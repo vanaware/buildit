@@ -1,0 +1,12 @@
+.deno/
+
+coverage/
+*.lcov
+
+.env
+
+node_modules/
+vendor/
+
+build/
+build/dist/

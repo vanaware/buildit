@@ -1,0 +1,6 @@
+{
+  "name": "BuildIt",
+  "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

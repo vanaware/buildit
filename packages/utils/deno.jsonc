@@ -1,0 +1,23 @@
+{
+  "name": "@vanaware/buildit",
+  "publish": false,
+  "compilerOptions": {
+    "lib": [
+      "deno.window",
+      "deno.unstable"
+    ]
+  },
+  "imports": {},
+  "tasks": {
+    "test": "deno test --allow-env --allow-net --allow-read --allow-write tests/",
+    "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
+    "tests": "deno task check && deno task test"
+  },
+  "exports": {
+    ".": "./src/mod.ts",
+    "./config": "./src/config/mod.ts",
+    "./interfaces": "./src/interfaces/mod.ts",
+    "./build": "./src/esbuild/mod.ts",
+    "./export": "./src/export/mod.ts"
+  }
+}

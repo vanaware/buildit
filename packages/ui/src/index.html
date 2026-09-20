@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BuildIt PWA - Demo</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="./manifest.json">
+
+    <!-- Favicon gerado nativamente via SVG in-line -->
+    <link rel="icon" type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%239edeb6'/><text x='50' y='68' font-size='50' font-family='system-ui, sans-serif' font-weight='bold' text-anchor='middle' fill='%231a1c19'>L</text></svg>">
+
+    <!-- BeerCSS e Material Symbols -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.css"
+      rel="stylesheet" />
+    <script type="module"
+      src="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.js"></script>
+    <script type="module"
+      src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+
+    <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #app {
+      min-height: 100vh;
+    }
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    </style>
+  </head>
+  <body class="dark">
+    <a id="iframe-warning" class="row yellow-container"
+      target="_blank"
+      rel="noopener"
+      style="display: none; align-items: center; justify-content: center; gap: 0.25rem; padding: 6px 12px; font-size: 0.8rem; border-bottom: 1px solid var(--border); min-height: auto; text-decoration: none; cursor: pointer;">
+      <i>info</i>
+      <span
+        style="white-space: nowrap; font-weight: 500;">Clique para sair do modo iframe</span>
+    </a>
+
+    <script>
+    if (window.self !== window.top) {
+      document.addEventListener("DOMContentLoaded", () => {
+        const banner = document.getElementById("iframe-warning",);
+        if (banner) {
+          banner.href = window.location.href;
+          banner.style.display = "flex";
+        }
+      },);
+    }
+    </script>
+
+    <div id="app">
+      <main class="responsive">
+        <h3>Carregando aplicação...</h3>
+        <progress class="circle"></progress>
+      </main>
+    </div>
+
+    <!-- Arquivo gerado pelo esbuild -->
+    <script type="module" src="./main.js?v=3"></script>
+  </body>
+</html>
