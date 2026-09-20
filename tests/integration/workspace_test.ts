@@ -16,11 +16,9 @@ const ROOT = resolve(Deno.cwd(),);
 const PACKAGES_DIR = join(ROOT, "packages",);
 
 const EXPECTED_PACKAGES = [
-  "worker-db",
   "server",
   "ui",
   "utils",
-  "service-worker",
 ];
 
 /**

@@ -1,12 +1,10 @@
 {
-  "version": "0.3.0#mua9rvo8",
+  "version": "0.3.1#muackpam",
   "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
   "workspace": [
-    "./packages/worker-db",
     "./packages/server",
     "./packages/ui",
-    "./packages/utils",
-    "./packages/service-worker"
+    "./packages/utils"
   ],
   // ⚙️ Configurações Rigorosas do Compilador TypeScript (FASE 4)
   "compilerOptions": {
@@ -116,8 +114,7 @@
       "packages/**/tests/**/*test.ts"
     ],
     "exclude": [
-      "packages/server/build/",
-      "packages/worker-db/build/"
+      "packages/server/build/"
     ]
   },
   "unstable": ["bundle"],

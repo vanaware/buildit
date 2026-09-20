@@ -13,18 +13,18 @@ const ROOT = resolve(Deno.cwd(),);
 
 describe("smoke", () => {
   it("deve ser possível carregar o módulo buildit principal", async () => {
-    const dbMod = await import(join(ROOT, "packages/worker-db/src/db.ts",));
+    const builditMod = await import(join(ROOT, "packages/utils/src/mod.ts",));
     assert(
-      typeof dbMod === "object",
-      "worker-db/db.ts deve ser carregável",
+      typeof builditMod === "object",
+      "packages/utils/src/mod.ts deve ser carregável",
     );
   });
 
-  it("deve ser possível carregar o utils", async () => {
-    const utilsMod = await import(join(ROOT, "packages/utils/src/mod.ts",));
+  it("deve ser possível carregar o módulo build/esbuild", async () => {
+    const esbuildMod = await import(join(ROOT, "packages/utils/src/esbuild/mod.ts",));
     assert(
-      typeof utilsMod === "object",
-      "utils/mod.ts deve ser carregável",
+      typeof esbuildMod === "object",
+      "packages/utils/src/esbuild/mod.ts deve ser carregável",
     );
   });
 });

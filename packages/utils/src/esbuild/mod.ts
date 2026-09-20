@@ -362,10 +362,10 @@ export async function incrementVersion(
     console.warn(`⚠️ Falha ao sincronizar workspaces:`, error,);
   }
 
-  // Atualiza arquivo de versão do worker-db (específico para injeção de código)
+  // Atualiza arquivo de versão (específico para injeção de código)
   try {
-    const workerDbVersionPath = "packages/worker-db/src/utils/version.ts";
-    const workerDbContent = `// Automatically generated file during build
+    const utilsVersionPath = "packages/utils/src/version.ts";
+    const versionContent = `// Automatically generated file during build
 declare const __APP_VERSION__: string;
 
 /** Current library/application version. */
@@ -373,8 +373,8 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   ? __APP_VERSION__
   : "${newVersion}";
 `;
-    await Deno.writeTextFile(workerDbVersionPath, workerDbContent,);
-    console.log(`📝 Versão atualizada em: ${workerDbVersionPath}`,);
+    await Deno.writeTextFile(utilsVersionPath, versionContent,);
+    console.log(`📝 Versão atualizada em: ${utilsVersionPath}`,);
   } catch {
     // Ignora quando executando em ambientes sem a estrutura completa (ex: testes)
   }

@@ -35,8 +35,5 @@
     "tests": "deno task check && deno task test"
   },
   "exclude": ["public/"],
-  "exports": {
-    ".": "./src/mod.ts",
-    "./utils": "./src/utils/mod.ts"
-  }
+  "exports": "./src/main.tsx"
 }

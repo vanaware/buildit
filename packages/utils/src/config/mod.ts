@@ -1,4 +1,4 @@
-export { APP_VERSION, } from "../../../worker-db/src/utils/version.ts";
+export { APP_VERSION } from "../version.ts";
 
 /**
  * Extensões de arquivo padrão que são comumente incluídas em snapshots.
