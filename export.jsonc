@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/export.json",
+  "$schema": "./packages/utils/schema/export.json",
   "version": "0.3.1",
   "modos": {
     "ui": {

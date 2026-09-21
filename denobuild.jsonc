@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/denobuild.json",
+  "$schema": "./packages/utils/schema/denobuild.json",
   "version": "0.3.6",
   "targets": {
     "ui": {

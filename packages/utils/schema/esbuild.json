@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BuildIt esbuild Configuration",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL do JSON Schema para autocomplete e validação no editor."
+    },
+    "version": {
+      "type": "string",
+      "description": "Versão semântica da configuração do projeto."
+    },
+    "targets": {
+      "type": "object",
+      "description": "Dicionário de alvos de compilação.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "enum": ["build", "watch"],
+            "description": "Modo de execução. 'build' compila e finaliza. 'watch' inicia o observador de arquivos."
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Se true, é executado automaticamente quando nenhum alvo específico é passado na CLI."
+          },
+          "srcdir": {
+            "type": "string",
+            "description": "Diretório base dos fontes do alvo."
+          },
+          "distdir": {
+            "type": "string",
+            "description": "Diretório de destino final onde os artefatos compilados são gravados."
+          },
+          "publicdir": {
+            "type": "string",
+            "description": "Diretório de ativos estáticos copiados recursivamente para distdir."
+          },
+          "indexHtml": {
+            "type": "boolean",
+            "description": "Se true, busca o index.html em srcdir ou publicdir e copia para distdir."
+          },
+          "clean": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Lista de caminhos para limpar antes do build (relativos a distdir)."
+          },
+          "entryPoints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Arquivos de entrada a serem compilados (relativos a srcdir)."
+          },
+          "platform": {
+            "enum": ["browser", "node", "neutral"],
+            "description": "Plataforma alvo de execução do bundle gerado."
+          },
+          "format": {
+            "enum": ["esm", "cjs", "iife"],
+            "description": "Formato do módulo de saída."
+          },
+          "bundle": {
+            "type": "boolean",
+            "description": "Se agrupa dependências e imports externos em arquivos consolidados."
+          },
+          "minify": {
+            "type": "boolean",
+            "description": "Se aplica minificação total."
+          },
+          "sourcemap": {
+            "oneOf": [
+              { "type": "boolean" },
+              { "enum": ["linked", "inline", "external"] }
+            ],
+            "description": "Estratégia de geração de mapa de fontes (.map)."
+          },
+          "jsx": {
+            "enum": ["automatic", "transform", "preserve"],
+            "description": "Modo de transformação de JSX/TSX."
+          },
+          "jsxImportSource": {
+            "type": "string",
+            "description": "Pacote para runtime automático do JSX (ex: 'preact', 'react')."
+          },
+          "define": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Mapa de substituição de constantes globais em tempo de compilação."
+          },
+          "drop": {
+            "type": "array",
+            "items": { "enum": ["console", "debugger"] },
+            "description": "Instruções a serem eliminadas do código compilado."
+          },
+          "external": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Módulos a não empacotar."
+          },
+          "metafile": {
+            "type": "boolean",
+            "description": "Se gera arquivo de metadados em formato JSON."
+          },
+          "write": {
+            "type": "boolean",
+            "description": "Se grava os arquivos compilados no disco."
+          },
+          "splitting": {
+            "type": "boolean",
+            "description": "Habilita divisão de código em chunks (requer format: 'esm')."
+          },
+          "outfile": {
+            "type": "string",
+            "description": "Nome ou caminho explícito do arquivo de saída."
+          }
+        },
+        "required": ["entryPoints"]
+      }
+    }
+  },
+  "required": ["targets"]
+}

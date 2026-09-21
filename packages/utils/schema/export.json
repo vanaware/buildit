@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BuildIt export Configuration",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL do JSON Schema do exportador."
+    },
+    "version": {
+      "type": "string",
+      "description": "Versão semântica da configuração."
+    },
+    "modos": {
+      "type": "object",
+      "description": "Dicionário contendo as configurações de cada modo de exportação.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "arquivoSaida": {
+            "type": "string",
+            "description": "Caminho do arquivo Markdown gerado."
+          },
+          "extensoesPermitidas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Lista de extensões de arquivos a serem capturadas."
+          },
+          "pastaBase": {
+            "type": "string",
+            "description": "Pasta base onde a busca se inicia."
+          },
+          "subpastasPermitidas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Lista de subdiretórios que podem ser varridos recursivamente."
+          },
+          "arquivosRaizPermitidos": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Nomes exatos de arquivos localizados diretamente na raiz de pastaBase."
+          },
+          "caminhosAdicionaisPermitidos": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Arquivos ou diretórios localizados fora de pastaBase."
+          },
+          "incluiVersao": {
+            "type": "boolean",
+            "description": "Se true, injeta a versão atual do projeto no topo."
+          },
+          "instrucaoCustomizada": {
+            "type": "string",
+            "description": "Mensagem de orientação para o modelo de IA."
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Se o modo deve ser executado por padrão."
+          }
+        },
+        "required": [
+          "arquivoSaida",
+          "extensoesPermitidas",
+          "pastaBase",
+          "subpastasPermitidas",
+          "arquivosRaizPermitidos",
+          "incluiVersao",
+          "instrucaoCustomizada"
+        ]
+      }
+    }
+  },
+  "required": ["modos"]
+}

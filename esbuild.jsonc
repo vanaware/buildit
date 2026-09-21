@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/esbuild.json",
+  "$schema": "./packages/utils/schema/esbuild.json",
   "version": "0.3.7",
   "targets": {
     "ui": {

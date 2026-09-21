@@ -39,7 +39,9 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Zero uso de bibliotecas de terceiros ou classes utilitárias fora da especificação BeerCSS.
 
 - **Conformidade com Diretrizes JSR (`docs/publish-jsr-rules.md`)**:
-  - `packages/utils/README.md`: Elaborado conforme as regras obrigatórias do JSR (título curto `# buildit`, descrição, comando de instalação `deno add`, exemplos de código executáveis, features e tabela de visão geral da API).
+  - `packages/utils/README.md`: Atualizado com exemplos práticos de uso da CLI para os três utilitários (`esbuild/cli`, `denobuild/cli`, `export/cli`), comando de instalação `deno add`, e seção de esquemas de configuração.
+  - `packages/utils/schema/`: Criado diretório contendo JSON Schemas oficiais para `esbuild.json`, `denobuild.json` e `export.json`, proporcionando validação e autocomplete.
+  - Configurações da raiz (`esbuild.jsonc`, `denobuild.jsonc`, `export.jsonc`) atualizadas para apontar para os esquemas locais.
   - `packages/utils/LICENSE`: Adicionado arquivo de licença MIT no pacote para empacotamento autônomo.
   - `packages/utils/deno.jsonc`: Configurado com `name`, `version`, `license`, `publish.include` e `publish.exclude` restritivos.
   - Resolução de colisões de tipos e remoção de triple slash directives (`/// <reference lib="..." />`) banidas pelo JSR.

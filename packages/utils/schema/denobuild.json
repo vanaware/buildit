@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BuildIt denobuild Configuration",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URL do JSON Schema para o compilador Deno."
+    },
+    "version": {
+      "type": "string",
+      "description": "Versão semântica do projeto."
+    },
+    "targets": {
+      "type": "object",
+      "description": "Dicionário de alvos de build.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "srcdir": {
+            "type": "string",
+            "description": "Diretório fonte onde residem os pontos de entrada."
+          },
+          "distdir": {
+            "type": "string",
+            "description": "Diretório de saída final dos arquivos empacotados."
+          },
+          "publicdir": {
+            "type": "string",
+            "description": "Diretório de ativos estáticos a copiar para distdir."
+          },
+          "indexHtml": {
+            "type": "boolean",
+            "description": "Se true, copia o index.html para distdir."
+          },
+          "clean": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Pastas ou arquivos a limpar antes do build."
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Se roda automaticamente quando nenhum alvo é indicado na chamada CLI."
+          },
+          "mode": {
+            "enum": ["build", "watch"],
+            "description": "Modo de execução. 'watch' não é suportado nativamente pelo runtime do Deno.bundle."
+          },
+          "entryPoints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Pontos de entrada TypeScript ou JavaScript a serem empacotados."
+          },
+          "format": {
+            "enum": ["esm", "cjs", "iife"],
+            "description": "Formato de saída do bundle."
+          },
+          "platform": {
+            "enum": ["browser", "deno"],
+            "description": "Plataforma alvo de otimização de runtime."
+          },
+          "minify": {
+            "type": "boolean",
+            "description": "Se aplica minificação no arquivo emitido."
+          },
+          "sourcemap": {
+            "enum": ["linked", "inline", "external"],
+            "description": "Estratégia de mapa de fontes."
+          },
+          "codeSplitting": {
+            "type": "boolean",
+            "description": "Se divide o bundle em múltiplos arquivos modulares."
+          },
+          "inlineImports": {
+            "type": "boolean",
+            "description": "Se inclui o código de imports externos diretamente no bundle final."
+          },
+          "packages": {
+            "enum": ["bundle", "external"],
+            "description": "Se empacota dependências de terceiros ou as mantém externas."
+          },
+          "define": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Mapeamento de constantes substituídas em memória."
+          },
+          "outfile": {
+            "type": "string",
+            "description": "Nome explícito do arquivo compilado gerado."
+          }
+        },
+        "required": ["entryPoints"]
+      }
+    }
+  },
+  "required": ["targets"]
+}
