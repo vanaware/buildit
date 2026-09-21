@@ -18,12 +18,19 @@ export const SimulatorCard = () => {
     <div class="grid">
       <div class="s12 m5">
         <article class="border round surface-container-low padding">
-          <h5>Painel de Simulação</h5>
-          <p class="small-text secondary-text">
-            Experimente os parâmetros reativos do BuildIt controlados via Preact Signals.
-          </p>
+          <div class="row middle">
+            <i class="primary-text extra">tune</i>
+            <div class="max">
+              <h5 class="no-margin">Simulador de Build</h5>
+              <div class="small-text secondary-text">
+                Parâmetros reativos controlados via Signals
+              </div>
+            </div>
+          </div>
 
-          <div class="field label border">
+          <div class="space"></div>
+
+          <div class="field label border round">
             <select
               value={selectedTool.value}
               onChange={(e,) =>
@@ -37,7 +44,7 @@ export const SimulatorCard = () => {
             <label>Ferramenta / CLI</label>
           </div>
 
-          <div class="field label border">
+          <div class="field label border round">
             <select
               value={targetName.value}
               onChange={(e,) =>
@@ -53,45 +60,47 @@ export const SimulatorCard = () => {
 
           <div class="space"></div>
 
-          <label class="checkbox">
-            <input
-              type="checkbox"
-              checked={minifyEnabled.value}
-              onChange={(e,) =>
-                (minifyEnabled.value = (e.target as HTMLInputElement).checked)
-              }
-            />
-            <span>Minificar saída (minify)</span>
-          </label>
+          <nav class="list">
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                checked={minifyEnabled.value}
+                onChange={(e,) =>
+                  (minifyEnabled.value = (e.target as HTMLInputElement).checked)
+                }
+              />
+              <span>Minificar saída (minify)</span>
+            </label>
 
-          <label class="checkbox">
-            <input
-              type="checkbox"
-              checked={sourcemapEnabled.value}
-              onChange={(e,) =>
-                (sourcemapEnabled.value = (e.target as HTMLInputElement).checked)
-              }
-            />
-            <span>Gerar Sourcemaps (sourcemap)</span>
-          </label>
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                checked={sourcemapEnabled.value}
+                onChange={(e,) =>
+                  (sourcemapEnabled.value = (e.target as HTMLInputElement).checked)
+                }
+              />
+              <span>Gerar Sourcemaps (sourcemap)</span>
+            </label>
 
-          <label class="checkbox">
-            <input
-              type="checkbox"
-              checked={cleanDistEnabled.value}
-              onChange={(e,) =>
-                (cleanDistEnabled.value = (e.target as HTMLInputElement).checked)
-              }
-            />
-            <span>Limpar diretório de saída (clean)</span>
-          </label>
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                checked={cleanDistEnabled.value}
+                onChange={(e,) =>
+                  (cleanDistEnabled.value = (e.target as HTMLInputElement).checked)
+                }
+              />
+              <span>Limpar diretório de saída (clean)</span>
+            </label>
+          </nav>
 
           <div class="space"></div>
 
-          <nav>
+          <nav class="row">
             <button
               type="button"
-              class="primary"
+              class="primary round"
               disabled={isSimulating.value}
               onClick={runSimulator}
             >
@@ -100,7 +109,7 @@ export const SimulatorCard = () => {
             </button>
             <button
               type="button"
-              class="transparent"
+              class="border round"
               onClick={clearLogs}
             >
               <i>delete_sweep</i>
@@ -108,25 +117,33 @@ export const SimulatorCard = () => {
             </button>
           </nav>
 
+          <div class="space"></div>
           <div class="divider"></div>
-          <p class="small-text secondary-text">
-            Execuções nesta sessão: <strong>{bundleSimCount.value}</strong>
-          </p>
+          <div class="space"></div>
+
+          <div class="row middle no-space">
+            <i class="small-text secondary-text">history</i>
+            <span class="small-text secondary-text margin-left">
+              Execuções nesta sessão: <strong>{bundleSimCount.value}</strong>
+            </span>
+          </div>
         </article>
       </div>
 
       <div class="s12 m7">
         <article class="border round surface-container-low padding">
           <div class="row middle">
-            <i class="secondary-text">terminal</i>
-            <h6 class="max no-margin">Console de Execução ({totalLogsCount.value} linhas)</h6>
+            <i class="primary-text">terminal</i>
+            <h6 class="max no-margin">Console de Execução</h6>
+            <span class="chip small surface-container-highest">
+              {totalLogsCount.value} linhas
+            </span>
           </div>
           <div class="space"></div>
-          <pre style="max-height: 420px; overflow-y: auto;">
-            <code>{simLogs.value.join("\n",)}</code>
-          </pre>
+          <pre class="scroll surface-container-highest round padding"><code>{simLogs.value.join("\n",)}</code></pre>
         </article>
       </div>
     </div>
   );
 };
+

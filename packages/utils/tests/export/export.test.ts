@@ -1,85 +1,113 @@
 /**
  * @file export.test.ts
- * @description Testes unitários para a lógica de filtragem do script de exportação de contexto.
- * Garante que caminhos adicionais (como .github) e regras de pastaBase funcionem corretamente.
+ * @description Testes unitários BDD para a lógica de filtragem e execução do exportador de contexto.
  */
+
+import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
-import { deveIncluirArquivo, } from "../../src/export/mod.ts";
-import { CONFIGURACOES, } from "../../../../export.ts";
+import {
+  CONFIGURACOES_PADRAO,
+  deveIncluirArquivo,
+  parseArgs,
+} from "../../src/export/mod.ts";
 
-Deno.test("deveIncluirArquivo: Deve BLOQUEAR qualquer arquivo dentro da pasta exports/", () => {
-  const config = CONFIGURACOES.server;
-  assertEquals(deveIncluirArquivo("exports/server.md", config,), false,);
-  assertEquals(
-    deveIncluirArquivo("exports/.github/workflows/test.yml", config,),
-    false,
-  );
+describe("deveIncluirArquivo", () => {
+  it("deve BLOQUEAR qualquer arquivo dentro da pasta exports/ ou snapshots/", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(deveIncluirArquivo("exports/server.md", config,), false,);
+    assertEquals(deveIncluirArquivo("snapshots/server.md", config,), false,);
+    assertEquals(
+      deveIncluirArquivo("exports/.github/workflows/test.yml", config,),
+      false,
+    );
+  });
+
+  it("deve PERMITIR caminho adicional (.github/workflows) com extensão válida", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(
+      deveIncluirArquivo(".github/workflows/deploy.yml", config,),
+      true,
+    );
+    assertEquals(
+      deveIncluirArquivo(".github/workflows/ci.yaml", config,),
+      true,
+    );
+  });
+
+  it("deve BLOQUEAR caminho adicional com extensão INVÁLIDA", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(
+      deveIncluirArquivo(".github/workflows/segredo.png", config,),
+      false,
+    );
+    assertEquals(
+      deveIncluirArquivo(".github/workflows/config.secret", config,),
+      false,
+    );
+  });
+
+  it("deve PERMITIR arquivo dentro da pastaBase e subpasta permitida", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(
+      deveIncluirArquivo("packages/server/src/main.ts", config,),
+      true,
+    );
+    assertEquals(
+      deveIncluirArquivo("packages/server/docs/arquitetura.md", config,),
+      true,
+    );
+  });
+
+  it("deve BLOQUEAR arquivo fora da pastaBase (que não seja caminho adicional)", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(deveIncluirArquivo("packages/ui/src/app.tsx", config,), false,);
+    assertEquals(
+      deveIncluirArquivo("packages/utils/src/helper.ts", config,),
+      false,
+    );
+  });
+
+  it("deve PERMITIR arquivos raiz explicitamente configurados", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(
+      deveIncluirArquivo("packages/server/deno.jsonc", config,),
+      true,
+    );
+    assertEquals(deveIncluirArquivo("packages/server/readme.md", config,), true,);
+  });
+
+  it("deve BLOQUEAR arquivos raiz NÃO configurados", () => {
+    const config = CONFIGURACOES_PADRAO.server!;
+    assertEquals(
+      deveIncluirArquivo("packages/server/package.json", config,),
+      false,
+    );
+  });
+
+  it("configuração 'docs' deve capturar raiz e subpasta docs", () => {
+    const config = CONFIGURACOES_PADRAO.docs!;
+    assertEquals(deveIncluirArquivo("readme.md", config,), true,);
+    assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
+    assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
+  });
 });
 
-Deno.test("deveIncluirArquivo: Deve PERMITIR caminho adicional (.github/workflows) com extensão válida", () => {
-  const config = CONFIGURACOES.server;
-  assertEquals(
-    deveIncluirArquivo(".github/workflows/deploy.yml", config,),
-    true,
-  );
-  assertEquals(deveIncluirArquivo(".github/workflows/ci.yaml", config,), true,);
-});
+describe("parseArgs", () => {
+  it("deve retornar todos os modos com default !== false quando sem argumentos", () => {
+    const modos = parseArgs([], CONFIGURACOES_PADRAO,);
+    assertEquals(modos.includes("ui",), true,);
+    assertEquals(modos.includes("server",), true,);
+    assertEquals(modos.includes("utils",), true,);
+    assertEquals(modos.includes("docs",), false,); // docs tem default: false
+  });
 
-Deno.test("deveIncluirArquivo: Deve BLOQUEAR caminho adicional com extensão INVÁLIDA", () => {
-  const config = CONFIGURACOES.server;
-  assertEquals(
-    deveIncluirArquivo(".github/workflows/segredo.png", config,),
-    false,
-  );
-  assertEquals(
-    deveIncluirArquivo(".github/workflows/config.secret", config,),
-    false,
-  );
-});
+  it("deve retornar apenas o modo solicitado via CLI", () => {
+    const modos = parseArgs(["docs",], CONFIGURACOES_PADRAO,);
+    assertEquals(modos, ["docs",],);
+  });
 
-Deno.test("deveIncluirArquivo: Deve PERMITIR arquivo dentro da pastaBase e subpasta permitida", () => {
-  const config = CONFIGURACOES.server;
-  // 🔥 CORREÇÃO: 'monorepo' alterado para 'packages' para bater com pastaBase: "packages/server"
-  assertEquals(
-    deveIncluirArquivo("packages/server/src/main.ts", config,),
-    true,
-  );
-  assertEquals(
-    deveIncluirArquivo("packages/server/docs/arquitetura.md", config,),
-    true,
-  );
-});
-
-Deno.test("deveIncluirArquivo: Deve BLOQUEAR arquivo fora da pastaBase (que não seja caminho adicional)", () => {
-  const config = CONFIGURACOES.server;
-  assertEquals(deveIncluirArquivo("packages/ui/src/app.tsx", config,), false,);
-  assertEquals(
-    deveIncluirArquivo("packages/utils/src/helper.ts", config,),
-    false,
-  );
-});
-
-Deno.test("deveIncluirArquivo: Deve PERMITIR arquivos raiz explicitamente configurados", () => {
-  const config = CONFIGURACOES.server;
-  // 🔥 CORREÇÃO: 'monorepo' alterado para 'packages'
-  assertEquals(
-    deveIncluirArquivo("packages/server/deno.jsonc", config,),
-    true,
-  );
-  assertEquals(deveIncluirArquivo("packages/server/readme.md", config,), true,);
-});
-
-Deno.test("deveIncluirArquivo: Deve BLOQUEAR arquivos raiz NÃO configurados", () => {
-  const config = CONFIGURACOES.server;
-  assertEquals(
-    deveIncluirArquivo("packages/server/package.json", config,),
-    false,
-  );
-});
-
-Deno.test("deveIncluirArquivo: Configuração 'docs' deve capturar raiz e subpasta docs", () => {
-  const config = CONFIGURACOES.docs;
-  assertEquals(deveIncluirArquivo("readme.md", config,), true,);
-  assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
-  assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
+  it("deve ignorar argumentos desconhecidos", () => {
+    const modos = parseArgs(["desconhecido", "ui",], CONFIGURACOES_PADRAO,);
+    assertEquals(modos, ["ui",],);
+  });
 });

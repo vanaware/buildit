@@ -1,0 +1,123 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/export.json",
+  "version": "0.3.1",
+  "modos": {
+    "ui": {
+      "arquivoSaida": "snapshots/ui.md",
+      "extensoesPermitidas": [
+        ".tsx",
+        ".jsx",
+        ".js",
+        ".ts",
+        ".css",
+        ".html",
+        ".manifest",
+        ".json",
+        ".jsonc",
+        ".md"
+      ],
+      "pastaBase": "./packages/ui/",
+      "subpastasPermitidas": [
+        "src",
+        "public",
+        "tests",
+        "docs"
+      ],
+      "arquivosRaizPermitidos": [
+        "build.ts",
+        "deno.json",
+        "deno.jsonc",
+        "readme.md"
+      ],
+      "incluiVersao": true,
+      "instrucaoCustomizada": "O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).",
+      "default": true
+    },
+    "docs": {
+      "arquivoSaida": "snapshots/docs.md",
+      "extensoesPermitidas": [
+        ".md",
+        ".txt"
+      ],
+      "pastaBase": "./",
+      "subpastasPermitidas": [
+        "docs"
+      ],
+      "arquivosRaizPermitidos": [
+        "readme.md",
+        "readme",
+        "license",
+        "license.md",
+        "license.txt",
+        ".tool-versions"
+      ],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
+      "default": false
+    },
+    "server": {
+      "arquivoSaida": "snapshots/server.md",
+      "extensoesPermitidas": [
+        ".tsx",
+        ".jsx",
+        ".js",
+        ".ts",
+        ".css",
+        ".html",
+        ".json",
+        ".jsonc",
+        ".yaml",
+        ".yml",
+        ".md"
+      ],
+      "pastaBase": "packages/server",
+      "subpastasPermitidas": [
+        "src",
+        "tests",
+        "docs"
+      ],
+      "caminhosAdicionaisPermitidos": [
+        ".github/workflows"
+      ],
+      "arquivosRaizPermitidos": [
+        "deno.json",
+        "deno.jsonc",
+        "readme.md"
+      ],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém os arquivos de configuração e execução do SERVIDOR @vanaware/server e CI/CD.",
+      "default": true
+    },
+    "utils": {
+      "arquivoSaida": "snapshots/utils.md",
+      "extensoesPermitidas": [
+        ".tsx",
+        ".jsx",
+        ".js",
+        ".ts",
+        ".json",
+        ".jsonc",
+        ".md"
+      ],
+      "pastaBase": "packages/utils",
+      "subpastasPermitidas": [
+        "src",
+        "tests",
+        "docs"
+      ],
+      "caminhosAdicionaisPermitidos": [
+        "export.ts",
+        "esbuild.ts",
+        "build.ts"
+      ],
+      "arquivosRaizPermitidos": [
+        "deno.json",
+        "deno.jsonc",
+        "readme.md"
+      ],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém o código e testes da biblioteca @vanaware/buildit",
+      "default": true
+    }
+  }
+}

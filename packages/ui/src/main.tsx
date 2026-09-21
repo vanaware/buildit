@@ -9,24 +9,29 @@ import { SnapshotsCard, } from "./components/SnapshotsCard.tsx";
 
 const App = () => {
   return (
-    <main class="responsive max" style="max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem;">
+    <div>
       <Header />
-      <div class="space"></div>
-      <Navigation />
+      <main class="responsive">
+        <div class="space"></div>
+        <Navigation />
 
-      {activeTab.value === "overview" && <OverviewCard />}
-      {activeTab.value === "cli" && <ToolDetails />}
-      {activeTab.value === "interactive" && <SimulatorCard />}
-      {activeTab.value === "snapshots" && <SnapshotsCard />}
+        {activeTab.value === "overview" && <OverviewCard />}
+        {activeTab.value === "cli" && <ToolDetails />}
+        {activeTab.value === "interactive" && <SimulatorCard />}
+        {activeTab.value === "snapshots" && <SnapshotsCard />}
 
-      <div class="large-space"></div>
-      <footer class="center-align padding surface-container-highest round">
-        <p class="italic small-text no-margin">
-          BuildIt — Toolkit de automação de build e exportação de contexto. Construído com Deno, Preact e BeerCSS.
-        </p>
-      </footer>
-    </main>
+        <div class="large-space"></div>
+        <footer class="responsive center-align">
+          <div class="divider"></div>
+          <div class="space"></div>
+          <p class="small-text secondary-text no-margin">
+            BuildIt &bull; Deno &amp; Web Toolkit &bull; Construído com Preact, Signals e BeerCSS
+          </p>
+        </footer>
+      </main>
+    </div>
   );
 };
 
 render(<App />, document.getElementById("app",)!,);
+

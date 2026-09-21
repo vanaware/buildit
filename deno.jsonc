@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1#muackpam",
+  "version": "0.3.6#muagab05",
   "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
   "workspace": [
     "./packages/server",

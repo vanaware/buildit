@@ -3,56 +3,75 @@ import { selectedTool, type ToolKey, } from "../stores/app.ts";
 export const ToolDetails = () => {
   const tools: {
     key: ToolKey;
+    icon: string;
     title: string;
+    subtitle: string;
     description: string;
     command: string;
+    configFile: string;
     config: string;
   }[] = [
     {
       key: "esbuild",
-      title: "1. esbuild Pipeline",
+      icon: "bolt",
+      title: "esbuild Pipeline",
+      subtitle: "Empacotamento de alta velocidade para navegadores e web apps",
       description:
-        "Orquestrador avançado que conecta esbuild ao @deno/esbuild-plugin. Suporta múltiplos alvos, watch mode contínuo, injeção de versão e empacotamento completo para navegadores.",
-      command: "deno task build # ou: deno run -A ./esbuild.ts [alvo] [noversion] [watch]",
-      config: `// Configuração declarativa (esbuild.jsonc ou CONFIG interno)
+        "Orquestrador avançado que conecta esbuild ao @deno/esbuild-plugin. Suporta múltiplos alvos, watch mode contínuo, injeção de versão semântica e resolução de dependências remotas do Deno.",
+      command: "deno task build\n# ou execução direta:\ndeno run -A ./esbuild.ts [alvo] [noversion] [watch]",
+      configFile: "esbuild.jsonc",
+      config: `// Configuração declarativa de alvos esbuild
 {
   "ui": {
     "srcdir": "packages/ui/src",
     "distdir": "packages/server/build/dist",
     "entryPoints": ["main.tsx"],
     "bundle": true,
-    "format": "esm"
+    "format": "esm",
+    "minify": true,
+    "sourcemap": "linked"
   }
 }`,
     },
     {
       key: "denobuild",
-      title: "2. denobuild (Deno.bundle nativo)",
+      icon: "memory",
+      title: "denobuild (Deno.bundle nativo)",
+      subtitle: "Empacotador autônomo sem dependências externas via Deno 2.x",
       description:
-        "Motor de build alternativo que emprega a API Deno.bundle nativa (--unstable-bundle). Ideal para empacotar bibliotecas e scripts autônomos sem requerer binários externos.",
-      command: "deno task build:deno # ou: deno run --unstable-bundle -A ./build.ts",
-      config: `// Configuração denobuild (denobuild.jsonc)
+        "Motor de compilação que emprega a API Deno.bundle nativa (--unstable-bundle). Ideal para empacotar bibliotecas e scripts autônomos sem requerer binários nativos ou ferramentas de terceiros.",
+      command: "deno task build:deno\n# ou execução direta:\ndeno run --unstable-bundle -A ./build.ts",
+      configFile: "denobuild.jsonc",
+      config: `// Configuração declarativa denobuild
 {
   "ui": {
     "entryPoints": ["main.tsx"],
     "format": "esm",
     "packages": "bundle",
-    "inlineImports": true
+    "inlineImports": true,
+    "minify": true
   }
 }`,
     },
     {
       key: "export",
-      title: "3. export (Snapshot de Contexto)",
+      icon: "auto_stories",
+      title: "export (Snapshot de Contexto para IA)",
+      subtitle: "Consolidação de código-fonte estruturada para LLMs e documentação",
       description:
-        "Consolidador inteligente de código-fonte e documentação em arquivos Markdown estruturados para uso com agentes de Inteligência Artificial ou documentação.",
-      command: "deno task export # ou: deno run --allow-read --allow-write ./export.ts [ui|docs|server|utils]",
-      config: `// Configuração de exportação (export.jsonc)
+        "Consolidador inteligente de código-fonte e documentação em arquivos Markdown estruturados. Inclui proteção contra loops, filtros por extensão, caminhos permitidos e cabeçalhos com instruções para agentes de Inteligência Artificial.",
+      command: "deno task export\n# ou com seleção de alvos:\ndeno run --allow-read --allow-write ./export.ts [ui|docs|server|utils]",
+      configFile: "export.jsonc",
+      config: `// Configuração declarativa export.jsonc
 {
   "ui": {
     "arquivoSaida": "snapshots/ui.md",
     "pastaBase": "./packages/ui/",
-    "subpastasPermitidas": ["src", "public", "tests"]
+    "subpastasPermitidas": ["src", "public", "tests"],
+    "arquivosRaizPermitidos": ["deno.json", "deno.jsonc"],
+    "extensoesPermitidas": [".ts", ".tsx", ".html", ".json"],
+    "incluiVersao": true,
+    "default": true
   }
 }`,
     },
@@ -65,10 +84,10 @@ export const ToolDetails = () => {
           <button
             key={t.key}
             type="button"
-            class={`chip ${selectedTool.value === t.key ? "secondary" : "transparent"}`}
+            class={`chip ${selectedTool.value === t.key ? "primary" : "border"}`}
             onClick={() => (selectedTool.value = t.key)}
           >
-            <i>tune</i>
+            <i>{t.icon}</i>
             <span>{t.title}</span>
           </button>
         ))}
@@ -78,16 +97,34 @@ export const ToolDetails = () => {
         .filter((t,) => t.key === selectedTool.value)
         .map((t,) => (
           <article key={t.key} class="border round surface-container-low padding">
-            <h4>{t.title}</h4>
-            <p>{t.description}</p>
+            <div class="row middle">
+              <i class="primary-text extra">{t.icon}</i>
+              <div class="max">
+                <h5 class="no-margin">{t.title}</h5>
+                <div class="small-text secondary-text">{t.subtitle}</div>
+              </div>
+              <span class="chip small primary-container">{t.configFile}</span>
+            </div>
 
-            <h6>Comando de Execução:</h6>
-            <pre><code>{t.command}</code></pre>
+            <div class="space"></div>
 
-            <h6>Estrutura de Configuração:</h6>
-            <pre><code>{t.config}</code></pre>
+            <p class="secondary-text">{t.description}</p>
+
+            <div class="divider"></div>
+            <div class="space"></div>
+
+            <h6 class="no-margin">Comando de Execução</h6>
+            <div class="space"></div>
+            <pre class="scroll surface-container-highest round padding"><code>{t.command}</code></pre>
+
+            <div class="space"></div>
+
+            <h6 class="no-margin">Estrutura de Configuração ({t.configFile})</h6>
+            <div class="space"></div>
+            <pre class="scroll surface-container-highest round padding"><code>{t.config}</code></pre>
           </article>
         ))}
     </div>
   );
 };
+

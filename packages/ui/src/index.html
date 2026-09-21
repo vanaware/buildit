@@ -24,49 +24,34 @@
       src="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.js"></script>
     <script type="module"
       src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
-
-    <style>
-    body {
-      margin: 0;
-      padding: 0;
-    }
-    #app {
-      min-height: 100vh;
-    }
-    pre {
-      background: #111;
-      color: #0f0;
-      padding: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-    }
-    </style>
   </head>
   <body class="dark">
-    <a id="iframe-warning" class="row yellow-container"
-      target="_blank"
-      rel="noopener"
-      style="display: none; align-items: center; justify-content: center; gap: 0.25rem; padding: 6px 12px; font-size: 0.8rem; border-bottom: 1px solid var(--border); min-height: auto; text-decoration: none; cursor: pointer;">
+    <aside id="iframe-warning" class="banner yellow-container none">
       <i>info</i>
-      <span
-        style="white-space: nowrap; font-weight: 500;">Clique para sair do modo iframe</span>
-    </a>
+      <span class="max">Executando em modo preview iframe</span>
+      <a id="iframe-link" class="button border round small" target="_blank" rel="noopener">
+        <span>Abrir em nova aba</span>
+        <i>open_in_new</i>
+      </a>
+    </aside>
 
     <script>
     if (window.self !== window.top) {
       document.addEventListener("DOMContentLoaded", () => {
-        const banner = document.getElementById("iframe-warning",);
-        if (banner) {
-          banner.href = window.location.href;
-          banner.style.display = "flex";
+        const banner = document.getElementById("iframe-warning");
+        const link = document.getElementById("iframe-link");
+        if (banner && link) {
+          link.href = window.location.href;
+          banner.classList.remove("none");
         }
-      },);
+      });
     }
     </script>
 
     <div id="app">
-      <main class="responsive">
-        <h3>Carregando aplicação...</h3>
+      <main class="responsive center-align">
+        <div class="space"></div>
+        <h5>Carregando aplicação...</h5>
         <progress class="circle"></progress>
       </main>
     </div>

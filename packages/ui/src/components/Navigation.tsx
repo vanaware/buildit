@@ -9,18 +9,18 @@ export const Navigation = () => {
   ];
 
   return (
-    <nav class="wrap margin-bottom">
+    <nav class="tabs center-align border bottom margin-bottom scroll">
       {tabs.map((tab,) => (
-        <button
+        <a
           key={tab.key}
-          type="button"
-          class={`chip ${activeTab.value === tab.key ? "primary" : "transparent"}`}
+          class={activeTab.value === tab.key ? "active" : ""}
           onClick={() => (activeTab.value = tab.key)}
         >
           <i>{tab.icon}</i>
           <span>{tab.label}</span>
-        </button>
+        </a>
       ))}
     </nav>
   );
 };
+

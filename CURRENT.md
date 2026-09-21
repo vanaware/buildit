@@ -1,23 +1,30 @@
 # Arquivo `CURRENT.md`
 
-## Status Atual: Fase 1 
+## Status Atual: Fase 1 (Em Andamento)
 
-Este repositório é um fork do workerdb e será refatorado para disponibilizar a biblioteca @vanaware/buildit
+Este repositório é um fork do workerdb e está sendo refatorado para disponibilizar a biblioteca `@vanaware/buildit`.
 
-Esta biblioteca será basicamente o package utils que conterá três cli:
-1. denobuid => derivado do build.ts que usará um arquivo config externo  denobuild.jsonc
-2. esbuild => derivado do esbuild.ts que usará um arquivo config externo esbuild.jsonc
-3. export => derivado do export.ts que usará um arquivo config externo export.jsonc
+Esta biblioteca será basicamente o pacote `packages/utils` que conterá três CLIs/utilitários:
+1. **denobuild** => derivado do `build.ts` que usará um arquivo config externo `denobuild.jsonc` *(Pendente)*
+2. **esbuild** => derivado do `esbuild.ts` que usará um arquivo config externo `esbuild.jsonc` *(Pendente)*
+3. **export** => derivado do `export.ts` que usa o arquivo config externo `export.jsonc` *(✅ Concluído)*
 
-Precisamos de várias modificações:
-* um novo agents.md pois ainda esta com alguns detalhes do pacote antigo workerdb
-* um novo readme para o repositorio explicando o que cada um dos 3 apps faz e o conteudo do repositorio
-* um readme para o pacote utils - @vanaware/buildit
-* um novo pacote UI para servir de exemplo (faça um exemplo simples usando preact, beercss e signals)
-* um novo pacote server apenas para mostrar o build do exemplo acima
+### ✅ Tarefas Realizadas:
+- **Refatoração completa do `export` para `packages/utils`**:
+  - `packages/utils/src/export/types.ts`: Interfaces de configuração (`ExportConfigFile`), opções (`ExportOptions`) e resultados (`ExportResult`).
+  - `packages/utils/src/export/formatter.ts`: Lógica pura de normalização de caminhos, detecção anti-loop, crases dinâmicas e blocos Markdown com JSDoc 100% compatível com JSR.
+  - `packages/utils/src/export/config.ts`: Carregamento do arquivo externo `export.jsonc` com fallback para `CONFIGURACOES_PADRAO`.
+  - `packages/utils/src/export/engine.ts`: Varredura de arquivos via `walk`, filtragem declarativa e geração de snapshots.
+  - `packages/utils/src/export/cli.ts`: Runner CLI com métricas de tempo e formatação de console.
+  - `packages/utils/src/export/mod.ts`: Ponto de entrada exportado em `packages/utils/deno.jsonc` (`@vanaware/buildit/export` e `@vanaware/buildit/export/cli`).
+  - `export.jsonc`: Arquivo de configuração externo na raiz com 4 modos (`ui`, `docs`, `server`, `utils`).
+  - `export.ts`: CLI enxuto na raiz delegando para a biblioteca.
+  - Testes unitários com `@std/testing/bdd` e validação com `deno doc --lint`.
+- **Melhoria visual da UI com BeerCSS puro**:
+  - Removidos todos os atributos `style="..."` e tags `<style>`.
+  - Layout limpo e responsivo estruturado com componentes BeerCSS (`nav class="tab"`, `article class="border round surface-container-low"`, chips, grid).
 
-Já Rodei uma substituição de nomes geral do antigo workerdb para buildit, mas com certeza preciso de ajustes para revisar o que pode ter ficado sem sentido
-
-Atenção: todo o código que será exportadon de nosso novo @vanaware/buildit deverá estar no pacote do diretório: packages/utils . O que não ficará lá são basicamente os codigos do servidor e da ui do exemplo. teremos claro algumas exceções como scripts e arquivos de config de exemplo na raiz do repositório, dentre outros.
-
-
+### 🎯 Próximos Passos:
+- Refatorar o utilitário `esbuild.ts` para dentro de `packages/utils/src/esbuild/` utilizando arquivo de configuração externo `esbuild.jsonc`.
+- Refatorar o utilitário `build.ts` (denobuild) para dentro de `packages/utils/src/denobuild/` utilizando `denobuild.jsonc`.
+- Atualizar documentação (`README.md`, `packages/utils/README.md`).
