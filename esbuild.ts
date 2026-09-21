@@ -7,8 +7,8 @@
  * e carrega as configurações declarativas de esbuild.jsonc.
  */
 
-import { runEsbuildCli, } from "@vanaware/buildit/build";
+import { esBuildCli, } from "@vanaware/buildit/build";
 
 if (import.meta.main) {
-  await runEsbuildCli(Deno.args,);
+  await esBuildCli(Deno.args,);
 }

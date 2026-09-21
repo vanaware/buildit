@@ -50,10 +50,10 @@ Exemplos:
  *
  * @example
  * ```typescript
- * await runEsbuildCli(Deno.args);
+ * await esBuildCli(Deno.args);
  * ```
  */
-export async function runEsbuildCli(
+export async function esBuildCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
@@ -74,7 +74,9 @@ export async function runEsbuildCli(
   const start = performance.now();
   const baseDir = ".";
   const configPath = flags.configPath ?? caminhoConfig;
-  const configs = await carregarConfigEsbuild(configPath, baseDir);
+  const loaded = await carregarConfigEsbuild(configPath, baseDir);
+  const configs = loaded.targets;
+
   const rawArgs = [
     ...flags.positional,
     ...(flags.noversion ? ["noversion"] : []),
@@ -98,8 +100,8 @@ export async function runEsbuildCli(
     const finalVersion = await updateProjectVersion({
       denoJsonPath: DENO_JSONC_PATH,
       noversion: globalNoVersion || (watchTarget !== null),
-      versionPaths: flags.versionPaths,
-      forcepackagesversion: flags.forcepackagesversion,
+      versionPaths: flags.versionPaths ?? loaded.versionPaths,
+      forcepackagesversion: flags.forcepackagesversion ?? loaded.forcepackagesversion,
     });
 
     if (watchTarget) {
@@ -136,5 +138,5 @@ export async function runEsbuildCli(
 }
 
 if (import.meta.main) {
-  await runEsbuildCli(Deno.args);
+  await esBuildCli(Deno.args);
 }

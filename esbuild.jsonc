@@ -45,7 +45,7 @@
       "publicdir": "packages/ui/public",
       "indexHtml": true,
       "entryPoints": [
-        "main.ts"
+        "main.tsx"
       ],
       "platform": "browser",
       "format": "esm",

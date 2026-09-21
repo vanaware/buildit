@@ -7,9 +7,9 @@
  *
  * @example
  * ```typescript
- * import { executarDenoBuild } from "@vanaware/buildit/denobuild";
+ * import { denoBuild } from "@vanaware/buildit/denobuild";
  *
- * const resultados = await executarDenoBuild({
+ * const resultados = await denoBuild({
  *   caminhoConfig: "denobuild.jsonc",
  *   targets: ["ui"],
  *   noversion: true,

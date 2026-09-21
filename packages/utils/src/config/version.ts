@@ -176,9 +176,85 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
 }
 
 /**
- * Incrementa e/ou sincroniza a versão do projeto em arquivos de configuração e código.
+ * Sincroniza a versão do projeto em arquivos de configuração e código sem incrementar.
+ * Útil para garantir que todos os pacotes e arquivos de versão estejam alinhados.
  *
- * @param options Opções de sincronização e versionamento
+ * @param options Opções de sincronização
+ * @returns Versão sincronizada
+ */
+export async function syncVersion(
+  options: VersionUpdateOptions = {},
+): Promise<string> {
+  const baseDir = options.baseDir ?? ".";
+  const denoJsonPath = options.denoJsonPath ??
+    join(baseDir, "deno.jsonc");
+  const forcePackages = options.forcepackagesversion ?? false;
+  const versionPaths = options.versionPaths ?? DEFAULT_VERSION_PATHS;
+
+  let finalVersion = options.currentVersion;
+  if (!finalVersion) {
+    try {
+      finalVersion = await readProjectVersion(denoJsonPath, baseDir);
+    } catch {
+      finalVersion = FALLBACK_VERSION;
+    }
+  }
+
+  // Sincroniza workspaces se solicitado
+  if (forcePackages) {
+    try {
+      const rootContent = await Deno.readTextFile(denoJsonPath);
+      const rootDir = dirname(denoJsonPath);
+      const parsed = parseJsonc(rootContent) as { workspace?: string[] };
+
+      if (parsed.workspace && Array.isArray(parsed.workspace)) {
+        console.log(`📦 Sincronizando workspaces para v${finalVersion}...`);
+        for (const ws of parsed.workspace) {
+          const wsPath = isAbsolute(ws) ? ws : join(rootDir, ws);
+          for (const fileName of ["deno.jsonc", "deno.json"]) {
+            const configPath = join(wsPath, fileName);
+            try {
+              const stat = await Deno.stat(configPath);
+              if (stat.isFile) {
+                let wsContent = await Deno.readTextFile(configPath);
+                wsContent = replaceVersionInContent(
+                  wsContent,
+                  finalVersion,
+                );
+                await Deno.writeTextFile(configPath, wsContent);
+                console.log(`   ✅ Sincronizado: ${join(ws, fileName)}`);
+                break;
+              }
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`⚠️ Falha ao sincronizar workspaces:`, err);
+    }
+  }
+
+  // Atualiza os arquivos version.ts nos caminhos especificados
+  for (const vPath of versionPaths) {
+    try {
+      await writeVersionFile(vPath, finalVersion);
+      console.log(`📝 Versão atualizada em: ${vPath}`);
+    } catch (err) {
+      if (options.versionPaths) {
+        console.warn(`⚠️ Aviso ao gravar version.ts em ${vPath}:`, err);
+      }
+    }
+  }
+
+  return finalVersion;
+}
+
+/**
+ * Incrementa a versão patch e sincroniza o projeto.
+ *
+ * @param options Opções de atualização
  * @returns Versão final aplicada
  */
 export async function updateProjectVersion(
@@ -188,16 +264,10 @@ export async function updateProjectVersion(
   const denoJsonPath = options.denoJsonPath ??
     join(baseDir, "deno.jsonc");
   const noversion = options.noversion ?? false;
-  const forcePackages = options.forcepackagesversion ?? false;
-  const versionPaths = options.versionPaths ?? DEFAULT_VERSION_PATHS;
 
   let currentVer = options.currentVersion;
   if (!currentVer) {
-    try {
-      currentVer = await readProjectVersion(denoJsonPath, baseDir);
-    } catch {
-      currentVer = FALLBACK_VERSION;
-    }
+    currentVer = await readProjectVersion(denoJsonPath, baseDir);
   }
 
   let finalVersion = currentVer;
@@ -215,60 +285,16 @@ export async function updateProjectVersion(
       );
       await Deno.writeTextFile(denoJsonPath, updatedRootContent);
       console.log(`📈 Versão incrementada para: v${finalVersion}`);
-
-      // Sincroniza workspaces se solicitado ou configurado
-      if (forcePackages) {
-        try {
-          const rootDir = dirname(denoJsonPath);
-          const parsed = parseJsonc(rootContent) as { workspace?: string[] };
-
-          if (parsed.workspace && Array.isArray(parsed.workspace)) {
-            console.log(`📦 Sincronizando workspaces...`);
-            for (const ws of parsed.workspace) {
-              const wsPath = isAbsolute(ws) ? ws : join(rootDir, ws);
-              for (const fileName of ["deno.jsonc", "deno.json"]) {
-                const configPath = join(wsPath, fileName);
-                try {
-                  const stat = await Deno.stat(configPath);
-                  if (stat.isFile) {
-                    let wsContent = await Deno.readTextFile(configPath);
-                    wsContent = replaceVersionInContent(
-                      wsContent,
-                      finalVersion,
-                    );
-                    await Deno.writeTextFile(configPath, wsContent);
-                    console.log(`   ✅ Sincronizado: ${join(ws, fileName)}`);
-                    break;
-                  }
-                } catch {
-                  continue;
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn(`⚠️ Falha ao sincronizar workspaces:`, err);
-        }
-      }
     } catch (err) {
-      console.warn(`⚠️ Aviso ao atualizar ${denoJsonPath}:`, err);
+      console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err);
     }
   } else {
     console.log(`📌 Versão mantida (noversion): v${finalVersion}`);
   }
 
-  // Atualiza os arquivos version.ts nos caminhos especificados
-  for (const vPath of versionPaths) {
-    try {
-      await writeVersionFile(vPath, finalVersion);
-      console.log(`📝 Versão atualizada em: ${vPath}`);
-    } catch (err) {
-      // Ignora falhas em testes ou diretórios isolados
-      if (options.versionPaths) {
-        console.warn(`⚠️ Aviso ao gravar version.ts em ${vPath}:`, err);
-      }
-    }
-  }
-
-  return finalVersion;
+  // Sincroniza arquivos e subpacotes
+  return await syncVersion({
+    ...options,
+    currentVersion: finalVersion,
+  });
 }

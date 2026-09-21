@@ -180,19 +180,21 @@ export async function processBundleTarget(
  * @example
  * ```typescript
  * // Passando configuração diretamente em memória:
- * const resultados = await executarDenoBuild({
+ * const resultados = await denoBuild({
  *   ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src", ... }
  * });
  *
  * // Ou usando opções completas:
- * const resultados = await executarDenoBuild({ targets: ["ui"], noversion: true });
+ * const resultados = await denoBuild({ targets: ["ui"], noversion: true });
  * ```
  */
-export async function executarDenoBuild(
+export async function denoBuild(
   configOuOpcoes?: DenoBuildOptions | DenoBundleGlobalConfig,
 ): Promise<DenoBuildResult[]> {
   let configs: DenoBundleGlobalConfig;
   let opcoes: DenoBuildOptions | undefined;
+  let fileConfigVersionPaths: string[] | undefined;
+  let fileConfigForcePackages: boolean | undefined;
 
   if (
     configOuOpcoes &&
@@ -214,7 +216,10 @@ export async function executarDenoBuild(
       configs = opcoes.config;
     } else {
       const baseDir = opcoes?.baseDir ?? ".";
-      configs = await carregarConfigDenoBuild(opcoes?.caminhoConfig, baseDir);
+      const loaded = await carregarConfigDenoBuild(opcoes?.caminhoConfig, baseDir);
+      configs = loaded.targets;
+      fileConfigVersionPaths = loaded.versionPaths;
+      fileConfigForcePackages = loaded.forcepackagesversion;
     }
   }
 
@@ -240,8 +245,8 @@ export async function executarDenoBuild(
     denoJsonPath: denoJsoncPath,
     baseDir,
     noversion: globalNoVersion || (opcoes?.noversion ?? false),
-    versionPaths: opcoes?.versionPaths,
-    forcepackagesversion: opcoes?.forcepackagesversion,
+    versionPaths: opcoes?.versionPaths ?? fileConfigVersionPaths,
+    forcepackagesversion: opcoes?.forcepackagesversion ?? fileConfigForcePackages,
   });
 
   const resultados: DenoBuildResult[] = [];

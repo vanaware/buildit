@@ -8,9 +8,9 @@
  *
  * @example
  * ```typescript
- * import { executarExport } from "@vanaware/buildit/export";
+ * import { builditExport } from "@vanaware/buildit/export";
  *
- * const resultados = await executarExport({
+ * const resultados = await builditExport({
  *   caminhoConfig: "export.jsonc",
  *   modos: ["ui", "docs"],
  * });

@@ -8,8 +8,8 @@
  * e carrega as configurações declarativas de denobuild.jsonc.
  */
 
-import { runDenoBuildCli, } from "@vanaware/buildit/denobuild";
+import { denoBuildCli, } from "@vanaware/buildit/denobuild";
 
 if (import.meta.main) {
-  await runDenoBuildCli(Deno.args,);
+  await denoBuildCli(Deno.args,);
 }

@@ -144,18 +144,18 @@ export async function exportarModo(
  * @example
  * ```typescript
  * // Passando configuração diretamente em memória:
- * const resultados = await executarExport({
+ * const resultados = await builditExport({
  *   ui: { arquivoSaida: "snapshot.md", pastaBase: "./src", ... }
  * });
  *
  * // Ou usando opções completas:
- * const resultados = await executarExport({
+ * const resultados = await builditExport({
  *   caminhoConfig: "export.jsonc",
  *   modos: ["ui", "docs"]
  * });
  * ```
  */
-export async function executarExport(
+export async function builditExport(
   configOuOpcoes?: ExportOptions | Record<string, ExportConfig>,
 ): Promise<ExportResult[]> {
   let configs: Record<string, ExportConfig>;

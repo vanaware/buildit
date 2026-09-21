@@ -1,5 +1,5 @@
 import { activeTab, themeMode, toggleTheme, } from "../stores/app.ts";
-import { APP_VERSION, } from "@vanaware/buildit";
+import { APP_VERSION, } from "@vanaware/buildit/version";
 
 export const Header = () => {
   return (

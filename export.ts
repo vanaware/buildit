@@ -7,8 +7,8 @@
  * e carrega as configurações declarativas de export.jsonc.
  */
 
-import { runExportCli, } from "@vanaware/buildit/export";
+import { exportCli, } from "@vanaware/buildit/export";
 
 if (import.meta.main) {
-  await runExportCli(Deno.args,);
+  await exportCli(Deno.args,);
 }

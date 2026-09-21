@@ -98,19 +98,21 @@ export async function startWatchMode(
  * @example
  * ```typescript
  * // Passando configuração diretamente em memória:
- * const resultados = await executarEsbuild({
+ * const resultados = await esBuild({
  *   ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src", ... }
  * });
  *
  * // Ou usando opções completas:
- * const resultados = await executarEsbuild({ targets: ["ui"], noversion: true });
+ * const resultados = await esBuild({ targets: ["ui"], noversion: true });
  * ```
  */
-export async function executarEsbuild(
+export async function esBuild(
   configOuOpcoes?: EsbuildOptions | GlobalTargetConfig,
 ): Promise<EsbuildResult[]> {
   let configs: GlobalTargetConfig;
   let opcoes: EsbuildOptions | undefined;
+  let fileConfigVersionPaths: string[] | undefined;
+  let fileConfigForcePackages: boolean | undefined;
 
   if (
     configOuOpcoes &&
@@ -133,7 +135,10 @@ export async function executarEsbuild(
       configs = opcoes.config;
     } else {
       const baseDir = opcoes?.baseDir ?? ".";
-      configs = await carregarConfigEsbuild(opcoes?.caminhoConfig, baseDir);
+      const loaded = await carregarConfigEsbuild(opcoes?.caminhoConfig, baseDir);
+      configs = loaded.targets;
+      fileConfigVersionPaths = loaded.versionPaths;
+      fileConfigForcePackages = loaded.forcepackagesversion;
     }
   }
 
@@ -151,8 +156,8 @@ export async function executarEsbuild(
     denoJsonPath: denoJsoncPath,
     baseDir,
     noversion: globalNoVersion || (opcoes?.noversion ?? false),
-    versionPaths: opcoes?.versionPaths,
-    forcepackagesversion: opcoes?.forcepackagesversion,
+    versionPaths: opcoes?.versionPaths ?? fileConfigVersionPaths,
+    forcepackagesversion: opcoes?.forcepackagesversion ?? fileConfigForcePackages,
   });
 
   if (activeWatch) {

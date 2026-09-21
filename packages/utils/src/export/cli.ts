@@ -6,7 +6,7 @@
 import { parseCommonCliFlags } from "../config/cli-flags.ts";
 import { readProjectVersion } from "../config/version.ts";
 import { carregarConfigExport } from "./config.ts";
-import { exportarModo, parseArgs } from "./engine.ts";
+import { builditExport } from "./engine.ts";
 
 /**
  * Exibe a mensagem de ajuda para o comando export.
@@ -40,10 +40,10 @@ Exemplos:
  *
  * @example
  * ```typescript
- * await runExportCli(Deno.args);
+ * await exportCli(Deno.args);
  * ```
  */
-export async function runExportCli(
+export async function exportCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
@@ -63,39 +63,28 @@ export async function runExportCli(
 
   const startTime = performance.now();
   const configPath = flags.configPath ?? caminhoConfig;
-  const configs = await carregarConfigExport(configPath);
-  const modosParaExecutar = parseArgs(flags.positional, configs);
 
   console.log("\n🚀 Iniciando Exportação de Contexto BuildIt");
-  console.log(`📋 Modos a exportar: ${modosParaExecutar.join(", ")}`);
-  console.log(`📌 Versão: v${projectVersion}\n`);
 
-  if (modosParaExecutar.length === 0) {
-    console.log(
-      "⚠️ Nenhum modo selecionado para execução. Verifique a chave 'default' no export.jsonc ou especifique os modos via CLI.",
-    );
-    return;
+  try {
+    await builditExport({
+      baseDir: ".",
+      modos: flags.positional,
+      caminhoConfig: configPath,
+      versaoApp: projectVersion,
+    });
+
+    const elapsed = (performance.now() - startTime).toFixed(0);
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`);
+    console.log(`⏱️ Tempo total: ${elapsed}ms`);
+    console.log(`${"=".repeat(60)}\n`);
+  } catch (error) {
+    console.error("\n🛑 Pipeline de exportação falhou:", error);
+    Deno.exit(1);
   }
-
-  for (const modo of modosParaExecutar) {
-    const config = configs[modo];
-    if (config) {
-      try {
-        await exportarModo(modo, config, { versaoApp: projectVersion });
-      } catch (erro) {
-        console.error(`\n🛑 Erro ao exportar modo ${modo}:`, erro);
-        Deno.exit(1);
-      }
-    }
-  }
-
-  const elapsed = (performance.now() - startTime).toFixed(0);
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`);
-  console.log(`⏱️ Tempo total: ${elapsed}ms`);
-  console.log(`${"=".repeat(60)}\n`);
 }
 
 if (import.meta.main) {
-  await runExportCli(Deno.args);
+  await exportCli(Deno.args);
 }

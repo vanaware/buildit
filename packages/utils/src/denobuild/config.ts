@@ -35,6 +35,15 @@ export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
 };
 
 /**
+ * Resultado do carregamento da configuração, incluindo alvos e opções globais.
+ */
+export interface DenoBuildConfigResult {
+  targets: DenoBundleGlobalConfig;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
+}
+
+/**
  * Carrega as configurações de alvos para o motor Deno.bundle a partir de um arquivo JSONC externo
  * (ex: `denobuild.jsonc` ou `denobuild.json`).
  *
@@ -42,38 +51,49 @@ export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
  *
  * @param caminhoConfig Caminho opcional do arquivo de configuração
  * @param baseDir Diretório base para resolução de arquivos relativos
- * @returns Mapeamento de alvos para suas configurações `DenoBundleTargetConfig`
+ * @returns Configuração carregada com alvos e opções globais
  *
  * @example
  * ```typescript
- * const configs = await carregarConfigDenoBuild("denobuild.jsonc");
- * console.log(Object.keys(configs)); // ["ui"]
+ * const config = await carregarConfigDenoBuild("denobuild.jsonc");
+ * console.log(Object.keys(config.targets)); // ["ui"]
  * ```
  */
 export async function carregarConfigDenoBuild(
   caminhoConfig?: string,
   baseDir: string = ".",
-): Promise<DenoBundleGlobalConfig> {
+): Promise<DenoBuildConfigResult> {
   const parsed = await loadConfig<DenoBuildConfigFile>(
     "denobuild",
     caminhoConfig,
     baseDir,
   );
 
+  const result: DenoBuildConfigResult = {
+    targets: { ...CONFIGURACOES_PADRAO },
+  };
+
   if (parsed) {
+    result.versionPaths = parsed.versionPaths;
+    result.forcepackagesversion = parsed.forcepackagesversion;
+
     // Caso 1: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
-      return parsed.targets;
+      result.targets = parsed.targets;
+      return result;
     }
 
     // Caso 2: Objeto possui a chave em português "alvos"
     if (parsed.alvos && typeof parsed.alvos === "object") {
-      return parsed.alvos;
+      result.targets = parsed.alvos;
+      return result;
     }
 
     // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
     const filteredKeys = Object.keys(parsed).filter(
-      (k) => !k.startsWith("$") && k !== "version",
+      (k) =>
+        !k.startsWith("$") &&
+        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
     );
 
     if (filteredKeys.length > 0) {
@@ -89,10 +109,11 @@ export async function carregarConfigDenoBuild(
       }
 
       if (hasValidTargets) {
-        return resultado;
+        result.targets = resultado;
+        return result;
       }
     }
   }
 
-  return { ...CONFIGURACOES_PADRAO };
+  return result;
 }

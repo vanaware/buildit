@@ -70,8 +70,21 @@ export interface EsbuildConfigFile {
   targets?: GlobalTargetConfig;
   /** Alias em português para alvos de build configurados */
   alvos?: GlobalTargetConfig;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
   /** Suporte a alvos definidos diretamente no nível raiz do JSON */
   [key: string]: unknown;
+}
+
+/**
+ * Resultado do carregamento da configuração, incluindo alvos e opções globais.
+ */
+export interface EsbuildConfigResult {
+  targets: GlobalTargetConfig;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
 }
 
 /**
@@ -82,32 +95,43 @@ export interface EsbuildConfigFile {
  *
  * @param caminhoConfig Caminho opcional do arquivo de configuração
  * @param baseDir Diretório base para resolução de arquivos relativos
- * @returns Mapeamento de alvos para suas configurações `TargetConfig`
+ * @returns Configuração carregada com alvos e opções globais
  */
 export async function carregarConfigEsbuild(
   caminhoConfig?: string,
   baseDir: string = ".",
-): Promise<GlobalTargetConfig> {
+): Promise<EsbuildConfigResult> {
   const parsed = await loadConfig<EsbuildConfigFile>(
     "esbuild",
     caminhoConfig,
     baseDir,
   );
 
+  const result: EsbuildConfigResult = {
+    targets: { ...CONFIGURACOES_PADRAO },
+  };
+
   if (parsed) {
+    result.versionPaths = parsed.versionPaths;
+    result.forcepackagesversion = parsed.forcepackagesversion;
+
     // Caso 1: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
-      return parsed.targets;
+      result.targets = parsed.targets;
+      return result;
     }
 
     // Caso 2: Objeto possui a chave em português "alvos"
     if (parsed.alvos && typeof parsed.alvos === "object") {
-      return parsed.alvos;
+      result.targets = parsed.alvos;
+      return result;
     }
 
     // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
     const filteredKeys = Object.keys(parsed).filter(
-      (k) => !k.startsWith("$") && k !== "version",
+      (k) =>
+        !k.startsWith("$") &&
+        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
     );
 
     if (filteredKeys.length > 0) {
@@ -123,10 +147,11 @@ export async function carregarConfigEsbuild(
       }
 
       if (hasValidTargets) {
-        return resultado;
+        result.targets = resultado;
+        return result;
       }
     }
   }
 
-  return { ...CONFIGURACOES_PADRAO };
+  return result;
 }

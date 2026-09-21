@@ -10,7 +10,7 @@ import {
   parseArgs,
 } from "../esbuild/mod.ts";
 import { carregarConfigDenoBuild } from "./config.ts";
-import { processBundleTarget } from "./engine.ts";
+import { denoBuild } from "./engine.ts";
 
 /**
  * Exibe a mensagem de ajuda para o comando denobuild.
@@ -48,10 +48,10 @@ Exemplos:
  *
  * @example
  * ```typescript
- * await runDenoBuildCli(Deno.args);
+ * await denoBuildCli(Deno.args);
  * ```
  */
-export async function runDenoBuildCli(
+export async function denoBuildCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
@@ -71,56 +71,20 @@ export async function runDenoBuildCli(
 
   const start = performance.now();
   const configPath = flags.configPath ?? caminhoConfig;
-  const configs = await carregarConfigDenoBuild(configPath);
-  const rawArgs = [
-    ...flags.positional,
-    ...(flags.noversion ? ["noversion"] : []),
-  ];
-  const { targets, globalNoVersion, watchTarget } = parseArgs(rawArgs, configs);
+  const loaded = await carregarConfigDenoBuild(configPath);
 
   console.log("\n🚀 Iniciando Orquestrador de Build BuildIt (denobuild / Deno.bundle API)");
   console.log(`   📦 Motor: Deno.bundle (nativo, --unstable-bundle)`);
 
-  if (watchTarget) {
-    console.log(`\n⚠️ AVISO: Modo Watch não suportado pelo Deno.bundle API.`);
-    console.log(`   O alvo '${watchTarget}' foi ignorado.`);
-    console.log(`   Para watch mode, use o build esbuild: deno task esbuild watch\n`);
-    return;
-  }
-
-  console.log(`   📋 Alvos: ${targets.join(", ") || "(nenhum)"}`);
-  console.log(`   🔒 Noversion: ${globalNoVersion}\n`);
-
-  if (targets.length === 0) {
-    console.log("⚠️ Nenhum alvo selecionado para compilação.");
-    return;
-  }
-
-  const DENO_JSONC_PATH = "deno.jsonc";
-
   try {
-    const finalVersion = await updateProjectVersion({
-      denoJsonPath: DENO_JSONC_PATH,
-      noversion: globalNoVersion,
-      versionPaths: flags.versionPaths,
-      forcepackagesversion: flags.forcepackagesversion,
+    await denoBuild({
+      targets: flags.positional,
+      noversion: flags.noversion,
+      versionPaths: flags.versionPaths ?? loaded.versionPaths,
+      forcepackagesversion: flags.forcepackagesversion ?? loaded.forcepackagesversion,
+      caminhoConfig: configPath,
+      config: loaded.targets,
     });
-
-    for (const targetName of targets) {
-      const targetConfig = configs[targetName];
-      if (!targetConfig) {
-        console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`);
-        continue;
-      }
-
-      const listFn = targetName === "sw" ? listAssetsForCache : undefined;
-      await processBundleTarget(
-        targetName,
-        targetConfig,
-        finalVersion,
-        listFn,
-      );
-    }
 
     console.log(`\n${"=".repeat(60)}`);
     console.log(`🎉 ORQUESTRAÇÃO DENOBUILD CONCLUÍDA COM SUCESSO!`);
@@ -135,5 +99,5 @@ export async function runDenoBuildCli(
 }
 
 if (import.meta.main) {
-  await runDenoBuildCli(Deno.args);
+  await denoBuildCli(Deno.args);
 }

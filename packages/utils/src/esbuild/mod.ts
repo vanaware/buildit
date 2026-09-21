@@ -15,88 +15,14 @@ import type {
 } from "../interfaces/mod.ts";
 
 // ============================================================================
-// 🔢 FUNÇÕES DE VERSÃO (puras, testáveis)
+// 🔢 FUNÇÕES DE VERSÃO (re-exportadas de config/version.ts)
 // ============================================================================
-/**
- * Parseia uma string de versão no formato major.minor.patch[#hash].
- * @param version String de versão
- * @returns Objeto ParsedVersion
- */
-export function parseVersion(version: string,): ParsedVersion {
-  const trimmed = version.trim();
-  if (trimmed !== version) {
-    throw new Error(`❌ Versão não pode ter espaços: ${version}`,);
-  }
-  const versionWithoutHash = version.split("#",)[0] ?? "";
-  if (version.includes("#",) && version.endsWith("#",)) {
-    throw new Error(
-      `❌ Formato de versão inválido (# sem hash): ${version}`,
-    );
-  }
-  const parts = versionWithoutHash.split(".",);
-  if (parts.length !== 3) {
-    throw new Error(`❌ Formato de versão inválido: ${version}`,);
-  }
-  const majorStr = parts[0];
-  const minorStr = parts[1];
-  const patchStr = parts[2];
-  if (
-    majorStr === undefined || minorStr === undefined || patchStr === undefined
-  ) {
-    throw new Error(`❌ Formato de versão inválido: ${version}`,);
-  }
-  const major = parseInt(majorStr, 10,);
-  const minor = parseInt(minorStr, 10,);
-  const patch = parseInt(patchStr, 10,);
-  if (isNaN(major,) || isNaN(minor,) || isNaN(patch,)) {
-    throw new Error(`❌ Versão contém valores não numéricos: ${version}`,);
-  }
-  return { major, minor, patch, };
-}
-
-/**
- * Formata os componentes da versão em uma string padronizada.
- * @param major Versão major
- * @param minor Versão minor
- * @param patch Versão patch
- * @param buildHash Hash opcional do build
- * @returns String de versão formatada
- */
-export function formatVersion(
-  major: number,
-  minor: number,
-  patch: number,
-  buildHash?: string,
-): string {
-  const hash = buildHash ?? Date.now().toString(36,);
-  return `${major}.${minor}.${patch}#${hash}`;
-}
-
-/**
- * Extrai a string de versão de um conteúdo textual (ex: deno.jsonc).
- * @param content Conteúdo textual
- * @returns String de versão ou null se não encontrada
- */
-export function extractVersionFromContent(content: string,): string | null {
-  const match = content.match(/"version"\s*:\s*"([^"]+)"/,);
-  return match && match[1] ? match[1] : null;
-}
-
-/**
- * Substitui a versão no conteúdo textual fornecido.
- * @param content Conteúdo textual original
- * @param newVersion Nova versão a ser injetada
- * @returns Conteúdo atualizado
- */
-export function replaceVersionInContent(
-  content: string,
-  newVersion: string,
-): string {
-  return content.replace(
-    /"version"\s*:\s*"[^"]+"/,
-    `"version": "${newVersion}"`,
-  );
-}
+export {
+  extractVersionFromContent,
+  formatVersion,
+  parseVersion,
+  replaceVersionInContent,
+} from "../config/version.ts";
 
 // ============================================================================
 // 🛡️ VALIDAÇÃO DE PATHS (pura, testável)

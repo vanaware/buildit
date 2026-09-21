@@ -31,6 +31,10 @@ export interface DenoBuildConfigFile {
   targets?: DenoBundleGlobalConfig;
   /** Alias em português para alvos de build configurados */
   alvos?: DenoBundleGlobalConfig;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
   /** Suporte a alvos definidos diretamente no nível raiz do JSON */
   [key: string]: unknown;
 }
