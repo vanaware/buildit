@@ -1,46 +1,59 @@
 > **INSTRUÇÃO PARA A IA:** 
 > O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).
-> O projeto é o **BuildIt [v1.0.3#h3] ** estruturado em módulos. 
+> O projeto é o **BuildIt [v0.3.10#mual9u7m] ** estruturado em módulos. 
 > Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).
 > Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
 
 ---
 
-# Contexto Exportado do Projeto BuildIt [v1.0.3#h3] - Modo: UI
+# Contexto Exportado do Projeto BuildIt [v0.3.10#mual9u7m] - Modo: UI
 
-Gerado automaticamente em: 2026-09-20T23:26:51.348Z
+Gerado automaticamente em: 2026-09-21T02:17:40.312Z
 
 ---
 
-## Arquivo: `packages/ui/src/components/Navigation.tsx`
+## Arquivo: `packages/ui/deno.jsonc`
 
-```tsx
-import { activeTab, type TabKey, } from "../stores/app.ts";
+```json
+{
+  "name": "@buildit/ui",
+  "publish": false,
 
-export const Navigation = () => {
-  const tabs: { key: TabKey; label: string; icon: string }[] = [
-    { key: "overview", label: "Visão Geral", icon: "dashboard", },
-    { key: "cli", label: "Ferramentas & CLI", icon: "terminal", },
-    { key: "interactive", label: "Simulador Interativo", icon: "play_circle", },
-    { key: "snapshots", label: "Exportador de Contexto", icon: "share", },
-  ];
+  // ----------------------------------------------------------------------
+  // 🔧 Compiler Options — AJUSTADO PARA DENO 2.x
+  // ----------------------------------------------------------------------
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "esnext"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
 
-  return (
-    <nav class="tabs center-align border bottom margin-bottom scroll">
-      {tabs.map((tab,) => (
-        <a
-          key={tab.key}
-          class={activeTab.value === tab.key ? "active" : ""}
-          onClick={() => (activeTab.value = tab.key)}
-        >
-          <i>{tab.icon}</i>
-          <span>{tab.label}</span>
-        </a>
-      ))}
-    </nav>
-  );
-};
+  // 📦 Gerenciamento de Dependências
+  "imports": {
+    // Preact Core — versão fixa e canônica
+    "preact": "https://esm.sh/preact@10.29.8",
+    "preact/": "https://esm.sh/preact@10.29.8/",
+    "preact/jsx-runtime": "https://esm.sh/preact@10.29.8/jsx-runtime",
 
+    // Signals — mapeados explicitamente para evitar npm
+    "@preact/signals": "https://esm.sh/@preact/signals@2.11.2?deps=preact@10.29.8",
+    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4"
+  },
+
+  // 🛠️ Scripts de Automação
+  "tasks": {
+    "test": "deno test --allow-env --allow-net tests/",
+    "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
+    "tests": "deno task check && deno task test"
+  },
+  "exclude": ["public/"],
+  "exports": "./src/main.tsx"
+}
 
 ```
 
@@ -203,6 +216,301 @@ export const SimulatorCard = () => {
 
 ---
 
+## Arquivo: `packages/ui/src/components/Navigation.tsx`
+
+```tsx
+import { activeTab, type TabKey, } from "../stores/app.ts";
+
+export const Navigation = () => {
+  const tabs: { key: TabKey; label: string; icon: string }[] = [
+    { key: "overview", label: "Visão Geral", icon: "dashboard", },
+    { key: "cli", label: "Ferramentas & CLI", icon: "terminal", },
+    { key: "interactive", label: "Simulador Interativo", icon: "play_circle", },
+    { key: "snapshots", label: "Exportador de Contexto", icon: "share", },
+  ];
+
+  return (
+    <nav class="tabs center-align border bottom margin-bottom scroll">
+      {tabs.map((tab,) => (
+        <a
+          key={tab.key}
+          class={activeTab.value === tab.key ? "active" : ""}
+          onClick={() => (activeTab.value = tab.key)}
+        >
+          <i>{tab.icon}</i>
+          <span>{tab.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+};
+
+
+```
+
+---
+
+## Arquivo: `packages/ui/src/components/SnapshotsCard.tsx`
+
+```tsx
+export const SnapshotsCard = () => {
+  return (
+    <div class="grid">
+      <div class="s12">
+        <article class="border round surface-container-low padding">
+          <div class="row middle">
+            <i class="primary-text extra">auto_stories</i>
+            <div class="max">
+              <h5 class="no-margin">Exportador de Contexto para Inteligência Artificial</h5>
+              <div class="small-text secondary-text">
+                Gere snapshots consolidados em Markdown para LLMs e revisões de código
+              </div>
+            </div>
+            <span class="chip small primary-container">CLI & Lib</span>
+          </div>
+
+          <div class="space"></div>
+
+          <p class="secondary-text">
+            Desenvolvedores que utilizam assistentes de código e LLMs precisam constantemente
+            fornecer contexto preciso de seus repositórios. O utilitário <code>export</code> varre os
+            arquivos selecionados, remove ruídos desnecessários e formata o conteúdo em um snapshot
+            único, limpo e estruturado.
+          </p>
+        </article>
+      </div>
+
+      <div class="s12 m6">
+        <article class="border round surface-container-low padding">
+          <h6 class="no-margin">Snapshots Predefinidos</h6>
+          <div class="space"></div>
+          <nav class="list">
+            <div class="row middle padding border round margin-bottom surface-container">
+              <i class="primary-text">code</i>
+              <div class="max margin-left">
+                <strong>snapshots/ui.md</strong>
+                <div class="small-text secondary-text">Todo o código-fonte da interface Preact</div>
+              </div>
+            </div>
+            <div class="row middle padding border round margin-bottom surface-container">
+              <i class="primary-text">dns</i>
+              <div class="max margin-left">
+                <strong>snapshots/server.md</strong>
+                <div class="small-text secondary-text">Configurações de servidor e workflows CI/CD</div>
+              </div>
+            </div>
+            <div class="row middle padding border round margin-bottom surface-container">
+              <i class="primary-text">handyman</i>
+              <div class="max margin-left">
+                <strong>snapshots/utils.md</strong>
+                <div class="small-text secondary-text">Mecanismos de build, CLIs e testes</div>
+              </div>
+            </div>
+            <div class="row middle padding border round surface-container">
+              <i class="primary-text">menu_book</i>
+              <div class="max margin-left">
+                <strong>snapshots/docs.md</strong>
+                <div class="small-text secondary-text">Documentação técnica e diretrizes</div>
+              </div>
+            </div>
+          </nav>
+        </article>
+      </div>
+
+      <div class="s12 m6">
+        <article class="border round surface-container-low padding">
+          <h6 class="no-margin">Como Executar no Terminal</h6>
+          <div class="space"></div>
+          <p class="small-text secondary-text">
+            O utilitário aceita argumentos via CLI para rodar snapshots específicos ou todos os padrões.
+          </p>
+          <pre class="scroll surface-container-highest round padding"><code>{`# Exporta todos os modos marcados como default:
+deno task export
+
+# Exporta apenas o contexto da UI:
+deno run --allow-read --allow-write ./export.ts ui
+
+# Exporta apenas a documentação:
+deno run --allow-read --allow-write ./export.ts docs`}</code></pre>
+        </article>
+      </div>
+    </div>
+  );
+};
+
+
+```
+
+---
+
+## Arquivo: `packages/ui/src/components/Header.tsx`
+
+```tsx
+import { themeMode, toggleTheme, } from "../stores/app.ts";
+import { APP_VERSION, } from "@vanaware/buildit";
+
+export const Header = () => {
+  return (
+    <header class="surface-container-low border bottom">
+      <nav class="responsive">
+        <button type="button" class="circle transparent">
+          <i class="primary-text">build</i>
+        </button>
+        <div class="max">
+          <div class="row middle no-space">
+            <h5 class="no-margin">BuildIt</h5>
+            <span class="chip small tertiary-container margin-left">v{APP_VERSION}</span>
+          </div>
+          <div class="small-text secondary-text">
+            Build Orchestration, Bundling & Context Export Toolkit
+          </div>
+        </div>
+        <button
+          type="button"
+          class="circle transparent"
+          onClick={toggleTheme}
+          title="Alternar tema claro/escuro"
+        >
+          <i>{themeMode.value === "dark" ? "light_mode" : "dark_mode"}</i>
+        </button>
+      </nav>
+    </header>
+  );
+};
+
+
+```
+
+---
+
+## Arquivo: `packages/ui/src/components/OverviewCard.tsx`
+
+```tsx
+export const OverviewCard = () => {
+  return (
+    <div class="grid">
+      <div class="s12 m6">
+        <article class="border round surface-container-low padding">
+          <div class="row middle">
+            <i class="primary-text extra">inventory_2</i>
+            <div class="max">
+              <h5 class="no-margin">@vanaware/buildit</h5>
+              <div class="small-text secondary-text">
+                Biblioteca central de orquestração em <code>packages/utils</code>
+              </div>
+            </div>
+            <span class="chip small primary-container">JSR Ready</span>
+          </div>
+
+          <div class="space"></div>
+
+          <p class="secondary-text">
+            O <strong>BuildIt</strong> padroniza o ciclo de vida de projetos Deno e Web modernos,
+            fornecendo automação para empacotamento, controle de versão semântico com hash e
+            consolidação estruturada de código para análise por modelos de IA.
+          </p>
+
+          <div class="divider"></div>
+          <div class="space"></div>
+
+          <h6 class="no-margin">Módulos Exportados</h6>
+          <nav class="list">
+            <div class="row middle no-space padding">
+              <i class="primary-text">check_circle</i>
+              <div class="max margin-left">
+                <strong>@vanaware/buildit</strong>
+                <div class="small-text secondary-text">Entrada principal e interfaces compartilhadas</div>
+              </div>
+            </div>
+            <div class="row middle no-space padding">
+              <i class="primary-text">check_circle</i>
+              <div class="max margin-left">
+                <strong>@vanaware/buildit/build</strong>
+                <div class="small-text secondary-text">Pipeline de compilação esbuild & Deno.bundle</div>
+              </div>
+            </div>
+            <div class="row middle no-space padding">
+              <i class="primary-text">check_circle</i>
+              <div class="max margin-left">
+                <strong>@vanaware/buildit/export</strong>
+                <div class="small-text secondary-text">Consolidador de contexto em Markdown para IAs</div>
+              </div>
+            </div>
+            <div class="row middle no-space padding">
+              <i class="primary-text">check_circle</i>
+              <div class="max margin-left">
+                <strong>@vanaware/buildit/config</strong>
+                <div class="small-text secondary-text">Constantes de extensões e regras padrão</div>
+              </div>
+            </div>
+          </nav>
+        </article>
+      </div>
+
+      <div class="s12 m6">
+        <article class="border round surface-container-low padding">
+          <div class="row middle">
+            <i class="tertiary-text extra">account_tree</i>
+            <div class="max">
+              <h5 class="no-margin">Estrutura do Workspace</h5>
+              <div class="small-text secondary-text">Monorepo Deno 2.x com gerenciamento nativo</div>
+            </div>
+            <span class="chip small tertiary-container">Deno 2</span>
+          </div>
+
+          <div class="space"></div>
+
+          <nav class="list">
+            <div class="row top padding border round margin-bottom surface-container">
+              <i class="tertiary-text">folder</i>
+              <div class="max margin-left">
+                <div class="row middle no-space">
+                  <strong>packages/utils</strong>
+                  <span class="chip small margin-left">@vanaware/buildit</span>
+                </div>
+                <div class="small-text secondary-text">
+                  Núcleo com as 3 CLIs: denobuild, esbuild e exportador de contexto com testes unitários em BDD.
+                </div>
+              </div>
+            </div>
+
+            <div class="row top padding border round margin-bottom surface-container">
+              <i class="tertiary-text">folder</i>
+              <div class="max margin-left">
+                <div class="row middle no-space">
+                  <strong>packages/server</strong>
+                  <span class="chip small margin-left">@buildit/server</span>
+                </div>
+                <div class="small-text secondary-text">
+                  Servidor estático de alta performance baseado em <code>Deno.serve</code> servindo em <code>0.0.0.0:3000</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="row top padding border round surface-container">
+              <i class="tertiary-text">folder</i>
+              <div class="max margin-left">
+                <div class="row middle no-space">
+                  <strong>packages/ui</strong>
+                  <span class="chip small margin-left">@buildit/ui</span>
+                </div>
+                <div class="small-text secondary-text">
+                  Aplicação de demonstração construída puramente com Preact, BeerCSS e Signals reativos.
+                </div>
+              </div>
+            </div>
+          </nav>
+        </article>
+      </div>
+    </div>
+  );
+};
+
+
+```
+
+---
+
 ## Arquivo: `packages/ui/src/components/ToolDetails.tsx`
 
 ```tsx
@@ -341,261 +649,71 @@ export const ToolDetails = () => {
 
 ---
 
-## Arquivo: `packages/ui/src/components/SnapshotsCard.tsx`
+## Arquivo: `packages/ui/src/index.html`
 
-```tsx
-export const SnapshotsCard = () => {
-  return (
-    <div class="grid">
-      <div class="s12">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="primary-text extra">auto_stories</i>
-            <div class="max">
-              <h5 class="no-margin">Exportador de Contexto para Inteligência Artificial</h5>
-              <div class="small-text secondary-text">
-                Gere snapshots consolidados em Markdown para LLMs e revisões de código
-              </div>
-            </div>
-            <span class="chip small primary-container">CLI & Lib</span>
-          </div>
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BuildIt</title>
+    <meta name="description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
+    <meta property="og:title" content="BuildIt">
+    <meta property="og:description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
 
-          <div class="space"></div>
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="./manifest.json">
 
-          <p class="secondary-text">
-            Desenvolvedores que utilizam assistentes de código e LLMs precisam constantemente
-            fornecer contexto preciso de seus repositórios. O utilitário <code>export</code> varre os
-            arquivos selecionados, remove ruídos desnecessários e formata o conteúdo em um snapshot
-            único, limpo e estruturado.
-          </p>
-        </article>
-      </div>
+    <!-- Favicon gerado nativamente via SVG in-line -->
+    <link rel="icon" type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%239edeb6'/><text x='50' y='68' font-size='50' font-family='system-ui, sans-serif' font-weight='bold' text-anchor='middle' fill='%231a1c19'>L</text></svg>">
 
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <h6 class="no-margin">Snapshots Predefinidos</h6>
-          <div class="space"></div>
-          <nav class="list">
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">code</i>
-              <div class="max margin-left">
-                <strong>snapshots/ui.md</strong>
-                <div class="small-text secondary-text">Todo o código-fonte da interface Preact</div>
-              </div>
-            </div>
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">dns</i>
-              <div class="max margin-left">
-                <strong>snapshots/server.md</strong>
-                <div class="small-text secondary-text">Configurações de servidor e workflows CI/CD</div>
-              </div>
-            </div>
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">handyman</i>
-              <div class="max margin-left">
-                <strong>snapshots/utils.md</strong>
-                <div class="small-text secondary-text">Mecanismos de build, CLIs e testes</div>
-              </div>
-            </div>
-            <div class="row middle padding border round surface-container">
-              <i class="primary-text">menu_book</i>
-              <div class="max margin-left">
-                <strong>snapshots/docs.md</strong>
-                <div class="small-text secondary-text">Documentação técnica e diretrizes</div>
-              </div>
-            </div>
-          </nav>
-        </article>
-      </div>
+    <!-- BeerCSS e Material Symbols -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.css"
+      rel="stylesheet" />
+    <script type="module"
+      src="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.js"></script>
+    <script type="module"
+      src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+  </head>
+  <body class="dark">
+    <aside id="iframe-warning" class="banner yellow-container none">
+      <i>info</i>
+      <span class="max">Executando em modo preview iframe</span>
+      <a id="iframe-link" class="button border round small" target="_blank" rel="noopener">
+        <span>Abrir em nova aba</span>
+        <i>open_in_new</i>
+      </a>
+    </aside>
 
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <h6 class="no-margin">Como Executar no Terminal</h6>
-          <div class="space"></div>
-          <p class="small-text secondary-text">
-            O utilitário aceita argumentos via CLI para rodar snapshots específicos ou todos os padrões.
-          </p>
-          <pre class="scroll surface-container-highest round padding"><code>{`# Exporta todos os modos marcados como default:
-deno task export
+    <script>
+    if (window.self !== window.top) {
+      document.addEventListener("DOMContentLoaded", () => {
+        const banner = document.getElementById("iframe-warning");
+        const link = document.getElementById("iframe-link");
+        if (banner && link) {
+          link.href = window.location.href;
+          banner.classList.remove("none");
+        }
+      });
+    }
+    </script>
 
-# Exporta apenas o contexto da UI:
-deno run --allow-read --allow-write ./export.ts ui
-
-# Exporta apenas a documentação:
-deno run --allow-read --allow-write ./export.ts docs`}</code></pre>
-        </article>
-      </div>
+    <div id="app">
+      <main class="responsive center-align">
+        <div class="space"></div>
+        <h5>Carregando aplicação...</h5>
+        <progress class="circle"></progress>
+      </main>
     </div>
-  );
-};
 
-
-```
-
----
-
-## Arquivo: `packages/ui/src/components/OverviewCard.tsx`
-
-```tsx
-export const OverviewCard = () => {
-  return (
-    <div class="grid">
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="primary-text extra">inventory_2</i>
-            <div class="max">
-              <h5 class="no-margin">@vanaware/buildit</h5>
-              <div class="small-text secondary-text">
-                Biblioteca central de orquestração em <code>packages/utils</code>
-              </div>
-            </div>
-            <span class="chip small primary-container">JSR Ready</span>
-          </div>
-
-          <div class="space"></div>
-
-          <p class="secondary-text">
-            O <strong>BuildIt</strong> padroniza o ciclo de vida de projetos Deno e Web modernos,
-            fornecendo automação para empacotamento, controle de versão semântico com hash e
-            consolidação estruturada de código para análise por modelos de IA.
-          </p>
-
-          <div class="divider"></div>
-          <div class="space"></div>
-
-          <h6 class="no-margin">Módulos Exportados</h6>
-          <nav class="list">
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
-              <div class="max margin-left">
-                <strong>@vanaware/buildit</strong>
-                <div class="small-text secondary-text">Entrada principal e interfaces compartilhadas</div>
-              </div>
-            </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
-              <div class="max margin-left">
-                <strong>@vanaware/buildit/build</strong>
-                <div class="small-text secondary-text">Pipeline de compilação esbuild & Deno.bundle</div>
-              </div>
-            </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
-              <div class="max margin-left">
-                <strong>@vanaware/buildit/export</strong>
-                <div class="small-text secondary-text">Consolidador de contexto em Markdown para IAs</div>
-              </div>
-            </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
-              <div class="max margin-left">
-                <strong>@vanaware/buildit/config</strong>
-                <div class="small-text secondary-text">Constantes de extensões e regras padrão</div>
-              </div>
-            </div>
-          </nav>
-        </article>
-      </div>
-
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="tertiary-text extra">account_tree</i>
-            <div class="max">
-              <h5 class="no-margin">Estrutura do Workspace</h5>
-              <div class="small-text secondary-text">Monorepo Deno 2.x com gerenciamento nativo</div>
-            </div>
-            <span class="chip small tertiary-container">Deno 2</span>
-          </div>
-
-          <div class="space"></div>
-
-          <nav class="list">
-            <div class="row top padding border round margin-bottom surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/utils</strong>
-                  <span class="chip small margin-left">@vanaware/buildit</span>
-                </div>
-                <div class="small-text secondary-text">
-                  Núcleo com as 3 CLIs: denobuild, esbuild e exportador de contexto com testes unitários em BDD.
-                </div>
-              </div>
-            </div>
-
-            <div class="row top padding border round margin-bottom surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/server</strong>
-                  <span class="chip small margin-left">@buildit/server</span>
-                </div>
-                <div class="small-text secondary-text">
-                  Servidor estático de alta performance baseado em <code>Deno.serve</code> servindo em <code>0.0.0.0:3000</code>.
-                </div>
-              </div>
-            </div>
-
-            <div class="row top padding border round surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/ui</strong>
-                  <span class="chip small margin-left">@buildit/ui</span>
-                </div>
-                <div class="small-text secondary-text">
-                  Aplicação de demonstração construída puramente com Preact, BeerCSS e Signals reativos.
-                </div>
-              </div>
-            </div>
-          </nav>
-        </article>
-      </div>
-    </div>
-  );
-};
-
-
-```
-
----
-
-## Arquivo: `packages/ui/src/components/Header.tsx`
-
-```tsx
-import { themeMode, toggleTheme, } from "../stores/app.ts";
-
-export const Header = () => {
-  return (
-    <header class="surface-container-low border bottom">
-      <nav class="responsive">
-        <button type="button" class="circle transparent">
-          <i class="primary-text">build</i>
-        </button>
-        <div class="max">
-          <div class="row middle no-space">
-            <h5 class="no-margin">BuildIt</h5>
-            <span class="chip small tertiary-container margin-left">v0.3.1</span>
-          </div>
-          <div class="small-text secondary-text">
-            Build Orchestration, Bundling & Context Export Toolkit
-          </div>
-        </div>
-        <button
-          type="button"
-          class="circle transparent"
-          onClick={toggleTheme}
-          title="Alternar tema claro/escuro"
-        >
-          <i>{themeMode.value === "dark" ? "light_mode" : "dark_mode"}</i>
-        </button>
-      </nav>
-    </header>
-  );
-};
-
+    <!-- Arquivo gerado pelo esbuild -->
+    <script type="module" src="./main.js?v=3"></script>
+  </body>
+</html>
 
 ```
 
@@ -727,123 +845,6 @@ export const runSimulator = async () => {
   addLog(`🎉 Pipeline finalizada com êxito! (Build #${bundleSimCount.value})`,);
   isSimulating.value = false;
 };
-
-```
-
----
-
-## Arquivo: `packages/ui/src/index.html`
-
-```html
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BuildIt</title>
-    <meta name="description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
-    <meta property="og:title" content="BuildIt">
-    <meta property="og:description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
-
-    <!-- Web App Manifest -->
-    <link rel="manifest" href="./manifest.json">
-
-    <!-- Favicon gerado nativamente via SVG in-line -->
-    <link rel="icon" type="image/svg+xml"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%239edeb6'/><text x='50' y='68' font-size='50' font-family='system-ui, sans-serif' font-weight='bold' text-anchor='middle' fill='%231a1c19'>L</text></svg>">
-
-    <!-- BeerCSS e Material Symbols -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.css"
-      rel="stylesheet" />
-    <script type="module"
-      src="https://cdn.jsdelivr.net/npm/beercss@3.7.12/dist/cdn/beer.min.js"></script>
-    <script type="module"
-      src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
-  </head>
-  <body class="dark">
-    <aside id="iframe-warning" class="banner yellow-container none">
-      <i>info</i>
-      <span class="max">Executando em modo preview iframe</span>
-      <a id="iframe-link" class="button border round small" target="_blank" rel="noopener">
-        <span>Abrir em nova aba</span>
-        <i>open_in_new</i>
-      </a>
-    </aside>
-
-    <script>
-    if (window.self !== window.top) {
-      document.addEventListener("DOMContentLoaded", () => {
-        const banner = document.getElementById("iframe-warning");
-        const link = document.getElementById("iframe-link");
-        if (banner && link) {
-          link.href = window.location.href;
-          banner.classList.remove("none");
-        }
-      });
-    }
-    </script>
-
-    <div id="app">
-      <main class="responsive center-align">
-        <div class="space"></div>
-        <h5>Carregando aplicação...</h5>
-        <progress class="circle"></progress>
-      </main>
-    </div>
-
-    <!-- Arquivo gerado pelo esbuild -->
-    <script type="module" src="./main.js?v=3"></script>
-  </body>
-</html>
-
-```
-
----
-
-## Arquivo: `packages/ui/deno.jsonc`
-
-```json
-{
-  "name": "@buildit/ui",
-  "publish": false,
-
-  // ----------------------------------------------------------------------
-  // 🔧 Compiler Options — AJUSTADO PARA DENO 2.x
-  // ----------------------------------------------------------------------
-  "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "dom.asynciterable",
-      "esnext"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  },
-
-  // 📦 Gerenciamento de Dependências
-  "imports": {
-    // Preact Core — versão fixa e canônica
-    "preact": "https://esm.sh/preact@10.29.8",
-    "preact/": "https://esm.sh/preact@10.29.8/",
-    "preact/jsx-runtime": "https://esm.sh/preact@10.29.8/jsx-runtime",
-
-    // Signals — mapeados explicitamente para evitar npm
-    "@preact/signals": "https://esm.sh/@preact/signals@2.11.2?deps=preact@10.29.8",
-    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4"
-  },
-
-  // 🛠️ Scripts de Automação
-  "tasks": {
-    "test": "deno test --allow-env --allow-net tests/",
-    "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
-    "tests": "deno task check && deno task test"
-  },
-  "exclude": ["public/"],
-  "exports": "./src/main.tsx"
-}
 
 ```
 

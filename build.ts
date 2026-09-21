@@ -11,5 +11,5 @@
 import { runDenoBuildCli, } from "@vanaware/buildit/denobuild";
 
 if (import.meta.main) {
-  await runDenoBuildCli(Deno.args, "denobuild.jsonc",);
+  await runDenoBuildCli(Deno.args,);
 }

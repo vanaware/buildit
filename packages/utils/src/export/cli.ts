@@ -5,9 +5,34 @@
 
 /// <reference lib="deno.ns" />
 
-import { APP_VERSION, } from "../version.ts";
-import { carregarConfigExport, } from "./config.ts";
-import { exportarModo, parseArgs, } from "./engine.ts";
+import { parseCommonCliFlags } from "../config/cli-flags.ts";
+import { readProjectVersion } from "../config/version.ts";
+import { carregarConfigExport } from "./config.ts";
+import { exportarModo, parseArgs } from "./engine.ts";
+
+/**
+ * Exibe a mensagem de ajuda para o comando export.
+ */
+export function showExportHelp(): void {
+  console.log(`
+BuildIt Context Exporter CLI
+
+Uso:
+  deno task export [modos...] [opções]
+  deno run -A jsr:@vanaware/buildit/export/cli [modos...] [opções]
+
+Opções:
+  -c, --config <path>    Especifica o arquivo de configuração (ex: export.jsonc)
+  -V, --version, -v      Exibe a versão do projeto
+  -h, --help             Exibe esta mensagem de ajuda
+
+Exemplos:
+  deno task export                      # Executa todos os modos marcados como default
+  deno task export ui docs              # Executa apenas os modos 'ui' e 'docs'
+  deno task export -c custom.jsonc      # Usa configuração customizada
+  deno task export -V                   # Exibe a versão do projeto
+`);
+}
 
 /**
  * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.
@@ -17,20 +42,35 @@ import { exportarModo, parseArgs, } from "./engine.ts";
  *
  * @example
  * ```typescript
- * await runExportCli(Deno.args, "export.jsonc");
+ * await runExportCli(Deno.args);
  * ```
  */
 export async function runExportCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
-  const startTime = performance.now();
-  const configs = await carregarConfigExport(caminhoConfig,);
-  const modosParaExecutar = parseArgs(args, configs,);
+  const flags = parseCommonCliFlags(args);
 
-  console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
-  console.log(`📋 Modos a exportar: ${modosParaExecutar.join(", ",)}`,);
-  console.log(`📌 Versão: v${APP_VERSION}\n`,);
+  if (flags.showHelp) {
+    showExportHelp();
+    return;
+  }
+
+  const projectVersion = await readProjectVersion();
+
+  if (flags.showVersion) {
+    console.log(`v${projectVersion}`);
+    return;
+  }
+
+  const startTime = performance.now();
+  const configPath = flags.configPath ?? caminhoConfig;
+  const configs = await carregarConfigExport(configPath);
+  const modosParaExecutar = parseArgs(flags.positional, configs);
+
+  console.log("\n🚀 Iniciando Exportação de Contexto BuildIt");
+  console.log(`📋 Modos a exportar: ${modosParaExecutar.join(", ")}`);
+  console.log(`📌 Versão: v${projectVersion}\n`);
 
   if (modosParaExecutar.length === 0) {
     console.log(
@@ -43,21 +83,21 @@ export async function runExportCli(
     const config = configs[modo];
     if (config) {
       try {
-        await exportarModo(modo, config, { versaoApp: APP_VERSION, },);
+        await exportarModo(modo, config, { versaoApp: projectVersion });
       } catch (erro) {
-        console.error(`\n🛑 Erro ao exportar modo ${modo}:`, erro,);
-        Deno.exit(1,);
+        console.error(`\n🛑 Erro ao exportar modo ${modo}:`, erro);
+        Deno.exit(1);
       }
     }
   }
 
-  const elapsed = (performance.now() - startTime).toFixed(0,);
-  console.log(`\n${"=".repeat(60,)}`,);
-  console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`,);
-  console.log(`⏱️ Tempo total: ${elapsed}ms`,);
-  console.log(`${"=".repeat(60,)}\n`,);
+  const elapsed = (performance.now() - startTime).toFixed(0);
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`);
+  console.log(`⏱️ Tempo total: ${elapsed}ms`);
+  console.log(`${"=".repeat(60)}\n`);
 }
 
 if (import.meta.main) {
-  await runExportCli(Deno.args,);
+  await runExportCli(Deno.args);
 }

@@ -739,4 +739,6 @@ export async function processTarget(
 // ============================================================================
 export * from "./bundle.ts";
 export * from "./config.ts";
+export * from "./engine.ts";
 export * from "./cli.ts";
+export * from "../config/version.ts";

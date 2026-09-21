@@ -10,5 +10,5 @@
 import { runExportCli, } from "@vanaware/buildit/export";
 
 if (import.meta.main) {
-  await runExportCli(Deno.args, "export.jsonc",);
+  await runExportCli(Deno.args,);
 }

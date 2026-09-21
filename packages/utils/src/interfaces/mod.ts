@@ -210,6 +210,37 @@ export interface GlobalTargetConfig {
   [targetName: string]: TargetConfig;
 }
 
+/** Alias semântico para a configuração de alvo do esbuild */
+export type EsbuildTargetConfig = TargetConfig;
+/** Alias semântico para a configuração global de alvos do esbuild */
+export type EsbuildGlobalConfig = GlobalTargetConfig;
+
+/**
+ * Opções para execução programática do esbuild.
+ */
+export interface EsbuildOptions {
+  /** Configuração direta de alvos em memória (substitui leitura de arquivo) */
+  config?: GlobalTargetConfig;
+  /** Caminho do arquivo de configuração (ex: "esbuild.jsonc") */
+  caminhoConfig?: string;
+  /** Alvos específicos a compilar */
+  targets?: string[];
+  /** Se true, não incrementa a versão */
+  noversion?: boolean;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
+  /** Diretório base de resolução */
+  baseDir?: string;
+  /** Caminho para o deno.jsonc raiz */
+  denoJsoncPath?: string;
+  /** Alvo watch específico a executar */
+  watchTarget?: string;
+  /** Se true, suprime logs não críticos */
+  silencioso?: boolean;
+}
+
 // ============================================================================
 // 📦 TIPOS E INTERFACES EXPORT
 // ============================================================================
@@ -400,4 +431,28 @@ export interface DenoBundleTargetConfig {
 export interface DenoBundleGlobalConfig {
   /** Nome do alvo e sua configuração correspondente */
   [targetName: string]: DenoBundleTargetConfig;
+}
+
+/**
+ * Opções para execução programática do denobuild.
+ */
+export interface DenoBuildOptions {
+  /** Configuração direta de alvos em memória (substitui leitura de arquivo) */
+  config?: DenoBundleGlobalConfig;
+  /** Caminho do arquivo de configuração (ex: "denobuild.jsonc") */
+  caminhoConfig?: string;
+  /** Alvos específicos a compilar */
+  targets?: string[];
+  /** Se true, não incrementa a versão */
+  noversion?: boolean;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
+  /** Diretório base de resolução */
+  baseDir?: string;
+  /** Caminho para o deno.jsonc raiz */
+  denoJsoncPath?: string;
+  /** Se true, suprime logs não críticos */
+  silencioso?: boolean;
 }

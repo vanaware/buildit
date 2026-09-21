@@ -8,11 +8,10 @@
 
 import { ensureDir, } from "@std/fs";
 import { join, } from "@std/path";
+import { updateProjectVersion, } from "../config/version.ts";
 import {
   cleanTarget,
   copyStaticFiles,
-  currentVersion,
-  incrementVersion,
   listAssetsForCache,
   parseArgs,
   validateTargetConfig,
@@ -25,6 +24,7 @@ import { carregarConfigDenoBuild, } from "./config.ts";
 import type {
   DenoBuildOptions,
   DenoBuildResult,
+  DenoBundleGlobalConfig,
   DenoBundleTargetConfig,
 } from "./types.ts";
 
@@ -175,29 +175,62 @@ export async function processBundleTarget(
 
 /**
  * Executa programaticamente a compilação via Deno.bundle para os alvos configurados.
+ * Aceita diretamente um objeto DenoBundleGlobalConfig em memória ou DenoBuildOptions.
  *
- * @param opcoes Opções de configuração e execução
+ * @param configOuOpcoes Objeto DenoBundleGlobalConfig em memória ou opções completas de execução
  * @returns Lista de resultados obtidos por alvo
  *
  * @example
  * ```typescript
+ * // Passando configuração diretamente em memória:
+ * const resultados = await executarDenoBuild({
+ *   ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src", ... }
+ * });
+ *
+ * // Ou usando opções completas:
  * const resultados = await executarDenoBuild({ targets: ["ui"], noversion: true });
  * ```
  */
 export async function executarDenoBuild(
-  opcoes?: DenoBuildOptions,
+  configOuOpcoes?: DenoBuildOptions | DenoBundleGlobalConfig,
 ): Promise<DenoBuildResult[]> {
+  let configs: DenoBundleGlobalConfig;
+  let opcoes: DenoBuildOptions | undefined;
+
+  if (
+    configOuOpcoes &&
+    typeof configOuOpcoes === "object" &&
+    !("caminhoConfig" in configOuOpcoes) &&
+    !("targets" in configOuOpcoes) &&
+    !("baseDir" in configOuOpcoes) &&
+    !("config" in configOuOpcoes) &&
+    !("silencioso" in configOuOpcoes) &&
+    !("noversion" in configOuOpcoes) &&
+    !("versionPaths" in configOuOpcoes) &&
+    !("forcepackagesversion" in configOuOpcoes) &&
+    !("denoJsoncPath" in configOuOpcoes)
+  ) {
+    configs = configOuOpcoes as DenoBundleGlobalConfig;
+  } else {
+    opcoes = configOuOpcoes as DenoBuildOptions | undefined;
+    if (opcoes?.config) {
+      configs = opcoes.config;
+    } else {
+      const baseDir = opcoes?.baseDir ?? ".";
+      configs = await carregarConfigDenoBuild(opcoes?.caminhoConfig, baseDir);
+    }
+  }
+
   const baseDir = opcoes?.baseDir ?? ".";
-  const configs = await carregarConfigDenoBuild(opcoes?.caminhoConfig, baseDir,);
   const rawArgs = [
     ...(opcoes?.targets ?? []),
-    ...(opcoes?.noversion ? ["noversion",] : []),
+    ...(opcoes?.noversion ? ["noversion"] : []),
   ];
 
-  const { targets, globalNoVersion, watchTarget, } = parseArgs(rawArgs, configs,);
+  const { targets, globalNoVersion, watchTarget } = parseArgs(rawArgs, configs);
 
   if (watchTarget) {
-    console.warn("⚠️ Modo Watch não é suportado pela API Deno.bundle nativa.",);
+    console.warn("⚠️ Modo Watch não é suportado pela API Deno.bundle nativa.");
     return [];
   }
 
@@ -205,18 +238,21 @@ export async function executarDenoBuild(
     return [];
   }
 
-  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
-  const currentVer = await currentVersion(denoJsoncPath,);
-  const finalVersion = globalNoVersion
-    ? currentVer
-    : await incrementVersion(currentVer, denoJsoncPath,);
+  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc");
+  const finalVersion = await updateProjectVersion({
+    denoJsonPath: denoJsoncPath,
+    baseDir,
+    noversion: globalNoVersion || (opcoes?.noversion ?? false),
+    versionPaths: opcoes?.versionPaths,
+    forcepackagesversion: opcoes?.forcepackagesversion,
+  });
 
   const resultados: DenoBuildResult[] = [];
 
   for (const targetName of targets) {
     const targetConfig = configs[targetName];
     if (!targetConfig) {
-      console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,);
+      console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`);
       continue;
     }
 
@@ -227,7 +263,7 @@ export async function executarDenoBuild(
       finalVersion,
       listFn,
     );
-    resultados.push(res,);
+    resultados.push(res);
   }
 
   return resultados;

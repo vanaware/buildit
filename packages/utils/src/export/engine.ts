@@ -7,7 +7,7 @@
 
 import { walk, } from "@std/fs/walk";
 import { dirname, join, relative, } from "@std/path";
-import { APP_VERSION, } from "../version.ts";
+import { readProjectVersion, } from "../config/version.ts";
 import { carregarConfigExport, } from "./config.ts";
 import {
   deveIncluirArquivo,
@@ -74,10 +74,11 @@ export async function exportarModo(
     versaoApp?: string;
     baseDir?: string;
     silencioso?: boolean;
+    denoJsoncPath?: string;
   },
 ): Promise<ExportResult> {
   const baseDir = opcoes?.baseDir ?? ".";
-  const versaoApp = opcoes?.versaoApp ?? APP_VERSION;
+  const versaoApp = opcoes?.versaoApp ?? await readProjectVersion(opcoes?.denoJsoncPath, baseDir);
   const silencioso = opcoes?.silencioso ?? false;
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
 
@@ -137,20 +138,56 @@ export async function exportarModo(
 
 /**
  * Executa programaticamente o fluxo completo de exportação com suporte a múltiplos modos.
+ * Aceita diretamente um objeto de configurações de modos em memória ou um objeto ExportOptions.
  *
- * @param opcoes Opções de execução incluindo caminhos, modos específicos e parâmetros de exibição
+ * @param configOuOpcoes Objeto de modos em memória ou opções completas de execução
  * @returns Lista de resultados obtidos para cada modo processado
  *
  * @example
  * ```typescript
- * const resultados = await executarExport({ modos: ["ui", "docs"] });
+ * // Passando configuração diretamente em memória:
+ * const resultados = await executarExport({
+ *   ui: { arquivoSaida: "snapshot.md", pastaBase: "./src", ... }
+ * });
+ *
+ * // Ou usando opções completas:
+ * const resultados = await executarExport({
+ *   caminhoConfig: "export.jsonc",
+ *   modos: ["ui", "docs"]
+ * });
  * ```
  */
 export async function executarExport(
-  opcoes?: ExportOptions,
+  configOuOpcoes?: ExportOptions | Record<string, ExportConfig>,
 ): Promise<ExportResult[]> {
+  let configs: Record<string, ExportConfig>;
+  let opcoes: ExportOptions | undefined;
+
+  // Verifica se o argumento passado é diretamente a configuração de modos (chaves mapeando para ExportConfig)
+  if (
+    configOuOpcoes &&
+    typeof configOuOpcoes === "object" &&
+    !("caminhoConfig" in configOuOpcoes) &&
+    !("modos" in configOuOpcoes) &&
+    !("baseDir" in configOuOpcoes) &&
+    !("config" in configOuOpcoes) &&
+    !("silencioso" in configOuOpcoes) &&
+    !("versaoApp" in configOuOpcoes) &&
+    !("denoJsoncPath" in configOuOpcoes)
+  ) {
+    configs = configOuOpcoes as Record<string, ExportConfig>;
+  } else {
+    opcoes = configOuOpcoes as ExportOptions | undefined;
+    if (opcoes?.config) {
+      configs = opcoes.config;
+    } else {
+      const baseDir = opcoes?.baseDir ?? ".";
+      configs = await carregarConfigExport(opcoes?.caminhoConfig, baseDir);
+    }
+  }
+
   const baseDir = opcoes?.baseDir ?? ".";
-  const configs = await carregarConfigExport(opcoes?.caminhoConfig, baseDir);
+  const versaoApp = opcoes?.versaoApp ?? await readProjectVersion(opcoes?.denoJsoncPath, baseDir);
   const modosParaExecutar = opcoes?.modos && opcoes.modos.length > 0
     ? parseArgs(opcoes.modos, configs)
     : parseArgs([], configs);
@@ -162,8 +199,9 @@ export async function executarExport(
     if (config) {
       const res = await exportarModo(modo, config, {
         baseDir,
-        versaoApp: opcoes?.versaoApp,
+        versaoApp,
         silencioso: opcoes?.silencioso,
+        denoJsoncPath: opcoes?.denoJsoncPath,
       });
       resultados.push(res);
     }

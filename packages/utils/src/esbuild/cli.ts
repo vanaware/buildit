@@ -1,87 +1,47 @@
 /// <reference lib="deno.ns" />
-import * as esbuild from "esbuild";
-import { denoPlugin, } from "@deno/esbuild-plugin";
+
+/**
+ * @module @vanaware/buildit/esbuild/cli
+ * @description Ponto de entrada CLI para o orquestrador de compilação baseado em esbuild.
+ */
+
+import { parseCommonCliFlags } from "../config/cli-flags.ts";
+import { readProjectVersion, updateProjectVersion } from "../config/version.ts";
 import {
-  buildEsbuildOptions,
-  copyStaticFiles,
-  currentVersion,
-  incrementVersion,
   listAssetsForCache,
   parseArgs,
   processTarget,
 } from "./mod.ts";
-import { carregarConfigEsbuild, } from "./config.ts";
-import type { GlobalTargetConfig, } from "../interfaces/mod.ts";
+import { carregarConfigEsbuild } from "./config.ts";
+import { buildWithDenoPlugin, startWatchMode } from "./engine.ts";
 
 /**
- * Interface para opções de execução do esbuild via CLI ou programática.
+ * Exibe a mensagem de ajuda para o comando esbuild.
  */
-export interface EsbuildRunOptions {
-  /** Caminho do arquivo de configuração (ex: "esbuild.jsonc") */
-  caminhoConfig?: string;
-  /** Diretório base de resolução */
-  baseDir?: string;
-  /** Argumentos da linha de comando */
-  args?: string[];
-  /** Caminho para o deno.jsonc (padrão: "deno.jsonc") */
-  denoJsoncPath?: string;
-}
+export function showEsbuildHelp(): void {
+  console.log(`
+BuildIt esbuild Orquestrador CLI
 
-/**
- * Função interna para injetar o Deno Plugin nas opções do esbuild.
- */
-// deno-lint-ignore no-explicit-any
-const buildWithDenoPlugin = (options: any, denoJsoncPath: string): Promise<any> => {
-  options.plugins = [
-    ...(options.plugins || []),
-    denoPlugin({ "configPath": denoJsoncPath, },),
-  ];
-  return esbuild.build(options,);
-};
+Uso:
+  deno task esbuild [alvos...] [opções]
+  deno run -A jsr:@vanaware/buildit/esbuild/cli [alvos...] [opções]
 
-/**
- * Executa o Watch Mode do esbuild.
- */
-async function startWatchMode(
-  watchTargetName: string,
-  currentVer: string,
-  config: GlobalTargetConfig,
-  denoJsoncPath: string,
-) {
-  const targetConfig = config[watchTargetName];
-  if (!targetConfig) {
-    throw new Error(`❌ Alvo watch '${watchTargetName}' não encontrado na configuração`,);
-  }
+Opções:
+  -c, --config <path>               Especifica o arquivo de configuração (ex: esbuild.jsonc)
+  -V, --version, -v                 Exibe a versão do projeto
+  -h, --help                        Exibe esta mensagem de ajuda
+  -n, --noversion, noversion        Desabilita o incremento automático de versão
+  -f, --forcepackagesversion        Propaga a versão para os subpacotes do workspace
+  --version-path <path>             Diretório ou arquivo adicional onde salvar o version.ts
 
-  console.log(`\n👀 Iniciando Watch Mode: ${watchTargetName}\n`,);
-
-  await copyStaticFiles(targetConfig, currentVer,);
-
-  const esbuildOptions = await buildEsbuildOptions(
-    watchTargetName,
-    targetConfig,
-    currentVer,
-  );
-
-  esbuildOptions.plugins = [
-    ...(esbuildOptions.plugins || []),
-    denoPlugin({ "configPath": denoJsoncPath }),
-  ];
-
-  const ctx = await esbuild.context(esbuildOptions,);
-  await ctx.watch();
-
-  console.log("\n✅ Watch mode ativo!",);
-  console.log(`📁 Monitorando: ${targetConfig.srcdir}/`,);
-
-  const resolvedOutfile = esbuildOptions.outfile ||
-    (targetConfig.distdir ? `${targetConfig.distdir}/` : "N/A");
-  console.log(`📦 Output: ${resolvedOutfile}`,);
-  console.log(`📌 Versão: v${currentVer}`,);
-  console.log("\n💡 Pressione Ctrl+C para parar.\n",);
-
-  // Mantém o processo vivo
-  await new Promise(() => {},);
+Exemplos:
+  deno task esbuild                 # Compila alvos padrão
+  deno task esbuild ui              # Compila apenas o alvo 'ui'
+  deno task esbuild watch           # Inicia o modo watch para o alvo configurado
+  deno task esbuild noversion       # Compila sem incrementar a versão
+  deno task esbuild -c custom.jsonc
+  deno task esbuild -V              # Exibe a versão do projeto
+`);
 }
 
 /**
@@ -92,47 +52,67 @@ async function startWatchMode(
  *
  * @example
  * ```typescript
- * await runEsbuildCli(Deno.args, "esbuild.jsonc");
+ * await runEsbuildCli(Deno.args);
  * ```
  */
 export async function runEsbuildCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
+  const flags = parseCommonCliFlags(args);
+
+  if (flags.showHelp) {
+    showEsbuildHelp();
+    return;
+  }
+
+  const projectVersion = await readProjectVersion();
+
+  if (flags.showVersion) {
+    console.log(`v${projectVersion}`);
+    return;
+  }
+
   const start = performance.now();
   const baseDir = ".";
-  const configs = await carregarConfigEsbuild(caminhoConfig, baseDir,);
-  const { targets, globalNoVersion, watchTarget, } = parseArgs(args, configs,);
+  const configPath = flags.configPath ?? caminhoConfig;
+  const configs = await carregarConfigEsbuild(configPath, baseDir);
+  const rawArgs = [
+    ...flags.positional,
+    ...(flags.noversion ? ["noversion"] : []),
+  ];
+  const { targets, globalNoVersion, watchTarget } = parseArgs(rawArgs, configs);
 
   const DENO_JSONC_PATH = "deno.jsonc";
 
-  console.log("\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)",);
-  
+  console.log("\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)");
+
   if (watchTarget) {
-    console.log(`👀 Modo Watch ativo: ${watchTarget}`,);
+    console.log(`👀 Modo Watch ativo: ${watchTarget}`);
   } else {
     console.log(
-      `📋 Alvos de build (ordem segura do CONFIG): ${targets.join(", ",) || "(nenhum)"}`,
+      `📋 Alvos de build (ordem segura do CONFIG): ${targets.join(", ") || "(nenhum)"}`,
     );
   }
-  console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
+  console.log(`🔒 Noversion: ${globalNoVersion}\n`);
 
   try {
-    const currentVer = await currentVersion(DENO_JSONC_PATH,);
+    const finalVersion = await updateProjectVersion({
+      denoJsonPath: DENO_JSONC_PATH,
+      noversion: globalNoVersion || (watchTarget !== null),
+      versionPaths: flags.versionPaths,
+      forcepackagesversion: flags.forcepackagesversion,
+    });
 
     if (watchTarget) {
-      await startWatchMode(watchTarget, currentVer, configs, DENO_JSONC_PATH,);
+      await startWatchMode(watchTarget, finalVersion, configs, DENO_JSONC_PATH);
       return;
     }
-
-    const finalVersion = globalNoVersion
-      ? currentVer
-      : await incrementVersion(currentVer, DENO_JSONC_PATH,);
 
     for (const targetName of targets) {
       const targetConfig = configs[targetName];
       if (!targetConfig) {
-        console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,);
+        console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`);
         continue;
       }
 
@@ -145,18 +125,18 @@ export async function runEsbuildCli(
       );
     }
 
-    console.log(`\n${"=".repeat(60,)}`,);
-    console.log(`🎉 ORQUESTRAÇÃO ESBUILD CONCLUÍDA COM SUCESSO!`,);
-    console.log(`${"=".repeat(60,)}`,);
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(`🎉 ORQUESTRAÇÃO ESBUILD CONCLUÍDA COM SUCESSO!`);
+    console.log(`${"=".repeat(60)}`);
   } catch (error) {
-    console.error("\n🛑 Pipeline de build falhou:", error,);
-    Deno.exit(1,);
+    console.error("\n🛑 Pipeline de build falhou:", error);
+    Deno.exit(1);
   } finally {
-    const elapsed = (performance.now() - start).toFixed(0,);
-    console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`,);
+    const elapsed = (performance.now() - start).toFixed(0);
+    console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`);
   }
 }
 
 if (import.meta.main) {
-  await runEsbuildCli(Deno.args,);
+  await runEsbuildCli(Deno.args);
 }

@@ -10,5 +10,5 @@
 import { runEsbuildCli, } from "@vanaware/buildit/build";
 
 if (import.meta.main) {
-  await runEsbuildCli(Deno.args, "esbuild.jsonc",);
+  await runEsbuildCli(Deno.args,);
 }

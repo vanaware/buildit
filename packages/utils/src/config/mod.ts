@@ -1,5 +1,7 @@
 export { APP_VERSION } from "../version.ts";
 export { loadConfig } from "./jsonc.ts";
+export * from "./version.ts";
+export * from "./cli-flags.ts";
 
 /**
  * Extensões de arquivo padrão que são comumente incluídas em snapshots.

@@ -53,6 +53,8 @@ export interface DenoBuildResult {
  * Opções de configuração para o método programático `executarDenoBuild`.
  */
 export interface DenoBuildOptions {
+  /** Configuração direta de alvos em memória (substitui leitura de arquivo) */
+  config?: DenoBundleGlobalConfig;
   /** Caminho do arquivo de configuração externo (padrão: "denobuild.jsonc" ou "denobuild.json") */
   caminhoConfig?: string;
   /** Lista explícita de alvos a serem compilados. Se omitido, compila os marcados como default */
@@ -61,6 +63,10 @@ export interface DenoBuildOptions {
   baseDir?: string;
   /** Se true, não incrementa a versão semântica no deno.jsonc */
   noversion?: boolean;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
   /** Caminho para o arquivo deno.jsonc (padrão: "deno.jsonc") */
   denoJsoncPath?: string;
   /** Se true, suprime mensagens informativas no console */

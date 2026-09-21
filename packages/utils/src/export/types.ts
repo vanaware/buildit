@@ -37,14 +37,18 @@ export interface ExportResult {
  * Opções de configuração para o método programático `executarExport`.
  */
 export interface ExportOptions {
+  /** Configuração direta de modos em memória (substitui leitura de arquivo) */
+  config?: Record<string, ExportConfig>;
   /** Caminho do arquivo de configuração (padrão: "export.jsonc" ou "export.json") */
   caminhoConfig?: string;
   /** Lista explícita de modos a serem executados. Se omitido, executa os marcados como default */
   modos?: string[];
   /** Diretório base de varredura (padrão: ".") */
   baseDir?: string;
-  /** Versão da aplicação a ser injetada no cabeçalho */
+  /** Versão da aplicação a ser injetada no cabeçalho (se omitido, lê do deno.jsonc raiz) */
   versaoApp?: string;
+  /** Caminho alternativo para o deno.jsonc para extração da versão */
+  denoJsoncPath?: string;
   /** Se true, suprime logs informativos no console */
   silencioso?: boolean;
 }

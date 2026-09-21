@@ -8,7 +8,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: SERVER
 
-Gerado automaticamente em: 2026-09-20T23:26:51.377Z
+Gerado automaticamente em: 2026-09-21T02:17:40.341Z
 
 ---
 
@@ -49,10 +49,11 @@ Gerado automaticamente em: 2026-09-20T23:26:51.377Z
 
 import { serveDir, } from "@std/http/file-server";
 
-const rawPort = Deno.env.get("PORT",);
-const port = rawPort ? Number(rawPort,) : 3000;
+const port = 3000;
 
-Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
+console.log(`🚀 Iniciando servidor na porta fixa: ${port}`);
+
+Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
   try {
     const url = new URL(req.url,);
     console.log(`[REQ] ${req.method} ${url.pathname}`,);
@@ -146,6 +147,56 @@ Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
 
 ---
 
+## Arquivo: `.github/workflows/jsr-publish.yml`
+
+```yaml
+name: Publish to JSR
+
+on:
+  push:
+    tags:
+      - 'v*.*' # Dispara apenas para tags iniciando com 'v' (ex: v0.2, v1.0.0)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # Required for JSR OIDC authentication
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version-file: .tool-versions
+          cache: true
+        
+      - name: Install dependencies
+        run: deno ci
+
+      - name: Sanitize Version
+        run: |
+          sh ./sanitize-version.sh ./packages/worker-db/deno.jsonc
+          sh ./sanitize-version.sh ./packages/service-worker/deno.jsonc
+
+      - name: Publish BuildIt to JSR
+        run: |
+          cd packages/worker-db
+          deno publish --allow-slow-types --allow-dirty
+
+      - name: Publish OPFS Explorer to JSR
+        run: |
+          cd packages/service-worker
+          deno publish --allow-slow-types --allow-dirty
+
+```
+
+---
+
 ## Arquivo: `.github/workflows/gh-pages.yml`
 
 ```yaml
@@ -203,56 +254,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-```
-
----
-
-## Arquivo: `.github/workflows/jsr-publish.yml`
-
-```yaml
-name: Publish to JSR
-
-on:
-  push:
-    tags:
-      - 'v*.*' # Dispara apenas para tags iniciando com 'v' (ex: v0.2, v1.0.0)
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write # Required for JSR OIDC authentication
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version-file: .tool-versions
-          cache: true
-        
-      - name: Install dependencies
-        run: deno ci
-
-      - name: Sanitize Version
-        run: |
-          sh ./sanitize-version.sh ./packages/worker-db/deno.jsonc
-          sh ./sanitize-version.sh ./packages/service-worker/deno.jsonc
-
-      - name: Publish BuildIt to JSR
-        run: |
-          cd packages/worker-db
-          deno publish --allow-slow-types --allow-dirty
-
-      - name: Publish OPFS Explorer to JSR
-        run: |
-          cd packages/service-worker
-          deno publish --allow-slow-types --allow-dirty
 
 ```
 
