@@ -45,5 +45,15 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - `docs/api.md`: Documentação técnica completa e exaustiva contendo todas as opções e propriedades aceitas em arquivos JSONC/JSON para cada utilitário (`esbuild.jsonc`, `denobuild.jsonc` e `export.jsonc`), exemplos comentados, flags CLI e referência da API programática em TypeScript (`runEsbuild`, `runDenoBuild`, `runExport`, `syncVersion`, etc.).
   - Integração e links em `README.md`.
 
+- **Limpeza e Padronização de Comentários Legados**:
+  - `packages/utils/src/interfaces/mod.ts`: Excluído comentário obsoleto de TODO sobre `worker-db` e método de banco `ls()`.
+  - Atualizados os cabeçalhos de comentários de seção de `PIPELINE WORKERDB` e `EXTENSÕES WORKERDB` para `PIPELINE BUILDIT` e `EXTENSÕES BUILDIT`.
+  - Verificação completa do código-fonte em `packages/utils`, `packages/server` e `packages/ui` confirmando zero referências residuais a comentários legados.
+
+- **Simplificação do Servidor de Desenvolvimento (`packages/server/src/main.ts`)**:
+  - Removido o fallback em HTML para OPFS Explorer e Service Worker que pertencia ao fork anterior.
+  - Servidor mantido enxuto e direto com `serveDir`, controle estrito de cache no-store, suporte a Service Worker (`Service-Worker-Allowed: /`) e tratamento resiliente de erros.
+  - Snapshot `snapshots/server.md` devidamente sincronizado.
+
 ### 🎯 Próximos Passos:
 - Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.

@@ -1,5 +1,3 @@
-// TODO(@djones): no novo worker-db, função ls(), "id" deverá ser "_id" para debug
-
 // ============================================================================
 // 📦 TIPOS ESBUILD
 // ============================================================================
@@ -310,7 +308,7 @@ export type DenoBundlePackageHandling = "bundle" | "external";
  */
 export interface DenoBundleTargetConfig {
   // ==========================================================================
-  // 🔄 PIPELINE WORKERDB (Pré/Pós Build)
+  // 🔄 PIPELINE BUILDIT (Pré/Pós Build)
   // ==========================================================================
 
   /** Diretório fonte (onde estão os arquivos de entrada) */
@@ -399,7 +397,7 @@ export interface DenoBundleTargetConfig {
   external?: string[];
 
   // ==========================================================================
-  // 🔧 EXTENSÕES WORKERDB (pré-processamento customizado)
+  // 🔧 EXTENSÕES BUILDIT (pré-processamento customizado)
   // ==========================================================================
 
   /**
