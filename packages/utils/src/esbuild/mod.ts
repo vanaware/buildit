@@ -18,6 +18,11 @@ import type {
 // ============================================================================
 // 🔢 FUNÇÕES DE VERSÃO (puras, testáveis)
 // ============================================================================
+/**
+ * Parseia uma string de versão no formato major.minor.patch[#hash].
+ * @param version String de versão
+ * @returns Objeto ParsedVersion
+ */
 export function parseVersion(version: string,): ParsedVersion {
   const trimmed = version.trim();
   if (trimmed !== version) {
@@ -50,6 +55,14 @@ export function parseVersion(version: string,): ParsedVersion {
   return { major, minor, patch, };
 }
 
+/**
+ * Formata os componentes da versão em uma string padronizada.
+ * @param major Versão major
+ * @param minor Versão minor
+ * @param patch Versão patch
+ * @param buildHash Hash opcional do build
+ * @returns String de versão formatada
+ */
 export function formatVersion(
   major: number,
   minor: number,
@@ -60,11 +73,22 @@ export function formatVersion(
   return `${major}.${minor}.${patch}#${hash}`;
 }
 
+/**
+ * Extrai a string de versão de um conteúdo textual (ex: deno.jsonc).
+ * @param content Conteúdo textual
+ * @returns String de versão ou null se não encontrada
+ */
 export function extractVersionFromContent(content: string,): string | null {
   const match = content.match(/"version"\s*:\s*"([^"]+)"/,);
   return match && match[1] ? match[1] : null;
 }
 
+/**
+ * Substitui a versão no conteúdo textual fornecido.
+ * @param content Conteúdo textual original
+ * @param newVersion Nova versão a ser injetada
+ * @returns Conteúdo atualizado
+ */
 export function replaceVersionInContent(
   content: string,
   newVersion: string,
@@ -78,6 +102,11 @@ export function replaceVersionInContent(
 // ============================================================================
 // 🛡️ VALIDAÇÃO DE PATHS (pura, testável)
 // ============================================================================
+/**
+ * Verifica se um caminho é seguro (evita path traversal e caminhos absolutos).
+ * @param cleanPath Caminho a ser verificado
+ * @returns True se for seguro
+ */
 export function isSafePath(cleanPath: string,): boolean {
   if (cleanPath.includes("..",)) return false;
   if (isAbsolute(cleanPath,)) return false;
@@ -232,6 +261,12 @@ export function resolveEntryPoints(
 // ============================================================================
 // 🎯 PARSING DE ARGUMENTOS CLI (pura, testável)
 // ============================================================================
+/**
+ * Parseia os argumentos de linha de comando para determinar alvos e flags.
+ * @param args Lista de argumentos
+ * @param config Configuração global de alvos
+ * @returns Argumentos parseados
+ */
 export function parseArgs(
   args: string[],
   config: GlobalTargetConfig | DenoBundleGlobalConfig,
@@ -274,6 +309,11 @@ export function parseArgs(
 // ============================================================================
 // 📂 FUNÇÕES DE FILESYSTEM
 // ============================================================================
+/**
+ * Limpa os diretórios/arquivos configurados no alvo.
+ * @param distDir Diretório de saída
+ * @param cleanPaths Lista de caminhos relativos para limpar
+ */
 export async function cleanTarget(
   distDir: string,
   cleanPaths: string[],
@@ -307,6 +347,11 @@ export async function cleanTarget(
   }
 }
 
+/**
+ * Obtém a versão atual do arquivo de configuração deno.jsonc.
+ * @param denoJsoncPath Caminho para o deno.jsonc
+ * @returns Versão atual
+ */
 export async function currentVersion(denoJsoncPath: string,): Promise<string> {
   const content = await Deno.readTextFile(denoJsoncPath,);
   const version = extractVersionFromContent(content,);
@@ -317,6 +362,13 @@ export async function currentVersion(denoJsoncPath: string,): Promise<string> {
   return version;
 }
 
+/**
+ * Incrementa a versão patch e sincroniza workspaces e arquivos de versão.
+ * @param version Versão atual
+ * @param denoJsoncPath Caminho para o deno.jsonc raiz
+ * @param buildHash Hash opcional do build
+ * @returns Nova versão incrementada
+ */
 export async function incrementVersion(
   version: string,
   denoJsoncPath: string,
@@ -382,6 +434,12 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   return newVersion;
 }
 
+/**
+ * Lista todos os assets gerados no distdir para cache do Service Worker.
+ * @param distDir Diretório de saída
+ * @param excludeFiles Lista de arquivos para ignorar
+ * @returns Lista de caminhos relativos
+ */
 export async function listAssetsForCache(
   distDir: string,
   excludeFiles: string[] = [],
@@ -414,6 +472,11 @@ export async function listAssetsForCache(
   return assets;
 }
 
+/**
+ * Copia arquivos estáticos da pasta publicdir e srcdir para o distdir.
+ * @param config Configuração do alvo
+ * @param appVersion Versão da aplicação para injeção no manifest
+ */
 export async function copyStaticFiles(
   config: TargetConfig | DenoBundleTargetConfig,
   appVersion: string,
@@ -485,6 +548,14 @@ export async function copyStaticFiles(
 // ============================================================================
 // 🛠️ FUNÇÕES DE ESBUILD
 // ============================================================================
+/**
+ * Constrói as opções de build para o esbuild.
+ * @param targetName Nome do alvo
+ * @param config Configuração do alvo
+ * @param appVersion Versão da aplicação
+ * @param listAssetsFn Função para listar assets
+ * @returns Opções do esbuild
+ */
 export async function buildEsbuildOptions(
   targetName: string,
   config: TargetConfig,
@@ -597,6 +668,14 @@ export async function buildEsbuildOptions(
   return options;
 }
 
+/**
+ * Processa a compilação de um alvo do esbuild.
+ * @param targetName Nome do alvo
+ * @param config Configuração do alvo
+ * @param appVersion Versão da aplicação
+ * @param esbuildBuildFn Função de build do esbuild (com plugins injetados)
+ * @param listAssetsFn Função opcional para listar assets
+ */
 export async function processTarget(
   targetName: string,
   config: TargetConfig,
@@ -656,6 +735,8 @@ export async function processTarget(
 }
 
 // ============================================================================
-// 📦 RE-EXPORT DO MÓDULO BUNDLE (Deno.bundle API)
+// 📦 RE-EXPORTS DE MÓDULOS ESPECÍFICOS
 // ============================================================================
 export * from "./bundle.ts";
+export * from "./config.ts";
+export * from "./cli.ts";

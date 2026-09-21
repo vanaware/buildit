@@ -6,7 +6,7 @@ Este repositório é um fork do workerdb e está sendo refatorado para disponibi
 
 Esta biblioteca será basicamente o pacote `packages/utils` que conterá três CLIs/utilitários:
 1. **denobuild** => derivado do `build.ts` que usa um arquivo config externo `denobuild.jsonc` *(✅ Concluído)*
-2. **esbuild** => derivado do `esbuild.ts` que usará um arquivo config externo `esbuild.jsonc` *(Pendente)*
+2. **esbuild** => derivado do `esbuild.ts` que usa um arquivo config externo `esbuild.jsonc` *(✅ Concluído)*
 3. **export** => derivado do `export.ts` que usa o arquivo config externo `export.jsonc` *(✅ Concluído)*
 
 ### ✅ Tarefas Realizadas:
@@ -34,5 +34,5 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Layout limpo e responsivo estruturado com componentes BeerCSS (`nav class="tab"`, `article class="border round surface-container-low"`, chips, grid).
 
 ### 🎯 Próximos Passos:
-- Refatorar o utilitário `esbuild.ts` para dentro de `packages/utils/src/esbuild/` utilizando arquivo de configuração externo `esbuild.jsonc`.
 - Atualizar documentação (`README.md`, `packages/utils/README.md`).
+- Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.

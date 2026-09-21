@@ -2,10 +2,11 @@
 
 import { serveDir, } from "@std/http/file-server";
 
-const rawPort = Deno.env.get("PORT",);
-const port = rawPort ? Number(rawPort,) : 3000;
+const port = 3000;
 
-Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
+console.log(`🚀 Iniciando servidor na porta fixa: ${port}`);
+
+Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
   try {
     const url = new URL(req.url,);
     console.log(`[REQ] ${req.method} ${url.pathname}`,);

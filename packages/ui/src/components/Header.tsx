@@ -1,4 +1,5 @@
 import { themeMode, toggleTheme, } from "../stores/app.ts";
+import { APP_VERSION, } from "@vanaware/buildit";
 
 export const Header = () => {
   return (
@@ -10,7 +11,7 @@ export const Header = () => {
         <div class="max">
           <div class="row middle no-space">
             <h5 class="no-margin">BuildIt</h5>
-            <span class="chip small tertiary-container margin-left">v0.3.1</span>
+            <span class="chip small tertiary-container margin-left">v{APP_VERSION}</span>
           </div>
           <div class="small-text secondary-text">
             Build Orchestration, Bundling & Context Export Toolkit

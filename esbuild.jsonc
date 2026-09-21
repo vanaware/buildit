@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/esbuild.json",
+  "version": "0.3.7",
+  "targets": {
+    "ui": {
+      "mode": "build",
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "publicdir": "packages/ui/public",
+      "indexHtml": true,
+      "clean": [
+        "."
+      ],
+      "entryPoints": [
+        "main.tsx"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": false,
+      "sourcemap": "linked",
+      "conditions": [
+        "browser"
+      ],
+      "drop": [
+        "debugger"
+      ],
+      "jsx": "automatic",
+      "jsxImportSource": "preact",
+      "metafile": true,
+      "write": true,
+      "legalComments": "eof",
+      "keepNames": true,
+      "splitting": false,
+      "banner": {
+        "js": "/*!\n * BuildIt v__APP_VERSION__\n * (c) 2026 Vanaware - MIT License\n */\n"
+      }
+    },
+    "watch": {
+      "mode": "watch",
+      "default": false,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "publicdir": "packages/ui/public",
+      "indexHtml": true,
+      "entryPoints": [
+        "main.ts"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": false,
+      "sourcemap": "inline",
+      "conditions": [
+        "browser"
+      ],
+      "jsx": "automatic",
+      "jsxImportSource": "preact",
+      "write": true,
+      "legalComments": "eof",
+      "outfile": "app.js",
+      "banner": {
+        "js": "/*!\n * BuildIt v__APP_VERSION__\n * (c) 2026 Vanaware - MIT License\n */\n"
+      }
+    }
+  }
+}
