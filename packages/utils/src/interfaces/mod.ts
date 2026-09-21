@@ -8,12 +8,21 @@
 // re-exporta esses tipos internos do esbuild como membros do namespace.
 // String literals mantêm autocomplete + type-safety e são independentes
 // de como o esm.sh expõe a tipagem.
+/**
+ * Versão semântica parseada.
+ */
 export interface ParsedVersion {
+  /** Versão major */
   major: number;
+  /** Versão minor */
   minor: number;
+  /** Versão patch */
   patch: number;
 }
 
+/**
+ * Argumentos de linha de comando parseados.
+ */
 export interface ParsedArgs {
   /** Alvos de build a processar (exclui alvos watch) */
   targets: string[];
@@ -77,12 +86,20 @@ export type EsbuildLoader =
   | "empty"
   | "copy";
 
+/**
+ * Configuração de um alvo de build (esbuild).
+ */
 export interface TargetConfig {
   // --- Configurações de Pipeline (Pré/Post Build) ---
+  /** Diretório de arquivos estáticos/públicos */
   publicdir?: string;
+  /** Diretório de código-fonte */
   srcdir?: string;
+  /** Diretório de saída do build */
   distdir?: string;
+  /** Se deve processar/copiar o arquivo index.html */
   indexHtml?: boolean;
+  /** Lista de caminhos para limpar antes do build */
   clean?: string[];
   /**
    * Determina se o alvo é incluído automaticamente quando nenhum alvo
@@ -107,39 +124,73 @@ export interface TargetConfig {
    */
   mode?: TargetMode;
   // --- Configurações do Esbuild (TODAS configuráveis) ---
+  /** Arquivos de entrada do bundle */
   entryPoints: string[];
+  /** Plataforma alvo (browser, node, neutral) */
   platform?: EsbuildPlatform;
+  /** Formato de saída (esm, cjs, iife) */
   format?: EsbuildFormat;
+  /** Se deve agrupar dependências no bundle */
   bundle?: boolean;
+  /** Se deve minificar o código */
   minify?: boolean;
+  /** Tipo de sourcemap a ser gerado */
   sourcemap?: EsbuildSourcemap;
+  /** Configuração de JSX */
   jsx?: EsbuildJsx;
+  /** Origem de importação do JSX (ex: preact) */
   jsxImportSource?: string;
+  /** Condições personalizadas de exportação */
   conditions?: string[];
+  /** Mapa de substituições globais */
   define?: Record<string, string>;
+  /** Coisas para remover do código (ex: console, debugger) */
   drop?: EsbuildDrop[];
+  /** Módulos a serem tratados como externos */
   external?: string[];
+  /** Se deve gerar um arquivo de metadados JSON */
   metafile?: boolean;
+  /** Se deve gravar o resultado no disco */
   write?: boolean;
+  /** Se deve habilitar tree shaking */
   treeShaking?: boolean;
+  /** Como tratar comentários legais (ex: linked, inline) */
   legalComments?: EsbuildLegalComments;
+  /** Se deve preservar nomes originais de funções/classes */
   keepNames?: boolean;
+  /** Caminho explícito do arquivo de saída */
   outfile?: string;
+  /** Se deve habilitar splitting de código */
   splitting?: boolean;
+  /** Mapeamento de loaders por extensão */
   loader?: Record<string, EsbuildLoader>;
+  /** Mapa de aliases de módulos */
   alias?: Record<string, string>;
+  /** Arquivos para injetar no bundle */
   inject?: string[];
+  /** Texto a ser adicionado no topo dos arquivos gerados */
   banner?: { js?: string; css?: string };
+  /** Texto a ser adicionado no final dos arquivos gerados */
   footer?: { js?: string; css?: string };
+  /** Ambiente alvo (ex: chrome58, node12, esnext) */
   target?: string | string[];
+  /** Conjunto de caracteres (utf8 ou ascii) */
   charset?: EsbuildCharset;
+  /** Nível de detalhamento do log */
   logLevel?: EsbuildLogLevel;
+  /** Limite de mensagens de log */
   logLimit?: number;
+  /** Sobrescrita de nível de log por código de erro */
   logOverride?: Record<string, EsbuildLogLevel>;
+  /** Padrão de nome para arquivos de entrada */
   entryNames?: string;
+  /** Padrão de nome para arquivos de chunk */
   chunkNames?: string;
+  /** Padrão de nome para ativos estáticos */
   assetNames?: string;
+  /** Caminho público base para ativos */
   publicPath?: string;
+  /** Lista de funções que podem ser removidas se o resultado não for usado */
   pure?: string[];
   /**
    * Plugins do esbuild.
@@ -150,7 +201,12 @@ export interface TargetConfig {
   plugins?: unknown[];
 }
 
+/**
+ * Configuração global de alvos de build do esbuild.
+ * Mapeia o nome do alvo para sua configuração.
+ */
 export interface GlobalTargetConfig {
+  /** Nome do alvo e sua configuração correspondente */
   [targetName: string]: TargetConfig;
 }
 
@@ -342,5 +398,6 @@ export interface DenoBundleTargetConfig {
  * Configuração global de múltiplos alvos de build para Deno.bundle.
  */
 export interface DenoBundleGlobalConfig {
+  /** Nome do alvo e sua configuração correspondente */
   [targetName: string]: DenoBundleTargetConfig;
 }

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/schemas/denobuild.json",
+  "version": "0.3.6",
+  "targets": {
+    "ui": {
+      "mode": "build",
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "publicdir": "packages/ui/public",
+      "indexHtml": true,
+      "clean": [
+        "."
+      ],
+      "entryPoints": [
+        "main.tsx"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "minify": false,
+      "sourcemap": "linked",
+      "keepNames": true,
+      "codeSplitting": false,
+      "packages": "bundle",
+      "inlineImports": true
+    }
+  }
+}

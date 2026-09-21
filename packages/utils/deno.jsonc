@@ -17,7 +17,7 @@
   "tasks": {
     "test": "deno test --allow-env --allow-net --allow-read --allow-write tests/",
     "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
-    "lint:doc": "deno doc --lint src/mod.ts src/export/mod.ts",
+    "lint:doc": "deno doc --lint src/mod.ts src/export/mod.ts src/denobuild/mod.ts",
     "tests": "deno task check && deno task test"
   },
   "exports": {
@@ -26,6 +26,8 @@
     "./interfaces": "./src/interfaces/mod.ts",
     "./build": "./src/esbuild/mod.ts",
     "./export": "./src/export/mod.ts",
-    "./export/cli": "./src/export/cli.ts"
+    "./export/cli": "./src/export/cli.ts",
+    "./denobuild": "./src/denobuild/mod.ts",
+    "./denobuild/cli": "./src/denobuild/cli.ts"
   }
 }
