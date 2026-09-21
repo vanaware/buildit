@@ -1,5 +1,5 @@
 import { describe, it } from "@std/testing/bdd";
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { join } from "@std/path";
 import {
   parseVersion,
@@ -22,7 +22,7 @@ describe("version utils", () => {
     });
 
     it("deve rejeitar versões inválidas", () => {
-      assertRejects(async () => {
+      assertThrows(() => {
         parseVersion("invalid");
       });
     });
