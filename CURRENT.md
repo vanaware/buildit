@@ -41,5 +41,9 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Validação completa com `deno doc --lint src/**/*.ts` (22 arquivos verificados, 0 erros) e `deno publish --dry-run` (simulação de publicação bem-sucedida).
   - Sincronização do workflow `.github/workflows/jsr-publish.yml` para publicação do `@vanaware/buildit` a partir de `packages/utils`.
 
+- **Documentação da API e Configurações (`docs/api.md`)**:
+  - `docs/api.md`: Documentação técnica completa e exaustiva contendo todas as opções e propriedades aceitas em arquivos JSONC/JSON para cada utilitário (`esbuild.jsonc`, `denobuild.jsonc` e `export.jsonc`), exemplos comentados, flags CLI e referência da API programática em TypeScript (`runEsbuild`, `runDenoBuild`, `runExport`, `syncVersion`, etc.).
+  - Integração e links em `README.md`.
+
 ### 🎯 Próximos Passos:
 - Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.

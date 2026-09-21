@@ -56,7 +56,8 @@ buildit/
 
 ## 📚 Library Usage (`@vanaware/buildit`)
 
-You can import BuildIt engines directly in any Deno application from [JSR](https://jsr.io/@vanaware/buildit):
+You can import BuildIt engines directly in any Deno application from [JSR](https://jsr.io/@vanaware/buildit).
+For complete API and configuration details, see the **[API and Configuration Reference (docs/api.md)](docs/api.md)**.
 
 ### Installation & Imports
 
