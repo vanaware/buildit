@@ -156,3 +156,7 @@ export async function runEsbuildCli(
     console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`,);
   }
 }
+
+if (import.meta.main) {
+  await runEsbuildCli(Deno.args,);
+}
