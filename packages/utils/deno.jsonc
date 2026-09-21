@@ -5,6 +5,7 @@
   "publish": {
     "include": [
       "src/**/*.ts",
+      "schema/**/*.json",
       "README.md",
       "LICENSE"
     ],
