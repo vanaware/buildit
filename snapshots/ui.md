@@ -1,14 +1,14 @@
 > **INSTRUÇÃO PARA A IA:** 
 > O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).
-> O projeto é o **BuildIt [v0.3.16#mub3tk02] ** estruturado em módulos. 
+> O projeto é o **BuildIt [v0.3.19#mub44zf5] ** estruturado em módulos. 
 > Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).
 > Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
 
 ---
 
-# Contexto Exportado do Projeto BuildIt [v0.3.16#mub3tk02] - Modo: UI
+# Contexto Exportado do Projeto BuildIt [v0.3.19#mub44zf5] - Modo: UI
 
-Gerado automaticamente em: 2026-09-21T10:32:28.166Z
+Gerado automaticamente em: 2026-09-21T10:40:32.024Z
 
 ---
 
@@ -42,6 +42,31 @@ export const totalLogsCount = computed(() => simLogs.value.length,);
 export const addLog = (msg: string,) => {
   const timestamp = new Date().toLocaleTimeString();
   simLogs.value = [...simLogs.value, `[${timestamp}] ${msg}`,];
+};
+
+export const applyPreset = (preset: "prod" | "dev" | "export",) => {
+  if (preset === "prod") {
+    selectedTool.value = "esbuild";
+    targetName.value = "ui";
+    minifyEnabled.value = true;
+    sourcemapEnabled.value = true;
+    cleanDistEnabled.value = true;
+    addLog("⚡ Predefinição 'Produção' aplicada (esbuild, minify, sourcemap, clean).",);
+  } else if (preset === "dev") {
+    selectedTool.value = "esbuild";
+    targetName.value = "ui";
+    minifyEnabled.value = false;
+    sourcemapEnabled.value = true;
+    cleanDistEnabled.value = false;
+    addLog("🛠️ Predefinição 'Dev Rápido' aplicada (esbuild, unminified, sourcemap).",);
+  } else {
+    selectedTool.value = "export";
+    targetName.value = "ui";
+    minifyEnabled.value = false;
+    sourcemapEnabled.value = false;
+    cleanDistEnabled.value = false;
+    addLog("📝 Predefinição 'Snapshot IA' aplicada (exportador de contexto).",);
+  }
 };
 
 export const clearLogs = () => {
@@ -101,30 +126,40 @@ export const runSimulator = async () => {
 ## Arquivo: `packages/ui/src/components/Header.tsx`
 
 ```tsx
-import { themeMode, toggleTheme, } from "../stores/app.ts";
+import { activeTab, themeMode, toggleTheme, } from "../stores/app.ts";
 import { APP_VERSION, } from "@vanaware/buildit";
 
 export const Header = () => {
   return (
     <header class="surface-container-low border bottom">
       <nav class="responsive">
-        <button type="button" class="circle transparent">
-          <i class="primary-text">build</i>
-        </button>
+        <div class="circle primary-container middle center-align">
+          <i class="primary-text">construction</i>
+        </div>
         <div class="max">
           <div class="row middle no-space">
-            <h5 class="no-margin">BuildIt</h5>
-            <span class="chip small tertiary-container margin-left">v{APP_VERSION}</span>
+            <h5 class="no-margin bold">BuildIt</h5>
+            <span class="chip small primary-container margin-left">v{APP_VERSION}</span>
+            <span class="chip small tertiary-container margin-left none s-inline-block">Deno 2.x</span>
+            <span class="chip small secondary-container margin-left none m-inline-block">JSR</span>
           </div>
           <div class="small-text secondary-text">
-            Build Orchestration, Bundling & Context Export Toolkit
+            Orquestrador de Compilação &amp; Exportador de Contexto IA para Deno
           </div>
         </div>
         <button
           type="button"
-          class="circle transparent"
+          class="border round wave small none s-inline-flex"
+          onClick={() => (activeTab.value = "cli")}
+        >
+          <i>menu_book</i>
+          <span>Docs &amp; CLI</span>
+        </button>
+        <button
+          type="button"
+          class="circle transparent wave"
           onClick={toggleTheme}
-          title="Alternar tema claro/escuro"
+          title={themeMode.value === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
         >
           <i>{themeMode.value === "dark" ? "light_mode" : "dark_mode"}</i>
         </button>
@@ -175,15 +210,17 @@ export const Navigation = () => {
 ## Arquivo: `packages/ui/src/components/ToolDetails.tsx`
 
 ```tsx
-import { selectedTool, type ToolKey, } from "../stores/app.ts";
+import { activeTab, selectedTool, type ToolKey, } from "../stores/app.ts";
 
 export const ToolDetails = () => {
   const tools: {
     key: ToolKey;
     icon: string;
     title: string;
+    badge: string;
     subtitle: string;
     description: string;
+    specs: { label: string; value: string }[];
     command: string;
     configFile: string;
     config: string;
@@ -192,63 +229,94 @@ export const ToolDetails = () => {
       key: "esbuild",
       icon: "bolt",
       title: "esbuild Pipeline",
+      badge: "Velocidade Extrema",
       subtitle: "Empacotamento de alta velocidade para navegadores e web apps",
       description:
-        "Orquestrador avançado que conecta esbuild ao @deno/esbuild-plugin. Suporta múltiplos alvos, watch mode contínuo, injeção de versão semântica e resolução de dependências remotas do Deno.",
-      command: "deno task build\n# ou execução direta:\ndeno run -A ./esbuild.ts [alvo] [noversion] [watch]",
+        "Orquestrador avançado que conecta esbuild ao @deno/esbuild-plugin. Suporta múltiplos alvos em paralelo, watch mode contínuo, injeção de versão semântica e resolução de dependências remotas do ecossistema Deno.",
+      specs: [
+        { label: "Plugin Deno", value: "@deno/esbuild-plugin" },
+        { label: "Modos", value: "build / watch" },
+        { label: "Assets", value: "Cópia automática" },
+        { label: "Versão", value: "Injeção no manifest.json" },
+      ],
+      command: "deno task build\n# ou com argumentos de controle:\ndeno run -A ./esbuild.ts [alvo] [noversion] [watch]",
       configFile: "esbuild.jsonc",
-      config: `// Configuração declarativa de alvos esbuild
+      config: `// Configuração declarativa de alvos esbuild (esbuild.jsonc)
 {
-  "ui": {
-    "srcdir": "packages/ui/src",
-    "distdir": "packages/server/build/dist",
-    "entryPoints": ["main.tsx"],
-    "bundle": true,
-    "format": "esm",
-    "minify": true,
-    "sourcemap": "linked"
+  "$schema": "https://deno.land/x/buildit/schemas/esbuild.json",
+  "targets": {
+    "ui": {
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "entryPoints": ["main.tsx"],
+      "bundle": true,
+      "format": "esm",
+      "minify": true,
+      "sourcemap": "linked",
+      "clean": true
+    }
   }
 }`,
     },
     {
       key: "denobuild",
       icon: "memory",
-      title: "denobuild (Deno.bundle nativo)",
-      subtitle: "Empacotador autônomo sem dependências externas via Deno 2.x",
+      title: "denobuild Engine",
+      badge: "Zero Dependências",
+      subtitle: "Empacotador autônomo baseado na API nativa Deno.bundle (--unstable-bundle)",
       description:
-        "Motor de compilação que emprega a API Deno.bundle nativa (--unstable-bundle). Ideal para empacotar bibliotecas e scripts autônomos sem requerer binários nativos ou ferramentas de terceiros.",
-      command: "deno task build:deno\n# ou execução direta:\ndeno run --unstable-bundle -A ./build.ts",
+        "Motor de compilação que emprega a nova API Deno.bundle nativa do Deno 2.x. Ideal para empacotar bibliotecas, Workers e scripts autônomos sem requerer binários compilados externos ou ferramentas de terceiros.",
+      specs: [
+        { label: "Motor", value: "Deno.bundle nativo" },
+        { label: "Flag Deno", value: "--unstable-bundle" },
+        { label: "Code Splitting", value: "Suporte ESM" },
+        { label: "Dependências", value: "Nenhuma (Zero deps)" },
+      ],
+      command: "deno task build:deno\n# ou execução direta:\ndeno run --unstable-bundle -A ./build.ts [alvo]",
       configFile: "denobuild.jsonc",
-      config: `// Configuração declarativa denobuild
+      config: `// Configuração declarativa denobuild (denobuild.jsonc)
 {
-  "ui": {
-    "entryPoints": ["main.tsx"],
-    "format": "esm",
-    "packages": "bundle",
-    "inlineImports": true,
-    "minify": true
+  "$schema": "https://deno.land/x/buildit/schemas/denobuild.json",
+  "targets": {
+    "ui": {
+      "entryPoints": ["main.tsx"],
+      "format": "esm",
+      "packages": "bundle",
+      "inlineImports": true,
+      "minify": true
+    }
   }
 }`,
     },
     {
       key: "export",
       icon: "auto_stories",
-      title: "export (Snapshot de Contexto para IA)",
-      subtitle: "Consolidação de código-fonte estruturada para LLMs e documentação",
+      title: "Context Exporter",
+      badge: "IA & Documentação",
+      subtitle: "Consolidação de código-fonte estruturada para LLMs e revisões",
       description:
-        "Consolidador inteligente de código-fonte e documentação em arquivos Markdown estruturados. Inclui proteção contra loops, filtros por extensão, caminhos permitidos e cabeçalhos com instruções para agentes de Inteligência Artificial.",
-      command: "deno task export\n# ou com seleção de alvos:\ndeno run --allow-read --allow-write ./export.ts [ui|docs|server|utils]",
+        "Consolidador inteligente de código-fonte e documentação em arquivos Markdown estruturados. Inclui proteção contra loops de pastas de saída, filtros por extensão, inclusão seletiva de arquivos raiz e cabeçalhos explicativos para agentes de Inteligência Artificial.",
+      specs: [
+        { label: "Formato", value: "Markdown consolidado" },
+        { label: "Filtros", value: "Anti-loop & Extensões" },
+        { label: "Cabeçalho", value: "Instruções customizadas" },
+        { label: "Saída", value: "snapshots/*.md" },
+      ],
+      command: "deno task export\n# ou com seleção de alvos específicos:\ndeno run --allow-read --allow-write ./export.ts [ui|docs|server|utils]",
       configFile: "export.jsonc",
       config: `// Configuração declarativa export.jsonc
 {
-  "ui": {
-    "arquivoSaida": "snapshots/ui.md",
-    "pastaBase": "./packages/ui/",
-    "subpastasPermitidas": ["src", "public", "tests"],
-    "arquivosRaizPermitidos": ["deno.json", "deno.jsonc"],
-    "extensoesPermitidas": [".ts", ".tsx", ".html", ".json"],
-    "incluiVersao": true,
-    "default": true
+  "$schema": "https://deno.land/x/buildit/schemas/export.json",
+  "modos": {
+    "ui": {
+      "arquivoSaida": "snapshots/ui.md",
+      "pastaBase": "./packages/ui/",
+      "subpastasPermitidas": ["src", "public", "tests"],
+      "arquivosRaizPermitidos": ["deno.json", "deno.jsonc"],
+      "extensoesPermitidas": [".ts", ".tsx", ".html", ".json"],
+      "incluiVersao": true,
+      "default": true
+    }
   }
 }`,
     },
@@ -256,54 +324,114 @@ export const ToolDetails = () => {
 
   return (
     <div>
-      <nav class="wrap margin-bottom">
+      {/* 🧭 Seletor de Ferramenta */}
+      <nav class="row wrap margin-bottom">
         {tools.map((t,) => (
           <button
             key={t.key}
             type="button"
-            class={`chip ${selectedTool.value === t.key ? "primary" : "border"}`}
+            class={`round wave ${selectedTool.value === t.key ? "primary" : "border"}`}
             onClick={() => (selectedTool.value = t.key)}
           >
             <i>{t.icon}</i>
-            <span>{t.title}</span>
+            <span class="bold">{t.title}</span>
+            <span class="chip small margin-left none s-inline-block">{t.badge}</span>
           </button>
         ))}
       </nav>
 
+      {/* 📋 Detalhes da Ferramenta Ativa */}
       {tools
         .filter((t,) => t.key === selectedTool.value)
         .map((t,) => (
           <article key={t.key} class="border round surface-container-low padding">
             <div class="row middle">
-              <i class="primary-text extra">{t.icon}</i>
-              <div class="max">
-                <h5 class="no-margin">{t.title}</h5>
+              <div class="circle primary-container middle center-align">
+                <i class="primary-text extra">{t.icon}</i>
+              </div>
+              <div class="max margin-left">
+                <div class="row middle no-space">
+                  <h5 class="no-margin bold">{t.title}</h5>
+                  <span class="chip small primary-container margin-left">{t.configFile}</span>
+                </div>
                 <div class="small-text secondary-text">{t.subtitle}</div>
               </div>
-              <span class="chip small primary-container">{t.configFile}</span>
+              <button
+                type="button"
+                class="primary round wave small none s-inline-flex"
+                onClick={() => {
+                  selectedTool.value = t.key;
+                  activeTab.value = "interactive";
+                }}
+              >
+                <i>play_arrow</i>
+                <span>Simular</span>
+              </button>
             </div>
 
             <div class="space"></div>
 
-            <p class="secondary-text">{t.description}</p>
+            <p class="secondary-text medium-line">{t.description}</p>
 
+            <div class="space"></div>
+
+            {/* 🏷️ Especificações e Capacidades */}
+            <div class="grid">
+              {t.specs.map((s, idx) => (
+                <div key={idx} class="s6 m3">
+                  <div class="padding border round surface-container center-align">
+                    <div class="small-text secondary-text">{s.label}</div>
+                    <div class="bold margin-top-xs">{s.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div class="space"></div>
             <div class="divider"></div>
             <div class="space"></div>
 
-            <h6 class="no-margin">Comando de Execução</h6>
-            <div class="space"></div>
-            <pre class="scroll surface-container-highest round padding"><code>{t.command}</code></pre>
+            {/* 💻 Comandos e Configurações */}
+            <div class="grid">
+              <div class="s12 m6">
+                <div class="row middle no-space">
+                  <i class="primary-text">terminal</i>
+                  <h6 class="no-margin bold margin-left">Comandos no Terminal</h6>
+                </div>
+                <div class="space"></div>
+                <pre class="scroll surface-container-highest round padding"><code>{t.command}</code></pre>
+              </div>
+
+              <div class="s12 m6">
+                <div class="row middle no-space">
+                  <i class="primary-text">description</i>
+                  <h6 class="no-margin bold margin-left">Configuração ({t.configFile})</h6>
+                </div>
+                <div class="space"></div>
+                <pre class="scroll surface-container-highest round padding"><code>{t.config}</code></pre>
+              </div>
+            </div>
 
             <div class="space"></div>
-
-            <h6 class="no-margin">Estrutura de Configuração ({t.configFile})</h6>
-            <div class="space"></div>
-            <pre class="scroll surface-container-highest round padding"><code>{t.config}</code></pre>
+            <nav class="row right-align">
+              <button
+                type="button"
+                class="primary round wave"
+                onClick={() => {
+                  selectedTool.value = t.key;
+                  activeTab.value = "interactive";
+                }}
+              >
+                <i>tune</i>
+                <span>Abrir no Simulador de Build</span>
+              </button>
+            </nav>
           </article>
         ))}
     </div>
   );
 };
+
 
 
 ```
@@ -313,125 +441,239 @@ export const ToolDetails = () => {
 ## Arquivo: `packages/ui/src/components/OverviewCard.tsx`
 
 ```tsx
+import { activeTab, } from "../stores/app.ts";
+
 export const OverviewCard = () => {
   return (
-    <div class="grid">
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="primary-text extra">inventory_2</i>
-            <div class="max">
-              <h5 class="no-margin">@vanaware/buildit</h5>
-              <div class="small-text secondary-text">
-                Biblioteca central de orquestração em <code>packages/utils</code>
+    <div class="space-y">
+      {/* 🚀 4 Destaques Principais */}
+      <div class="grid">
+        <div class="s12 m6 l3">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <div class="circle primary-container middle center-align">
+                <i class="primary-text">bolt</i>
               </div>
-            </div>
-            <span class="chip small primary-container">JSR Ready</span>
-          </div>
-
-          <div class="space"></div>
-
-          <p class="secondary-text">
-            O <strong>BuildIt</strong> padroniza o ciclo de vida de projetos Deno e Web modernos,
-            fornecendo automação para empacotamento, controle de versão semântico com hash e
-            consolidação estruturada de código para análise por modelos de IA.
-          </p>
-
-          <div class="divider"></div>
-          <div class="space"></div>
-
-          <h6 class="no-margin">Módulos Exportados</h6>
-          <nav class="list">
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
               <div class="max margin-left">
-                <strong>@vanaware/buildit</strong>
-                <div class="small-text secondary-text">Entrada principal e interfaces compartilhadas</div>
+                <span class="chip small primary-container">esbuild</span>
+                <div class="bold margin-top-xs">Motor esbuild</div>
               </div>
             </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
+            <p class="small-text secondary-text margin-top">
+              Empacotamento ultra-rápido com <code>@deno/esbuild-plugin</code>, suporte a watch mode e injeção de assets.
+            </p>
+          </article>
+        </div>
+
+        <div class="s12 m6 l3">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <div class="circle secondary-container middle center-align">
+                <i class="secondary-text">memory</i>
+              </div>
               <div class="max margin-left">
-                <strong>@vanaware/buildit/build</strong>
-                <div class="small-text secondary-text">Pipeline de compilação esbuild & Deno.bundle</div>
+                <span class="chip small secondary-container">Deno 2 Nativo</span>
+                <div class="bold margin-top-xs">Deno.bundle</div>
               </div>
             </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
+            <p class="small-text secondary-text margin-top">
+              Empacotador autônomo baseado na API nativa <code>Deno.bundle</code>, sem dependência de binários externos.
+            </p>
+          </article>
+        </div>
+
+        <div class="s12 m6 l3">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <div class="circle tertiary-container middle center-align">
+                <i class="tertiary-text">auto_stories</i>
+              </div>
               <div class="max margin-left">
-                <strong>@vanaware/buildit/export</strong>
-                <div class="small-text secondary-text">Consolidador de contexto em Markdown para IAs</div>
+                <span class="chip small tertiary-container">LLM Context</span>
+                <div class="bold margin-top-xs">Exportador IA</div>
               </div>
             </div>
-            <div class="row middle no-space padding">
-              <i class="primary-text">check_circle</i>
+            <p class="small-text secondary-text margin-top">
+              Consolida repositórios em Markdown estruturado para alimentar prompts de IA com filtros anti-ruído.
+            </p>
+          </article>
+        </div>
+
+        <div class="s12 m6 l3">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <div class="circle surface-container-highest middle center-align">
+                <i class="primary-text">verified</i>
+              </div>
               <div class="max margin-left">
-                <strong>@vanaware/buildit/config</strong>
-                <div class="small-text secondary-text">Constantes de extensões e regras padrão</div>
+                <span class="chip small surface-container-high">JSR & BDD</span>
+                <div class="bold margin-top-xs">Qualidade Total</div>
               </div>
             </div>
-          </nav>
-        </article>
+            <p class="small-text secondary-text margin-top">
+              37 suítes de testes BDD rigorosos, 100% tipado e compatível com publicação de bibliotecas no JSR.
+            </p>
+          </article>
+        </div>
       </div>
 
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="tertiary-text extra">account_tree</i>
-            <div class="max">
-              <h5 class="no-margin">Estrutura do Workspace</h5>
-              <div class="small-text secondary-text">Monorepo Deno 2.x com gerenciamento nativo</div>
-            </div>
-            <span class="chip small tertiary-container">Deno 2</span>
-          </div>
+      <div class="space"></div>
 
-          <div class="space"></div>
-
-          <nav class="list">
-            <div class="row top padding border round margin-bottom surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/utils</strong>
-                  <span class="chip small margin-left">@vanaware/buildit</span>
-                </div>
+      {/* 📦 Biblioteca & Monorepo */}
+      <div class="grid">
+        <div class="s12 m6">
+          <article class="border round surface-container-low padding">
+            <div class="row middle">
+              <i class="primary-text extra">inventory_2</i>
+              <div class="max">
+                <h5 class="no-margin bold">@vanaware/buildit</h5>
                 <div class="small-text secondary-text">
-                  Núcleo com as 3 CLIs: denobuild, esbuild e exportador de contexto com testes unitários em BDD.
+                  Biblioteca reutilizável em <code>packages/utils</code>
                 </div>
               </div>
+              <span class="chip small primary-container">JSR Published</span>
             </div>
 
-            <div class="row top padding border round margin-bottom surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/server</strong>
-                  <span class="chip small margin-left">@buildit/server</span>
+            <div class="space"></div>
+
+            <p class="secondary-text">
+              Instale ou importe os motores diretamente em qualquer projeto Deno 2:
+            </p>
+
+            <pre class="scroll surface-container-highest round padding"><code>deno add jsr:@vanaware/buildit</code></pre>
+
+            <div class="space"></div>
+            <h6 class="no-margin bold">Subcaminhos e Módulos</h6>
+            <div class="space"></div>
+
+            <nav class="list">
+              <div class="row middle padding border round margin-bottom surface-container">
+                <i class="primary-text">tune</i>
+                <div class="max margin-left">
+                  <strong>@vanaware/buildit</strong>
+                  <div class="small-text secondary-text">Ponto de entrada central com tipos e interfaces</div>
                 </div>
-                <div class="small-text secondary-text">
-                  Servidor estático de alta performance baseado em <code>Deno.serve</code> servindo em <code>0.0.0.0:3000</code>.
-                </div>
+                <span class="chip small">Core</span>
               </div>
+              <div class="row middle padding border round margin-bottom surface-container">
+                <i class="primary-text">bolt</i>
+                <div class="max margin-left">
+                  <strong>@vanaware/buildit/build</strong>
+                  <div class="small-text secondary-text">Pipeline de compilação esbuild e Deno.bundle</div>
+                </div>
+                <span class="chip small">Bundler</span>
+              </div>
+              <div class="row middle padding border round margin-bottom surface-container">
+                <i class="primary-text">share</i>
+                <div class="max margin-left">
+                  <strong>@vanaware/buildit/export</strong>
+                  <div class="small-text secondary-text">Gerador de snapshots de contexto para modelos de IA</div>
+                </div>
+                <span class="chip small">LLM</span>
+              </div>
+              <div class="row middle padding border round surface-container">
+                <i class="primary-text">settings</i>
+                <div class="max margin-left">
+                  <strong>@vanaware/buildit/config</strong>
+                  <div class="small-text secondary-text">Gerenciador de versão semântica e flags CLI</div>
+                </div>
+                <span class="chip small">Version</span>
+              </div>
+            </nav>
+
+            <div class="space"></div>
+            <nav class="row wrap">
+              <button
+                type="button"
+                class="primary round wave"
+                onClick={() => (activeTab.value = "interactive")}
+              >
+                <i>play_arrow</i>
+                <span>Testar no Simulador</span>
+              </button>
+              <button
+                type="button"
+                class="border round wave"
+                onClick={() => (activeTab.value = "cli")}
+              >
+                <i>menu_book</i>
+                <span>Ver Comandos CLI</span>
+              </button>
+            </nav>
+          </article>
+        </div>
+
+        <div class="s12 m6">
+          <article class="border round surface-container-low padding">
+            <div class="row middle">
+              <i class="tertiary-text extra">account_tree</i>
+              <div class="max">
+                <h5 class="no-margin bold">Estrutura do Workspace</h5>
+                <div class="small-text secondary-text">Monorepo multi-pacotes sob Deno 2.x</div>
+              </div>
+              <span class="chip small tertiary-container">Deno Workspace</span>
             </div>
 
-            <div class="row top padding border round surface-container">
-              <i class="tertiary-text">folder</i>
-              <div class="max margin-left">
-                <div class="row middle no-space">
-                  <strong>packages/ui</strong>
-                  <span class="chip small margin-left">@buildit/ui</span>
-                </div>
-                <div class="small-text secondary-text">
-                  Aplicação de demonstração construída puramente com Preact, BeerCSS e Signals reativos.
+            <div class="space"></div>
+
+            <nav class="list">
+              <div class="row top padding border round margin-bottom surface-container">
+                <i class="tertiary-text">folder</i>
+                <div class="max margin-left">
+                  <div class="row middle no-space">
+                    <strong>packages/utils</strong>
+                    <span class="chip small margin-left primary-container">@vanaware/buildit</span>
+                  </div>
+                  <div class="small-text secondary-text margin-top-xs">
+                    Pacote publicado no JSR com os 3 motores, interfaces TypeScript e 37 suítes de testes BDD.
+                  </div>
                 </div>
               </div>
+
+              <div class="row top padding border round margin-bottom surface-container">
+                <i class="tertiary-text">folder</i>
+                <div class="max margin-left">
+                  <div class="row middle no-space">
+                    <strong>packages/server</strong>
+                    <span class="chip small margin-left secondary-container">@buildit/server</span>
+                  </div>
+                  <div class="small-text secondary-text margin-top-xs">
+                    Servidor HTTP estático nativo utilizando <code>Deno.serve</code> servindo arquivos compilados na porta 3000.
+                  </div>
+                </div>
+              </div>
+
+              <div class="row top padding border round margin-bottom surface-container">
+                <i class="tertiary-text">folder</i>
+                <div class="max margin-left">
+                  <div class="row middle no-space">
+                    <strong>packages/ui</strong>
+                    <span class="chip small margin-left tertiary-container">@buildit/ui</span>
+                  </div>
+                  <div class="small-text secondary-text margin-top-xs">
+                    Dashboard reativo construído com Preact, Signals e componentes semânticos Material Design 3 via BeerCSS.
+                  </div>
+                </div>
+              </div>
+            </nav>
+
+            <div class="space"></div>
+            <h6 class="no-margin bold">Comandos Rápidos no Terminal</h6>
+            <div class="space"></div>
+
+            <div class="row wrap">
+              <span class="chip border"><i class="small">bolt</i>deno task build</span>
+              <span class="chip border"><i class="small">memory</i>deno task build:deno</span>
+              <span class="chip border"><i class="small">share</i>deno task export</span>
+              <span class="chip border"><i class="small">check_circle</i>deno task test</span>
             </div>
-          </nav>
-        </article>
+          </article>
+        </div>
       </div>
     </div>
   );
 };
+
 
 
 ```
@@ -441,90 +683,180 @@ export const OverviewCard = () => {
 ## Arquivo: `packages/ui/src/components/SnapshotsCard.tsx`
 
 ```tsx
+import { activeTab, selectedTool, } from "../stores/app.ts";
+
 export const SnapshotsCard = () => {
+  const snapshots = [
+    {
+      file: "snapshots/ui.md",
+      title: "UI Context",
+      badge: "Preact & BeerCSS",
+      target: "ui",
+      icon: "devices",
+      desc: "Todo o código-fonte da interface de usuário, componentes, stores e manifest.",
+    },
+    {
+      file: "snapshots/server.md",
+      title: "Server & Deploy",
+      badge: "Deno.serve & CI/CD",
+      target: "server",
+      icon: "dns",
+      desc: "Servidor estático, scripts de inicialização, configuração Docker e workflows.",
+    },
+    {
+      file: "snapshots/utils.md",
+      title: "Core Engines & Tests",
+      badge: "@vanaware/buildit",
+      target: "utils",
+      icon: "handyman",
+      desc: "Motores de orquestração, suíte de 37 testes BDD e interfaces TypeScript.",
+    },
+    {
+      file: "snapshots/docs.md",
+      title: "Technical Docs",
+      badge: "Markdown Specs",
+      target: "docs",
+      icon: "menu_book",
+      desc: "Arquitetura, guias de publicação JSR, plano de tarefas e especificações de API.",
+    },
+  ];
+
   return (
-    <div class="grid">
-      <div class="s12">
-        <article class="border round surface-container-low padding">
-          <div class="row middle">
-            <i class="primary-text extra">auto_stories</i>
-            <div class="max">
-              <h5 class="no-margin">Exportador de Contexto para Inteligência Artificial</h5>
-              <div class="small-text secondary-text">
-                Gere snapshots consolidados em Markdown para LLMs e revisões de código
+    <div class="space-y">
+      {/* 🌟 Cabeçalho do Exportador */}
+      <div class="grid">
+        <div class="s12">
+          <article class="border round surface-container-low padding">
+            <div class="row middle">
+              <div class="circle tertiary-container middle center-align">
+                <i class="tertiary-text extra">auto_stories</i>
               </div>
+              <div class="max margin-left">
+                <div class="row middle no-space">
+                  <h5 class="no-margin bold">Exportador de Contexto para Inteligência Artificial</h5>
+                  <span class="chip small tertiary-container margin-left">LLM-Ready</span>
+                </div>
+                <div class="small-text secondary-text">
+                  Consolidação limpa e estruturada de repositórios em Markdown para Claude, Gemini e GPT
+                </div>
+              </div>
+              <button
+                type="button"
+                class="primary round wave small none s-inline-flex"
+                onClick={() => {
+                  selectedTool.value = "export";
+                  activeTab.value = "interactive";
+                }}
+              >
+                <i>tune</i>
+                <span>Simular Snapshot</span>
+              </button>
             </div>
-            <span class="chip small primary-container">CLI & Lib</span>
-          </div>
 
-          <div class="space"></div>
+            <div class="space"></div>
 
-          <p class="secondary-text">
-            Desenvolvedores que utilizam assistentes de código e LLMs precisam constantemente
-            fornecer contexto preciso de seus repositórios. O utilitário <code>export</code> varre os
-            arquivos selecionados, remove ruídos desnecessários e formata o conteúdo em um snapshot
-            único, limpo e estruturado.
-          </p>
-        </article>
+            <p class="secondary-text medium-line">
+              Desenvolvedores que utilizam assistentes de código e LLMs precisam constantemente
+              fornecer contexto preciso de seus repositórios sem poluição de arquivos binários, dependências ou
+              arquivos gerados. O utilitário <code>export</code> varre os arquivos permitidos, aplica filtros de segurança
+              anti-loop e estrutura um documento Markdown unificado e limpo.
+            </p>
+          </article>
+        </div>
       </div>
 
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <h6 class="no-margin">Snapshots Predefinidos</h6>
-          <div class="space"></div>
-          <nav class="list">
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">code</i>
-              <div class="max margin-left">
-                <strong>snapshots/ui.md</strong>
-                <div class="small-text secondary-text">Todo o código-fonte da interface Preact</div>
-              </div>
-            </div>
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">dns</i>
-              <div class="max margin-left">
-                <strong>snapshots/server.md</strong>
-                <div class="small-text secondary-text">Configurações de servidor e workflows CI/CD</div>
-              </div>
-            </div>
-            <div class="row middle padding border round margin-bottom surface-container">
-              <i class="primary-text">handyman</i>
-              <div class="max margin-left">
-                <strong>snapshots/utils.md</strong>
-                <div class="small-text secondary-text">Mecanismos de build, CLIs e testes</div>
-              </div>
-            </div>
-            <div class="row middle padding border round surface-container">
-              <i class="primary-text">menu_book</i>
-              <div class="max margin-left">
-                <strong>snapshots/docs.md</strong>
-                <div class="small-text secondary-text">Documentação técnica e diretrizes</div>
-              </div>
-            </div>
-          </nav>
-        </article>
-      </div>
+      <div class="space"></div>
 
-      <div class="s12 m6">
-        <article class="border round surface-container-low padding">
-          <h6 class="no-margin">Como Executar no Terminal</h6>
-          <div class="space"></div>
-          <p class="small-text secondary-text">
-            O utilitário aceita argumentos via CLI para rodar snapshots específicos ou todos os padrões.
-          </p>
-          <pre class="scroll surface-container-highest round padding"><code>{`# Exporta todos os modos marcados como default:
+      {/* 📑 Alvos e Instruções CLI */}
+      <div class="grid">
+        <div class="s12 m6">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <i class="primary-text">bookmarks</i>
+              <h6 class="no-margin bold margin-left">Snapshots Automatizados</h6>
+            </div>
+            <div class="space"></div>
+
+            <nav class="list">
+              {snapshots.map((s, idx) => (
+                <div
+                  key={idx}
+                  class={`row top padding border round ${idx < snapshots.length - 1 ? "margin-bottom" : ""} surface-container`}
+                >
+                  <div class="circle surface-container-highest middle center-align">
+                    <i class="primary-text">{s.icon}</i>
+                  </div>
+                  <div class="max margin-left">
+                    <div class="row middle no-space">
+                      <strong class="medium-text">{s.file}</strong>
+                      <span class="chip small margin-left">{s.badge}</span>
+                    </div>
+                    <div class="small-text secondary-text margin-top-xs">{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </nav>
+          </article>
+        </div>
+
+        <div class="s12 m6">
+          <article class="border round surface-container-low padding">
+            <div class="row middle no-space">
+              <i class="primary-text">terminal</i>
+              <h6 class="no-margin bold margin-left">Comandos no Terminal</h6>
+            </div>
+            <div class="space"></div>
+            <p class="small-text secondary-text">
+              Execute a tarefa central ou isole alvos individuais conforme a necessidade da análise:
+            </p>
+            <pre class="scroll surface-container-highest round padding"><code>{`# Exporta todos os modos marcados como padrão (default: true):
 deno task export
 
 # Exporta apenas o contexto da UI:
 deno run --allow-read --allow-write ./export.ts ui
 
-# Exporta apenas a documentação:
+# Exporta apenas motores e testes:
+deno run --allow-read --allow-write ./export.ts utils
+
+# Exporta documentação técnica:
 deno run --allow-read --allow-write ./export.ts docs`}</code></pre>
-        </article>
+
+            <div class="space"></div>
+            <div class="divider"></div>
+            <div class="space"></div>
+
+            <div class="row middle no-space">
+              <i class="tertiary-text">security</i>
+              <h6 class="no-margin bold margin-left">Proteções Embutidas</h6>
+            </div>
+            <div class="space"></div>
+            <ul class="small-text secondary-text no-margin medium-line">
+              <li><strong>Proteção Anti-Loop:</strong> Impede recursividade ao excluir a própria pasta de saída de snapshots.</li>
+              <li><strong>Filtro de Extensões:</strong> Restringe a captura apenas a formatos textuais relevantes (.ts, .tsx, .json, .md, .html).</li>
+              <li><strong>Inclusão Seletiva:</strong> Permite especificar arquivos de raiz individuais (deno.json, manifest.json).</li>
+            </ul>
+
+            <div class="space"></div>
+            <nav class="row right-align">
+              <button
+                type="button"
+                class="primary round wave"
+                onClick={() => {
+                  selectedTool.value = "export";
+                  activeTab.value = "interactive";
+                }}
+              >
+                <i>play_arrow</i>
+                <span>Testar Exportação no Simulador</span>
+              </button>
+            </nav>
+          </article>
+        </div>
       </div>
     </div>
   );
 };
+
 
 
 ```
@@ -535,6 +867,7 @@ deno run --allow-read --allow-write ./export.ts docs`}</code></pre>
 
 ```tsx
 import {
+  applyPreset,
   bundleSimCount,
   cleanDistEnabled,
   clearLogs,
@@ -552,12 +885,15 @@ import {
 export const SimulatorCard = () => {
   return (
     <div class="grid">
+      {/* 🎛️ Painel de Controle */}
       <div class="s12 m5">
         <article class="border round surface-container-low padding">
           <div class="row middle">
-            <i class="primary-text extra">tune</i>
-            <div class="max">
-              <h5 class="no-margin">Simulador de Build</h5>
+            <div class="circle primary-container middle center-align">
+              <i class="primary-text">tune</i>
+            </div>
+            <div class="max margin-left">
+              <h5 class="no-margin bold">Painel de Simulação</h5>
               <div class="small-text secondary-text">
                 Parâmetros reativos controlados via Signals
               </div>
@@ -566,7 +902,37 @@ export const SimulatorCard = () => {
 
           <div class="space"></div>
 
-          <div class="field label border round">
+          {/* ⚡ Predefinições Rápidas */}
+          <div class="small-text secondary-text bold margin-bottom-xs">Predefinições Rápidas:</div>
+          <nav class="row wrap margin-bottom">
+            <button
+              type="button"
+              class="chip border wave"
+              onClick={() => applyPreset("prod")}
+            >
+              <i>bolt</i>
+              <span>Produção</span>
+            </button>
+            <button
+              type="button"
+              class="chip border wave"
+              onClick={() => applyPreset("dev")}
+            >
+              <i>build</i>
+              <span>Dev Rápido</span>
+            </button>
+            <button
+              type="button"
+              class="chip border wave"
+              onClick={() => applyPreset("export")}
+            >
+              <i>auto_stories</i>
+              <span>Snapshot IA</span>
+            </button>
+          </nav>
+
+          <div class="field label prefix border round">
+            <i>build</i>
             <select
               value={selectedTool.value}
               onChange={(e,) =>
@@ -577,10 +943,11 @@ export const SimulatorCard = () => {
               <option value="denobuild">denobuild (Deno.bundle nativo)</option>
               <option value="export">export (Snapshot Markdown)</option>
             </select>
-            <label>Ferramenta / CLI</label>
+            <label>Motor / Ferramenta</label>
           </div>
 
-          <div class="field label border round">
+          <div class="field label prefix border round">
+            <i>folder_zip</i>
             <select
               value={targetName.value}
               onChange={(e,) =>
@@ -591,65 +958,92 @@ export const SimulatorCard = () => {
               <option value="server">server (packages/server)</option>
               <option value="utils">utils (packages/utils)</option>
             </select>
-            <label>Alvo (Target)</label>
+            <label>Alvo de Compilação (Target)</label>
           </div>
 
           <div class="space"></div>
 
-          <nav class="list">
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                checked={minifyEnabled.value}
-                onChange={(e,) =>
-                  (minifyEnabled.value = (e.target as HTMLInputElement).checked)
-                }
-              />
-              <span>Minificar saída (minify)</span>
-            </label>
+          {/* 🔘 Switches Material Design 3 via BeerCSS */}
+          <div class="space-y">
+            <div class="row middle padding border round surface-container margin-bottom">
+              <i class="primary-text">compress</i>
+              <div class="max margin-left">
+                <div class="bold">Minificar Saída</div>
+                <div class="small-text secondary-text">Ativa minificação e tree-shaking</div>
+              </div>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  checked={minifyEnabled.value}
+                  onChange={(e,) =>
+                    (minifyEnabled.value = (e.target as HTMLInputElement).checked)
+                  }
+                />
+                <span></span>
+              </label>
+            </div>
 
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                checked={sourcemapEnabled.value}
-                onChange={(e,) =>
-                  (sourcemapEnabled.value = (e.target as HTMLInputElement).checked)
-                }
-              />
-              <span>Gerar Sourcemaps (sourcemap)</span>
-            </label>
+            <div class="row middle padding border round surface-container margin-bottom">
+              <i class="secondary-text">map</i>
+              <div class="max margin-left">
+                <div class="bold">Gerar Sourcemaps</div>
+                <div class="small-text secondary-text">Gera arquivos .map para depuração</div>
+              </div>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  checked={sourcemapEnabled.value}
+                  onChange={(e,) =>
+                    (sourcemapEnabled.value = (e.target as HTMLInputElement).checked)
+                  }
+                />
+                <span></span>
+              </label>
+            </div>
 
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                checked={cleanDistEnabled.value}
-                onChange={(e,) =>
-                  (cleanDistEnabled.value = (e.target as HTMLInputElement).checked)
-                }
-              />
-              <span>Limpar diretório de saída (clean)</span>
-            </label>
-          </nav>
+            <div class="row middle padding border round surface-container margin-bottom">
+              <i class="tertiary-text">delete_sweep</i>
+              <div class="max margin-left">
+                <div class="bold">Limpar Diretório Dist</div>
+                <div class="small-text secondary-text">Executa limpeza prévia em distdir</div>
+              </div>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  checked={cleanDistEnabled.value}
+                  onChange={(e,) =>
+                    (cleanDistEnabled.value = (e.target as HTMLInputElement).checked)
+                  }
+                />
+                <span></span>
+              </label>
+            </div>
+          </div>
 
           <div class="space"></div>
 
-          <nav class="row">
+          <nav class="row wrap">
             <button
               type="button"
-              class="primary round"
+              class="primary round wave max"
               disabled={isSimulating.value}
               onClick={runSimulator}
             >
-              <i>play_arrow</i>
-              <span>{isSimulating.value ? "Executando..." : "Executar Build"}</span>
+              {isSimulating.value ? (
+                <progress class="circle small"></progress>
+              ) : (
+                <i>play_arrow</i>
+              )}
+              <span>{isSimulating.value ? "Compilando..." : "Executar Pipeline"}</span>
             </button>
             <button
               type="button"
-              class="border round"
+              class="border round wave"
               onClick={clearLogs}
+              title="Limpar logs do console"
             >
               <i>delete_sweep</i>
-              <span>Limpar Logs</span>
+              <span>Limpar</span>
             </button>
           </nav>
 
@@ -666,22 +1060,39 @@ export const SimulatorCard = () => {
         </article>
       </div>
 
+      {/* 💻 Janela do Console Terminal */}
       <div class="s12 m7">
         <article class="border round surface-container-low padding">
           <div class="row middle">
-            <i class="primary-text">terminal</i>
-            <h6 class="max no-margin">Console de Execução</h6>
-            <span class="chip small surface-container-highest">
-              {totalLogsCount.value} linhas
-            </span>
+            {/* Pontos de controle da janela */}
+            <div class="row no-space margin-right">
+              <span class="circle small error margin-right-xs"></span>
+              <span class="circle small warning margin-right-xs"></span>
+              <span class="circle small primary"></span>
+            </div>
+            <i class="primary-text margin-left-xs">terminal</i>
+            <h6 class="max no-margin bold margin-left-xs">Console de Execução</h6>
+            {isSimulating.value ? (
+              <span class="chip small tertiary-container">
+                <progress class="circle small"></progress>
+                <span>Processando</span>
+              </span>
+            ) : (
+              <span class="chip small primary-container">
+                {totalLogsCount.value} eventos
+              </span>
+            )}
           </div>
+
           <div class="space"></div>
-          <pre class="scroll surface-container-highest round padding"><code>{simLogs.value.join("\n",)}</code></pre>
+
+          <pre class="scroll surface-container-highest round padding" style="min-height: 380px;"><code>{simLogs.value.join("\n",)}</code></pre>
         </article>
       </div>
     </div>
   );
 };
+
 
 
 ```
@@ -863,8 +1274,13 @@ import { assertEquals, } from "@std/assert";
 import {
   activeTab,
   addLog,
+  applyPreset,
+  cleanDistEnabled,
   clearLogs,
+  minifyEnabled,
+  selectedTool,
   simLogs,
+  sourcemapEnabled,
   themeMode,
   toggleTheme,
   totalLogsCount,
@@ -888,6 +1304,26 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(themeMode.value, "light",);
     toggleTheme();
     assertEquals(themeMode.value, "dark",);
+  });
+
+  it("deve aplicar predefinições de build corretamente", () => {
+    applyPreset("prod");
+    assertEquals(selectedTool.value, "esbuild");
+    assertEquals(minifyEnabled.value, true);
+    assertEquals(sourcemapEnabled.value, true);
+    assertEquals(cleanDistEnabled.value, true);
+
+    applyPreset("dev");
+    assertEquals(selectedTool.value, "esbuild");
+    assertEquals(minifyEnabled.value, false);
+    assertEquals(sourcemapEnabled.value, true);
+    assertEquals(cleanDistEnabled.value, false);
+
+    applyPreset("export");
+    assertEquals(selectedTool.value, "export");
+    assertEquals(minifyEnabled.value, false);
+    assertEquals(sourcemapEnabled.value, false);
+    assertEquals(cleanDistEnabled.value, false);
   });
 
   it("deve adicionar e limpar logs no console de simulação", () => {

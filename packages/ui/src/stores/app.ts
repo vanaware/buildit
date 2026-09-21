@@ -27,6 +27,31 @@ export const addLog = (msg: string,) => {
   simLogs.value = [...simLogs.value, `[${timestamp}] ${msg}`,];
 };
 
+export const applyPreset = (preset: "prod" | "dev" | "export",) => {
+  if (preset === "prod") {
+    selectedTool.value = "esbuild";
+    targetName.value = "ui";
+    minifyEnabled.value = true;
+    sourcemapEnabled.value = true;
+    cleanDistEnabled.value = true;
+    addLog("⚡ Predefinição 'Produção' aplicada (esbuild, minify, sourcemap, clean).",);
+  } else if (preset === "dev") {
+    selectedTool.value = "esbuild";
+    targetName.value = "ui";
+    minifyEnabled.value = false;
+    sourcemapEnabled.value = true;
+    cleanDistEnabled.value = false;
+    addLog("🛠️ Predefinição 'Dev Rápido' aplicada (esbuild, unminified, sourcemap).",);
+  } else {
+    selectedTool.value = "export";
+    targetName.value = "ui";
+    minifyEnabled.value = false;
+    sourcemapEnabled.value = false;
+    cleanDistEnabled.value = false;
+    addLog("📝 Predefinição 'Snapshot IA' aplicada (exportador de contexto).",);
+  }
+};
+
 export const clearLogs = () => {
   simLogs.value = [];
 };

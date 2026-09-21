@@ -29,9 +29,14 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - `denobuild.jsonc`: Configuração declarativa dos alvos de build.
   - `build.ts`: Delegado CLI na raiz.
   - Testes unitários em `packages/utils/tests/denobuild/`.
-- **Melhoria visual da UI com BeerCSS puro**:
-  - Removidos todos os atributos `style="..."` e tags `<style>`.
-  - Layout limpo e responsivo estruturado com componentes BeerCSS (`nav class="tab"`, `article class="border round surface-container-low"`, chips, grid).
+- **Aprimoramento Visual e Arquitetural da UI com BeerCSS Puro**:
+  - `Header.tsx`: Identidade visual polida com ícones circulares em containers temáticos, badges de versão (`v{APP_VERSION}`), chips contextuais (`Deno 2.x`, `JSR`) e botão responsivo de acesso rápido à documentação.
+  - `OverviewCard.tsx`: Dashboard executivo bento-style com 4 cards de recursos em grid (`esbuild Engine`, `Deno.bundle`, `Exportador IA`, `JSR & BDD`), bloco terminal com comando `deno add jsr:@vanaware/buildit`, catálogo de submódulos com badges de status, mapa do workspace e comandos de terminal rápidos.
+  - `ToolDetails.tsx`: Seletor de ferramentas em chips responsivos, especificações técnicas em cartões compactos (`specs`), comandos de terminal com sintaxe destacada, esquemas de configuração anotados e botão de transição direta para simulação.
+  - `SimulatorCard.tsx`: Controles reativos com switches modernos Material Design 3 (`<label class="switch">`), predefinições de um clique (`Produção`, `Dev Rápido`, `Snapshot IA`), campos de seleção com prefixos semânticos e console de execução com estética de janela de terminal macOS.
+  - `SnapshotsCard.tsx`: Apresentação estruturada dos 4 snapshots pré-configurados, cartões de arquivos com chips e métricas, visualização de proteções ativas (anti-loop, extensões permitidas) e comandos CLI diretos.
+  - `stores/app.ts` & `tests/store.test.ts`: Implementada ação `applyPreset` com cobertura de testes BDD e reatividade completa via `@preact/signals`.
+  - Zero uso de bibliotecas de terceiros ou classes utilitárias fora da especificação BeerCSS.
 
 - **Conformidade com Diretrizes JSR (`docs/publish-jsr-rules.md`)**:
   - `packages/utils/README.md`: Elaborado conforme as regras obrigatórias do JSR (título curto `# buildit`, descrição, comando de instalação `deno add`, exemplos de código executáveis, features e tabela de visão geral da API).

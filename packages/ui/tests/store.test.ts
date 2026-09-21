@@ -8,8 +8,13 @@ import { assertEquals, } from "@std/assert";
 import {
   activeTab,
   addLog,
+  applyPreset,
+  cleanDistEnabled,
   clearLogs,
+  minifyEnabled,
+  selectedTool,
   simLogs,
+  sourcemapEnabled,
   themeMode,
   toggleTheme,
   totalLogsCount,
@@ -33,6 +38,26 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(themeMode.value, "light",);
     toggleTheme();
     assertEquals(themeMode.value, "dark",);
+  });
+
+  it("deve aplicar predefinições de build corretamente", () => {
+    applyPreset("prod");
+    assertEquals(selectedTool.value, "esbuild");
+    assertEquals(minifyEnabled.value, true);
+    assertEquals(sourcemapEnabled.value, true);
+    assertEquals(cleanDistEnabled.value, true);
+
+    applyPreset("dev");
+    assertEquals(selectedTool.value, "esbuild");
+    assertEquals(minifyEnabled.value, false);
+    assertEquals(sourcemapEnabled.value, true);
+    assertEquals(cleanDistEnabled.value, false);
+
+    applyPreset("export");
+    assertEquals(selectedTool.value, "export");
+    assertEquals(minifyEnabled.value, false);
+    assertEquals(sourcemapEnabled.value, false);
+    assertEquals(cleanDistEnabled.value, false);
   });
 
   it("deve adicionar e limpar logs no console de simulação", () => {
