@@ -1,5 +1,3 @@
-/// <reference lib="deno.ns" />
-
 import { parse as parseJsonc } from "@std/jsonc";
 import { join } from "@std/path";
 

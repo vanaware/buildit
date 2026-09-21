@@ -1,5 +1,3 @@
-/// <reference lib="deno.ns" />
-
 /**
  * @module @vanaware/buildit/config/version
  * @description Gerenciamento centralizado de versões semânticas e sincronização
@@ -9,15 +7,9 @@
 import { dirname, isAbsolute, join } from "@std/path";
 import { parse as parseJsonc } from "@std/jsonc";
 import { APP_VERSION as FALLBACK_VERSION } from "../version.ts";
+import type { ParsedVersion } from "../interfaces/mod.ts";
 
-/**
- * Versão semântica parseada.
- */
-export interface ParsedVersion {
-  major: number;
-  minor: number;
-  patch: number;
-}
+export type { ParsedVersion };
 
 /**
  * Opções para atualização e sincronização de versão.

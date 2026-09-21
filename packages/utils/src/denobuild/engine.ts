@@ -1,6 +1,3 @@
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.unstable" />
-
 /**
  * @module @vanaware/buildit/denobuild/engine
  * @description Mecanismo central de compilação, injeção de defines e processamento de alvos com Deno.bundle.

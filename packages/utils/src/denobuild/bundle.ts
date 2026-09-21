@@ -1,6 +1,3 @@
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.unstable" />
-
 /**
  * @module @vanaware/buildit/denobuild/bundle
  * @description Funções utilitárias e geradores de opções para a API nativa Deno.bundle.

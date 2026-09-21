@@ -28,15 +28,9 @@ jobs:
 
       - name: Sanitize Version
         run: |
-          sh ./sanitize-version.sh ./packages/worker-db/deno.jsonc
-          sh ./sanitize-version.sh ./packages/service-worker/deno.jsonc
+          sh ./sanitize-version.sh ./packages/utils/deno.jsonc
 
       - name: Publish BuildIt to JSR
         run: |
-          cd packages/worker-db
-          deno publish --allow-slow-types --allow-dirty
-
-      - name: Publish OPFS Explorer to JSR
-        run: |
-          cd packages/service-worker
-          deno publish --allow-slow-types --allow-dirty
+          cd packages/utils
+          deno publish --allow-dirty

@@ -1,5 +1,3 @@
-/// <reference lib="deno.ns" />
-
 /**
  * @module @vanaware/buildit/config/cli-flags
  * @description Parser padronizado de argumentos CLI para ferramentas de build e exportação.

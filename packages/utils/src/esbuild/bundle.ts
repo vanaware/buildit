@@ -1,6 +1,3 @@
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.unstable" />
-
 /**
  * @module @vanaware/buildit/build/bundle
  * @description Funções específicas para o motor Deno.bundle (API nativa --unstable-bundle).
@@ -35,6 +32,18 @@ import {
 // ============================================================================
 // 🔧 APLICAÇÃO DE DEFINES (em memória, antes de salvar)
 // ============================================================================
+/**
+ * Applies compile-time variable defines to the generated bundle source code.
+ *
+ * @param text - The bundle source text.
+ * @param defines - Key-value map of defines to replace (e.g., `__VERSION__`).
+ * @returns The transformed source code with defines applied.
+ *
+ * @example
+ * ```ts
+ * const replaced = applyDefines("console.log(__VERSION__);", { "__VERSION__": '"1.0.0"' });
+ * ```
+ */
 export function applyDefines(
   text: string,
   defines: Record<string, string>,
@@ -52,6 +61,12 @@ export function applyDefines(
 // ============================================================================
 // 🛠️ CONSTRUÇÃO DAS OPÇÕES DO DENO.BUNDLE
 // ============================================================================
+/**
+ * Constructs Deno.bundle options from a target configuration.
+ *
+ * @param config - The bundle target configuration.
+ * @returns Fully resolved options object for Deno.bundle.
+ */
 export function buildBundleOptions(
   config: DenoBundleTargetConfig,
 ): Deno.bundle.Options {
@@ -97,6 +112,15 @@ export function buildBundleOptions(
 // ============================================================================
 // 🎯 PROCESSAMENTO DE ALVO (Deno.bundle)
 // ============================================================================
+/**
+ * Processes a single bundle target using Deno.bundle.
+ *
+ * @param targetName - The name of the target to compile.
+ * @param config - The bundle target configuration.
+ * @param appVersion - The application version string to stamp.
+ * @param listAssetsFn - Optional function to list output assets for cache manifests.
+ * @returns A promise that resolves when processing is complete.
+ */
 export async function processBundleTarget(
   targetName: string,
   config: DenoBundleTargetConfig,

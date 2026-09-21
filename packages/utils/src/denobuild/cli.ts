@@ -1,6 +1,3 @@
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.unstable" />
-
 /**
  * @module @vanaware/buildit/denobuild/cli
  * @description Ponto de entrada CLI para o orquestrador denobuild baseado em Deno.bundle API.

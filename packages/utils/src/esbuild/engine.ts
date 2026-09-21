@@ -1,5 +1,3 @@
-/// <reference lib="deno.ns" />
-
 /**
  * @module @vanaware/buildit/esbuild/engine
  * @description Mecanismo programático para execução de builds com esbuild e @deno/esbuild-plugin.
@@ -23,11 +21,14 @@ import type {
 } from "../interfaces/mod.ts";
 
 /**
- * Resultado detalhado de compilação esbuild.
+ * Detailed esbuild compilation result.
  */
 export interface EsbuildResult {
+  /** The build target identifier. */
   target: string;
+  /** Whether the build operation succeeded. */
   success: boolean;
+  /** Total duration of the build operation in milliseconds. */
   durationMs: number;
 }
 

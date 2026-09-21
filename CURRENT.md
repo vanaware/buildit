@@ -33,9 +33,13 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Removidos todos os atributos `style="..."` e tags `<style>`.
   - Layout limpo e responsivo estruturado com componentes BeerCSS (`nav class="tab"`, `article class="border round surface-container-low"`, chips, grid).
 
-- **Atualização da documentação**:
-  - `README.md`: Recriado com foco em build orchestration, bundling (`esbuild` e `denobuild`), exportação de contexto para IA (`export`), arquitetura do monorepo, tarefas Deno e guia da interface web.
-  - `packages/utils/README.md`: Documentação inicial do pacote `@vanaware/buildit`.
+- **Conformidade com Diretrizes JSR (`docs/publish-jsr-rules.md`)**:
+  - `packages/utils/README.md`: Elaborado conforme as regras obrigatórias do JSR (título curto `# buildit`, descrição, comando de instalação `deno add`, exemplos de código executáveis, features e tabela de visão geral da API).
+  - `packages/utils/LICENSE`: Adicionado arquivo de licença MIT no pacote para empacotamento autônomo.
+  - `packages/utils/deno.jsonc`: Configurado com `name`, `version`, `license`, `publish.include` e `publish.exclude` restritivos.
+  - Resolução de colisões de tipos e remoção de triple slash directives (`/// <reference lib="..." />`) banidas pelo JSR.
+  - Validação completa com `deno doc --lint src/**/*.ts` (22 arquivos verificados, 0 erros) e `deno publish --dry-run` (simulação de publicação bem-sucedida).
+  - Sincronização do workflow `.github/workflows/jsr-publish.yml` para publicação do `@vanaware/buildit` a partir de `packages/utils`.
 
 ### 🎯 Próximos Passos:
 - Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.

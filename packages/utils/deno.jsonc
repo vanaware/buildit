@@ -1,6 +1,19 @@
 {
   "name": "@vanaware/buildit",
-  "publish": false,
+  "version": "0.3.14",
+  "license": "MIT",
+  "publish": {
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "LICENSE"
+    ],
+    "exclude": [
+      "**/*_test.ts",
+      "**/*.test.ts",
+      "tests/"
+    ]
+  },
   "compilerOptions": {
     "lib": [
       "deno.window",
@@ -17,7 +30,7 @@
   "tasks": {
     "test": "deno test --allow-env --allow-net --allow-read --allow-write tests/",
     "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
-    "lint:doc": "deno doc --lint src/mod.ts src/export/mod.ts src/denobuild/mod.ts",
+    "lint:doc": "deno doc --lint src/**/*.ts",
     "tests": "deno task check && deno task test"
   },
   "exports": {

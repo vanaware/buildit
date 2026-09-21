@@ -3,8 +3,6 @@
  * @description Mecanismo de varredura de diretórios, filtragem e geração de snapshots consolidados.
  */
 
-/// <reference lib="deno.ns" />
-
 import { walk, } from "@std/fs/walk";
 import { dirname, join, relative, } from "@std/path";
 import { readProjectVersion, } from "../config/version.ts";

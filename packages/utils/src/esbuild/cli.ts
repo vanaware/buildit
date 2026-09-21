@@ -1,5 +1,3 @@
-/// <reference lib="deno.ns" />
-
 /**
  * @module @vanaware/buildit/esbuild/cli
  * @description Ponto de entrada CLI para o orquestrador de compilação baseado em esbuild.

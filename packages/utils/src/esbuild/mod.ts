@@ -1,4 +1,3 @@
-/// <reference lib="deno.ns" />
 import { copy, emptyDir, ensureDir, walk, } from "@std/fs";
 import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
