@@ -1,120 +1,191 @@
-# 🌌 BuildIt
+# 🛠️ BuildIt
 
-**Asynchronous database layer for Web Workers, IndexedDB, and OPFS.**
+**Build orchestration, bundling, and AI context export utilities for Deno & Web projects.**
 
-BuildIt is a high-performance, non-blocking persistence engine designed for modern Deno and Web applications. It offloads all database and filesystem operations to background threads, ensuring a smooth 60fps user interface even during massive data processing.
+BuildIt is a modular, high-performance toolkit tailored for modern Deno 2.x workspaces. It provides automated bundling pipelines (via esbuild and native `Deno.bundle`), semantic version stamping, and intelligent source-code consolidation for AI model context windows (LLM snapshots).
 
-## ✨ Core Features
+[![Deno 2.x](https://img.shields.io/badge/Deno-2.x-black?logo=deno)](https://deno.com/)
+[![JSR Package](https://jsr.io/badges/@vanaware/buildit)](https://jsr.io/@vanaware/buildit)
+[![Preact Signals](https://img.shields.io/badge/UI-Preact%20%2B%20Signals-673ab8?logo=preact)](https://preactjs.com/)
+[![BeerCSS](https://img.shields.io/badge/Style-BeerCSS%20(MD3)-orange)](https://www.beercss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-- **Non-Blocking Architecture:** Offloads all heavy IndexedDB and OPFS operations to a background Web Worker via a transparent RPC proxy.
-- **Advanced Query Engine:** Leverages native IDB indexes for fast aggregations, range filters, and cursor-based pagination.
-- **OPFS File System:** High-performance, private, persistent file system integration for large binary blobs and encrypted media.
-- **ZIP Compression:** Native in-worker zipping and unzipping of files stored in the OPFS.
-- **Offline-First PWA:** Robust Service Worker caching and PWA manifest for a native-app experience.
-- **Deno-Native Toolchain:** Zero `node_modules`. Pure TypeScript ecosystem with built-in build orchestration.
-- **Reactive UI:** Built with Preact, granular state via `@preact/signals`, and Material Design 3 (BeerCSS).
+---
 
-## 📦 Monorepo Structure
+## ✨ Core Engines
 
-This project is organized as a Deno monorepo publishing multiple packages to JSR:
+BuildIt consolidates three specialized developer tools, all driven by declarative `.jsonc` configuration files:
 
-- `packages/worker-db/`: The core persistence engine (JSR: [`@vanaware/buildit`](https://jsr.io/@vanaware/buildit)).
-- `packages/service-worker/`: Standalone OPFS file explorer & Service Worker router (JSR: [`@vanaware/opfs-explorer`](https://jsr.io/@vanaware/opfs-explorer)).
-- `packages/ui/`: The Preact-based reactive frontend application.
-- `packages/server/`: A lightweight Deno file server for production delivery.
-- `packages/utils/`: Shared build tools and esbuild orchestration scripts.
+### 1. ⚡ `esbuild` Pipeline (`esbuild.ts` & `esbuild.jsonc`)
+- **Lightning-Fast Bundling:** Uses esbuild with `@deno/esbuild-plugin` to resolve remote imports, NPM specifiers, and JSR packages.
+- **Declarative Targets:** Define multiple build targets in `esbuild.jsonc` (e.g., `ui`, `server`, `standalone`).
+- **Automated Asset Management:** Cleans distribution directories, copies static files from `public/`, and automatically injects semantic release versions and hash timestamps into `manifest.json` and generated scripts.
+- **Continuous Watch Mode:** Automatically watches file trees and recompiles instantly.
 
-## 📚 Library Usage
+### 2. 📦 `denobuild` Engine (`build.ts` & `denobuild.jsonc`)
+- **Native Deno Bundler:** Built on top of Deno's native `Deno.bundle` API (`--unstable-bundle`).
+- **Zero External Binaries:** Produces standalone ECMAScript modules without requiring third-party native bundlers or external binaries.
+- **Compile-Time Defines:** Injects dynamic compile-time constants and environment flags directly into the output code.
 
-If you are a developer looking to use **BuildIt** or **OPFS Explorer** in your own projects, see:
-- [Getting Started Guide](./docs/getting-started.md)
-- [API Reference](./docs/api.md)
-- [OPFS Explorer Documentation](./packages/service-worker/README.md)
+### 3. 📝 `export` Context Exporter (`export.ts` & `export.jsonc`)
+- **AI-Ready Snapshots:** Consolidates source code into structured Markdown documents optimized for LLMs (such as Gemini, Claude, and GPT).
+- **Intelligent Filtering:** Enforces allowed extensions, subdirectories, root files, and ignore patterns.
+- **Anti-Loop Protection:** Prevents infinite directory traversals, symlink traps, and output file self-inclusion.
+- **Dynamic Markdown Escaping:** Automatically escapes backticks inside source files to guarantee valid, uncorrupted code fences in generated snapshots.
 
-### Quick Imports (JSR)
+---
 
-```ts
-// BuildIt (Core Persistence)
-import { db, opfs, ls } from "jsr:@vanaware/buildit";
+## 📦 Monorepo Architecture
 
-// OPFS Explorer (Service Worker Handler)
-import { createOpfsFetchHandler } from "jsr:@vanaware/opfs-explorer";
+```
+buildit/
+├── packages/
+│   ├── utils/          # 📦 @vanaware/buildit (Core library with all 3 engines & CLI runners)
+│   ├── ui/             # 🖥️ @buildit/ui (Reactive dashboard built with Preact, Signals & BeerCSS)
+│   └── server/         # 🌐 @buildit/server (High-performance static file server on port 3000)
+├── snapshots/          # 📄 Generated Markdown AI context snapshots (ui.md, server.md, docs.md, utils.md)
+├── esbuild.jsonc       # ⚙️ Configuration for esbuild pipeline
+├── denobuild.jsonc     # ⚙️ Configuration for Deno.bundle engine
+├── export.jsonc        # ⚙️ Configuration for AI context export targets
+├── esbuild.ts          # 🚀 CLI entrypoint for esbuild orchestration
+├── build.ts            # 🚀 CLI entrypoint for native denobuild
+└── export.ts           # 🚀 CLI entrypoint for snapshot export
 ```
 
-## 🚀 Getting Started (Development)
+---
+
+## 📚 Library Usage (`@vanaware/buildit`)
+
+You can import BuildIt engines directly in any Deno application from [JSR](https://jsr.io/@vanaware/buildit):
+
+### Installation & Imports
+
+```ts
+// esbuild Orchestration
+import { runEsbuild } from "jsr:@vanaware/buildit/esbuild";
+
+// Deno.bundle Native Engine
+import { runDenoBuild } from "jsr:@vanaware/buildit/denobuild";
+
+// AI Context Exporter
+import { runExport } from "jsr:@vanaware/buildit/export";
+```
+
+### Programmatic Context Export Example
+
+```ts
+import { runExport } from "jsr:@vanaware/buildit/export";
+
+const result = await runExport({
+  target: "ui",
+  configPath: "./export.jsonc",
+});
+
+console.log(`Snapshot generated at: ${result.outputPath}`);
+console.log(`Processed ${result.filesCount} files in ${result.durationMs}ms`);
+```
+
+### JSR Export Map
+
+| Specifier | Description |
+|---|---|
+| `@vanaware/buildit` | Root module re-exporting core utilities and shared interfaces |
+| `@vanaware/buildit/esbuild` | esbuild bundling engine and configuration loaders |
+| `@vanaware/buildit/esbuild/cli` | Command-line runner for the esbuild pipeline |
+| `@vanaware/buildit/denobuild` | Native `Deno.bundle` engine and options resolver |
+| `@vanaware/buildit/denobuild/cli` | Command-line runner for denobuild |
+| `@vanaware/buildit/export` | Core walker, markdown formatter, and snapshot engine |
+| `@vanaware/buildit/export/cli` | Command-line runner for AI context exports |
+| `@vanaware/buildit/config` | JSONC file loaders and fallback configurations |
+| `@vanaware/buildit/interfaces` | TypeScript contracts and options types |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-You only need **Deno** installed to run this project. 
-*(Note: A `package.json` and `install-script.sh` are included exclusively for compatibility with specific containerized environments like AI Studio).*
+All you need is [Deno 2.x](https://deno.com/) installed on your machine.
+*(A minimal `package.json` and `install-script.sh` are included solely for cloud container compatibility).*
 
-### Development
+### Running the Development Server
 
-To start the development server, you can use standard Deno tasks:
+To build the UI distribution and start the local server on port 3000:
 
 ```bash
-# Installs dependencies, builds the project into /packages/server/build/dist, and starts the server on port 3000
 deno task dev
 ```
 
-Alternatively, if you are in an NPM-bridged environment:
+Or when running in an npm-bridged environment:
 
 ```bash
 npm run dev
 ```
 
-### Building for Production
+Open [http://localhost:3000](http://localhost:3000) in your browser to access the interactive dashboard.
 
-Our custom `esbuild.ts` pipeline bundles the UI, Worker, and Service Worker into the `packages/server/build/dist/` directory.
+---
+
+## 🛠️ CLI Commands & Deno Tasks
+
+### Building the Project
 
 ```bash
+# Build with esbuild (default production build):
 deno task build
+
+# Build a specific target without incrementing version:
+deno run -A ./esbuild.ts ui noversion
+
+# Run with file watcher:
+deno run -A ./esbuild.ts ui watch
+
+# Build with native Deno.bundle:
+deno task denobuild
 ```
 
-### Testing
-
-All tests are written using Deno's native BDD testing standard (`@std/testing/bdd`).
+### Exporting AI Context Snapshots
 
 ```bash
+# Generate all snapshots configured in export.jsonc:
+deno task export
+
+# Generate a specific target:
+deno run --allow-read --allow-write ./export.ts ui
+deno run --allow-read --allow-write ./export.ts docs
+deno run --allow-read --allow-write ./export.ts utils
+```
+
+### Quality Assurance & Testing
+
+All tests are written using standard BDD syntax (`@std/testing/bdd`) and assertions (`@std/assert`):
+
+```bash
+# Run the test suite:
 deno task test
-# OR to run checks, linting, formatting, and tests:
-deno task check-all
+
+# Run linter:
+deno task lint
+
+# Run type checks:
+deno task check
+
+# Run full quality check (lint + format + type check + tests):
+deno task tests
 ```
 
-## 🛠️ Tech Stack
+---
 
-- **Runtime:** [Deno](https://deno.com/)
-- **UI Framework:** [Preact](https://preactjs.com/) (no React)
-- **State Management:** [@preact/signals](https://preactjs.com/guide/v10/signals/)
-- **CSS Framework:** [BeerCSS](https://www.beercss.com/) (Material Design 3)
-- **Database:** [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) (via `idb-keyval`)
-- **File System:** [OPFS](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
-- **Bundler:** [esbuild](https://esbuild.github.io/)
+## 🖥️ Interactive Dashboard Features
 
-## 📂 OPFS Explorer (`@vanaware/opfs-explorer`)
+The embedded web interface (`packages/ui/`) provides:
+- **Workspace Overview:** Live inventory of workspace packages, dependencies, and JSR modules.
+- **CLI & Configuration Explorer:** Interactive documentation of `esbuild.jsonc`, `denobuild.jsonc`, and `export.jsonc` with syntax highlights.
+- **Interactive Build Simulator:** Test pipeline parameters (minify, sourcemaps, clean dist) with simulated real-time logs powered by `@preact/signals`.
+- **Snapshot Manager:** Review exported Markdown context sizes, target rules, and AI ingestion instructions.
 
-Once the application is running and the Service Worker is registered, you can navigate to the configured explorer endpoint:
+---
 
-```text
-# Default route in demo app:
-http://localhost:3000/opfs/
+## 📄 License
 
-# Or on GitHub Pages (auto-detected scope):
-https://vanaware.github.io/buildit/opfs/
-```
-
-The Service Worker intercepts the request and dynamically renders a visual, dark-mode HTML file explorer directly from the browser's Origin Private File System!
-
-### Pluggable into any Service Worker:
-
-```ts
-import { createOpfsFetchHandler } from "jsr:@vanaware/opfs-explorer";
-
-// Configure with any subfolder name ("files", "arquivos", "opfs"):
-self.addEventListener("fetch", createOpfsFetchHandler("files"));
-// Now accessible at /files/ or /{repo-name}/files/
-```
-
-## 📜 License
-
-MIT License
+This project is licensed under the [MIT License](LICENSE).

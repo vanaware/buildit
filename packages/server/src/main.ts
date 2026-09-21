@@ -11,8 +11,17 @@ Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
     const url = new URL(req.url,);
     console.log(`[REQ] ${req.method} ${url.pathname}`,);
 
+    const fsRoot = (() => {
+      try {
+        Deno.statSync("./build/dist",);
+        return "./build/dist";
+      } catch {
+        return new URL("../build/dist", import.meta.url,).pathname;
+      }
+    })();
+
     const staticResponse = await serveDir(req, {
-      fsRoot: "./build/dist",
+      fsRoot,
       showDirListing: false,
       quiet: true,
     },);

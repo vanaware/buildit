@@ -33,6 +33,9 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Removidos todos os atributos `style="..."` e tags `<style>`.
   - Layout limpo e responsivo estruturado com componentes BeerCSS (`nav class="tab"`, `article class="border round surface-container-low"`, chips, grid).
 
+- **Atualização da documentação**:
+  - `README.md`: Recriado com foco em build orchestration, bundling (`esbuild` e `denobuild`), exportação de contexto para IA (`export`), arquitetura do monorepo, tarefas Deno e guia da interface web.
+  - `packages/utils/README.md`: Documentação inicial do pacote `@vanaware/buildit`.
+
 ### 🎯 Próximos Passos:
-- Atualizar documentação (`README.md`, `packages/utils/README.md`).
 - Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.
