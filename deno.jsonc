@@ -1,5 +1,5 @@
 {
-  "version": "0.3.21#mubi58qq",
+  "version": "0.3.29#mubjdp6i",
   "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
   "workspace": [
     "./packages/server",

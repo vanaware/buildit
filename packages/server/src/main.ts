@@ -12,9 +12,12 @@ Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
     const fsRoot = (() => {
       try {
         Deno.statSync("./build/dist",);
+        console.log("[SERVER] Using fsRoot: ./build/dist");
         return "./build/dist";
       } catch {
-        return new URL("../build/dist", import.meta.url,).pathname;
+        const fallback = new URL("../build/dist", import.meta.url,).pathname;
+        console.log(`[SERVER] Fallback fsRoot: ${fallback}`);
+        return fallback;
       }
     })();
 
