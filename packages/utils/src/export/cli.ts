@@ -3,6 +3,8 @@
  * @description Ponto de entrada para execução do exportador de contexto via linha de comando (CLI).
  */
 
+/// <reference lib="deno.ns" />
+
 import { APP_VERSION, } from "../version.ts";
 import { carregarConfigExport, } from "./config.ts";
 import { exportarModo, parseArgs, } from "./engine.ts";

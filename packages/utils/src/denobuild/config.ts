@@ -4,8 +4,7 @@
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { parse as parseJsonc, } from "@std/jsonc";
-import { join, } from "@std/path";
+import { loadConfig } from "../config/mod.ts";
 import type {
   DenoBuildConfigFile,
   DenoBundleGlobalConfig,
@@ -55,54 +54,45 @@ export async function carregarConfigDenoBuild(
   caminhoConfig?: string,
   baseDir: string = ".",
 ): Promise<DenoBundleGlobalConfig> {
-  const caminhosCandidatos = caminhoConfig
-    ? [caminhoConfig,]
-    : [
-      join(baseDir, "denobuild.jsonc",),
-      join(baseDir, "denobuild.json",),
-    ];
+  const parsed = await loadConfig<DenoBuildConfigFile>(
+    "denobuild",
+    caminhoConfig,
+    baseDir,
+  );
 
-  for (const caminho of caminhosCandidatos) {
-    try {
-      const conteudo = await Deno.readTextFile(caminho,);
-      const parsed = parseJsonc(conteudo,) as unknown;
+  if (parsed) {
+    // Caso 1: Objeto possui a chave "targets"
+    if (parsed.targets && typeof parsed.targets === "object") {
+      return parsed.targets;
+    }
 
-      if (parsed && typeof parsed === "object") {
-        const configFile = parsed as DenoBuildConfigFile;
+    // Caso 2: Objeto possui a chave em português "alvos"
+    if (parsed.alvos && typeof parsed.alvos === "object") {
+      return parsed.alvos;
+    }
 
-        // Caso 1: Objeto possui a chave "targets"
-        if (configFile.targets && typeof configFile.targets === "object") {
-          return configFile.targets;
-        }
+    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
+    const filteredKeys = Object.keys(parsed).filter(
+      (k) => !k.startsWith("$") && k !== "version",
+    );
 
-        // Caso 2: Objeto possui a chave em português "alvos"
-        if (configFile.alvos && typeof configFile.alvos === "object") {
-          return configFile.alvos;
-        }
+    if (filteredKeys.length > 0) {
+      const resultado: DenoBundleGlobalConfig = {};
+      let hasValidTargets = false;
 
-        // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-        const filteredKeys = Object.keys(parsed,).filter(
-          (k,) => !k.startsWith("$",) && k !== "version",
-        );
-        if (filteredKeys.length > 0) {
-          const resultado: DenoBundleGlobalConfig = {};
-          for (const key of filteredKeys) {
-            const val = (parsed as Record<string, unknown>)[key];
-            if (val && typeof val === "object") {
-              resultado[key] = val as DenoBundleGlobalConfig[string];
-            }
-          }
-          if (Object.keys(resultado,).length > 0) {
-            return resultado;
-          }
+      for (const key of filteredKeys) {
+        const val = (parsed as Record<string, unknown>)[key];
+        if (val && typeof val === "object") {
+          resultado[key] = val as DenoBundleGlobalConfig[string];
+          hasValidTargets = true;
         }
       }
-    } catch (erro) {
-      if (caminhoConfig && !(erro instanceof Deno.errors.NotFound)) {
-        console.warn(`⚠️ Aviso ao ler configuração em ${caminho}:`, erro,);
+
+      if (hasValidTargets) {
+        return resultado;
       }
     }
   }
 
-  return { ...CONFIGURACOES_PADRAO, };
+  return { ...CONFIGURACOES_PADRAO };
 }

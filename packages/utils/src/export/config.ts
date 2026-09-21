@@ -4,8 +4,7 @@
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { parse as parseJsonc, } from "@std/jsonc";
-import { join, } from "@std/path";
+import { loadConfig } from "../config/mod.ts";
 import { EXTENSOES_PADRAO, } from "../config/mod.ts";
 import type { ExportConfig, ExportConfigFile, } from "./types.ts";
 
@@ -97,30 +96,18 @@ export async function carregarConfigExport(
   caminhoConfig?: string,
   baseDir: string = ".",
 ): Promise<Record<string, ExportConfig>> {
-  const caminhosCandidatos = caminhoConfig
-    ? [caminhoConfig,]
-    : [
-      join(baseDir, "export.jsonc",),
-      join(baseDir, "export.json",),
-    ];
+  const parsed = await loadConfig<ExportConfigFile>(
+    "export",
+    caminhoConfig,
+    baseDir,
+  );
 
-  for (const caminho of caminhosCandidatos) {
-    try {
-      const conteudo = await Deno.readTextFile(caminho,);
-      const parsed = parseJsonc(conteudo,) as unknown;
-
-      if (parsed && typeof parsed === "object") {
-        if ("modos" in parsed && typeof (parsed as ExportConfigFile).modos === "object") {
-          return (parsed as ExportConfigFile).modos;
-        }
-        return parsed as Record<string, ExportConfig>;
-      }
-    } catch (erro) {
-      if (caminhoConfig && !(erro instanceof Deno.errors.NotFound)) {
-        console.warn(`⚠️ Aviso ao ler configuração em ${caminho}:`, erro,);
-      }
+  if (parsed) {
+    if ("modos" in parsed && typeof (parsed as ExportConfigFile).modos === "object") {
+      return (parsed as ExportConfigFile).modos;
     }
+    return parsed as unknown as Record<string, ExportConfig>;
   }
 
-  return { ...CONFIGURACOES_PADRAO, };
+  return { ...CONFIGURACOES_PADRAO };
 }
