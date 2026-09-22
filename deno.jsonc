@@ -46,8 +46,7 @@
     "export": "deno run --allow-read --allow-write ./export.ts",
     "build": "deno run -A ./esbuild.ts",
     "esbuild": "deno run -A ./esbuild.ts",
-    "denobuild": "deno run --unstable-bundle -A ./build.ts",
-    "build:deno": "deno run --unstable-bundle -A ./build.ts",
+    "denobuild": "deno run --unstable-bundle -A ./denobuild.ts",
     "bump": "deno install --frozen=false && deno task build dist noversion && sh ./tag-version.sh"
   },
   "nodeModulesDir": "none",
