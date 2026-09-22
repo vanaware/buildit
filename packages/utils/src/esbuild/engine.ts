@@ -50,10 +50,11 @@ import { carregarConfigEsbuild, } from "./config.ts";
 /**
  * Injeta o Deno Plugin nas opções do esbuild.
  */
-// deno-lint-ignore no-explicit-any
 export const buildWithDenoPlugin = (
+  // deno-lint-ignore no-explicit-any
   options: any,
   denoJsoncPath: string,
+  // deno-lint-ignore no-explicit-any
 ): Promise<any> => {
   options.plugins = [
     ...(options.plugins || []),

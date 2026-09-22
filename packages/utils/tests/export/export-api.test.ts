@@ -1,9 +1,9 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
-import { executarExport } from "../../src/export/engine.ts";
+import { exportEngine } from "../../src/export/engine.ts";
 
-describe("executarExport programmatic API", () => {
+describe("exportEngine programmatic API", () => {
   it("deve aceitar configuração diretamente como objeto em memória e ler versão do deno.jsonc", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src");
@@ -29,7 +29,7 @@ describe("executarExport programmatic API", () => {
       },
     };
 
-    const resultados = await executarExport({
+    const resultados = await exportEngine({
       config: configEmMemoria,
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
@@ -55,7 +55,7 @@ describe("executarExport programmatic API", () => {
 
     await Deno.writeTextFile(join(srcDir, "index.ts"), 'console.log("direct config");');
 
-    const resultados = await executarExport({
+    const resultados = await exportEngine({
       direto: {
         arquivoSaida: join(tempDir, "direct.md"),
         extensoesPermitidas: [".ts"],

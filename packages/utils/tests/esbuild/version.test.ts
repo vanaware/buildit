@@ -9,7 +9,7 @@ import {
   incrementVersion,
   parseVersion,
   replaceVersionInContent,
-} from "../../src/esbuild/mod.ts";
+} from "../../src/tools/version.ts";
 import { withTempDenoJsonc, } from "../helpers/fixtures.ts";
 
 describe("parseVersion", () => {

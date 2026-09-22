@@ -1,9 +1,9 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
-import { executarDenoBuild } from "../../src/denobuild/engine.ts";
+import { denoBuild } from "../../src/denobuild/engine.ts";
 
-describe("executarDenoBuild programmatic API", () => {
+describe("denoBuild programmatic API", () => {
   it("deve aceitar objeto DenoBundleGlobalConfig em memória diretamente", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src");
@@ -24,7 +24,7 @@ describe("executarDenoBuild programmatic API", () => {
       },
     };
 
-    const results = await executarDenoBuild({
+    const results = await denoBuild({
       config,
       baseDir: tempDir,
       noversion: true,

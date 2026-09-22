@@ -3,7 +3,7 @@ import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, } from "@std/assert";
 import { join, } from "@std/path";
 import { processTarget, } from "../../src/esbuild/mod.ts";
-import type { TargetConfig, } from "../../src/interfaces/mod.ts";
+import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 import {
   fileExists,
   readText,

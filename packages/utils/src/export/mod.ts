@@ -20,3 +20,4 @@
 export * from "./formatter.ts";
 export * from "./config.ts";
 export * from "./engine.ts";
+export * from "./cli.ts";

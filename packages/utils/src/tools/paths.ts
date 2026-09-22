@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, } from "@std/path";
 import type {
   DenoBundleTargetConfig,
   TargetConfig,
-} from "../tools/interfaces.ts";
+} from "./interfaces.ts";
 
 // ============================================================================
 // 🛡️ VALIDAÇÃO DE PATHS (pura, testável)
