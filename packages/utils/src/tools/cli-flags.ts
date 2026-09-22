@@ -3,7 +3,7 @@ import {
   DenoBundleGlobalConfig,
   GlobalTargetConfig,
   ParsedArgs,
-} from "../tools/interfaces.ts";
+} from "./interfaces.ts";
 
 /**
  * @module @vanaware/buildit/config/cli-flags

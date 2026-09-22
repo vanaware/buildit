@@ -2,7 +2,7 @@
 
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
-import { isSafePath, } from "@vanaware/buildit/build";
+import { isSafePath, } from "../../src/tools/paths.ts";
 
 describe("isSafePath", () => {
   describe("paths seguros", () => {
