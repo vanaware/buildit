@@ -5,7 +5,7 @@
 
 import { walk, } from "@std/fs/walk";
 import { dirname, join, relative, } from "@std/path";
-import { readProjectVersion, } from "../config/version.ts";
+import { readProjectVersion, } from "../tools/version.ts";
 import { carregarConfigExport, } from "./config.ts";
 import {
   deveIncluirArquivo,
@@ -16,7 +16,7 @@ import type {
   ExportConfig,
   ExportOptions,
   ExportResult,
-} from "./types.ts";
+} from "../tools/interfaces.ts";
 
 /**
  * Analisa os argumentos fornecidos via linha de comando ou array de strings
@@ -76,49 +76,53 @@ export async function exportarModo(
   },
 ): Promise<ExportResult> {
   const baseDir = opcoes?.baseDir ?? ".";
-  const versaoApp = opcoes?.versaoApp ?? await readProjectVersion(opcoes?.denoJsoncPath, baseDir);
+  const versaoApp = opcoes?.versaoApp ??
+    await readProjectVersion(opcoes?.denoJsoncPath, baseDir,);
   const silencioso = opcoes?.silencioso ?? false;
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
 
   if (!silencioso) {
-    console.log(`\n${"=".repeat(60)}`);
-    console.log(`📦 EXPORTANDO MODO: ${modo.toUpperCase()} ${versaoDisplay}`);
-    console.log(`${"=".repeat(60)}`);
-    console.log(`📄 Arquivo de saída: ${config.arquivoSaida}`);
-    console.log(`📁 Pasta base: ${config.pastaBase}`);
+    console.log(`\n${"=".repeat(60,)}`,);
+    console.log(`📦 EXPORTANDO MODO: ${modo.toUpperCase()} ${versaoDisplay}`,);
+    console.log(`${"=".repeat(60,)}`,);
+    console.log(`📄 Arquivo de saída: ${config.arquivoSaida}`,);
+    console.log(`📁 Pasta base: ${config.pastaBase}`,);
   }
 
-  let conteudoFinal = gerarCabecalho(config, modo, versaoApp);
+  let conteudoFinal = gerarCabecalho(config, modo, versaoApp,);
   let arquivosIncluidos = 0;
 
-  for await (const entry of walk(baseDir, { includeDirs: false })) {
-    const caminhoRelativo = relative(baseDir, entry.path);
+  for await (const entry of walk(baseDir, { includeDirs: false, },)) {
+    const caminhoRelativo = relative(baseDir, entry.path,);
 
-    if (deveIncluirArquivo(caminhoRelativo, config)) {
+    if (deveIncluirArquivo(caminhoRelativo, config,)) {
       try {
         if (!silencioso) {
-          console.log(`   ✅ Incluindo: ${caminhoRelativo}`);
+          console.log(`   ✅ Incluindo: ${caminhoRelativo}`,);
         }
-        const conteudoArquivo = await Deno.readTextFile(entry.path);
-        conteudoFinal += formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo);
+        const conteudoArquivo = await Deno.readTextFile(entry.path,);
+        conteudoFinal += formatarArquivoMarkdown(
+          caminhoRelativo,
+          conteudoArquivo,
+        );
         arquivosIncluidos++;
       } catch (erro) {
         if (!silencioso && erro instanceof Error) {
-          console.error(`   ❌ Erro ao ler ${caminhoRelativo}:`, erro.message);
+          console.error(`   ❌ Erro ao ler ${caminhoRelativo}:`, erro.message,);
         }
       }
     }
   }
 
   // Garante que o diretório de destino existe antes da gravação
-  const caminhoSaida = join(baseDir, config.arquivoSaida);
-  const dirSaida = dirname(caminhoSaida);
+  const caminhoSaida = join(baseDir, config.arquivoSaida,);
+  const dirSaida = dirname(caminhoSaida,);
   if (dirSaida && dirSaida !== ".") {
-    await Deno.mkdir(dirSaida, { recursive: true });
+    await Deno.mkdir(dirSaida, { recursive: true, },);
   }
 
-  const encodedBytes = new TextEncoder().encode(conteudoFinal);
-  await Deno.writeTextFile(caminhoSaida, conteudoFinal);
+  const encodedBytes = new TextEncoder().encode(conteudoFinal,);
+  await Deno.writeTextFile(caminhoSaida, conteudoFinal,);
 
   if (!silencioso) {
     console.log(
@@ -144,18 +148,18 @@ export async function exportarModo(
  * @example
  * ```typescript
  * // Passando configuração diretamente em memória:
- * const resultados = await builditExport({
+ * const resultados = await exportEngine({
  *   ui: { arquivoSaida: "snapshot.md", pastaBase: "./src", ... }
  * });
  *
  * // Ou usando opções completas:
- * const resultados = await builditExport({
+ * const resultados = await exportEngine({
  *   caminhoConfig: "export.jsonc",
  *   modos: ["ui", "docs"]
  * });
  * ```
  */
-export async function builditExport(
+export async function exportEngine(
   configOuOpcoes?: ExportOptions | Record<string, ExportConfig>,
 ): Promise<ExportResult[]> {
   let configs: Record<string, ExportConfig>;
@@ -180,15 +184,16 @@ export async function builditExport(
       configs = opcoes.config;
     } else {
       const baseDir = opcoes?.baseDir ?? ".";
-      configs = await carregarConfigExport(opcoes?.caminhoConfig, baseDir);
+      configs = await carregarConfigExport(opcoes?.caminhoConfig, baseDir,);
     }
   }
 
   const baseDir = opcoes?.baseDir ?? ".";
-  const versaoApp = opcoes?.versaoApp ?? await readProjectVersion(opcoes?.denoJsoncPath, baseDir);
+  const versaoApp = opcoes?.versaoApp ??
+    await readProjectVersion(opcoes?.denoJsoncPath, baseDir,);
   const modosParaExecutar = opcoes?.modos && opcoes.modos.length > 0
-    ? parseArgs(opcoes.modos, configs)
-    : parseArgs([], configs);
+    ? parseArgs(opcoes.modos, configs,)
+    : parseArgs([], configs,);
 
   const resultados: ExportResult[] = [];
 
@@ -200,8 +205,8 @@ export async function builditExport(
         versaoApp,
         silencioso: opcoes?.silencioso,
         denoJsoncPath: opcoes?.denoJsoncPath,
-      });
-      resultados.push(res);
+      },);
+      resultados.push(res,);
     }
   }
 

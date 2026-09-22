@@ -3,15 +3,15 @@
  * @description Ponto de entrada para execução do exportador de contexto via linha de comando (CLI).
  */
 
-import { parseCommonCliFlags } from "../config/cli-flags.ts";
-import { readProjectVersion } from "../config/version.ts";
-import { carregarConfigExport } from "./config.ts";
-import { builditExport } from "./engine.ts";
+import { parseCommonCliFlags, } from "../tools/cli-flags.ts";
+import { readProjectVersion, } from "../tools/version.ts";
+import { carregarConfigExport, } from "./config.ts";
+import { exportEngine, } from "./engine.ts";
 
 /**
  * Exibe a mensagem de ajuda para o comando export.
  */
-export function showExportHelp(): void {
+function showExportHelp(): void {
   console.log(`
 BuildIt Context Exporter CLI
 
@@ -29,7 +29,7 @@ Exemplos:
   deno task export ui docs              # Executa apenas os modos 'ui' e 'docs'
   deno task export -c custom.jsonc      # Usa configuração customizada
   deno task export -V                   # Exibe a versão do projeto
-`);
+`,);
 }
 
 /**
@@ -47,7 +47,7 @@ export async function exportCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
-  const flags = parseCommonCliFlags(args);
+  const flags = parseCommonCliFlags(args,);
 
   if (flags.showHelp) {
     showExportHelp();
@@ -57,34 +57,34 @@ export async function exportCli(
   const projectVersion = await readProjectVersion();
 
   if (flags.showVersion) {
-    console.log(`v${projectVersion}`);
+    console.log(`v${projectVersion}`,);
     return;
   }
 
   const startTime = performance.now();
   const configPath = flags.configPath ?? caminhoConfig;
 
-  console.log("\n🚀 Iniciando Exportação de Contexto BuildIt");
+  console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
 
   try {
-    await builditExport({
+    await exportEngine({
       baseDir: ".",
       modos: flags.positional,
       caminhoConfig: configPath,
       versaoApp: projectVersion,
-    });
+    },);
 
-    const elapsed = (performance.now() - startTime).toFixed(0);
-    console.log(`\n${"=".repeat(60)}`);
-    console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`);
-    console.log(`⏱️ Tempo total: ${elapsed}ms`);
-    console.log(`${"=".repeat(60)}\n`);
+    const elapsed = (performance.now() - startTime).toFixed(0,);
+    console.log(`\n${"=".repeat(60,)}`,);
+    console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`,);
+    console.log(`⏱️ Tempo total: ${elapsed}ms`,);
+    console.log(`${"=".repeat(60,)}\n`,);
   } catch (error) {
-    console.error("\n🛑 Pipeline de exportação falhou:", error);
-    Deno.exit(1);
+    console.error("\n🛑 Pipeline de exportação falhou:", error,);
+    Deno.exit(1,);
   }
 }
 
 if (import.meta.main) {
-  await exportCli(Deno.args);
+  await exportCli(Deno.args,);
 }

@@ -4,10 +4,12 @@
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { loadConfig } from "../config/mod.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
 import type {
+  EsbuildConfigFile,
+  EsbuildConfigResult,
   GlobalTargetConfig,
-} from "../interfaces/mod.ts";
+} from "../tools/interfaces.ts";
 
 /**
  * Configuração padrão para o motor esbuild no projeto BuildIt.
@@ -59,35 +61,6 @@ export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
 };
 
 /**
- * Estrutura do arquivo de configuração externo `esbuild.jsonc`.
- */
-export interface EsbuildConfigFile {
-  /** URL do JSON Schema para validação e autocomplete no editor */
-  $schema?: string;
-  /** Versão semântica da configuração */
-  version?: string;
-  /** Alvos de build configurados no projeto */
-  targets?: GlobalTargetConfig;
-  /** Alias em português para alvos de build configurados */
-  alvos?: GlobalTargetConfig;
-  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
-  versionPaths?: string[];
-  /** Se true, sincroniza versão para os subpacotes do workspace */
-  forcepackagesversion?: boolean;
-  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
-  [key: string]: unknown;
-}
-
-/**
- * Resultado do carregamento da configuração, incluindo alvos e opções globais.
- */
-export interface EsbuildConfigResult {
-  targets: GlobalTargetConfig;
-  versionPaths?: string[];
-  forcepackagesversion?: boolean;
-}
-
-/**
  * Carrega as configurações de alvos para o motor esbuild a partir de um arquivo JSONC externo
  * (ex: `esbuild.jsonc` ou `esbuild.json`).
  *
@@ -108,7 +81,7 @@ export async function carregarConfigEsbuild(
   );
 
   const result: EsbuildConfigResult = {
-    targets: { ...CONFIGURACOES_PADRAO },
+    targets: { ...CONFIGURACOES_PADRAO, },
   };
 
   if (parsed) {
@@ -128,9 +101,9 @@ export async function carregarConfigEsbuild(
     }
 
     // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed).filter(
-      (k) =>
-        !k.startsWith("$") &&
+    const filteredKeys = Object.keys(parsed,).filter(
+      (k,) =>
+        !k.startsWith("$",) &&
         !["version", "versionPaths", "forcepackagesversion",].includes(k,),
     );
 

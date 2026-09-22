@@ -8,17 +8,15 @@
  *
  * @example
  * ```typescript
- * import { builditExport } from "@vanaware/buildit/export";
+ * import { exportEngine } from "@vanaware/buildit/export";
  *
- * const resultados = await builditExport({
+ * const resultados = await exportEngine({
  *   caminhoConfig: "export.jsonc",
  *   modos: ["ui", "docs"],
  * });
  * ```
  */
 
-export * from "./types.ts";
 export * from "./formatter.ts";
 export * from "./config.ts";
 export * from "./engine.ts";
-export * from "./cli.ts";

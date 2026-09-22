@@ -5,25 +5,25 @@
 
 import { ensureDir, } from "@std/fs";
 import { join, } from "@std/path";
-import { updateProjectVersion, } from "../config/version.ts";
+import { updateProjectVersion, } from "../tools/version.ts";
 import {
   cleanTarget,
   copyStaticFiles,
   listAssetsForCache,
-  parseArgs,
-  validateTargetConfig,
-} from "../esbuild/mod.ts";
-import {
-  applyDefines,
-  buildBundleOptions,
-} from "./bundle.ts";
+} from "../tools/paths.ts";
+
+import { validateTargetConfig, } from "../tools/validate.ts";
+
+import { parseArgs, } from "../tools/cli-flags.ts";
+
+import { applyDefines, buildBundleOptions, } from "./bundle.ts";
 import { carregarConfigDenoBuild, } from "./config.ts";
 import type {
   DenoBuildOptions,
   DenoBuildResult,
   DenoBundleGlobalConfig,
   DenoBundleTargetConfig,
-} from "./types.ts";
+} from "../tools/interfaces.ts";
 
 /**
  * Processa a compilação de um alvo específico utilizando o motor Deno.bundle.
@@ -123,7 +123,7 @@ export async function processBundleTarget(
     return {
       target: targetName,
       success: true,
-      durationMs: Number((performance.now() - startTime).toFixed(0,)),
+      durationMs: Number((performance.now() - startTime).toFixed(0,),),
       outputFiles: [],
     };
   }
@@ -157,7 +157,7 @@ export async function processBundleTarget(
     );
   }
 
-  const durationMs = Number((performance.now() - startTime).toFixed(0,));
+  const durationMs = Number((performance.now() - startTime).toFixed(0,),);
   console.log(
     `✅ [${targetName}] Build concluído em ${durationMs}ms (${outputFiles.length} arquivo(s))`,
   );
@@ -216,7 +216,10 @@ export async function denoBuild(
       configs = opcoes.config;
     } else {
       const baseDir = opcoes?.baseDir ?? ".";
-      const loaded = await carregarConfigDenoBuild(opcoes?.caminhoConfig, baseDir);
+      const loaded = await carregarConfigDenoBuild(
+        opcoes?.caminhoConfig,
+        baseDir,
+      );
       configs = loaded.targets;
       fileConfigVersionPaths = loaded.versionPaths;
       fileConfigForcePackages = loaded.forcepackagesversion;
@@ -226,13 +229,16 @@ export async function denoBuild(
   const baseDir = opcoes?.baseDir ?? ".";
   const rawArgs = [
     ...(opcoes?.targets ?? []),
-    ...(opcoes?.noversion ? ["noversion"] : []),
+    ...(opcoes?.noversion ? ["noversion",] : []),
   ];
 
-  const { targets, globalNoVersion, watchTarget } = parseArgs(rawArgs, configs);
+  const { targets, globalNoVersion, watchTarget, } = parseArgs(
+    rawArgs,
+    configs,
+  );
 
   if (watchTarget) {
-    console.warn("⚠️ Modo Watch não é suportado pela API Deno.bundle nativa.");
+    console.warn("⚠️ Modo Watch não é suportado pela API Deno.bundle nativa.",);
     return [];
   }
 
@@ -240,21 +246,24 @@ export async function denoBuild(
     return [];
   }
 
-  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc");
+  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
     noversion: globalNoVersion || (opcoes?.noversion ?? false),
     versionPaths: opcoes?.versionPaths ?? fileConfigVersionPaths,
-    forcepackagesversion: opcoes?.forcepackagesversion ?? fileConfigForcePackages,
-  });
+    forcepackagesversion: opcoes?.forcepackagesversion ??
+      fileConfigForcePackages,
+  },);
 
   const resultados: DenoBuildResult[] = [];
 
   for (const targetName of targets) {
     const targetConfig = configs[targetName];
     if (!targetConfig) {
-      console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`);
+      console.warn(
+        `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+      );
       continue;
     }
 
@@ -265,7 +274,7 @@ export async function denoBuild(
       finalVersion,
       listFn,
     );
-    resultados.push(res);
+    resultados.push(res,);
   }
 
   return resultados;

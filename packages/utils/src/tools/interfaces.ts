@@ -6,6 +6,31 @@
 // re-exporta esses tipos internos do esbuild como membros do namespace.
 // String literals mantêm autocomplete + type-safety e são independentes
 // de como o esm.sh expõe a tipagem.
+
+/**
+ * Extensões de arquivo padrão que são comumente incluídas em snapshots.
+ * Reutilizável em qualquer projeto de software.
+ */
+export const EXTENSOES_PADRAO = [
+  ".tsx",
+  ".jsx",
+  ".js",
+  ".ts",
+  ".css",
+  ".html",
+  ".manifest",
+  ".map",
+  ".sh",
+  ".py",
+  ".json",
+  ".jsonc",
+  ".yaml",
+  ".yml",
+  ".toml",
+  ".env.example",
+  ".md",
+];
+
 /**
  * Versão semântica parseada.
  */
@@ -424,6 +449,49 @@ export interface DenoBundleTargetConfig {
 }
 
 /**
+ * Estrutura do arquivo de configuração externo `denobuild.jsonc`.
+ */
+export interface DenoBuildConfigFile {
+  /** URL do JSON Schema para validação e autocomplete no editor */
+  $schema?: string;
+  /** Versão semântica da configuração */
+  version?: string;
+  /** Alvos de build configurados no projeto */
+  targets?: DenoBundleGlobalConfig;
+  /** Alias em português para alvos de build configurados */
+  alvos?: DenoBundleGlobalConfig;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
+  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
+  [key: string]: unknown;
+}
+
+/**
+ * Resultado detalhado da execução de compilação de um alvo via Deno.bundle.
+ */
+export interface DenoBuildResult {
+  /** Nome identificador do alvo compilado (ex: "ui") */
+  target: string;
+  /** Indica se a compilação foi concluída com êxito */
+  success: boolean;
+  /** Duração da compilação em milissegundos */
+  durationMs: number;
+  /** Lista de caminhos dos arquivos gerados no disco */
+  outputFiles: string[];
+}
+
+/**
+ * Resultado do carregamento da configuração, incluindo alvos e opções globais.
+ */
+export interface DenoBuildConfigResult {
+  targets: DenoBundleGlobalConfig;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
+}
+
+/**
  * Configuração global de múltiplos alvos de build para Deno.bundle.
  */
 export interface DenoBundleGlobalConfig {
@@ -453,4 +521,131 @@ export interface DenoBuildOptions {
   denoJsoncPath?: string;
   /** Se true, suprime logs não críticos */
   silencioso?: boolean;
+}
+
+/**
+ * Estrutura do arquivo de configuração externo `export.jsonc`.
+ */
+export interface ExportConfigFile {
+  /** URL do JSON Schema para validação e autocomplete no editor */
+  $schema?: string;
+  /** Versão opcional do schema de configuração */
+  version?: string;
+  /** Modos de exportação configurados para o projeto */
+  modos: Record<string, ExportConfig>;
+}
+
+/**
+ * Resultado detalhado da execução de exportação de um modo.
+ */
+export interface ExportResult {
+  /** Nome identificador do modo executado (ex: "ui", "docs", "server", "utils") */
+  modo: string;
+  /** Quantidade de arquivos incluídos no snapshot gerado */
+  arquivos: number;
+  /** Caminho relativo do arquivo de saída gravado */
+  arquivoSaida: string;
+  /** Tamanho total do arquivo de saída em bytes */
+  bytes: number;
+}
+
+/**
+ * Opções de configuração para o método programático `executarExport`.
+ */
+export interface ExportOptions {
+  /** Configuração direta de modos em memória (substitui leitura de arquivo) */
+  config?: Record<string, ExportConfig>;
+  /** Caminho do arquivo de configuração (padrão: "export.jsonc" ou "export.json") */
+  caminhoConfig?: string;
+  /** Lista explícita de modos a serem executados. Se omitido, executa os marcados como default */
+  modos?: string[];
+  /** Diretório base de varredura (padrão: ".") */
+  baseDir?: string;
+  /** Versão da aplicação a ser injetada no cabeçalho (se omitido, lê do deno.jsonc raiz) */
+  versaoApp?: string;
+  /** Caminho alternativo para o deno.jsonc para extração da versão */
+  denoJsoncPath?: string;
+  /** Se true, suprime logs informativos no console */
+  silencioso?: boolean;
+}
+
+/**
+ * Opções comuns parseadas da linha de comando.
+ */
+export interface CommonCliFlags {
+  /** Caminho explícito para o arquivo de configuração (--config / -c) */
+  configPath?: string;
+  /** Se a flag de versão foi solicitada (--version / -V) */
+  showVersion: boolean;
+  /** Se a flag de ajuda foi solicitada (--help / -h) */
+  showHelp: boolean;
+  /** Se o incremento de versão deve ser desabilitado (noversion / --noversion / -n) */
+  noversion: boolean;
+  /** Se a versão deve ser propagada para os pacotes do workspace (--forcepackagesversion / -f) */
+  forcepackagesversion: boolean;
+  /** Caminhos adicionais onde salvar o version.ts (--version-path) */
+  versionPaths?: string[];
+  /** Argumentos posicionais restantes (alvos ou modos) */
+  positional: string[];
+}
+
+/**
+ * Opções para atualização e sincronização de versão.
+ */
+export interface VersionUpdateOptions {
+  /** Versão base a ser utilizada. Se não fornecida, será lida do arquivo deno.jsonc */
+  currentVersion?: string;
+  /** Caminho do arquivo deno.jsonc raiz */
+  denoJsonPath?: string;
+  /** Diretório base do projeto (padrão: ".") */
+  baseDir?: string;
+  /** Se true, não incrementa o patch da versão */
+  noversion?: boolean;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o arquivo version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza a versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
+  /** Hash customizado para compor a versão (opcional) */
+  buildHash?: string;
+}
+
+/**
+ * Estrutura do arquivo de configuração externo `esbuild.jsonc`.
+ */
+export interface EsbuildConfigFile {
+  /** URL do JSON Schema para validação e autocomplete no editor */
+  $schema?: string;
+  /** Versão semântica da configuração */
+  version?: string;
+  /** Alvos de build configurados no projeto */
+  targets?: GlobalTargetConfig;
+  /** Alias em português para alvos de build configurados */
+  alvos?: GlobalTargetConfig;
+  /** Lista de caminhos de arquivos ou diretórios onde salvar o version.ts */
+  versionPaths?: string[];
+  /** Se true, sincroniza versão para os subpacotes do workspace */
+  forcepackagesversion?: boolean;
+  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
+  [key: string]: unknown;
+}
+
+/**
+ * Resultado do carregamento da configuração, incluindo alvos e opções globais.
+ */
+export interface EsbuildConfigResult {
+  targets: GlobalTargetConfig;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
+}
+
+/**
+ * Detailed esbuild compilation result.
+ */
+export interface EsbuildResult {
+  /** The build target identifier. */
+  target: string;
+  /** Whether the build operation succeeded. */
+  success: boolean;
+  /** Total duration of the build operation in milliseconds. */
+  durationMs: number;
 }

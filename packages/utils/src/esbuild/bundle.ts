@@ -17,7 +17,7 @@ import { ensureDir, } from "@std/fs";
 // ============================================================================
 // 📦 TIPOS
 // ============================================================================
-import type { DenoBundleTargetConfig, } from "../interfaces/mod.ts";
+import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 // ============================================================================
 // 📂 FUNÇÕES COMPARTILHADAS (reimportadas do mod.ts)
 // ============================================================================
@@ -26,8 +26,9 @@ import {
   copyStaticFiles,
   resolveEntryPoints,
   resolveOutputPaths,
-  validateTargetConfig,
-} from "./mod.ts";
+} from "../tools/paths.ts";
+
+import { validateTargetConfig, } from "../tools/validate.ts";
 
 // ============================================================================
 // 🔧 APLICAÇÃO DE DEFINES (em memória, antes de salvar)

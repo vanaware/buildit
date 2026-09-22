@@ -4,7 +4,7 @@
  * mapeamento de extensões e formatação Markdown com proteção contra crases.
  */
 
-import type { ExportConfig, } from "./types.ts";
+import type { ExportConfig, } from "../tools/interfaces.ts";
 
 /**
  * Normaliza um caminho de arquivo para comparação consistente entre sistemas operacionais.

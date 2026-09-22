@@ -36,16 +36,11 @@
   },
   "exports": {
     ".": "./src/mod.ts",
-    "./config": "./src/config/mod.ts",
-    "./interfaces": "./src/interfaces/mod.ts",
-    "./build": "./src/esbuild/mod.ts",
-    "./build/cli": "./src/esbuild/cli.ts",
     "./esbuild": "./src/esbuild/mod.ts",
     "./esbuild/cli": "./src/esbuild/cli.ts",
     "./export": "./src/export/mod.ts",
     "./export/cli": "./src/export/cli.ts",
     "./denobuild": "./src/denobuild/mod.ts",
-    "./denobuild/cli": "./src/denobuild/cli.ts",
-    "./version": "./src/version.ts"
+    "./denobuild/cli": "./src/denobuild/cli.ts"
   }
 }

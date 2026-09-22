@@ -11,7 +11,6 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
 
 ### ✅ Tarefas Realizadas:
 - **Refatoração completa do `export` para `packages/utils`**:
-  - `packages/utils/src/export/types.ts`: Interfaces de configuração (`ExportConfigFile`), opções (`ExportOptions`) e resultados (`ExportResult`).
   - `packages/utils/src/export/formatter.ts`: Lógica pura de normalização de caminhos, detecção anti-loop, crases dinâmicas e blocos Markdown com JSDoc 100% compatível com JSR.
   - `packages/utils/src/export/config.ts`: Carregamento do arquivo externo `export.jsonc` com fallback para `CONFIGURACOES_PADRAO`.
   - `packages/utils/src/export/engine.ts`: Varredura de arquivos via `walk`, filtragem declarativa e geração de snapshots.
@@ -21,7 +20,6 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - `export.ts`: CLI enxuto na raiz delegando para a biblioteca.
   - Testes unitários com `@std/testing/bdd` e validação com `deno doc --lint`.
 - **Refatoração completa do `denobuild` para `packages/utils`**:
-  - `packages/utils/src/denobuild/types.ts`: Interfaces para `Deno.bundle`.
   - `packages/utils/src/denobuild/config.ts`: Carregamento de `denobuild.jsonc`.
   - `packages/utils/src/denobuild/bundle.ts`: Lógica de injeção de `defines` e montagem de `bundle options`.
   - `packages/utils/src/denobuild/engine.ts`: Orquestrador de build utilizando `Deno.bundle` nativo.

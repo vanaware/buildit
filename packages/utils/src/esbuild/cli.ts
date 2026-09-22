@@ -3,20 +3,20 @@
  * @description Ponto de entrada CLI para o orquestrador de compilação baseado em esbuild.
  */
 
-import { parseCommonCliFlags } from "../config/cli-flags.ts";
-import { readProjectVersion, updateProjectVersion } from "../config/version.ts";
+import { parseArgs, parseCommonCliFlags, } from "../tools/cli-flags.ts";
+import { readProjectVersion, updateProjectVersion, } from "../tools/version.ts";
+import { listAssetsForCache, } from "../tools/paths.ts";
+import { carregarConfigEsbuild, } from "./config.ts";
 import {
-  listAssetsForCache,
-  parseArgs,
+  buildWithDenoPlugin,
   processTarget,
-} from "./mod.ts";
-import { carregarConfigEsbuild } from "./config.ts";
-import { buildWithDenoPlugin, startWatchMode } from "./engine.ts";
+  startWatchMode,
+} from "./engine.ts";
 
 /**
  * Exibe a mensagem de ajuda para o comando esbuild.
  */
-export function showEsbuildHelp(): void {
+function showEsbuildHelp(): void {
   console.log(`
 BuildIt esbuild Orquestrador CLI
 
@@ -39,7 +39,7 @@ Exemplos:
   deno task esbuild noversion       # Compila sem incrementar a versão
   deno task esbuild -c custom.jsonc
   deno task esbuild -V              # Exibe a versão do projeto
-`);
+`,);
 }
 
 /**
@@ -57,7 +57,7 @@ export async function esBuildCli(
   args: string[] = Deno.args,
   caminhoConfig?: string,
 ): Promise<void> {
-  const flags = parseCommonCliFlags(args);
+  const flags = parseCommonCliFlags(args,);
 
   if (flags.showHelp) {
     showEsbuildHelp();
@@ -67,52 +67,67 @@ export async function esBuildCli(
   const projectVersion = await readProjectVersion();
 
   if (flags.showVersion) {
-    console.log(`v${projectVersion}`);
+    console.log(`v${projectVersion}`,);
     return;
   }
 
   const start = performance.now();
   const baseDir = ".";
   const configPath = flags.configPath ?? caminhoConfig;
-  const loaded = await carregarConfigEsbuild(configPath, baseDir);
+  const loaded = await carregarConfigEsbuild(configPath, baseDir,);
   const configs = loaded.targets;
 
   const rawArgs = [
     ...flags.positional,
-    ...(flags.noversion ? ["noversion"] : []),
+    ...(flags.noversion ? ["noversion",] : []),
   ];
-  const { targets, globalNoVersion, watchTarget } = parseArgs(rawArgs, configs);
+  const { targets, globalNoVersion, watchTarget, } = parseArgs(
+    rawArgs,
+    configs,
+  );
 
   const DENO_JSONC_PATH = "deno.jsonc";
 
-  console.log("\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)");
+  console.log(
+    "\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)",
+  );
 
   if (watchTarget) {
-    console.log(`👀 Modo Watch ativo: ${watchTarget}`);
+    console.log(`👀 Modo Watch ativo: ${watchTarget}`,);
   } else {
     console.log(
-      `📋 Alvos de build (ordem segura do CONFIG): ${targets.join(", ") || "(nenhum)"}`,
+      `📋 Alvos de build (ordem segura do CONFIG): ${
+        targets.join(", ",) || "(nenhum)"
+      }`,
     );
   }
-  console.log(`🔒 Noversion: ${globalNoVersion}\n`);
+  console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
   try {
     const finalVersion = await updateProjectVersion({
       denoJsonPath: DENO_JSONC_PATH,
       noversion: globalNoVersion || (watchTarget !== null),
       versionPaths: flags.versionPaths ?? loaded.versionPaths,
-      forcepackagesversion: flags.forcepackagesversion ?? loaded.forcepackagesversion,
-    });
+      forcepackagesversion: flags.forcepackagesversion ??
+        loaded.forcepackagesversion,
+    },);
 
     if (watchTarget) {
-      await startWatchMode(watchTarget, finalVersion, configs, DENO_JSONC_PATH);
+      await startWatchMode(
+        watchTarget,
+        finalVersion,
+        configs,
+        DENO_JSONC_PATH,
+      );
       return;
     }
 
     for (const targetName of targets) {
       const targetConfig = configs[targetName];
       if (!targetConfig) {
-        console.warn(`⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`);
+        console.warn(
+          `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+        );
         continue;
       }
 
@@ -120,23 +135,23 @@ export async function esBuildCli(
         targetName,
         targetConfig,
         finalVersion,
-        (opts) => buildWithDenoPlugin(opts, DENO_JSONC_PATH),
+        (opts,) => buildWithDenoPlugin(opts, DENO_JSONC_PATH,),
         listAssetsForCache,
       );
     }
 
-    console.log(`\n${"=".repeat(60)}`);
-    console.log(`🎉 ORQUESTRAÇÃO ESBUILD CONCLUÍDA COM SUCESSO!`);
-    console.log(`${"=".repeat(60)}`);
+    console.log(`\n${"=".repeat(60,)}`,);
+    console.log(`🎉 ORQUESTRAÇÃO ESBUILD CONCLUÍDA COM SUCESSO!`,);
+    console.log(`${"=".repeat(60,)}`,);
   } catch (error) {
-    console.error("\n🛑 Pipeline de build falhou:", error);
-    Deno.exit(1);
+    console.error("\n🛑 Pipeline de build falhou:", error,);
+    Deno.exit(1,);
   } finally {
-    const elapsed = (performance.now() - start).toFixed(0);
-    console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`);
+    const elapsed = (performance.now() - start).toFixed(0,);
+    console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`,);
   }
 }
 
 if (import.meta.main) {
-  await esBuildCli(Deno.args);
+  await esBuildCli(Deno.args,);
 }

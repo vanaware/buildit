@@ -4,9 +4,9 @@
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { loadConfig } from "../config/mod.ts";
-import { EXTENSOES_PADRAO, } from "../config/mod.ts";
-import type { ExportConfig, ExportConfigFile, } from "./types.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
+import { EXTENSOES_PADRAO, } from "../tools/interfaces.ts";
+import type { ExportConfig, ExportConfigFile, } from "../tools/interfaces.ts";
 
 /**
  * Dicionário com as configurações padrão dos modos de exportação do BuildIt.
@@ -103,11 +103,14 @@ export async function carregarConfigExport(
   );
 
   if (parsed) {
-    if ("modos" in parsed && typeof (parsed as ExportConfigFile).modos === "object") {
+    if (
+      "modos" in parsed &&
+      typeof (parsed as ExportConfigFile).modos === "object"
+    ) {
       return (parsed as ExportConfigFile).modos;
     }
     return parsed as unknown as Record<string, ExportConfig>;
   }
 
-  return { ...CONFIGURACOES_PADRAO };
+  return { ...CONFIGURACOES_PADRAO, };
 }

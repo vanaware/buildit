@@ -3,11 +3,8 @@
  * @description Funções utilitárias e geradores de opções para a API nativa Deno.bundle.
  */
 
-import {
-  resolveEntryPoints,
-  resolveOutputPaths,
-} from "../esbuild/mod.ts";
-import type { DenoBundleTargetConfig, } from "./types.ts";
+import { resolveEntryPoints, resolveOutputPaths, } from "../tools/paths.ts";
+import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 
 /**
  * Aplica substituição de definições (defines) em uma string de código em memória.
