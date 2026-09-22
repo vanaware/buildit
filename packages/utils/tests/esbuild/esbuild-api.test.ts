@@ -1,8 +1,7 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
-import { parseArgs } from "../../src/esbuild/mod.ts";
-import { parseCommonCliFlags } from "../../src/config/cli-flags.ts";
+import { parseArgs, parseCommonCliFlags } from "../../src/tools/cli-flags.ts";
 
 describe("esbuild API & CLI flags integration", () => {
   it("deve integrar flags CLI com parseArgs", () => {

@@ -8,8 +8,12 @@ import { assertEquals, assert, } from "@std/assert";
 import {
   parseVersion,
   formatVersion,
+} from "../../src/tools/version.ts";
+import {
   isSafePath,
   resolveOutputPaths,
+} from "../../src/tools/paths.ts";
+import {
   CONFIGURACOES_PADRAO,
 } from "../../src/esbuild/mod.ts";
 

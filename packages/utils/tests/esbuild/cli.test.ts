@@ -2,8 +2,8 @@
 
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
-import { parseArgs, } from "@vanaware/buildit/build";
-import type { GlobalTargetConfig, } from "../../src/interfaces/mod.ts";
+import { parseArgs, } from "../../src/tools/cli-flags.ts";
+import type { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
 
 // Helper para criar config mínima
 function makeTarget(overrides: Record<string, unknown> = {},) {

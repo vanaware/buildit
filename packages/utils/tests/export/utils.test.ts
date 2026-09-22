@@ -10,8 +10,8 @@ import {
   mapearExtensao,
   normalizarCaminho,
 } from "../../src/export/mod.ts";
-import { EXTENSOES_PADRAO, } from "../../src/config/mod.ts";
-import type { ExportConfig, } from "../../src/interfaces/mod.ts";
+import { EXTENSOES_PADRAO, } from "../../src/tools/interfaces.ts";
+import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
 // Helper para criar config customizada em testes
 function makeConfig(overrides: Partial<ExportConfig> = {},): ExportConfig {

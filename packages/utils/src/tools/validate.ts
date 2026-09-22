@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join, } from "@std/path";
 import type {
   DenoBundleTargetConfig,
   TargetConfig,
-} from "../tools/interfaces.ts";
+} from "./interfaces.ts";
 
 // ============================================================================
 // 🎯 VALIDAÇÃO DE CONFIGURAÇÃO DO ALVO (fail-fast com mensagens claras)

@@ -7,7 +7,7 @@ import {
   cleanTarget,
   copyStaticFiles,
   listAssetsForCache,
-} from "../../src/esbuild/mod.ts";
+} from "../../src/tools/paths.ts";
 import {
   fileExists,
   listFiles,

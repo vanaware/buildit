@@ -7,7 +7,7 @@ import {
   readProjectVersion,
   updateProjectVersion,
   writeVersionFile,
-} from "../../src/config/version.ts";
+} from "../../src/tools/version.ts";
 
 describe("version utils", () => {
   describe("parseVersion e formatVersion", () => {

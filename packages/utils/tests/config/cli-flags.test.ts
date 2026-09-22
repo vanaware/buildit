@@ -1,6 +1,6 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
-import { parseCommonCliFlags } from "../../src/config/cli-flags.ts";
+import { parseCommonCliFlags } from "../../src/tools/cli-flags.ts";
 
 describe("parseCommonCliFlags", () => {
   it("deve identificar a flag de ajuda (--help e -h)", () => {

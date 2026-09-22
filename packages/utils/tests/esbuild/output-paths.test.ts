@@ -3,9 +3,11 @@ import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, assertThrows, } from "@std/assert";
 import {
   resolveOutputPaths,
+} from "../../src/tools/paths.ts";
+import {
   validateTargetConfig,
-} from "../../src/esbuild/mod.ts";
-import type { TargetConfig, } from "../../src/interfaces/mod.ts";
+} from "../../src/tools/validate.ts";
+import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 
 describe("validateTargetConfig", () => {
   describe("distdir obrigatório", () => {
