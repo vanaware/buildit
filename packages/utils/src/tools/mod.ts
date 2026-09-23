@@ -13,6 +13,7 @@ export { validateTargetConfig, } from "./validate.ts";
 export {
   cleanTarget,
   copyStaticFiles,
+  ensureDirForFile,
   isSafePath,
   listAssetsForCache,
   resolveEntryPoints,

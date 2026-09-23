@@ -27,6 +27,30 @@ export async function currentVersion(denoJsoncPath: string): Promise<string> {
 }
 
 /**
+ * Sincroniza a versão em um diretório de workspace (deno.jsonc ou deno.json).
+ */
+async function syncWorkspaceDir(
+  wsPath: string,
+  newVersion: string,
+  wsRelPath: string,
+): Promise<void> {
+  for (const fileName of ["deno.jsonc", "deno.json"]) {
+    const configPath = join(wsPath, fileName);
+    try {
+      const content = await Deno.readTextFile(configPath);
+      const updated = replaceVersionInContent(content, newVersion);
+      await Deno.writeTextFile(configPath, updated);
+      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName)}`);
+      return; // Sucesso, para de procurar neste workspace
+    } catch (err) {
+      if (!(err instanceof Deno.errors.NotFound)) {
+        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err);
+      }
+    }
+  }
+}
+
+/**
  * Incrementa a versão patch e sincroniza workspaces e arquivos de versão.
  * @param version Versão atual
  * @param denoJsoncPath Caminho para o deno.jsonc raiz
@@ -38,64 +62,12 @@ export async function incrementVersion(
   denoJsoncPath: string,
   buildHash?: string,
 ): Promise<string> {
-  const { major, minor, patch, } = parseVersion(version,);
-  const nextPatch = patch + 1;
-  const newVersion = formatVersion(major, minor, nextPatch, buildHash,);
-  const content = await Deno.readTextFile(denoJsoncPath,);
-  const updatedRootContent = replaceVersionInContent(content, newVersion,);
-  await Deno.writeTextFile(denoJsoncPath, updatedRootContent,);
-  console.log(`📈 Versão incrementada para: v${newVersion}`,);
-
-  // Sincronização de Workspaces
-  try {
-    const rootDir = dirname(denoJsoncPath,);
-    const parsed = parseJsonc(content,) as { workspace?: string[] };
-
-    if (parsed.workspace && Array.isArray(parsed.workspace,)) {
-      console.log(`📦 Sincronizando workspaces...`,);
-      for (const ws of parsed.workspace) {
-        const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
-
-        // Tenta deno.jsonc depois deno.json
-        for (const fileName of ["deno.jsonc", "deno.json",]) {
-          const configPath = join(wsPath, fileName,);
-          try {
-            const stat = await Deno.stat(configPath,);
-            if (stat.isFile) {
-              let wsContent = await Deno.readTextFile(configPath,);
-              wsContent = replaceVersionInContent(wsContent, newVersion,);
-              await Deno.writeTextFile(configPath, wsContent,);
-              console.log(`   ✅ Sincronizado: ${join(ws, fileName,)}`,);
-              break; // Para no primeiro que encontrar
-            }
-          } catch {
-            continue;
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.warn(`⚠️ Falha ao sincronizar workspaces:`, error,);
-  }
-
-  // Atualiza arquivo de versão (específico para injeção de código)
-  try {
-    const utilsVersionPath = "packages/utils/src/version.ts";
-    const versionContent = `// Automatically generated file during build
-declare const __APP_VERSION__: string;
-
-/** Current library/application version. */
-export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
-  ? __APP_VERSION__
-  : "${newVersion}";
-`;
-    await Deno.writeTextFile(utilsVersionPath, versionContent,);
-    console.log(`📝 Versão atualizada em: ${utilsVersionPath}`,);
-  } catch {
-    // Ignora quando executando em ambientes sem a estrutura completa (ex: testes)
-  }
-
-  return newVersion;
+  return await updateProjectVersion({
+    currentVersion: version,
+    denoJsonPath: denoJsoncPath,
+    buildHash,
+    forcepackagesversion: true,
+  });
 }
 
 /**
@@ -267,24 +239,7 @@ export async function syncVersion(
         console.log(`📦 Sincronizando workspaces para v${finalVersion}...`,);
         for (const ws of parsed.workspace) {
           const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
-          for (const fileName of ["deno.jsonc", "deno.json",]) {
-            const configPath = join(wsPath, fileName,);
-            try {
-              const stat = await Deno.stat(configPath,);
-              if (stat.isFile) {
-                let wsContent = await Deno.readTextFile(configPath,);
-                wsContent = replaceVersionInContent(
-                  wsContent,
-                  finalVersion,
-                );
-                await Deno.writeTextFile(configPath, wsContent,);
-                console.log(`   ✅ Sincronizado: ${join(ws, fileName,)}`,);
-                break;
-              }
-            } catch {
-              continue;
-            }
-          }
+          await syncWorkspaceDir(wsPath, finalVersion, ws,);
         }
       }
     } catch (err) {

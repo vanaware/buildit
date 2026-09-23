@@ -90,6 +90,17 @@ export function resolveEntryPoints(
   },);
 }
 
+/**
+ * Garante que o diretório pai de um arquivo existe.
+ * @param filePath Caminho do arquivo
+ */
+export async function ensureDirForFile(filePath: string): Promise<void> {
+  const dir = dirname(filePath);
+  if (dir && dir !== ".") {
+    await ensureDir(dir);
+  }
+}
+
 // ============================================================================
 // 📂 FUNÇÕES DE FILESYSTEM
 // ============================================================================

@@ -9,6 +9,7 @@ import { updateProjectVersion, } from "../tools/version.ts";
 import {
   cleanTarget,
   copyStaticFiles,
+  ensureDirForFile,
   listAssetsForCache,
 } from "../tools/paths.ts";
 
@@ -137,13 +138,7 @@ export async function processBundleTarget(
   }
 
   for (const outputFile of outputFiles) {
-    const dir = outputFile.path.substring(
-      0,
-      outputFile.path.lastIndexOf("/",),
-    );
-    if (dir) {
-      await ensureDir(dir,);
-    }
+    await ensureDirForFile(outputFile.path);
 
     let content = outputFile.text();
     if (hasDefines) {
@@ -189,71 +184,23 @@ export async function processBundleTarget(
  * ```
  */
 export async function denoBuild(
-  configOuOpcoes?: DenoBuildOptions | DenoBundleGlobalConfig,
+  opcoes: DenoBuildOptions,
 ): Promise<DenoBuildResult[]> {
-  let configs: DenoBundleGlobalConfig;
-  let opcoes: DenoBuildOptions | undefined;
-  let fileConfigVersionPaths: string[] | undefined;
-  let fileConfigForcePackages: boolean | undefined;
-
-  if (
-    configOuOpcoes &&
-    typeof configOuOpcoes === "object" &&
-    !("caminhoConfig" in configOuOpcoes) &&
-    !("targets" in configOuOpcoes) &&
-    !("baseDir" in configOuOpcoes) &&
-    !("config" in configOuOpcoes) &&
-    !("silencioso" in configOuOpcoes) &&
-    !("noversion" in configOuOpcoes) &&
-    !("versionPaths" in configOuOpcoes) &&
-    !("forcepackagesversion" in configOuOpcoes) &&
-    !("denoJsoncPath" in configOuOpcoes)
-  ) {
-    configs = configOuOpcoes as DenoBundleGlobalConfig;
-  } else {
-    opcoes = configOuOpcoes as DenoBuildOptions | undefined;
-    if (opcoes?.config) {
-      configs = opcoes.config;
-    } else {
-      const baseDir = opcoes?.baseDir ?? ".";
-      const loaded = await carregarConfigDenoBuild(
-        opcoes?.caminhoConfig,
-        baseDir,
-      );
-      configs = loaded.targets;
-      fileConfigVersionPaths = loaded.versionPaths;
-      fileConfigForcePackages = loaded.forcepackagesversion;
-    }
-  }
-
-  const baseDir = opcoes?.baseDir ?? ".";
-  const rawArgs = [
-    ...(opcoes?.targets ?? []),
-    ...(opcoes?.noversion ? ["noversion",] : []),
-  ];
-
-  const { targets, globalNoVersion, watchTarget, } = parseArgs(
-    rawArgs,
-    configs,
-  );
-
-  if (watchTarget) {
-    console.warn("⚠️ Modo Watch não é suportado pela API Deno.bundle nativa.",);
-    return [];
-  }
+  const configs = opcoes.config;
+  const baseDir = opcoes.baseDir ?? ".";
+  const targets = opcoes.targets ?? [];
+  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   if (targets.length === 0) {
     return [];
   }
 
-  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: globalNoVersion || (opcoes?.noversion ?? false),
-    versionPaths: opcoes?.versionPaths ?? fileConfigVersionPaths,
-    forcepackagesversion: opcoes?.forcepackagesversion ??
-      fileConfigForcePackages,
+    noversion: opcoes.noversion ?? false,
+    versionPaths: opcoes.versionPaths,
+    forcepackagesversion: opcoes.forcepackagesversion,
   },);
 
   const resultados: DenoBuildResult[] = [];

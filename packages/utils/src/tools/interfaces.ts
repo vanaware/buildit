@@ -242,11 +242,9 @@ export type EsbuildGlobalConfig = GlobalTargetConfig;
  * Opções para execução programática do esbuild.
  */
 export interface EsbuildOptions {
-  /** Configuração direta de alvos em memória (substitui leitura de arquivo) */
-  config?: GlobalTargetConfig;
-  /** Caminho do arquivo de configuração (ex: "esbuild.jsonc") */
-  caminhoConfig?: string;
-  /** Alvos específicos a compilar */
+  /** Configuração direta de alvos em memória */
+  config: GlobalTargetConfig;
+  /** Alvos específicos a compilar. Se vazio e não houver watchTarget, não executa nada. */
   targets?: string[];
   /** Se true, não incrementa a versão */
   noversion?: boolean;
@@ -503,10 +501,8 @@ export interface DenoBundleGlobalConfig {
  * Opções para execução programática do denobuild.
  */
 export interface DenoBuildOptions {
-  /** Configuração direta de alvos em memória (substitui leitura de arquivo) */
-  config?: DenoBundleGlobalConfig;
-  /** Caminho do arquivo de configuração (ex: "denobuild.jsonc") */
-  caminhoConfig?: string;
+  /** Configuração direta de alvos em memória */
+  config: DenoBundleGlobalConfig;
   /** Alvos específicos a compilar */
   targets?: string[];
   /** Se true, não incrementa a versão */
@@ -553,11 +549,9 @@ export interface ExportResult {
  * Opções de configuração para o método programático `executarExport`.
  */
 export interface ExportOptions {
-  /** Configuração direta de modos em memória (substitui leitura de arquivo) */
-  config?: Record<string, ExportConfig>;
-  /** Caminho do arquivo de configuração (padrão: "export.jsonc" ou "export.json") */
-  caminhoConfig?: string;
-  /** Lista explícita de modos a serem executados. Se omitido, executa os marcados como default */
+  /** Configuração direta de modos em memória */
+  config: Record<string, ExportConfig>;
+  /** Lista explícita de modos a serem executados. */
   modos?: string[];
   /** Diretório base de varredura (padrão: ".") */
   baseDir?: string;

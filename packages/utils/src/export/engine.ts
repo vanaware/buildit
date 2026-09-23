@@ -12,6 +12,9 @@ import {
   formatarArquivoMarkdown,
   gerarCabecalho,
 } from "./formatter.ts";
+import {
+  ensureDirForFile,
+} from "../tools/paths.ts";
 import type {
   ExportConfig,
   ExportOptions,
@@ -116,10 +119,7 @@ export async function exportarModo(
 
   // Garante que o diretório de destino existe antes da gravação
   const caminhoSaida = join(baseDir, config.arquivoSaida,);
-  const dirSaida = dirname(caminhoSaida,);
-  if (dirSaida && dirSaida !== ".") {
-    await Deno.mkdir(dirSaida, { recursive: true, },);
-  }
+  await ensureDirForFile(caminhoSaida,);
 
   const encodedBytes = new TextEncoder().encode(conteudoFinal,);
   await Deno.writeTextFile(caminhoSaida, conteudoFinal,);
@@ -160,40 +160,14 @@ export async function exportarModo(
  * ```
  */
 export async function exportEngine(
-  configOuOpcoes?: ExportOptions | Record<string, ExportConfig>,
+  opcoes: ExportOptions,
 ): Promise<ExportResult[]> {
-  let configs: Record<string, ExportConfig>;
-  let opcoes: ExportOptions | undefined;
+  const configs = opcoes.config;
+  const baseDir = opcoes.baseDir ?? ".";
+  const modosParaExecutar = opcoes.modos ?? [];
 
-  // Verifica se o argumento passado é diretamente a configuração de modos (chaves mapeando para ExportConfig)
-  if (
-    configOuOpcoes &&
-    typeof configOuOpcoes === "object" &&
-    !("caminhoConfig" in configOuOpcoes) &&
-    !("modos" in configOuOpcoes) &&
-    !("baseDir" in configOuOpcoes) &&
-    !("config" in configOuOpcoes) &&
-    !("silencioso" in configOuOpcoes) &&
-    !("versaoApp" in configOuOpcoes) &&
-    !("denoJsoncPath" in configOuOpcoes)
-  ) {
-    configs = configOuOpcoes as Record<string, ExportConfig>;
-  } else {
-    opcoes = configOuOpcoes as ExportOptions | undefined;
-    if (opcoes?.config) {
-      configs = opcoes.config;
-    } else {
-      const baseDir = opcoes?.baseDir ?? ".";
-      configs = await carregarConfigExport(opcoes?.caminhoConfig, baseDir,);
-    }
-  }
-
-  const baseDir = opcoes?.baseDir ?? ".";
-  const versaoApp = opcoes?.versaoApp ??
-    await readProjectVersion(opcoes?.denoJsoncPath, baseDir,);
-  const modosParaExecutar = opcoes?.modos && opcoes.modos.length > 0
-    ? parseArgs(opcoes.modos, configs,)
-    : parseArgs([], configs,);
+  const versaoApp = opcoes.versaoApp ??
+    await readProjectVersion(opcoes.denoJsoncPath, baseDir,);
 
   const resultados: ExportResult[] = [];
 
@@ -203,8 +177,8 @@ export async function exportEngine(
       const res = await exportarModo(modo, config, {
         baseDir,
         versaoApp,
-        silencioso: opcoes?.silencioso,
-        denoJsoncPath: opcoes?.denoJsoncPath,
+        silencioso: opcoes.silencioso,
+        denoJsoncPath: opcoes.denoJsoncPath,
       },);
       resultados.push(res,);
     }

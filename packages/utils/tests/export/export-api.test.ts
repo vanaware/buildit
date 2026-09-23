@@ -31,6 +31,7 @@ describe("exportEngine programmatic API", () => {
 
     const resultados = await exportEngine({
       config: configEmMemoria,
+      modos: ["testMode"],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
       silencioso: true,
@@ -56,15 +57,18 @@ describe("exportEngine programmatic API", () => {
     await Deno.writeTextFile(join(srcDir, "index.ts"), 'console.log("direct config");');
 
     const resultados = await exportEngine({
-      direto: {
-        arquivoSaida: join(tempDir, "direct.md"),
-        extensoesPermitidas: [".ts"],
-        pastaBase: srcDir,
-        subpastasPermitidas: [],
-        arquivosRaizPermitidos: ["index.ts"],
-        incluiVersao: false,
-        instrucaoCustomizada: "Teste direto",
+      config: {
+        direto: {
+          arquivoSaida: join(tempDir, "direct.md"),
+          extensoesPermitidas: [".ts"],
+          pastaBase: srcDir,
+          subpastasPermitidas: [],
+          arquivosRaizPermitidos: ["index.ts"],
+          incluiVersao: false,
+          instrucaoCustomizada: "Teste direto",
+        },
       },
+      modos: ["direto"],
     });
 
     assertEquals(resultados.length, 1);

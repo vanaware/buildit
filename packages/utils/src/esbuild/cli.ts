@@ -83,16 +83,17 @@ export function esBuildCli() {
 
       try {
         await esBuild({
-          targets: args,
+          config: configs,
+          targets,
           noversion: globalNoVersion,
           versionPaths: (options.versionPath as string[]) ??
             loaded.versionPaths,
           forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
           denoJsoncPath: DENO_JSONC_PATH,
-          caminhoConfig: configPath,
-          config: configs,
+          watchTarget: watchTarget || undefined,
           baseDir,
+          silencioso: false,
         },);
 
         console.log(`\n${"=".repeat(60,)}`,);

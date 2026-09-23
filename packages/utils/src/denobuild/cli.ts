@@ -79,14 +79,14 @@ export function denoBuildCli() {
 
       try {
         await denoBuild({
-          targets: args,
+          config: configs,
+          targets,
           noversion: globalNoVersion,
           versionPaths: (options.versionPath as string[]) ??
             loaded.versionPaths,
           forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
-          caminhoConfig: configPath,
-          config: configs,
+          denoJsoncPath: options.denoConfig as string,
         },);
 
         console.log(`\n${"=".repeat(60,)}`,);

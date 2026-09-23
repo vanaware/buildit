@@ -26,6 +26,7 @@ describe("denoBuild programmatic API", () => {
 
     const results = await denoBuild({
       config,
+      targets: ["app"],
       baseDir: tempDir,
       noversion: true,
       silencioso: true,

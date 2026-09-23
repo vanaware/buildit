@@ -6,6 +6,8 @@ import { readProjectVersion, } from "../tools/version.ts";
 import { exportEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
+import { carregarConfigExport, } from "./config.ts";
+import { parseArgs, } from "../tools/cli-flags.ts";
 
 import { Command, } from "@cliffy/command";
 
@@ -32,12 +34,24 @@ export function exportCli() {
     .arguments("[modos...:string]", ["Modos de exportação",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
+      const baseDir = options.baseDir as string || ".";
+      const configs = await carregarConfigExport(
+        options.appConfig as string,
+        baseDir,
+      );
+      const modos = parseArgs(args, configs,);
+
       console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
       try {
         await exportEngine({
-          modos: args,
-          caminhoConfig: options.appConfig as string,
-          versaoApp: await readProjectVersion(),
+          config: configs,
+          modos,
+          baseDir,
+          versaoApp: await readProjectVersion(
+            options.denoConfig as string,
+            baseDir,
+          ),
+          denoJsoncPath: options.denoConfig as string,
         },);
 
         const elapsed = (performance.now() - startTime).toFixed(0,);

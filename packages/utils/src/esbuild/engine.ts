@@ -19,6 +19,7 @@ import type {
 import {
   cleanTarget,
   copyStaticFiles,
+  ensureDirForFile,
   listAssetsForCache,
   resolveEntryPoints,
   resolveOutputPaths,
@@ -111,81 +112,25 @@ export async function startWatchMode(
 
 /**
  * Executa programaticamente a compilação com esbuild para os alvos configurados.
- * Aceita diretamente um objeto GlobalTargetConfig em memória ou EsbuildOptions.
  *
- * @param configOuOpcoes Objeto GlobalTargetConfig em memória ou opções completas de execução
+ * @param opcoes Opções completas de execução (incluindo configuração já parseada)
  * @returns Lista de resultados obtidos por alvo
- *
- * @example
- * ```typescript
- * // Passando configuração diretamente em memória:
- * const resultados = await esBuild({
- *   ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src", ... }
- * });
- *
- * // Ou usando opções completas:
- * const resultados = await esBuild({ targets: ["ui"], noversion: true });
- * ```
  */
 export async function esBuild(
-  configOuOpcoes?: EsbuildOptions | GlobalTargetConfig,
+  opcoes: EsbuildOptions,
 ): Promise<EsbuildResult[]> {
-  let configs: GlobalTargetConfig;
-  let opcoes: EsbuildOptions | undefined;
-  let fileConfigVersionPaths: string[] | undefined;
-  let fileConfigForcePackages: boolean | undefined;
-
-  if (
-    configOuOpcoes &&
-    typeof configOuOpcoes === "object" &&
-    !("caminhoConfig" in configOuOpcoes) &&
-    !("targets" in configOuOpcoes) &&
-    !("baseDir" in configOuOpcoes) &&
-    !("config" in configOuOpcoes) &&
-    !("silencioso" in configOuOpcoes) &&
-    !("noversion" in configOuOpcoes) &&
-    !("versionPaths" in configOuOpcoes) &&
-    !("forcepackagesversion" in configOuOpcoes) &&
-    !("denoJsoncPath" in configOuOpcoes) &&
-    !("watchTarget" in configOuOpcoes)
-  ) {
-    configs = configOuOpcoes as GlobalTargetConfig;
-  } else {
-    opcoes = configOuOpcoes as EsbuildOptions | undefined;
-    if (opcoes?.config) {
-      configs = opcoes.config;
-    } else {
-      const baseDir = opcoes?.baseDir ?? ".";
-      const loaded = await carregarConfigEsbuild(
-        opcoes?.caminhoConfig,
-        baseDir,
-      );
-      configs = loaded.targets;
-      fileConfigVersionPaths = loaded.versionPaths;
-      fileConfigForcePackages = loaded.forcepackagesversion;
-    }
-  }
-
-  const baseDir = opcoes?.baseDir ?? ".";
-  const rawArgs = [
-    ...(opcoes?.targets ?? []),
-    ...(opcoes?.noversion ? ["noversion",] : []),
-  ];
-
-  const { targets, globalNoVersion, watchTarget, } = parseArgs(
-    rawArgs,
-    configs,
-  );
-  const activeWatch = opcoes?.watchTarget ?? watchTarget;
-  const denoJsoncPath = opcoes?.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = opcoes.config;
+  const baseDir = opcoes.baseDir ?? ".";
+  const targets = opcoes.targets ?? [];
+  const activeWatch = opcoes.watchTarget;
+  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: globalNoVersion || (opcoes?.noversion ?? false),
-    versionPaths: opcoes?.versionPaths ?? fileConfigVersionPaths,
-    forcepackagesversion: opcoes?.forcepackagesversion ??
-      fileConfigForcePackages,
+    noversion: opcoes.noversion ?? false,
+    versionPaths: opcoes.versionPaths,
+    forcepackagesversion: opcoes.forcepackagesversion,
   },);
 
   if (activeWatch) {
