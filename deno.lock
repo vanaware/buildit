@@ -530,13 +530,8 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@deno/esbuild-plugin@^1.2.1",
       "jsr:@std/assert@^1.0.19",
-      "jsr:@std/fs@^1.0.24",
-      "jsr:@std/jsonc@^1.0.2",
-      "jsr:@std/path@^1.1.6",
-      "jsr:@std/testing@^1.0.20",
-      "npm:esbuild@~0.28.2"
+      "jsr:@std/testing@^1.0.20"
     ],
     "members": {
       "packages/server": {
