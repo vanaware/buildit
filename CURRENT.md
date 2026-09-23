@@ -10,7 +10,7 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
 3. **export** => derivado do `export.ts` que usa o arquivo config externo `export.jsonc` *(✅ Concluído)*
 
 ### ✅ Tarefas Realizadas:
-- **Refatoração completa do `export` para `packages/utils`**:
+- **Refatoração completa do `export` para `packages/utils` (Fase 1)**:
   - `packages/utils/src/export/formatter.ts`: Lógica pura de normalização de caminhos, detecção anti-loop, crases dinâmicas e blocos Markdown com JSDoc 100% compatível com JSR.
   - `packages/utils/src/export/config.ts`: Carregamento do arquivo externo `export.jsonc` com fallback para `CONFIGURACOES_PADRAO`.
   - `packages/utils/src/export/engine.ts`: Varredura de arquivos via `walk`, filtragem declarativa e geração de snapshots.
@@ -38,33 +38,42 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
 
 - **Conformidade com Diretrizes JSR (`docs/publish-jsr-rules.md`)**:
   - `packages/utils/README.md`: Atualizado com exemplos práticos de uso da CLI para os três utilitários (`esbuild/cli`, `denobuild/cli`, `export/cli`), comando de instalação `deno add`, e seção de esquemas de configuração.
-  - `packages/utils/schema/`: Criado diretório contendo JSON Schemas oficiais para `esbuild.json`, `denobuild.json` e `export.json`, proporcionando validação e autocomplete.
-  - Configurações da raiz (`esbuild.jsonc`, `denobuild.jsonc`, `export.jsonc`) atualizadas para apontar para os esquemas locais.
-  - `packages/utils/LICENSE`: Adicionado arquivo de licença MIT no pacote para empacotamento autônomo.
+  - `packages/utils/schema/`: Criado diretório contendo JSON Schemas oficiais para `esbuild.json`, `denobuild.json`, `export.json` e `watch.json`.
+  - Configurações da raiz (`esbuild.jsonc`, `denobuild.jsonc`, `export.jsonc`, `watch.jsonc`) atualizadas para apontar para os esquemas locais.
+  - `packages/utils/LICENSE`: Licença MIT incluída no pacote.
   - `packages/utils/deno.jsonc`: Configurado com `name`, `version`, `license`, `publish.include` e `publish.exclude` restritivos.
-  - Resolução de colisões de tipos e remoção de triple slash directives (`/// <reference lib="..." />`) banidas pelo JSR.
-  - Validação completa com `deno doc --lint src/**/*.ts` (22 arquivos verificados, 0 erros) e `deno publish --dry-run` (simulação de publicação bem-sucedida).
-  - Sincronização do workflow `.github/workflows/jsr-publish.yml` para publicação do `@vanaware/buildit` a partir de `packages/utils`.
+  - Validação completa com `deno doc --lint` e `deno publish --dry-run`.
 
-- **Documentação da API e Configurações (`docs/api.md`)**:
-  - `docs/api.md`: Documentação técnica completa e exaustiva contendo todas as opções e propriedades aceitas em arquivos JSONC/JSON para cada utilitário (`esbuild.jsonc`, `denobuild.jsonc` e `export.jsonc`), exemplos comentados, flags CLI e referência da API programática em TypeScript (`runEsbuild`, `runDenoBuild`, `runExport`, `syncVersion`, etc.).
-  - Integração e links em `README.md`.
+- **Documentação da Topologia de Execução (`docs/`)**:
+  - `docs/topology-esbuild.md`: Call graph, mapeamento função a função, flags e pontos de extensão do `esbuild`.
+  - `docs/topology-denobuild.md`: Call graph e ciclo de vida do `Deno.bundle` nativo com injeção de defines.
+  - `docs/topology-export.md`: Call graph, proteção anti-looping e estratégia de geração de snapshots.
+  - `docs/topology-watch.md`: Call graph, validação Cliffy de argumento único, controle de concorrência com PID lock e observação contínua com esbuild context.
 
-- **Limpeza e Padronização de Comentários Legados**:
-  - `packages/utils/src/interfaces/mod.ts`: Excluído comentário obsoleto de TODO sobre `worker-db` e método de banco `ls()`.
-  - Atualizados os cabeçalhos de comentários de seção de `PIPELINE WORKERDB` e `EXTENSÕES WORKERDB` para `PIPELINE BUILDIT` e `EXTENSÕES BUILDIT`.
-  - Verificação completa do código-fonte em `packages/utils`, `packages/server` e `packages/ui` confirmando zero referências residuais a comentários legados.
+---
 
-- **Simplificação do Servidor de Desenvolvimento (`packages/server/src/main.ts`)**:
-  - Removido o fallback em HTML para OPFS Explorer e Service Worker que pertencia ao fork anterior.
-  - Servidor mantido enxuto e direto com `serveDir`, controle estrito de cache no-store, suporte a Service Worker (`Service-Worker-Allowed: /`) e tratamento resiliente de erros.
-  - Snapshot `snapshots/server.md` devidamente sincronizado.
+## 🚀 Plano de Refatoração: Modernização do Utilitário `export`
 
-- **Garantia de Ordem de Execução nos Engines e Simplificação de CLIs (Itens 1, 3 e 4)**:
-  - `packages/utils/src/tools/targets.ts`: Implementada função `resolverOrdemTargets`, tornando os engines (`esbuild`, `denobuild`, `export`, `watch`) a única fonte da verdade para a ordem de execução declarada no arquivo de configuração, aceitando maiúsculas/minúsculas e alvos solicitados arbitrariamente.
-  - `exportEngine`: Fixado como somente-leitura de versão (`noversion` implícito).
-  - Desacoplamento do motor `watch`: Módulo autônomo `packages/utils/src/watch/` criado com seu próprio `watch.jsonc`, CLI `watch.ts`, schema `packages/utils/schema/watch.json` e exportação `@vanaware/buildit/watch`, separando completamente o modo de bundling do modo de desenvolvimento contínuo.
-  - Cobertura de testes unitários BDD adicionada para `resolverOrdemTargets` e `carregarConfigWatch`.
+**Objetivo**: Simplificar a configuração dos modos de exportação, substituindo as 5 propriedades legadas (`pastaBase`, `subpastasPermitidas`, `arquivosRaizPermitidos`, `caminhosAdicionaisPermitidos`, `extensoesPermitidas`) pelo padrão declarativo moderno com **`includes`** (suportando globs e brace expansion como `**/*.{ts,tsx}`) e **`excludes`**, utilizando **`expandGlob`** para navegação otimizada no sistema de arquivos e **streaming de escrita em disco**.
 
-### 🎯 Próximos Passos:
-- Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.
+### 📋 Tarefas do Plano:
+
+- [ ] **Tarefa 1: Tipagem e JSON Schema**
+  - [ ] Atualizar `ExportConfig` em `packages/utils/src/tools/interfaces.ts` para incluir `includes: string[]` e `excludes?: string[]`.
+  - [ ] Atualizar o esquema oficial em `packages/utils/schema/export.json`.
+- [ ] **Tarefa 2: Configuração Padrão e Arquivo `export.jsonc`**
+  - [ ] Atualizar `CONFIGURACOES_PADRAO` em `packages/utils/src/export/config.ts` com a sintaxe de globs.
+  - [ ] Atualizar o arquivo `export.jsonc` na raiz com os modos (`ui`, `docs`, `server`, `utils`).
+- [ ] **Tarefa 3: Motor de Varredura com `expandGlob` e Streaming de Escrita**
+  - [ ] Implementar `expandGlob` com suporte a `root`, `exclude` e brace expansion em `packages/utils/src/export/engine.ts`.
+  - [ ] Implementar deduplicação de caminhos (`Set<string>`) e ordenação determinística.
+  - [ ] Implementar escrita via stream com `Deno.open` (`file.writable` / `writer.write`) para manter uso de memória $O(1)$.
+  - [ ] Preservar regras anti-loop (`exports/`, `snapshots/`), cálculo dinâmico de crases e tags de sintaxe no `formatter.ts`.
+- [ ] **Tarefa 4: Atualização da Documentação**
+  - [ ] Atualizar `docs/topology-export.md` com o novo fluxo de `expandGlob` e stream.
+  - [ ] Atualizar `docs/api.md` e `packages/utils/README.md`.
+- [ ] **Tarefa 5: Suíte de Testes BDD e Validações de Publicação**
+  - [ ] Atualizar e expandir a suíte `packages/utils/tests/export/` para cobrir globs, brace expansion, excludes, anti-loop e streams.
+  - [ ] Executar `deno task test` (100% aprovado).
+  - [ ] Executar `deno doc --lint` e `deno publish --dry-run` (sem erros).
+  - [ ] Executar `npm run lint` e `npm run build`.
