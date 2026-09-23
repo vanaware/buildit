@@ -82,42 +82,6 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
     }
   });
 
-  it("deve rejeitar se múltiplos alvos forem passados no array targets", async () => {
-    const tempDir = await Deno.makeTempDir();
-    try {
-      const config: WatchGlobalConfig = {
-        first: {
-          default: true,
-          entryPoints: ["main.ts"],
-          srcdir: `${tempDir}/src`,
-          distdir: `${tempDir}/dist`,
-        },
-        second: {
-          default: true,
-          entryPoints: ["other.ts"],
-          srcdir: `${tempDir}/src`,
-          distdir: `${tempDir}/dist`,
-        },
-      };
-
-      await assertRejects(
-        async () => {
-          await watchEngine({
-            config,
-            targets: ["first", "second"],
-            baseDir: tempDir,
-            lockFile: `${tempDir}/.watch.lock`,
-            silencioso: true,
-          });
-        },
-        Error,
-        "O modo watch suporta apenas 1 alvo por execução. Foram fornecidos 2: first, second.",
-      );
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
-
   it("deve rejeitar se o alvo solicitado não existir", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
