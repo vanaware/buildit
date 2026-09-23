@@ -10,5 +10,6 @@
 import { esBuildCli, } from "./packages/utils/src/esbuild/cli.ts";
 
 if (import.meta.main) {
-  await esBuildCli(Deno.args,);
+  const cli = esBuildCli();
+  await cli.parse(Deno.args,);
 }

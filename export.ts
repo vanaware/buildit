@@ -10,5 +10,6 @@
 import { exportCli, } from "./packages/utils/src/export/cli.ts";
 
 if (import.meta.main) {
-  await exportCli(Deno.args,);
+  const cli = exportCli();
+  await cli.parse(Deno.args,);
 }

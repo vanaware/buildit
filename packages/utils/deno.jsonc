@@ -42,6 +42,7 @@
     "./export": "./src/export/mod.ts",
     "./export/cli": "./src/export/cli.ts",
     "./denobuild": "./src/denobuild/mod.ts",
-    "./denobuild/cli": "./src/denobuild/cli.ts"
+    "./denobuild/cli": "./src/denobuild/cli.ts",
+    "./version": "./src/version.ts"
   }
 }

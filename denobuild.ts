@@ -11,5 +11,6 @@
 import { denoBuildCli, } from "./packages/utils/src/denobuild/cli.ts";
 
 if (import.meta.main) {
-  await denoBuildCli(Deno.args,);
+  const cli = denoBuildCli();
+  await cli.parse(Deno.args,);
 }
