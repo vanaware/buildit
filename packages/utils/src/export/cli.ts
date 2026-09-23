@@ -7,7 +7,6 @@ import { exportEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
 import { carregarConfigExport, } from "./config.ts";
-import { parseArgs, } from "../tools/cli-flags.ts";
 
 import { Command, } from "@cliffy/command";
 
@@ -39,13 +38,13 @@ export function exportCli() {
         options.appConfig as string,
         baseDir,
       );
-      const modos = parseArgs(args, configs,);
+      const rawModos = args.length > 0 ? args : undefined;
 
       console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
       try {
         await exportEngine({
           config: configs,
-          modos,
+          modos: rawModos,
           baseDir,
           versaoApp: await readProjectVersion(
             options.denoConfig as string,

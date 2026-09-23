@@ -14,8 +14,7 @@ import {
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
-
-import { parseArgs, } from "../tools/cli-flags.ts";
+import { resolverOrdemTargets, } from "../tools/targets.ts";
 
 import { applyDefines, buildBundleOptions, } from "./bundle.ts";
 import { carregarConfigDenoBuild, } from "./config.ts";
@@ -188,12 +187,10 @@ export async function denoBuild(
 ): Promise<DenoBuildResult[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const targets = opcoes.targets ?? [];
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   // Garante estritamente que a ordem de execução siga a declaração na configuração
-  const configKeys = Object.keys(configs,);
-  const targetsParaExecutar = configKeys.filter((t,) => targets.includes(t,));
+  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
 
   if (targetsParaExecutar.length === 0) {
     return [];

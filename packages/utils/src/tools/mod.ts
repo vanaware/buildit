@@ -9,6 +9,7 @@ export {
 
 // 🛠️ Utilitários de CLI e Validação
 export { parseArgs, } from "./cli-flags.ts";
+export { resolverOrdemTargets, } from "./targets.ts";
 export { validateTargetConfig, } from "./validate.ts";
 export {
   cleanTarget,
@@ -44,4 +45,8 @@ export type {
   TargetConfig,
   TargetMode,
   VersionUpdateOptions,
+  WatchConfigFile,
+  WatchConfigResult,
+  WatchOptions,
+  WatchResult,
 } from "./interfaces.ts";

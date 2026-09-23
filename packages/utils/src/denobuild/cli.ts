@@ -4,12 +4,10 @@
  */
 
 import { Command, } from "@cliffy/command";
-import { readProjectVersion, } from "../tools/version.ts";
 import { carregarConfigDenoBuild, } from "./config.ts";
 import { denoBuild, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
-import { parseArgs, } from "../tools/cli-flags.ts";
 
 /**
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
@@ -46,15 +44,7 @@ export function denoBuildCli() {
       const loaded = await carregarConfigDenoBuild(configPath, baseDir,);
       const configs = loaded.targets;
 
-      const rawArgs = [
-        ...args,
-        ...(options.noversion ? ["noversion",] : []),
-      ];
-
-      const { targets, globalNoVersion, } = parseArgs(
-        rawArgs,
-        configs,
-      );
+      const rawTargets = args.length > 0 ? args : undefined;
 
       console.log(
         "\n🚀 Iniciando Orquestrador de Build BuildIt (denobuild / Deno.bundle API)",
@@ -62,18 +52,16 @@ export function denoBuildCli() {
       console.log(`   📦 Motor: Deno.bundle (nativo, --unstable-bundle)`,);
 
       console.log(
-        `📋 Alvos de build (ordem segura do CONFIG): ${
-          targets.join(", ",) || "(nenhum)"
-        }`,
+        `📋 Alvos solicitados: ${rawTargets ? rawTargets.join(", ") : "(padrão)"}`,
       );
-      console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
+      console.log(`🔒 Noversion: ${options.noversion}\n`,);
 
       try {
         await denoBuild({
           config: configs,
-          targets,
+          targets: rawTargets,
           baseDir,
-          noversion: globalNoVersion,
+          noversion: options.noversion,
           versionPaths: loaded.versionPaths,
           forcepackagesversion: loaded.forcepackagesversion,
           denoJsoncPath: options.denoConfig as string,

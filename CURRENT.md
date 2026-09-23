@@ -60,5 +60,11 @@ Esta biblioteca será basicamente o pacote `packages/utils` que conterá três C
   - Servidor mantido enxuto e direto com `serveDir`, controle estrito de cache no-store, suporte a Service Worker (`Service-Worker-Allowed: /`) e tratamento resiliente de erros.
   - Snapshot `snapshots/server.md` devidamente sincronizado.
 
+- **Garantia de Ordem de Execução nos Engines e Simplificação de CLIs (Itens 1, 3 e 4)**:
+  - `packages/utils/src/tools/targets.ts`: Implementada função `resolverOrdemTargets`, tornando os engines (`esbuild`, `denobuild`, `export`, `watch`) a única fonte da verdade para a ordem de execução declarada no arquivo de configuração, aceitando maiúsculas/minúsculas e alvos solicitados arbitrariamente.
+  - `exportEngine`: Fixado como somente-leitura de versão (`noversion` implícito).
+  - Desacoplamento do motor `watch`: Módulo autônomo `packages/utils/src/watch/` criado com seu próprio `watch.jsonc`, CLI `watch.ts`, schema `packages/utils/schema/watch.json` e exportação `@vanaware/buildit/watch`, separando completamente o modo de bundling do modo de desenvolvimento contínuo.
+  - Cobertura de testes unitários BDD adicionada para `resolverOrdemTargets` e `carregarConfigWatch`.
+
 ### 🎯 Próximos Passos:
 - Implementar o utilitário `bump.ts` para automatizar o versionamento semântico.

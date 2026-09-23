@@ -1,5 +1,5 @@
 {
-  "version": "0.3.30#mud5uq6n",
+  "version": "0.3.31#mudx0o4y",
   "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
   "workspace": [
     "./packages/server",
@@ -44,6 +44,7 @@
     "export": "deno run --allow-read --allow-write ./export.ts",
     "build": "deno run -A ./esbuild.ts",
     "esbuild": "deno run -A ./esbuild.ts",
+    "watch": "deno run -A ./watch.ts",
     "denobuild": "deno run --unstable-bundle -A ./denobuild.ts",
     "bump": "deno install --frozen=false && deno task build dist noversion && sh ./tag-version.sh"
   },

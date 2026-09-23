@@ -45,7 +45,7 @@ import {
 import * as esbuild from "esbuild";
 import { denoPlugin, } from "@deno/esbuild-plugin";
 import { updateProjectVersion, } from "../tools/version.ts";
-import { parseArgs, } from "../tools/cli-flags.ts";
+import { resolverOrdemTargets, } from "../tools/targets.ts";
 import { carregarConfigEsbuild, } from "./config.ts";
 
 /**
@@ -65,53 +65,9 @@ export const buildWithDenoPlugin = (
 };
 
 /**
- * Inicia o Watch Mode do esbuild.
- */
-export async function startWatchMode(
-  watchTargetName: string,
-  currentVer: string,
-  config: GlobalTargetConfig,
-  denoJsoncPath: string,
-): Promise<void> {
-  const targetConfig = config[watchTargetName];
-  if (!targetConfig) {
-    throw new Error(
-      `❌ Alvo watch '${watchTargetName}' não encontrado na configuração`,
-    );
-  }
-
-  console.log(`\n👀 Iniciando Watch Mode: ${watchTargetName}\n`,);
-
-  await copyStaticFiles(targetConfig, currentVer,);
-
-  const esbuildOptions = await buildEsbuildOptions(
-    watchTargetName,
-    targetConfig,
-    currentVer,
-  );
-
-  esbuildOptions.plugins = [
-    ...(esbuildOptions.plugins || []),
-    denoPlugin({ configPath: denoJsoncPath, },),
-  ];
-
-  const ctx = await esbuild.context(esbuildOptions,);
-  await ctx.watch();
-
-  console.log("\n✅ Watch mode ativo!",);
-  console.log(`📁 Monitorando: ${targetConfig.srcdir}/`,);
-
-  const resolvedOutfile = esbuildOptions.outfile ||
-    (targetConfig.distdir ? `${targetConfig.distdir}/` : "N/A");
-  console.log(`📦 Output: ${resolvedOutfile}`,);
-  console.log(`📌 Versão: v${currentVer}`,);
-  console.log("\n💡 Pressione Ctrl+C para parar.\n",);
-
-  await new Promise(() => {},);
-}
-
-/**
  * Executa programaticamente a compilação com esbuild para os alvos configurados.
+ * A ordem de execução é estritamente garantida pelo Engine seguindo a ordem
+ * declarada na configuração (fonte única da verdade).
  *
  * @param opcoes Opções completas de execução (incluindo configuração já parseada)
  * @returns Lista de resultados obtidos por alvo
@@ -121,9 +77,14 @@ export async function esBuild(
 ): Promise<EsbuildResult[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const targets = opcoes.targets ?? [];
-  const activeWatch = opcoes.watchTarget;
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+
+  // Garante estritamente que a ordem de execução siga a declaração na configuração
+  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
+
+  if (targetsParaExecutar.length === 0) {
+    return [];
+  }
 
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
@@ -132,19 +93,6 @@ export async function esBuild(
     versionPaths: opcoes.versionPaths,
     forcepackagesversion: opcoes.forcepackagesversion,
   },);
-
-  if (activeWatch) {
-    await startWatchMode(activeWatch, finalVersion, configs, denoJsoncPath,);
-    return [{ target: activeWatch, success: true, durationMs: 0, },];
-  }
-
-  // Garante estritamente que a ordem de execução siga a declaração na configuração
-  const configKeys = Object.keys(configs,);
-  const targetsParaExecutar = configKeys.filter((t,) => targets.includes(t,));
-
-  if (targetsParaExecutar.length === 0) {
-    return [];
-  }
 
   const resultados: EsbuildResult[] = [];
 

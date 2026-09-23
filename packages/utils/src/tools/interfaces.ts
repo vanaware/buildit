@@ -643,3 +643,57 @@ export interface EsbuildResult {
   /** Total duration of the build operation in milliseconds. */
   durationMs: number;
 }
+
+// ============================================================================
+// 📦 TIPOS WATCH (desenvolvimento incremental com esbuild context)
+// ============================================================================
+
+/**
+ * Estrutura do arquivo de configuração externo `watch.jsonc`.
+ */
+export interface WatchConfigFile {
+  /** URL do JSON Schema para validação e autocomplete no editor */
+  $schema?: string;
+  /** Versão semântica da configuração */
+  version?: string;
+  /** Alvos watch configurados no projeto */
+  targets?: GlobalTargetConfig;
+  /** Alias em português para alvos configurados */
+  alvos?: GlobalTargetConfig;
+  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
+  [key: string]: unknown;
+}
+
+/**
+ * Resultado do carregamento da configuração watch.
+ */
+export interface WatchConfigResult {
+  targets: GlobalTargetConfig;
+}
+
+/**
+ * Opções para execução programática do Watch Engine.
+ */
+export interface WatchOptions {
+  /** Configuração direta de alvos em memória */
+  config: GlobalTargetConfig;
+  /** Alvos específicos a monitorar. Se não especificado, monitora todos com default !== false */
+  targets?: string[];
+  /** Diretório base de resolução */
+  baseDir?: string;
+  /** Caminho para o deno.jsonc raiz */
+  denoJsoncPath?: string;
+  /** Se true, não bloqueia o processo (retorna após iniciar os watchers) */
+  unref?: boolean;
+}
+
+/**
+ * Resultado da inicialização do watch para um alvo.
+ */
+export interface WatchResult {
+  target: string;
+  success: boolean;
+  srcdir?: string;
+  distdir?: string;
+}
+

@@ -1,17 +1,14 @@
 {
-  "$schema": "./packages/utils/schema/esbuild.json",
+  "$schema": "./packages/utils/schema/watch.json",
   "version": "0.3.7",
   "targets": {
     "ui": {
-      "mode": "build",
+      "mode": "watch",
       "default": true,
       "srcdir": "packages/ui/src",
       "distdir": "packages/server/build/dist",
       "publicdir": "packages/ui/public",
       "indexHtml": true,
-      "clean": [
-        "."
-      ],
       "entryPoints": [
         "main.tsx"
       ],
@@ -19,22 +16,17 @@
       "format": "esm",
       "bundle": true,
       "minify": false,
-      "sourcemap": "linked",
+      "sourcemap": "inline",
       "conditions": [
         "browser"
       ],
-      "drop": [
-        "debugger"
-      ],
       "jsx": "automatic",
       "jsxImportSource": "preact",
-      "metafile": true,
       "write": true,
       "legalComments": "eof",
-      "keepNames": true,
-      "splitting": false,
+      "outfile": "app.js",
       "banner": {
-        "js": "/*!\n * BuildIt v__APP_VERSION__\n * (c) 2026 Vanaware - MIT License\n */\n"
+        "js": "/*!\n * BuildIt (Watch Mode)\n * (c) 2026 Vanaware - MIT License\n */\n"
       }
     }
   }

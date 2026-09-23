@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BuildIt Watch Configuration",
+  "description": "JSON Schema para validação e autocomplete do arquivo watch.jsonc do BuildIt (esbuild context & watch mode).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI do JSON Schema de validação."
+    },
+    "version": {
+      "type": "string",
+      "description": "Versão semântica da configuração."
+    },
+    "targets": {
+      "type": "object",
+      "description": "Dicionário de alvos de desenvolvimento contínuo (watch).",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetConfig"
+      }
+    },
+    "alvos": {
+      "type": "object",
+      "description": "Alias em português para alvos de monitoramento.",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetConfig"
+      }
+    }
+  },
+  "definitions": {
+    "targetConfig": {
+      "type": "object",
+      "required": ["entryPoints"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["watch", "build"],
+          "description": "Modo de operação do alvo (padrão: watch)."
+        },
+        "default": {
+          "type": "boolean",
+          "description": "Se verdadeiro, é executado automaticamente quando nenhum alvo é fornecido via CLI."
+        },
+        "srcdir": {
+          "type": "string",
+          "description": "Diretório de arquivos fonte."
+        },
+        "distdir": {
+          "type": "string",
+          "description": "Diretório de arquivos compilados de saída."
+        },
+        "publicdir": {
+          "type": "string",
+          "description": "Diretório contendo arquivos públicos estáticos."
+        },
+        "indexHtml": {
+          "type": "boolean",
+          "description": "Se verdadeiro, processa e copia index.html."
+        },
+        "entryPoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de arquivos TypeScript/JavaScript de entrada."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["browser", "node", "neutral"],
+          "description": "Plataforma de execução do bundle."
+        },
+        "format": {
+          "type": "string",
+          "enum": ["esm", "cjs", "iife"],
+          "description": "Formato de módulos gerado."
+        },
+        "bundle": {
+          "type": "boolean",
+          "description": "Se verdadeiro, agrupa dependências em um único arquivo."
+        },
+        "minify": {
+          "type": "boolean",
+          "description": "Se verdadeiro, minifica o código gerado."
+        },
+        "sourcemap": {
+          "type": ["boolean", "string"],
+          "enum": [true, false, "linked", "inline", "external"],
+          "description": "Estratégia de mapas de fontes (sourcemaps)."
+        },
+        "jsx": {
+          "type": "string",
+          "enum": ["automatic", "transform", "preserve"],
+          "description": "Estratégia de transformação JSX."
+        },
+        "jsxImportSource": {
+          "type": "string",
+          "description": "Biblioteca provedora de JSX (ex: preact, react)."
+        },
+        "write": {
+          "type": "boolean",
+          "description": "Se verdadeiro, escreve os arquivos gerados no disco."
+        },
+        "legalComments": {
+          "type": "string",
+          "enum": ["none", "inline", "eof", "linked", "external"],
+          "description": "Tratamento de comentários legais e licenças."
+        },
+        "outfile": {
+          "type": "string",
+          "description": "Nome ou caminho do arquivo de saída gerado."
+        },
+        "banner": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Comentários no topo dos arquivos gerados."
+        }
+      }
+    }
+  }
+}

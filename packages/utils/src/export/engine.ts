@@ -15,6 +15,7 @@ import {
 import {
   ensureDirForFile,
 } from "../tools/paths.ts";
+import { resolverOrdemTargets, } from "../tools/targets.ts";
 import type {
   ExportConfig,
   ExportOptions,
@@ -164,10 +165,7 @@ export async function exportEngine(
 ): Promise<ExportResult[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const configKeys = Object.keys(configs,);
-  const modosParaExecutar = configKeys.filter((m,) =>
-    (opcoes.modos ?? []).includes(m,)
-  );
+  const modosParaExecutar = resolverOrdemTargets(configs, opcoes.modos,);
 
   const versaoApp = opcoes.versaoApp ??
     await readProjectVersion(opcoes.denoJsoncPath, baseDir,);
