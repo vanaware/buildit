@@ -138,13 +138,17 @@ export async function esBuild(
     return [{ target: activeWatch, success: true, durationMs: 0, },];
   }
 
-  if (targets.length === 0) {
+  // Garante estritamente que a ordem de execução siga a declaração na configuração
+  const configKeys = Object.keys(configs,);
+  const targetsParaExecutar = configKeys.filter((t,) => targets.includes(t,));
+
+  if (targetsParaExecutar.length === 0) {
     return [];
   }
 
   const resultados: EsbuildResult[] = [];
 
-  for (const targetName of targets) {
+  for (const targetName of targetsParaExecutar) {
     const targetConfig = configs[targetName];
     if (!targetConfig) {
       console.warn(

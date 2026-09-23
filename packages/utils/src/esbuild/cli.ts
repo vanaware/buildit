@@ -22,6 +22,14 @@ export function esBuildCli() {
       default: "esbuild.jsonc",
       env: { prefix: "ESBUILD_", },
     },)
+    .option("-b, --base-dir [dir:string]", "Diretório Base", {
+      default: "./",
+      env: true,
+    },)
+    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
+      default: findDenoConfig() ?? "deno.jsonc",
+      env: true,
+    },)
     .option(
       "-n, --noversion",
       "Desabilita o incremento automático de versão",
@@ -29,28 +37,10 @@ export function esBuildCli() {
         default: false,
       },
     )
-    .option(
-      "-f, --force-packages-version",
-      "Propaga a versão para os subpacotes do workspace",
-      {
-        default: false,
-      },
-    )
-    .option(
-      "--version-path [path:string]",
-      "Diretório ou arquivo adicional onde salvar o version.ts",
-      {
-        collect: true,
-      },
-    )
-    .option("--deno-config [file:string]", "Configuração do Deno", {
-      default: findDenoConfig() ?? "deno.jsonc",
-      env: true,
-    },)
     .arguments("[targets...:string]", ["Alvos de build",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
-      const baseDir = ".";
+      const baseDir = options.baseDir as string || ".";
       const configPath = options.appConfig as string;
       const loaded = await carregarConfigEsbuild(configPath, baseDir,);
       const configs = loaded.targets;
@@ -86,10 +76,8 @@ export function esBuildCli() {
           config: configs,
           targets,
           noversion: globalNoVersion,
-          versionPaths: (options.versionPath as string[]) ??
-            loaded.versionPaths,
-          forcepackagesversion: options.forcePackagesVersion ??
-            loaded.forcepackagesversion,
+          versionPaths: loaded.versionPaths,
+          forcepackagesversion: loaded.forcepackagesversion,
           denoJsoncPath: DENO_JSONC_PATH,
           watchTarget: watchTarget || undefined,
           baseDir,

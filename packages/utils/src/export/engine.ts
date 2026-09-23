@@ -164,7 +164,10 @@ export async function exportEngine(
 ): Promise<ExportResult[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const modosParaExecutar = opcoes.modos ?? [];
+  const configKeys = Object.keys(configs,);
+  const modosParaExecutar = configKeys.filter((m,) =>
+    (opcoes.modos ?? []).includes(m,)
+  );
 
   const versaoApp = opcoes.versaoApp ??
     await readProjectVersion(opcoes.denoJsoncPath, baseDir,);

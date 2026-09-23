@@ -23,11 +23,11 @@ export function exportCli() {
       default: "export.jsonc",
       env: { prefix: "EXPORT_", },
     },)
-    .option("--base-dir [file]", "Diretório Base", {
+    .option("-b, --base-dir [dir:string]", "Diretório Base", {
       default: "./",
       env: true,
     },)
-    .option("--deno-config [file:string]", "Configuração do Deno", {
+    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     },)

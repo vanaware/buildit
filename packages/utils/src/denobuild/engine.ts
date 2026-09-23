@@ -191,7 +191,11 @@ export async function denoBuild(
   const targets = opcoes.targets ?? [];
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
-  if (targets.length === 0) {
+  // Garante estritamente que a ordem de execução siga a declaração na configuração
+  const configKeys = Object.keys(configs,);
+  const targetsParaExecutar = configKeys.filter((t,) => targets.includes(t,));
+
+  if (targetsParaExecutar.length === 0) {
     return [];
   }
 
@@ -205,7 +209,7 @@ export async function denoBuild(
 
   const resultados: DenoBuildResult[] = [];
 
-  for (const targetName of targets) {
+  for (const targetName of targetsParaExecutar) {
     const targetConfig = configs[targetName];
     if (!targetConfig) {
       console.warn(

@@ -23,6 +23,14 @@ export function denoBuildCli() {
       default: "denobuild.jsonc",
       env: { prefix: "DENOBUILD_", },
     },)
+    .option("-b, --base-dir [dir:string]", "Diretório Base", {
+      default: "./",
+      env: true,
+    },)
+    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
+      default: findDenoConfig() ?? "deno.jsonc",
+      env: true,
+    },)
     .option(
       "-n, --noversion",
       "Desabilita o incremento automático de versão",
@@ -30,29 +38,12 @@ export function denoBuildCli() {
         default: false,
       },
     )
-    .option(
-      "-f, --force-packages-version",
-      "Propaga a versão para os subpacotes do workspace",
-      {
-        default: false,
-      },
-    )
-    .option(
-      "--version-path [path:string]",
-      "Diretório ou arquivo adicional onde salvar o version.ts",
-      {
-        collect: true,
-      },
-    )
-    .option("--deno-config [file:string]", "Configuração do Deno", {
-      default: findDenoConfig() ?? "deno.jsonc",
-      env: true,
-    },)
     .arguments("[targets...:string]", ["Alvos de build",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
+      const baseDir = options.baseDir as string || ".";
       const configPath = options.appConfig as string;
-      const loaded = await carregarConfigDenoBuild(configPath,);
+      const loaded = await carregarConfigDenoBuild(configPath, baseDir,);
       const configs = loaded.targets;
 
       const rawArgs = [
@@ -81,11 +72,10 @@ export function denoBuildCli() {
         await denoBuild({
           config: configs,
           targets,
+          baseDir,
           noversion: globalNoVersion,
-          versionPaths: (options.versionPath as string[]) ??
-            loaded.versionPaths,
-          forcepackagesversion: options.forcePackagesVersion ??
-            loaded.forcepackagesversion,
+          versionPaths: loaded.versionPaths,
+          forcepackagesversion: loaded.forcepackagesversion,
           denoJsoncPath: options.denoConfig as string,
         },);
 

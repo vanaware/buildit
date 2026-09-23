@@ -309,15 +309,19 @@ A biblioteca conta com um analisador de argumentos padronizado e um sincronizado
 
 ### Flags Padronizadas de CLI
 
-| Flag Longa | Flag Curta | Descrição |
-| :--- | :--- | :--- |
-| `--config <caminho>` | `-c <caminho>` | Especifica um arquivo de configuração alternativo (ex: `-c build.custom.jsonc`). |
-| `--noversion` | `-n` | Impede o incremento automático do patch da versão durante a compilação. |
-| `--forcepackagesversion` | `-f` | Propaga a versão do `deno.jsonc` raiz para todos os manifestos de subpacotes do workspace. |
-| `--version-path <caminho>` | — | Define um caminho de arquivo onde gerar o módulo de constante `version.ts`. |
-| `--version` | `-V`, `-v` | Exibe a versão atual do utilitário e encerra a execução. |
-| `--help` | `-h` | Exibe a tela de ajuda da CLI. |
-| *(argumentos posicionais)* | — | Nomes de alvos ou modos específicos a serem executados (ex: `deno task build ui`). |
+Todas as ferramentas CLI (`esbuild`, `denobuild` e `export`) compartilham a mesma convenção padronizada de flags:
+
+| Flag Longa | Flag Curta | Padrão | Descrição |
+| :--- | :--- | :--- | :--- |
+| `--app-config <arquivo>` | `-c <arquivo>` | `esbuild.jsonc` / `denobuild.jsonc` / `export.jsonc` | Especifica um arquivo de configuração alternativo. |
+| `--base-dir <diretório>` | `-b <diretório>` | `./` | Define o diretório base utilizado para resolução de todos os arquivos e alvos. |
+| `--deno-config <arquivo>` | `-d <arquivo>` | `findDenoConfig()` (`deno.jsonc`) | Define o arquivo de configuração do Deno que contém a versão e mapeamento do projeto. |
+| `--noversion` | `-n` | `false` | Impede o incremento automático do patch da versão durante a compilação (onde aplicável). |
+| `--version` | `-V`, `-v` | — | Exibe a versão atual do utilitário e encerra a execução. |
+| `--help` | `-h` | — | Exibe a tela de ajuda da CLI. |
+| *(argumentos posicionais)* | — | *(definidos no config)* | Nomes de alvos ou modos específicos a serem executados (ex: `deno task esbuild ui`). |
+
+> **Nota:** Opções de versionamento estrutural como `versionPaths` e `forcepackagesversion` são configuradas diretamente na raiz dos arquivos de configuração (`esbuild.jsonc` e `denobuild.jsonc`), mantendo a linha de comando limpa e concisa.
 
 ---
 
