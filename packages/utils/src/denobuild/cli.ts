@@ -9,6 +9,7 @@ import { carregarConfigDenoBuild, } from "./config.ts";
 import { denoBuild, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
+import { parseArgs, } from "../tools/cli-flags.ts";
 
 /**
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
@@ -23,7 +24,7 @@ export function denoBuildCli() {
       env: { prefix: "DENOBUILD_", },
     },)
     .option(
-      "-n, --noVersion",
+      "-n, --noversion",
       "Desabilita o incremento automático de versão",
       {
         default: false,
@@ -56,7 +57,7 @@ export function denoBuildCli() {
 
       const rawArgs = [
         ...args,
-        ...(options.noVersion ? ["noversion",] : []),
+        ...(options.noversion ? ["noversion",] : []),
       ];
 
       const { targets, globalNoVersion, } = parseArgs(
@@ -79,7 +80,7 @@ export function denoBuildCli() {
       try {
         await denoBuild({
           targets: args,
-          noversion: options.noVersion,
+          noversion: globalNoVersion,
           versionPaths: (options.versionPath as string[]) ??
             loaded.versionPaths,
           forcepackagesversion: options.forcePackagesVersion ??

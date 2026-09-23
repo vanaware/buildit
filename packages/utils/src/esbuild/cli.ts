@@ -23,7 +23,7 @@ export function esBuildCli() {
       env: { prefix: "ESBUILD_", },
     },)
     .option(
-      "-n, --noVersion",
+      "-n, --noversion",
       "Desabilita o incremento automático de versão",
       {
         default: false,
@@ -57,7 +57,7 @@ export function esBuildCli() {
 
       const rawArgs = [
         ...args,
-        ...(options.noVersion ? ["noversion",] : []),
+        ...(options.noversion ? ["noversion",] : []),
       ];
       const { targets, globalNoVersion, watchTarget, } = parseArgs(
         rawArgs,
@@ -84,7 +84,7 @@ export function esBuildCli() {
       try {
         await esBuild({
           targets: args,
-          noversion: options.noVersion,
+          noversion: globalNoVersion,
           versionPaths: (options.versionPath as string[]) ??
             loaded.versionPaths,
           forcepackagesversion: options.forcePackagesVersion ??
