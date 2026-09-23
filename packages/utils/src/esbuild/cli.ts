@@ -4,14 +4,8 @@
  */
 
 import { Command, } from "@cliffy/command";
-import { readProjectVersion, updateProjectVersion, } from "../tools/version.ts";
-import { listAssetsForCache, } from "../tools/paths.ts";
 import { carregarConfigEsbuild, } from "./config.ts";
-import {
-  buildWithDenoPlugin,
-  processTarget,
-  startWatchMode,
-} from "./engine.ts";
+import { esBuild, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
 import { parseArgs, } from "../tools/cli-flags.ts";
@@ -88,42 +82,18 @@ export function esBuildCli() {
       console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
       try {
-        const finalVersion = await updateProjectVersion({
-          denoJsonPath: DENO_JSONC_PATH,
-          noversion: globalNoVersion || (watchTarget !== null),
+        await esBuild({
+          targets: args,
+          noversion: options.noVersion,
           versionPaths: (options.versionPath as string[]) ??
             loaded.versionPaths,
           forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
+          denoJsoncPath: DENO_JSONC_PATH,
+          caminhoConfig: configPath,
+          config: configs,
+          baseDir,
         },);
-
-        if (watchTarget) {
-          await startWatchMode(
-            watchTarget,
-            finalVersion,
-            configs,
-            DENO_JSONC_PATH,
-          );
-          return;
-        }
-
-        for (const targetName of targets) {
-          const targetConfig = configs[targetName];
-          if (!targetConfig) {
-            console.warn(
-              `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
-            );
-            continue;
-          }
-
-          await processTarget(
-            targetName,
-            targetConfig,
-            finalVersion,
-            (opts,) => buildWithDenoPlugin(opts, DENO_JSONC_PATH,),
-            listAssetsForCache,
-          );
-        }
 
         console.log(`\n${"=".repeat(60,)}`,);
         console.log(`🎉 ORQUESTRAÇÃO ESBUILD CONCLUÍDA COM SUCESSO!`,);

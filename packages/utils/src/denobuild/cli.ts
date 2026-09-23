@@ -52,11 +52,29 @@ export function denoBuildCli() {
       const startTime = performance.now();
       const configPath = options.appConfig as string;
       const loaded = await carregarConfigDenoBuild(configPath,);
+      const configs = loaded.targets;
+
+      const rawArgs = [
+        ...args,
+        ...(options.noVersion ? ["noversion",] : []),
+      ];
+
+      const { targets, globalNoVersion, } = parseArgs(
+        rawArgs,
+        configs,
+      );
 
       console.log(
         "\n🚀 Iniciando Orquestrador de Build BuildIt (denobuild / Deno.bundle API)",
       );
       console.log(`   📦 Motor: Deno.bundle (nativo, --unstable-bundle)`,);
+
+      console.log(
+        `📋 Alvos de build (ordem segura do CONFIG): ${
+          targets.join(", ",) || "(nenhum)"
+        }`,
+      );
+      console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
       try {
         await denoBuild({
@@ -67,7 +85,7 @@ export function denoBuildCli() {
           forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
           caminhoConfig: configPath,
-          config: loaded.targets,
+          config: configs,
         },);
 
         console.log(`\n${"=".repeat(60,)}`,);
