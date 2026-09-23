@@ -6,17 +6,12 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 find_tool_versions() {
-  dir="$1"
-  while [ -n "$dir" ] && [ "$dir" != "/" ]; do
-    if [ -f "$dir/.tool-versions" ]; then
-      printf '%s\n' "$dir/.tool-versions"
-      return 0
-    fi
-    dir="$(dirname "$dir")"
-  done
-  # Último recurso: diretório atual
-  if [ -f ".tool-versions" ]; then
-    printf '%s\n' ".tool-versions"
+  if [ -f "$SCRIPT_DIR/.tool-versions" ]; then
+    printf '%s\n' "$SCRIPT_DIR/.tool-versions"
+    return 0
+  fi
+  if [ -f "./.tool-versions" ]; then
+    printf '%s\n' "./.tool-versions"
     return 0
   fi
   return 1

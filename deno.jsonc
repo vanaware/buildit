@@ -1,5 +1,5 @@
 {
-  "version": "0.3.31#mudx0o4y",
+  "version": "0.3.31#mudxvcks",
   "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
   "workspace": [
     "./packages/server",
@@ -34,7 +34,7 @@
     "test": "deno test --no-check --unstable-bundle -P",
     "lint": "deno lint",
     "fmt": "deno fmt",
-    "check": "deno task --recursive check && deno check build.ts esbuild.ts export.ts tests/**/*test.ts",
+    "check": "deno task --recursive check && deno check build.ts denobuild.ts esbuild.ts export.ts watch.ts tests/**/*test.ts",
     "fmt:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
     "lint:doc": "deno task --recursive lint:doc",
@@ -44,8 +44,8 @@
     "export": "deno run --allow-read --allow-write ./export.ts",
     "build": "deno run -A ./esbuild.ts",
     "esbuild": "deno run -A ./esbuild.ts",
-    "watch": "deno run -A ./watch.ts",
     "denobuild": "deno run --unstable-bundle -A ./denobuild.ts",
+    "watch": "deno run -A ./watch.ts",
     "bump": "deno install --frozen=false && deno task build dist noversion && sh ./tag-version.sh"
   },
   "nodeModulesDir": "none",
@@ -58,8 +58,10 @@
     },
     "include": [
       "build.ts",
+      "denobuild.ts",
       "esbuild.ts",
       "export.ts",
+      "watch.ts",
       "examples/**/*.{ts,tsx}",
       "packages/**/src/**/*.{ts,tsx}",
       "tests/**/*test.ts",
