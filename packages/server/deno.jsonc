@@ -14,7 +14,7 @@
     "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
     "tests": "deno task check && deno task test",
     "start": "deno run --allow-read --allow-write --allow-env --allow-net ./src/main.ts",
-    "dev": "deno run --allow-read --allow-write --allow-env --allow-net --watch ./src/main.ts",
+    "dev": "deno run --allow-read --allow-write --allow-env --allow-net ./src/main.ts",
     "clean": "deno clean && rm -rf ./build && mkdir -p ./build/dist"
   },
   "exports": "./src/main.ts",

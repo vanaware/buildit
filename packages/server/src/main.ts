@@ -1,42 +1,39 @@
-import { serveDir, } from "@std/http/file-server";
+import { serveDir } from "@std/http/file-server";
+import { fromFileUrl } from "@std/path";
 
 const port = 3000;
 
-console.log(`🚀 Iniciando servidor na porta fixa: ${port}`);
+const fsRoot = (() => {
+  try {
+    Deno.statSync("./build/dist");
+    return "./build/dist";
+  } catch {
+    return fromFileUrl(new URL("../build/dist", import.meta.url));
+  }
+})();
+
+console.log(`🚀 Iniciando servidor na porta: ${port} (fsRoot: ${fsRoot})`);
 
 Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
   try {
-    const url = new URL(req.url,);
-    console.log(`[REQ] ${req.method} ${url.pathname}`,);
-
-    const fsRoot = (() => {
-      try {
-        Deno.statSync("./build/dist",);
-        console.log("[SERVER] Using fsRoot: ./build/dist");
-        return "./build/dist";
-      } catch {
-        const fallback = new URL("../build/dist", import.meta.url,).pathname;
-        console.log(`[SERVER] Fallback fsRoot: ${fallback}`);
-        return fallback;
-      }
-    })();
+    const url = new URL(req.url);
 
     const staticResponse = await serveDir(req, {
       fsRoot,
       showDirListing: false,
       quiet: true,
-    },);
+    });
 
     staticResponse.headers.set(
       "Cache-Control",
       "no-store, no-cache, must-revalidate, proxy-revalidate",
     );
-    staticResponse.headers.set("Pragma", "no-cache",);
-    staticResponse.headers.set("Expires", "0",);
+    staticResponse.headers.set("Pragma", "no-cache");
+    staticResponse.headers.set("Expires", "0");
 
     // Permitir escopo global para Service Worker
-    if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js",)) {
-      staticResponse.headers.set("Service-Worker-Allowed", "/",);
+    if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js")) {
+      staticResponse.headers.set("Service-Worker-Allowed", "/");
     }
 
     return staticResponse;
@@ -48,8 +45,8 @@ Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
 
     return new Response("Internal Server Error", {
       status: 500,
-      headers: { "content-type": "text/plain; charset=utf-8", },
-    },);
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    });
   }
-},);
+});
 
