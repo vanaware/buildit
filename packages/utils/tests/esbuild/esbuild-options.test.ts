@@ -2,7 +2,7 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, } from "@std/assert";
 import { join, } from "@std/path";
-import { buildEsbuildOptions, } from "../../src/esbuild/mod.ts";
+import { buildEsbuildOptions, } from "../../src/esbuild/engine.ts";
 import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 

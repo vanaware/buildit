@@ -10,19 +10,20 @@ import { APP_VERSION as FALLBACK_VERSION, } from "../version.ts";
 
 import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
 
+import { loadConfig } from "./jsonc.ts";
+
 /**
  * Obtém a versão atual do arquivo de configuração deno.jsonc.
  * @param denoJsoncPath Caminho para o deno.jsonc
  * @returns Versão atual
  */
-export async function currentVersion(denoJsoncPath: string,): Promise<string> {
-  const content = await Deno.readTextFile(denoJsoncPath,);
-  const version = extractVersionFromContent(content,);
-  if (!version) {
-    throw new Error("❌ Versão não encontrada no deno.jsonc",);
+export async function currentVersion(denoJsoncPath: string): Promise<string> {
+  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath);
+  if (!parsed?.version) {
+    throw new Error("❌ Versão não encontrada no deno.jsonc");
   }
-  console.log(`📌 Versão Atual: v${version}`,);
-  return version;
+  console.log(`📌 Versão Atual: v${parsed.version}`);
+  return parsed.version;
 }
 
 /**
@@ -185,23 +186,14 @@ export async function readProjectVersion(
   denoJsonPath?: string,
   baseDir: string = ".",
 ): Promise<string> {
-  const candidates = denoJsonPath ? [denoJsonPath,] : [
-    join(baseDir, "deno.jsonc",),
-    join(baseDir, "deno.json",),
-  ];
+  const parsed = await loadConfig<{ version?: string }>(
+    "deno",
+    denoJsonPath,
+    baseDir,
+  );
 
-  for (const path of candidates) {
-    try {
-      const content = await Deno.readTextFile(path,);
-      const version = extractVersionFromContent(content,);
-      if (version) {
-        return version;
-      }
-    } catch (error) {
-      if (denoJsonPath && !(error instanceof Deno.errors.NotFound)) {
-        console.warn(`⚠️ Erro ao ler versão em ${path}:`, error,);
-      }
-    }
+  if (parsed?.version) {
+    return parsed.version;
   }
 
   return FALLBACK_VERSION;

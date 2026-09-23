@@ -8,6 +8,8 @@ import { assertEquals, } from "@std/assert";
 import {
   applyDefines,
   buildBundleOptions,
+} from "../../src/denobuild/bundle.ts";
+import {
   CONFIGURACOES_PADRAO,
 } from "../../src/denobuild/mod.ts";
 

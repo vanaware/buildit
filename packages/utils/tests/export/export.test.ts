@@ -7,9 +7,13 @@ import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import {
   CONFIGURACOES_PADRAO,
-  deveIncluirArquivo,
-  parseArgs,
 } from "../../src/export/mod.ts";
+import {
+  deveIncluirArquivo,
+} from "../../src/export/formatter.ts";
+import {
+  parseArgs,
+} from "../../src/export/engine.ts";
 
 describe("deveIncluirArquivo", () => {
   it("deve BLOQUEAR qualquer arquivo dentro da pasta exports/ ou snapshots/", () => {

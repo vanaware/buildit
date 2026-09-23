@@ -2,22 +2,12 @@
  * @module @vanaware/buildit/export/cli
  * @description Ponto de entrada para execução do exportador de contexto via linha de comando (CLI).
  */
-import { join, } from "@std/path";
-import { parseCommonCliFlags, } from "../tools/cli-flags.ts";
 import { readProjectVersion, } from "../tools/version.ts";
 import { exportEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
-
-import { Command, EnumType, } from "@cliffy/command";
-import { HelpCommand, } from "@cliffy/command/help";
-import { CompletionsCommand, } from "@cliffy/command/completions";
 
 import { Command, } from "@cliffy/command";
-import { readProjectVersion, } from "../tools/version.ts";
-import { exportEngine, } from "./engine.ts";
-import { APP_VERSION, } from "../version.ts";
-import { findDenoConfig, } from "../tools/paths.ts";
 
 /**
  * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.

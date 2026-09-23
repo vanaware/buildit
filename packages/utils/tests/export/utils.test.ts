@@ -9,7 +9,7 @@ import {
   gerarCabecalho,
   mapearExtensao,
   normalizarCaminho,
-} from "../../src/export/mod.ts";
+} from "../../src/export/formatter.ts";
 import { EXTENSOES_PADRAO, } from "../../src/tools/interfaces.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 

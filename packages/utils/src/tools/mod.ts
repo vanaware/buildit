@@ -8,7 +8,7 @@ export {
 } from "./version.ts";
 
 // 🛠️ Utilitários de CLI e Validação
-export { parseArgs, parseCommonCliFlags, } from "./cli-flags.ts";
+export { parseArgs, } from "./cli-flags.ts";
 export { validateTargetConfig, } from "./validate.ts";
 export {
   cleanTarget,
