@@ -117,10 +117,8 @@ await exportEngine({
   config: {
     ui: {
       arquivoSaida: "snapshots/ui.md",
-      pastaBase: "packages/ui",
-      subpastasPermitidas: ["src"],
-      arquivosRaizPermitidos: ["deno.jsonc"],
-      extensoesPermitidas: [".ts", ".tsx"],
+      includes: ["packages/ui/{src,public}/**/*.{ts,tsx,html,css}"],
+      excludes: ["**/*.test.ts"],
       incluiVersao: true,
       instrucaoCustomizada: "Contexto UI",
     },

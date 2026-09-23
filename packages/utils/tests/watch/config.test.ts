@@ -17,6 +17,7 @@ describe("watch/config", () => {
   it("carrega configurações a partir do watch.jsonc real do projeto", async () => {
     const config = await carregarConfigWatch("watch.jsonc", ".",);
     assert(config.targets.ui !== undefined,);
-    assertEquals(config.targets.ui.mode, "watch",);
+    assertEquals(config.targets.ui.format, "esm",);
+    assertEquals(config.targets.ui.entryPoints, ["main.tsx"],);
   });
 });

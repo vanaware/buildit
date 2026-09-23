@@ -4,30 +4,13 @@
   "modos": {
     "ui": {
       "arquivoSaida": "snapshots/ui.md",
-      "extensoesPermitidas": [
-        ".tsx",
-        ".jsx",
-        ".js",
-        ".ts",
-        ".css",
-        ".html",
-        ".manifest",
-        ".json",
-        ".jsonc",
-        ".md"
+      "includes": [
+        "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
+        "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
       ],
-      "pastaBase": "./packages/ui/",
-      "subpastasPermitidas": [
-        "src",
-        "public",
-        "tests",
-        "docs"
-      ],
-      "arquivosRaizPermitidos": [
-        "build.ts",
-        "deno.json",
-        "deno.jsonc",
-        "readme.md"
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
       ],
       "incluiVersao": true,
       "instrucaoCustomizada": "O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).",
@@ -35,54 +18,25 @@
     },
     "docs": {
       "arquivoSaida": "snapshots/docs.md",
-      "extensoesPermitidas": [
-        ".md",
-        ".txt"
+      "includes": [
+        "docs/**/*.{md,txt}",
+        "{readme.md,readme,license,license.md,license.txt,.tool-versions}"
       ],
-      "pastaBase": "./",
-      "subpastasPermitidas": [
-        "docs"
-      ],
-      "arquivosRaizPermitidos": [
-        "readme.md",
-        "readme",
-        "license",
-        "license.md",
-        "license.txt",
-        ".tool-versions"
-      ],
+      "excludes": [],
       "incluiVersao": false,
       "instrucaoCustomizada": "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
       "default": false
     },
     "server": {
       "arquivoSaida": "snapshots/server.md",
-      "extensoesPermitidas": [
-        ".tsx",
-        ".jsx",
-        ".js",
-        ".ts",
-        ".css",
-        ".html",
-        ".json",
-        ".jsonc",
-        ".yaml",
-        ".yml",
-        ".md"
+      "includes": [
+        "packages/server/{src,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,json,jsonc,yaml,yml,md}",
+        "packages/server/{deno.json,deno.jsonc,readme.md}",
+        ".github/workflows/**/*.{yaml,yml}"
       ],
-      "pastaBase": "packages/server",
-      "subpastasPermitidas": [
-        "src",
-        "tests",
-        "docs"
-      ],
-      "caminhosAdicionaisPermitidos": [
-        ".github/workflows"
-      ],
-      "arquivosRaizPermitidos": [
-        "deno.json",
-        "deno.jsonc",
-        "readme.md"
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
       ],
       "incluiVersao": false,
       "instrucaoCustomizada": "O texto abaixo contém os arquivos de configuração e execução do SERVIDOR @vanaware/server e CI/CD.",
@@ -90,30 +44,14 @@
     },
     "utils": {
       "arquivoSaida": "snapshots/utils.md",
-      "extensoesPermitidas": [
-        ".tsx",
-        ".jsx",
-        ".js",
-        ".ts",
-        ".json",
-        ".jsonc",
-        ".md"
+      "includes": [
+        "packages/utils/{src,tests,docs}/**/*.{tsx,jsx,js,ts,json,jsonc,md}",
+        "packages/utils/{deno.json,deno.jsonc,readme.md}",
+        "{export.ts,esbuild.ts,build.ts}"
       ],
-      "pastaBase": "packages/utils",
-      "subpastasPermitidas": [
-        "src",
-        "tests",
-        "docs"
-      ],
-      "caminhosAdicionaisPermitidos": [
-        "export.ts",
-        "esbuild.ts",
-        "build.ts"
-      ],
-      "arquivosRaizPermitidos": [
-        "deno.json",
-        "deno.jsonc",
-        "readme.md"
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
       ],
       "incluiVersao": false,
       "instrucaoCustomizada": "O texto abaixo contém o código e testes da biblioteca @vanaware/buildit",

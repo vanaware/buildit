@@ -22,36 +22,36 @@ exportCli() (packages/utils/src/export/cli.ts)
 exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
+       ├──► resolverOrdemTargets(configs, opcoes.modos)
        │
        └──► [Loop para cada Modo Selecionado]
                │
                ▼
        exportarModo(modo, config, opcoes)
                │
-               ├──► gerarCabecalho(config, modo, versaoApp) (packages/utils/src/export/formatter.ts)
-               │
-               ├──► walk(baseDir, { includeDirs: false }) [@std/fs/walk]
+               ├──► coletarArquivosParaExportacao(config, baseDir)
                │       │
-               │       ▼ [Para cada arquivo encontrado]
-               │       deveIncluirArquivo(caminhoRelativo, config) (packages/utils/src/export/formatter.ts)
-               │               │
-               │               ├──► normalizarCaminho(caminho)
-               │               ├──► [Verificação de Proteção Anti-loop (exports/, snapshots/)]
-               │               ├──► [Verificação de caminhosAdicionaisPermitidos]
-               │               ├──► [Verificação de pastaBase + subpastasPermitidas]
-               │               ├──► [Verificação de arquivosRaizPermitidos]
-               │               └──► [Validação de extensoesPermitidas]
-               │
-               ├──► Deno.readTextFile(entry.path)
-               │
-               ├──► formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo) (packages/utils/src/export/formatter.ts)
+               │       ├──► [Modo Moderno: expandGlob(padrao, { root, exclude })]
+               │       │       ├──► normalizarCaminho(caminhoRelativo)
+               │       │       └──► correspondeGlobs(caminhoRelativo, config.excludes)
                │       │
-               │       ├──► mapearExtensao(ext)
-               │       └──► calcularCraseWrapper(conteudo)
+               │       └──► [Modo Legado Fallback: walk(baseDir) + deveIncluirArquivo]
                │
                ├──► ensureDirForFile(caminhoSaida)
                │
-               └──► Deno.writeTextFile(caminhoSaida, conteudoFinal)
+               ├──► Deno.open(caminhoSaida, { write, create, truncate }) [Streaming O(1)]
+               │       │
+               │       ├──► writer.write(encoder.encode(gerarCabecalho(config, modo, versaoApp)))
+               │       │
+               │       └──► [Loop para cada arquivo coletado]
+               │               │
+               │               ├──► Deno.readTextFile(caminhoCompleto)
+               │               ├──► formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)
+               │               │       ├──► mapearExtensao(caminhoRelativo)
+               │               │       └──► calcularCraseWrapper(conteudoArquivo)
+               │               └──► writer.write(encoder.encode(blocoMarkdown))
+               │
+               └──► writer.close()
 ```
 
 ---
@@ -64,7 +64,7 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 * **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modos...:string]`).
 * **Ações**:
   1. Identifica o arquivo de configuração e diretório base.
-  2. Executa `carregarConfigExport(caminhoConfig, baseDir)` para ler `export.jsonc` ou carregar o fallback padrão (`ui`, `docs`, `server`).
+  2. Executa `carregarConfigExport(caminhoConfig, baseDir)` para ler `export.jsonc` ou carregar o fallback padrão (`ui`, `docs`, `server`, `utils`).
   3. Coleta os modos passados via argumentos posicionais.
   4. Chama `exportEngine(opcoes)`.
 
@@ -84,38 +84,34 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
   ```
 * **Ações**:
   1. Determina a versão da aplicação via `readProjectVersion(denoJsoncPath, baseDir)`.
-  2. Filtra os modos selecionados contra a configuração. Se nenhum foi passado explicitamente, filtra aqueles com `default !== false`.
+  2. Executa `resolverOrdemTargets(configs, opcoes.modos)` para filtrar e ordenar estritamente os modos. Se nenhum foi passado explicitamente, filtra aqueles com `default !== false`.
   3. Itera sequencialmente sobre cada modo executando `exportarModo(...)`.
-  4. Retorna a lista de `ExportResult[]` com total de arquivos e bytes gerados.
+  4. Retorna a lista de `ExportResult[]` com contagem de arquivos e total de bytes gravados.
 
-### Passo 3: Processamento do Modo Individual
+### Passo 3: Processamento do Modo com `expandGlob` e Stream de Escrita
 * **Função**: `exportarModo(modo, config, opcoes)`
 * **Arquivo**: `packages/utils/src/export/engine.ts`
 * **Parâmetros de Entrada**:
   - `modo: string`: Nome do modo (ex: `"ui"`, `"docs"`)
-  - `config: ExportConfig`: Configuração detalhada do modo (filtros, caminhos e regras)
+  - `config: ExportConfig`: Configuração detalhada do modo contendo `includes: string[]` e opcionalmente `excludes?: string[]`
   - `opcoes?: { versaoApp?, baseDir?, silencioso?, denoJsoncPath? }`
 * **Ações e Subfunções**:
-  1. `gerarCabecalho(config, modo, versaoApp)` (`packages/utils/src/export/formatter.ts`):
-     - Cria o banner inicial em Markdown com título do modo, versão (se `incluiVersao: true`), timestamp ISO e `instrucaoCustomizada`.
-  2. `walk(baseDir, { includeDirs: false })`:
-     - Varre recursivamente a árvore de arquivos do diretório base.
-  3. `deveIncluirArquivo(caminhoRelativo, config)` (`packages/utils/src/export/formatter.ts`):
-     - `normalizarCaminho(caminho)`: Converte barras invertidas e normaliza para minúsculas.
-     - **Regra Anti-Loop**: Bloqueia categoricamente arquivos dentro de `exports/` ou `snapshots/` para impedir que arquivos de saída sejam consumidos como entrada recursiva.
-     - Valida se o arquivo pertence a `caminhosAdicionaisPermitidos`.
-     - Valida se o arquivo está na raiz de `pastaBase` e em `arquivosRaizPermitidos`.
-     - Valida se o arquivo pertence a uma das `subpastasPermitidas`.
-     - Valida se a extensão do arquivo está contida em `extensoesPermitidas`.
-  4. Leitura e Formatação:
-     - `Deno.readTextFile(entry.path)`: Lê o conteúdo textual do arquivo.
+  1. `coletarArquivosParaExportacao(config, baseDir)`:
+     - Itera sobre cada padrão glob em `config.includes` chamando `expandGlob(padrao, { root: baseDir, exclude: config.excludes, includeDirs: false })`.
+     - Aplica proteção anti-looping (`exports/`, `snapshots/`) e deduplica em um `Set<string>`.
+     - Retorna array ordenado alfabeticamente para gerar snapshots determinísticos.
+  2. Abertura do Stream de Escrita:
+     - `ensureDirForFile(caminhoSaida)`: Cria pastas pai no disco.
+     - `Deno.open(caminhoSaida, { write: true, create: true, truncate: true })`: Inicializa o arquivo para streaming.
+     - `writer.write(encoder.encode(cabecalho))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
+  3. Processamento Individual de Arquivos:
+     - Para cada arquivo coletado, lê via `Deno.readTextFile(caminhoCompleto)`.
      - `formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)`:
        - `mapearExtensao(ext)`: Mapeia extensões especiais (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente o número de crases necessárias para o code fence (se o arquivo contiver \`\`\`, usa \`\`\`\` ou mais para garantir Markdown válido).
-       - Anexa o cabeçalho do arquivo com link relativo, tag de linguagem e bloco fechado.
-  5. Gravação em Disco:
-     - `ensureDirForFile(caminhoSaida)`: Cria o diretório de destino do snapshot.
-     - `Deno.writeTextFile(caminhoSaida, conteudoFinal)`: Grava o documento Markdown consolidado.
+       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (\`\`\` ou mais) para garantir que o code block seja válido.
+     - `writer.write(encoder.encode(blocoMarkdown))`: Envia o bloco Markdown diretamente para o stream em disco.
+  4. Finalização:
+     - `writer.close()`: Garante o fechamento limpo do arquivo.
 
 ---
 
@@ -126,17 +122,11 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 | `exportCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
 | `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<Record<string, ExportConfig>>` | Leitura do sistema de arquivos (`export.jsonc`) |
 | `exportEngine()` | `exportCli` / API | `opcoes: ExportOptions` | `Promise<ExportResult[]>` | Orquestração de exportação |
-| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura do disco e escrita do snapshot Markdown |
+| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
+| `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
+| `correspondeGlobs()` | `formatter` / `engine` | `caminho: string`, `padroes: string[]` | `boolean` | Avaliação de regex gerada via `globToRegExp` |
+| `deveIncluirArquivo()` | Testes / Fallback | `caminho: string`, `config: ExportConfig` | `boolean` | Validação de inclusão/exclusão |
 | `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string` | `string` | Formatação de string Markdown em memória |
-| `deveIncluirArquivo()` | `exportarModo` | `caminho: string`, `config: ExportConfig` | `boolean` | Avaliação de filtros de caminho e extensão |
 | `formatarArquivoMarkdown()` | `exportarModo` | `caminho: string`, `conteudo: string` | `string` | Formatação com code fence e syntax highlight |
-| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Cálculo de escape de Markdown |
-| `mapearExtensao()` | `formatarArquivoMarkdown` | `extensao: string` | `string` (linguagem de highlight) | Normalização de linguagem |
-
----
-
-## 4. Oportunidades de Melhoria e Refatoração
-
-1. **Varredura Otimizada (Evitar Walk Global)**: Atualmente o `walk` percorre a partir de `baseDir` (".") e filtra cada entrada. Poderia iniciar o `walk` diretamente a partir de `config.pastaBase` e `caminhosAdicionaisPermitidos`, reduzindo I/O em repositórios grandes.
-2. **Streaming / Buffer de Escrita**: Para repositórios muito volumosos, concatenar strings em memória pode gerar consumo elevado de RAM. Uma abordagem usando streams de escrita para o arquivo Markdown de destino aumentaria a eficiência.
-3. **Respeito a `.gitignore`**: Integrar um parser opcional de `.gitignore` para ignorar automaticamente arquivos temporários gerados durante o desenvolvimento local.
+| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Escape dinâmico de crases Markdown |
+| `mapearExtensao()` | `formatarArquivoMarkdown` | `extensao: string` | `string` (linguagem de highlight) | Normalização de highlight de sintaxe |

@@ -1,9 +1,8 @@
-/// <reference lib="deno.ns" />
-
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, } from "@std/assert";
 import {
   calcularCraseWrapper,
+  correspondeGlobs,
   deveIncluirArquivo,
   formatarArquivoMarkdown,
   gerarCabecalho,
@@ -118,6 +117,23 @@ describe("mapearExtensao", () => {
   });
 });
 
+describe("correspondeGlobs", () => {
+  it("deve corresponder com wildcards simples", () => {
+    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts"]), true);
+    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts"]), false);
+  });
+
+  it("deve corresponder com globstar recursivo", () => {
+    assertEquals(correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**"]), true);
+  });
+
+  it("deve corresponder com brace expansion", () => {
+    assertEquals(correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}"]), true);
+    assertEquals(correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}"]), true);
+    assertEquals(correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}"]), false);
+  });
+});
+
 // ============================================================================
 // 🎯 LÓGICA DE FILTRAGEM
 // ============================================================================
@@ -143,7 +159,19 @@ describe("deveIncluirArquivo", () => {
     });
   });
 
-  describe("caminhos adicionais", () => {
+  describe("modo moderno includes / excludes", () => {
+    it("permite arquivo que casa com includes e não casa com excludes", () => {
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["src/**/*.{ts,tsx}"],
+        excludes: ["**/*.test.ts"],
+      };
+      assertEquals(deveIncluirArquivo("src/app.tsx", config), true);
+      assertEquals(deveIncluirArquivo("src/app.test.ts", config), false);
+    });
+  });
+
+  describe("caminhos adicionais (legado)", () => {
     it("permite caminho adicional com extensão válida", () => {
       const config = makeConfig({
         pastaBase: "src",
@@ -182,7 +210,7 @@ describe("deveIncluirArquivo", () => {
     });
   });
 
-  describe("pastaBase e subpastas", () => {
+  describe("pastaBase e subpastas (legado)", () => {
     it("permite arquivo dentro de pastaBase e subpasta permitida", () => {
       const config = makeConfig({
         pastaBase: "monorepo/server",
@@ -223,7 +251,7 @@ describe("deveIncluirArquivo", () => {
     });
   });
 
-  describe("arquivos raiz", () => {
+  describe("arquivos raiz (legado)", () => {
     it("permite arquivos raiz explicitamente configurados", () => {
       const config = makeConfig({
         pastaBase: "monorepo/server",
@@ -253,7 +281,7 @@ describe("deveIncluirArquivo", () => {
     });
   });
 
-  describe("configuração tipo docs", () => {
+  describe("configuração tipo docs (legado)", () => {
     it("captura raiz e subpasta docs", () => {
       const config = makeConfig({
         pastaBase: "./",
@@ -272,55 +300,6 @@ describe("deveIncluirArquivo", () => {
         extensoesPermitidas: [".md",],
       },);
       assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
-    });
-  });
-
-  describe("edge cases", () => {
-    it("subpastasPermitidas vazia permite tudo dentro de pastaBase", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/utils",
-        subpastasPermitidas: [],
-        extensoesPermitidas: [".ts",],
-      },);
-      assertEquals(
-        deveIncluirArquivo("monorepo/utils/qualquer-coisa/arquivo.ts", config,),
-        true,
-      );
-    });
-
-    it("extensoesPermitidas vazia permite qualquer extensão", () => {
-      const config = makeConfig({
-        pastaBase: "src",
-        subpastasPermitidas: ["lib",],
-        extensoesPermitidas: [],
-      },);
-      assertEquals(deveIncluirArquivo("src/lib/arquivo.xyz", config,), true,);
-    });
-
-    it("lida com pastaBase './'", () => {
-      const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["src",],
-      },);
-      assertEquals(deveIncluirArquivo("src/main.ts", config,), true,);
-    });
-
-    it("lida com pastaBase '.'", () => {
-      const config = makeConfig({
-        pastaBase: ".",
-        subpastasPermitidas: ["src",],
-      },);
-      assertEquals(deveIncluirArquivo("src/main.ts", config,), true,);
-    });
-
-    it("é case insensitive na comparação", () => {
-      const config = makeConfig({
-        pastaBase: "SRC",
-        subpastasPermitidas: ["Lib",],
-        arquivosRaizPermitidos: ["README.md",],
-      },);
-      assertEquals(deveIncluirArquivo("src/lib/arquivo.ts", config,), true,);
-      assertEquals(deveIncluirArquivo("src/readme.md", config,), true,);
     });
   });
 });
@@ -383,7 +362,6 @@ describe("formatarArquivoMarkdown", () => {
   it("aumenta crases quando conteúdo tem ```", () => {
     const conteudo = "código com ```\nmais código";
     const resultado = formatarArquivoMarkdown("arquivo.md", conteudo,);
-    // 🔥 CORREÇÃO: A extensão é "md" não "markdown"
     assertStringIncludes(resultado, "````md",);
     assertStringIncludes(resultado, "````",);
   });

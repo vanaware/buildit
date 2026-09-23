@@ -21,29 +21,15 @@
             "type": "string",
             "description": "Caminho do arquivo Markdown gerado."
           },
-          "extensoesPermitidas": {
+          "includes": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Lista de extensões de arquivos a serem capturadas."
+            "description": "Lista de padrões glob para inclusão de arquivos (suporta wildcards e brace expansion como {src,public}/**/*.{ts,tsx})."
           },
-          "pastaBase": {
-            "type": "string",
-            "description": "Pasta base onde a busca se inicia."
-          },
-          "subpastasPermitidas": {
+          "excludes": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Lista de subdiretórios que podem ser varridos recursivamente."
-          },
-          "arquivosRaizPermitidos": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Nomes exatos de arquivos localizados diretamente na raiz de pastaBase."
-          },
-          "caminhosAdicionaisPermitidos": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Arquivos ou diretórios localizados fora de pastaBase."
+            "description": "Lista de padrões glob para exclusão de arquivos (ex: **/*.test.ts, **/dist/**)."
           },
           "incluiVersao": {
             "type": "boolean",
@@ -56,16 +42,34 @@
           "default": {
             "type": "boolean",
             "description": "Se o modo deve ser executado por padrão."
+          },
+          "extensoesPermitidas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "[Legado] Lista de extensões de arquivos a serem capturadas."
+          },
+          "pastaBase": {
+            "type": "string",
+            "description": "[Legado] Pasta base onde a busca se inicia."
+          },
+          "subpastasPermitidas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "[Legado] Lista de subdiretórios que podem ser varridos recursivamente."
+          },
+          "arquivosRaizPermitidos": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "[Legado] Nomes exatos de arquivos localizados diretamente na raiz de pastaBase."
+          },
+          "caminhosAdicionaisPermitidos": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "[Legado] Arquivos ou diretórios localizados fora de pastaBase."
           }
         },
         "required": [
-          "arquivoSaida",
-          "extensoesPermitidas",
-          "pastaBase",
-          "subpastasPermitidas",
-          "arquivosRaizPermitidos",
-          "incluiVersao",
-          "instrucaoCustomizada"
+          "arquivoSaida"
         ]
       }
     }

@@ -34,6 +34,9 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
   },
 };
 
+/** Alias retrocompatível para configurações padrão de watch */
+export const CONFIGURACOES_WATCH_PADRAO = CONFIGURACOES_PADRAO_WATCH;
+
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
  *

@@ -1,9 +1,10 @@
 /**
  * @module @vanaware/buildit/export/formatter
  * @description Funções utilitárias puras para normalização de caminhos,
- * mapeamento de extensões e formatação Markdown com proteção contra crases.
+ * mapeamento de extensões, avaliação de padrões glob e formatação Markdown com proteção contra crases.
  */
 
+import { globToRegExp, } from "@std/path";
 import type { ExportConfig, } from "../tools/interfaces.ts";
 
 /**
@@ -97,15 +98,42 @@ export function mapearExtensao(caminhoRelativo: string,): string {
 }
 
 /**
- * Determina se um determinado arquivo deve ser incluído no snapshot baseado na configuração do modo.
+ * Testa se um caminho corresponde a algum dos padrões glob fornecidos.
  *
- * Regras aplicadas (em ordem estrita):
- * 1. Proteção anti-loop: sempre exclui arquivos dentro de pastas `exports/` ou `snapshots/` gerados anteriormente.
- * 2. Verifica se está em caminhos adicionais explicitamente permitidos.
- * 3. Verifica se está dentro de `pastaBase`.
- * 4. Se está na raiz de `pastaBase`, valida contra `arquivosRaizPermitidos`.
- * 5. Se está em subpasta, valida contra `subpastasPermitidas`.
- * 6. Valida se a extensão do arquivo consta em `extensoesPermitidas`.
+ * @param caminho Caminho relativo normalizado a ser testado
+ * @param padroes Lista de padrões glob (suporta brace expansion e globstar)
+ * @returns True se o caminho casar com ao menos um padrão
+ */
+export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
+  const caminhoNormalizado = caminho.replace(/\\/g, "/",);
+  for (const padrao of padroes) {
+    try {
+      const reg = globToRegExp(padrao, {
+        globstar: true,
+        caseInsensitive: true,
+      },);
+      if (reg.test(caminhoNormalizado,) || reg.test(caminho,)) {
+        return true;
+      }
+    } catch {
+      // Ignora padrão inválido
+    }
+  }
+  return false;
+}
+
+/**
+ * Determina se um determinado arquivo deve ser incluído no snapshot baseado na configuração do modo.
+ * Suporta a sintaxe moderna baseada em `includes` / `excludes` (globs) e mantém suporte a propriedades legadas.
+ *
+ * Regras aplicadas:
+ * 1. Proteção anti-loop: sempre exclui arquivos dentro de pastas `exports/` ou `snapshots/`.
+ * 2. Se configurado com `includes`:
+ *    - Se casar com qualquer padrão de `excludes`, retorna `false`.
+ *    - Se casar com qualquer padrão de `includes`, retorna `true`.
+ * 3. Modo Legado (se `includes` não estiver definido):
+ *    - Verifica caminhos adicionais permitidos.
+ *    - Valida pastaBase, arquivos raiz, subpastas e extensões permitidas.
  *
  * @param caminhoRelativo Caminho relativo do arquivo no repositório
  * @param config Configuração do modo de exportação
@@ -130,7 +158,17 @@ export function deveIncluirArquivo(
     return false;
   }
 
-  // 🔍 Verifica caminhos adicionais (fora de pastaBase)
+  // 🌟 MODO MODERNO: Padrões `includes` e `excludes` (globs com brace expansion)
+  if (config.includes && config.includes.length > 0) {
+    if (config.excludes && config.excludes.length > 0) {
+      if (correspondeGlobs(caminhoRelativo, config.excludes,)) {
+        return false;
+      }
+    }
+    return correspondeGlobs(caminhoRelativo, config.includes,);
+  }
+
+  // 🔍 MODO LEGADO (fallback retrocompatível)
   if (
     config.caminhosAdicionaisPermitidos &&
     config.caminhosAdicionaisPermitidos.length > 0
@@ -146,16 +184,16 @@ export function deveIncluirArquivo(
     );
 
     if (correspondeAdicional) {
-      if (config.extensoesPermitidas.length === 0) return true;
-      return config.extensoesPermitidas.some(
+      const extensoes = config.extensoesPermitidas ?? [];
+      if (extensoes.length === 0) return true;
+      return extensoes.some(
         (ext,) =>
           caminhoNormalizado.endsWith(ext,) || caminhoNormalizado === ext,
       );
     }
   }
 
-  // 🔍 Verifica se está dentro de pastaBase
-  const prefixoBase = normalizarPrefixo(config.pastaBase,);
+  const prefixoBase = normalizarPrefixo(config.pastaBase ?? "./",);
   const prefixoBaseComBarra = prefixoBase !== "" ? prefixoBase + "/" : "";
 
   if (
@@ -165,28 +203,26 @@ export function deveIncluirArquivo(
     return false;
   }
 
-  // 🔍 Extrai o caminho relativo dentro de pastaBase
   const caminhoInterno = prefixoBaseComBarra !== ""
     ? caminhoNormalizado.substring(prefixoBaseComBarra.length,)
     : caminhoNormalizado;
 
-  // Verifica se está NA RAIZ de pastaBase (não possui barras no caminho interno)
   const estaNaRaiz = !caminhoInterno.includes("/",);
 
   if (estaNaRaiz) {
-    return config.arquivosRaizPermitidos.some(
+    const arquivosRaiz = config.arquivosRaizPermitidos ?? [];
+    return arquivosRaiz.some(
       (raiz,) => normalizarCaminho(raiz,) === caminhoInterno,
     );
   }
 
-  // 🔍 Está em subpasta: verifica subpastasPermitidas
+  const subpastas = config.subpastasPermitidas ?? [];
   let emSubpastaPermitida = false;
 
-  if (config.subpastasPermitidas.length === 0) {
-    // Lista vazia = permite varrer todas as subpastas
+  if (subpastas.length === 0) {
     emSubpastaPermitida = true;
   } else {
-    emSubpastaPermitida = config.subpastasPermitidas.some((sub,) => {
+    emSubpastaPermitida = subpastas.some((sub,) => {
       const subNormalizada = normalizarCaminho(sub,) + "/";
       return (
         caminhoInterno.startsWith(subNormalizada,) ||
@@ -196,8 +232,9 @@ export function deveIncluirArquivo(
   }
 
   if (emSubpastaPermitida) {
-    if (config.extensoesPermitidas.length === 0) return true;
-    return config.extensoesPermitidas.some(
+    const extensoes = config.extensoesPermitidas ?? [];
+    if (extensoes.length === 0) return true;
+    return extensoes.some(
       (ext,) => caminhoNormalizado.endsWith(ext,) || caminhoNormalizado === ext,
     );
   }
@@ -224,9 +261,10 @@ export function gerarCabecalho(
   versaoApp: string,
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
+  const instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
 
   return `> **INSTRUÇÃO PARA A IA:** 
-> ${config.instrucaoCustomizada}
+> ${instrucao}
 > O projeto é o **BuildIt ${versaoDisplay}** estruturado em módulos. 
 > Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).
 > Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.

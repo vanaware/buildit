@@ -152,17 +152,24 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
   "modos": {
     "ui": {
       "arquivoSaida": "snapshots/ui.md",
-      "pastaBase": "packages/ui",
-      "subpastasPermitidas": ["src", "public"],
-      "arquivosRaizPermitidos": ["deno.jsonc"],
-      "extensoesPermitidas": [".ts", ".tsx", ".html", ".css", ".json"],
+      "includes": [
+        "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
+        "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
+      ],
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
       "incluiVersao": true,
-      "instrucaoCustomizada": "Contexto do frontend Preact + BeerCSS."
+      "instrucaoCustomizada": "Contexto do frontend Preact + BeerCSS.",
+      "default": true
     }
   }
 }
 ```
 
+- **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
+- **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
 - **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão.
 
 ---

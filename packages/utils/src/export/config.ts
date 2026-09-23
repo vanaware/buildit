@@ -5,7 +5,6 @@
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
-import { EXTENSOES_PADRAO, } from "../tools/interfaces.ts";
 import type { ExportConfig, ExportConfigFile, } from "../tools/interfaces.ts";
 
 /**
@@ -15,14 +14,13 @@ import type { ExportConfig, ExportConfigFile, } from "../tools/interfaces.ts";
 export const CONFIGURACOES_PADRAO: Record<string, ExportConfig> = {
   ui: {
     arquivoSaida: "snapshots/ui.md",
-    extensoesPermitidas: EXTENSOES_PADRAO,
-    pastaBase: "./packages/ui/",
-    subpastasPermitidas: ["src", "public", "tests", "docs",],
-    arquivosRaizPermitidos: [
-      "build.ts",
-      "deno.json",
-      "deno.jsonc",
-      "readme.md",
+    includes: [
+      "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
+      "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}",
+    ],
+    excludes: [
+      "**/node_modules/**",
+      "**/.git/**",
     ],
     incluiVersao: true,
     instrucaoCustomizada:
@@ -31,17 +29,11 @@ export const CONFIGURACOES_PADRAO: Record<string, ExportConfig> = {
   },
   docs: {
     arquivoSaida: "snapshots/docs.md",
-    extensoesPermitidas: [".md", ".txt",],
-    pastaBase: "./",
-    subpastasPermitidas: ["docs",],
-    arquivosRaizPermitidos: [
-      "readme.md",
-      "readme",
-      "license",
-      "license.md",
-      "license.txt",
-      ".tool-versions",
+    includes: [
+      "docs/**/*.{md,txt}",
+      "{readme.md,readme,license,license.md,license.txt,.tool-versions}",
     ],
+    excludes: [],
     incluiVersao: false,
     instrucaoCustomizada:
       "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
@@ -49,14 +41,14 @@ export const CONFIGURACOES_PADRAO: Record<string, ExportConfig> = {
   },
   server: {
     arquivoSaida: "snapshots/server.md",
-    extensoesPermitidas: EXTENSOES_PADRAO,
-    pastaBase: "packages/server",
-    subpastasPermitidas: ["src", "tests", "docs",],
-    caminhosAdicionaisPermitidos: [".github/workflows",],
-    arquivosRaizPermitidos: [
-      "deno.json",
-      "deno.jsonc",
-      "readme.md",
+    includes: [
+      "packages/server/{src,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,json,jsonc,yaml,yml,md}",
+      "packages/server/{deno.json,deno.jsonc,readme.md}",
+      ".github/workflows/**/*.{yaml,yml}",
+    ],
+    excludes: [
+      "**/node_modules/**",
+      "**/.git/**",
     ],
     incluiVersao: false,
     instrucaoCustomizada:
@@ -65,11 +57,15 @@ export const CONFIGURACOES_PADRAO: Record<string, ExportConfig> = {
   },
   utils: {
     arquivoSaida: "snapshots/utils.md",
-    extensoesPermitidas: EXTENSOES_PADRAO,
-    pastaBase: "packages/utils",
-    subpastasPermitidas: ["src", "tests", "docs",],
-    caminhosAdicionaisPermitidos: ["export.ts", "esbuild.ts", "build.ts",],
-    arquivosRaizPermitidos: ["deno.json", "deno.jsonc", "readme.md",],
+    includes: [
+      "packages/utils/{src,tests,docs}/**/*.{tsx,jsx,js,ts,json,jsonc,md}",
+      "packages/utils/{deno.json,deno.jsonc,readme.md}",
+      "{export.ts,esbuild.ts,build.ts}",
+    ],
+    excludes: [
+      "**/node_modules/**",
+      "**/.git/**",
+    ],
     incluiVersao: false,
     instrucaoCustomizada:
       "O texto abaixo contém o código e testes da biblioteca @vanaware/buildit",

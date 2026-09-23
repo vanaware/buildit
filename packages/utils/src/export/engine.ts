@@ -1,20 +1,19 @@
 /**
  * @module @vanaware/buildit/export/engine
- * @description Mecanismo de varredura de diretórios, filtragem e geração de snapshots consolidados.
+ * @description Mecanismo de varredura otimizada de diretórios (expandGlob), filtragem e streaming de snapshots Markdown.
  */
 
-import { walk, } from "@std/fs/walk";
-import { dirname, join, relative, } from "@std/path";
+import { expandGlob, walk, } from "@std/fs";
+import { join, relative, } from "@std/path";
 import { readProjectVersion, } from "../tools/version.ts";
-import { carregarConfigExport, } from "./config.ts";
 import {
+  correspondeGlobs,
   deveIncluirArquivo,
   formatarArquivoMarkdown,
   gerarCabecalho,
+  normalizarCaminho,
 } from "./formatter.ts";
-import {
-  ensureDirForFile,
-} from "../tools/paths.ts";
+import { ensureDirForFile, } from "../tools/paths.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";
 import type {
   ExportConfig,
@@ -56,7 +55,76 @@ export function parseArgs(
 }
 
 /**
- * Executa o processo de exportação para um único modo configurado.
+ * Coleta a lista ordenada e deduplicada de arquivos que devem ser incluídos no snapshot.
+ * Utiliza `expandGlob` para varredura otimizada direta quando `includes` está configurado,
+ * ou recorre ao `walk` legado quando propriedades antigas são fornecidas.
+ *
+ * @param config Configuração do modo de exportação
+ * @param baseDir Diretório base do projeto
+ * @returns Array de caminhos relativos ordenados alfabeticamente
+ */
+export async function coletarArquivosParaExportacao(
+  config: ExportConfig,
+  baseDir: string = ".",
+): Promise<string[]> {
+  const arquivosEncontrados = new Set<string>();
+
+  // 🌟 MODO MODERNO: Uso direto de expandGlob com suporte nativo a brace expansion
+  if (config.includes && config.includes.length > 0) {
+    for (const padrao of config.includes) {
+      try {
+        for await (
+          const entry of expandGlob(padrao, {
+            root: baseDir,
+            exclude: config.excludes,
+            includeDirs: false,
+          },)
+        ) {
+          const caminhoRelativo = relative(baseDir, entry.path,).replace(
+            /\\/g,
+            "/",
+          );
+          const caminhoNormalizado = normalizarCaminho(caminhoRelativo,);
+
+          // Proteção anti-loop
+          if (
+            caminhoNormalizado.startsWith("exports/",) ||
+            caminhoNormalizado.startsWith("snapshots/",)
+          ) {
+            continue;
+          }
+
+          // Verificação extra de excludes
+          if (config.excludes && config.excludes.length > 0) {
+            if (correspondeGlobs(caminhoRelativo, config.excludes,)) {
+              continue;
+            }
+          }
+
+          arquivosEncontrados.add(caminhoRelativo,);
+        }
+      } catch {
+        // Ignora padrões que não encontram caminhos ou com sintaxe inválida
+      }
+    }
+  } else {
+    // 🔍 MODO LEGADO: Varredura com walk global e filtro deveIncluirArquivo
+    for await (const entry of walk(baseDir, { includeDirs: false, },)) {
+      const caminhoRelativo = relative(baseDir, entry.path,).replace(
+        /\\/g,
+        "/",
+      );
+      if (deveIncluirArquivo(caminhoRelativo, config,)) {
+        arquivosEncontrados.add(caminhoRelativo,);
+      }
+    }
+  }
+
+  return Array.from(arquivosEncontrados,).sort();
+}
+
+/**
+ * Executa o processo de exportação para um único modo configurado utilizando streaming de escrita em disco.
  *
  * @param modo Nome identificador do modo (ex: "ui")
  * @param config Objeto de configuração do modo
@@ -90,44 +158,71 @@ export async function exportarModo(
     console.log(`📦 EXPORTANDO MODO: ${modo.toUpperCase()} ${versaoDisplay}`,);
     console.log(`${"=".repeat(60,)}`,);
     console.log(`📄 Arquivo de saída: ${config.arquivoSaida}`,);
-    console.log(`📁 Pasta base: ${config.pastaBase}`,);
+    if (config.includes) {
+      console.log(`🎯 Padrões de inclusão: ${config.includes.join(", ",)}`,);
+    }
   }
 
-  let conteudoFinal = gerarCabecalho(config, modo, versaoApp,);
+  // 1. Coleta os arquivos de forma otimizada via expandGlob
+  const arquivosParaProcessar = await coletarArquivosParaExportacao(
+    config,
+    baseDir,
+  );
+
+  // 2. Garante que o diretório de destino existe antes da gravação
+  const caminhoSaida = join(baseDir, config.arquivoSaida,);
+  await ensureDirForFile(caminhoSaida,);
+
+  // 3. Inicializa o stream de escrita em disco (Uso de memória O(1))
+  const file = await Deno.open(caminhoSaida, {
+    write: true,
+    create: true,
+    truncate: true,
+  },);
+  const writer = file.writable.getWriter();
+  const encoder = new TextEncoder();
+
+  let bytesGravados = 0;
   let arquivosIncluidos = 0;
 
-  for await (const entry of walk(baseDir, { includeDirs: false, },)) {
-    const caminhoRelativo = relative(baseDir, entry.path,);
+  try {
+    // Escreve o cabeçalho
+    const cabecalho = gerarCabecalho(config, modo, versaoApp,);
+    const cabecalhoChunk = encoder.encode(cabecalho,);
+    await writer.write(cabecalhoChunk,);
+    bytesGravados += cabecalhoChunk.byteLength;
 
-    if (deveIncluirArquivo(caminhoRelativo, config,)) {
+    // Processa e escreve cada arquivo individualmente no stream
+    for (const caminhoRelativo of arquivosParaProcessar) {
       try {
-        if (!silencioso) {
-          console.log(`   ✅ Incluindo: ${caminhoRelativo}`,);
-        }
-        const conteudoArquivo = await Deno.readTextFile(entry.path,);
-        conteudoFinal += formatarArquivoMarkdown(
+        const caminhoCompleto = join(baseDir, caminhoRelativo,);
+        const conteudoArquivo = await Deno.readTextFile(caminhoCompleto,);
+        const blocoMarkdown = formatarArquivoMarkdown(
           caminhoRelativo,
           conteudoArquivo,
         );
+        const blocoChunk = encoder.encode(blocoMarkdown,);
+
+        await writer.write(blocoChunk,);
+        bytesGravados += blocoChunk.byteLength;
         arquivosIncluidos++;
+
+        if (!silencioso) {
+          console.log(`   ✅ Incluído: ${caminhoRelativo}`,);
+        }
       } catch (erro) {
         if (!silencioso && erro instanceof Error) {
           console.error(`   ❌ Erro ao ler ${caminhoRelativo}:`, erro.message,);
         }
       }
     }
+  } finally {
+    await writer.close();
   }
-
-  // Garante que o diretório de destino existe antes da gravação
-  const caminhoSaida = join(baseDir, config.arquivoSaida,);
-  await ensureDirForFile(caminhoSaida,);
-
-  const encodedBytes = new TextEncoder().encode(conteudoFinal,);
-  await Deno.writeTextFile(caminhoSaida, conteudoFinal,);
 
   if (!silencioso) {
     console.log(
-      `\n✨ Modo ${modo.toUpperCase()} concluído: ${arquivosIncluidos} arquivos exportados para ${config.arquivoSaida} (${encodedBytes.length} bytes)`,
+      `\n✨ Modo ${modo.toUpperCase()} concluído: ${arquivosIncluidos} arquivos exportados para ${config.arquivoSaida} (${bytesGravados} bytes)`,
     );
   }
 
@@ -135,7 +230,7 @@ export async function exportarModo(
     modo,
     arquivos: arquivosIncluidos,
     arquivoSaida: config.arquivoSaida,
-    bytes: encodedBytes.length,
+    bytes: bytesGravados,
   };
 }
 
@@ -143,20 +238,16 @@ export async function exportarModo(
  * Executa programaticamente o fluxo completo de exportação com suporte a múltiplos modos.
  * Aceita diretamente um objeto de configurações de modos em memória ou um objeto ExportOptions.
  *
- * @param configOuOpcoes Objeto de modos em memória ou opções completas de execução
+ * @param opcoes Opções completas de execução
  * @returns Lista de resultados obtidos para cada modo processado
  *
  * @example
  * ```typescript
  * // Passando configuração diretamente em memória:
  * const resultados = await exportEngine({
- *   ui: { arquivoSaida: "snapshot.md", pastaBase: "./src", ... }
- * });
- *
- * // Ou usando opções completas:
- * const resultados = await exportEngine({
- *   caminhoConfig: "export.jsonc",
- *   modos: ["ui", "docs"]
+ *   config: {
+ *     ui: { arquivoSaida: "snapshots/ui.md", includes: ["packages/ui/src/*.ts"] }
+ *   }
  * });
  * ```
  */
