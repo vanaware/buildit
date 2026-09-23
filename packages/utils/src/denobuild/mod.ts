@@ -19,3 +19,10 @@
 
 export { denoBuild, } from "./engine.ts";
 export { CONFIGURACOES_PADRAO, } from "./config.ts";
+
+export type {
+  DenoBuildOptions,
+  DenoBuildResult,
+  DenoBundleGlobalConfig,
+  DenoBundleTargetConfig,
+} from "../tools/interfaces.ts";

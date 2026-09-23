@@ -19,4 +19,28 @@ export {
   resolveOutputPaths,
 } from "./paths.ts";
 
-export {} from "./interfaces.ts";
+export {
+  EXTENSOES_PADRAO,
+} from "./interfaces.ts";
+
+export type {
+  DenoBuildOptions,
+  DenoBuildResult,
+  DenoBundleGlobalConfig,
+  DenoBundleTargetConfig,
+  EsbuildFormat,
+  EsbuildGlobalConfig,
+  EsbuildOptions,
+  EsbuildPlatform,
+  EsbuildResult,
+  EsbuildTargetConfig,
+  ExportConfig,
+  ExportOptions,
+  ExportResult,
+  GlobalTargetConfig,
+  ParsedArgs,
+  ParsedVersion,
+  TargetConfig,
+  TargetMode,
+  VersionUpdateOptions,
+} from "./interfaces.ts";

@@ -19,3 +19,9 @@
 
 export { exportEngine, } from "./engine.ts";
 export { CONFIGURACOES_PADRAO, } from "./config.ts";
+
+export type {
+  ExportConfig,
+  ExportOptions,
+  ExportResult,
+} from "../tools/interfaces.ts";
