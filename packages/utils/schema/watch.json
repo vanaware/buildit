@@ -1,111 +1,154 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BuildIt Watch Configuration",
-  "description": "JSON Schema para validação e autocomplete do arquivo watch.jsonc do BuildIt (esbuild context & watch mode).",
+  "description": "Schema oficial de configuração para o orquestrador de desenvolvimento contínuo (Watch) do BuildIt.",
   "type": "object",
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "URI do JSON Schema de validação."
+      "description": "URL do JSON Schema para autocomplete e validação no editor."
     },
     "version": {
       "type": "string",
-      "description": "Versão semântica da configuração."
+      "description": "Versão semântica da configuração do projeto."
     },
     "targets": {
       "type": "object",
-      "description": "Dicionário de alvos de desenvolvimento contínuo (watch).",
+      "description": "Dicionário de alvos a monitorar continuamente.",
       "additionalProperties": {
-        "$ref": "#/definitions/targetConfig"
+        "$ref": "#/definitions/WatchTargetConfig"
       }
     },
     "alvos": {
       "type": "object",
-      "description": "Alias em português para alvos de monitoramento.",
+      "description": "Alias em português para targets.",
       "additionalProperties": {
-        "$ref": "#/definitions/targetConfig"
+        "$ref": "#/definitions/WatchTargetConfig"
       }
     }
   },
   "definitions": {
-    "targetConfig": {
+    "WatchTargetConfig": {
       "type": "object",
       "required": ["entryPoints"],
       "properties": {
-        "mode": {
-          "type": "string",
-          "enum": ["watch", "build"],
-          "description": "Modo de operação do alvo (padrão: watch)."
-        },
         "default": {
           "type": "boolean",
-          "description": "Se verdadeiro, é executado automaticamente quando nenhum alvo é fornecido via CLI."
+          "description": "Se true, é monitorado automaticamente quando nenhum alvo específico é passado na CLI.",
+          "default": true
         },
         "srcdir": {
           "type": "string",
-          "description": "Diretório de arquivos fonte."
+          "description": "Diretório base dos fontes do alvo observado."
         },
         "distdir": {
           "type": "string",
-          "description": "Diretório de arquivos compilados de saída."
+          "description": "Diretório de destino onde as saídas observadas são salvas."
         },
         "publicdir": {
           "type": "string",
-          "description": "Diretório contendo arquivos públicos estáticos."
+          "description": "Diretório de ativos estáticos copiados na inicialização."
         },
         "indexHtml": {
           "type": "boolean",
-          "description": "Se verdadeiro, processa e copia index.html."
+          "description": "Se true, busca o index.html em srcdir e copia para distdir."
+        },
+        "clean": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de caminhos para limpar antes da primeira compilação."
         },
         "entryPoints": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Lista de arquivos TypeScript/JavaScript de entrada."
+          "description": "Arquivos de entrada a serem monitorados (relativos a srcdir)."
         },
         "platform": {
-          "type": "string",
           "enum": ["browser", "node", "neutral"],
-          "description": "Plataforma de execução do bundle."
+          "description": "Plataforma alvo de execução.",
+          "default": "browser"
         },
         "format": {
-          "type": "string",
           "enum": ["esm", "cjs", "iife"],
-          "description": "Formato de módulos gerado."
+          "description": "Formato do módulo gerado.",
+          "default": "esm"
         },
         "bundle": {
           "type": "boolean",
-          "description": "Se verdadeiro, agrupa dependências em um único arquivo."
+          "description": "Se agrupa dependências e imports externos.",
+          "default": true
         },
         "minify": {
           "type": "boolean",
-          "description": "Se verdadeiro, minifica o código gerado."
+          "description": "Se aplica minificação (geralmente false em desenvolvimento).",
+          "default": false
         },
         "sourcemap": {
-          "type": ["boolean", "string"],
-          "enum": [true, false, "linked", "inline", "external"],
-          "description": "Estratégia de mapas de fontes (sourcemaps)."
+          "oneOf": [
+            { "type": "boolean" },
+            { "enum": ["linked", "inline", "external"] }
+          ],
+          "description": "Estratégia de mapa de fontes (recomendado 'inline' em watch para rebuild veloz).",
+          "default": "inline"
         },
         "jsx": {
-          "type": "string",
           "enum": ["automatic", "transform", "preserve"],
-          "description": "Estratégia de transformação JSX."
+          "description": "Modo de transformação de JSX/TSX.",
+          "default": "automatic"
         },
         "jsxImportSource": {
           "type": "string",
-          "description": "Biblioteca provedora de JSX (ex: preact, react)."
+          "description": "Pacote para runtime automático do JSX (ex: 'preact', 'react')."
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Condições personalizadas para resolução de exports."
+        },
+        "define": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Mapa de constantes globais em tempo de compilação."
+        },
+        "drop": {
+          "type": "array",
+          "items": { "enum": ["console", "debugger"] },
+          "description": "Instruções a serem eliminadas do código."
+        },
+        "external": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Módulos tratados como externos."
         },
         "write": {
           "type": "boolean",
-          "description": "Se verdadeiro, escreve os arquivos gerados no disco."
+          "description": "Se grava os arquivos gerados no disco a cada alteração.",
+          "default": true
         },
-        "legalComments": {
-          "type": "string",
-          "enum": ["none", "inline", "eof", "linked", "external"],
-          "description": "Tratamento de comentários legais e licenças."
+        "keepNames": {
+          "type": "boolean",
+          "description": "Preserva os nomes originais de funções e classes."
         },
         "outfile": {
           "type": "string",
-          "description": "Nome ou caminho do arquivo de saída gerado."
+          "description": "Caminho do arquivo de saída gerado a cada alteração."
+        },
+        "loader": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": ["js", "jsx", "ts", "tsx", "css", "json", "text", "base64", "dataurl", "file", "binary", "empty", "copy"]
+          },
+          "description": "Mapeamento de loaders por extensão."
+        },
+        "alias": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Aliases de importação."
+        },
+        "inject": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Arquivos para injetar no topo do bundle."
         },
         "banner": {
           "type": "object",
@@ -113,7 +156,30 @@
             "js": { "type": "string" },
             "css": { "type": "string" }
           },
-          "description": "Comentários no topo dos arquivos gerados."
+          "description": "Banner adicionado no início dos arquivos gerados."
+        },
+        "footer": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Footer adicionado no final dos arquivos gerados."
+        },
+        "target": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ],
+          "description": "Ambiente alvo ECMAScript."
+        },
+        "charset": {
+          "enum": ["ascii", "utf8"],
+          "description": "Conjunto de caracteres."
+        },
+        "logLevel": {
+          "enum": ["verbose", "debug", "info", "warning", "error", "silent"],
+          "description": "Nível de detalhamento dos logs de rebuild."
         }
       }
     }

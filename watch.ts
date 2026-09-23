@@ -1,7 +1,9 @@
-#!/usr/bin/env -S deno run -A
-import { watchCli, } from "./packages/utils/src/watch/cli.ts";
+/**
+ * BuildIt Watch CLI Entry Point.
+ * Delegado para o utilitário @vanaware/buildit/watch.
+ */
+import { watchCli } from "./packages/utils/src/watch/cli.ts";
 
 if (import.meta.main) {
-  const cli = watchCli();
-  await cli.parse(Deno.args,);
+  await watchCli().parse(Deno.args);
 }

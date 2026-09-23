@@ -36,11 +36,11 @@
     ".": "./src/mod.ts",
     "./esbuild": "./src/esbuild/mod.ts",
     "./esbuild/cli": "./src/esbuild/cli.ts",
+    "./watch": "./src/watch/mod.ts",
+    "./watch/cli": "./src/watch/cli.ts",
     "./export": "./src/export/mod.ts",
     "./export/cli": "./src/export/cli.ts",
     "./denobuild": "./src/denobuild/mod.ts",
-    "./denobuild/cli": "./src/denobuild/cli.ts",
-    "./watch": "./src/watch/mod.ts",
-    "./watch/cli": "./src/watch/cli.ts"
+    "./denobuild/cli": "./src/denobuild/cli.ts"
   }
 }

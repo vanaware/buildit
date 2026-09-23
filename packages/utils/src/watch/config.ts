@@ -1,105 +1,85 @@
 /**
  * @module @vanaware/buildit/watch/config
- * @description Carregamento de configurações de desenvolvimento contínuo a partir de `watch.jsonc`
- * e fallback para configurações padrão do projeto BuildIt.
+ * @description Carregamento e validação de configurações para o modo de desenvolvimento contínuo (Watch).
  */
 
-import { loadConfig, } from "../tools/jsonc.ts";
+import { loadConfig } from "../tools/jsonc.ts";
 import type {
-  GlobalTargetConfig,
   WatchConfigFile,
   WatchConfigResult,
+  WatchGlobalConfig,
+  WatchTargetConfig,
 } from "../tools/interfaces.ts";
 
-/**
- * Configuração padrão para o motor watch no projeto BuildIt.
- */
-export const CONFIGURACOES_WATCH_PADRAO: GlobalTargetConfig = {
+/** Configurações padrão para o modo watch caso nenhum arquivo exista */
+export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
   ui: {
-    mode: "watch",
     default: true,
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     publicdir: "packages/ui/public",
     indexHtml: true,
-    entryPoints: ["main.tsx",],
+    entryPoints: ["main.tsx"],
     platform: "browser",
     format: "esm",
     bundle: true,
     minify: false,
     sourcemap: "inline",
-    conditions: ["browser",],
+    conditions: ["browser"],
     jsx: "automatic",
     jsxImportSource: "preact",
     write: true,
     legalComments: "eof",
     outfile: "app.js",
-    banner: {
-      js: "/*!\n * BuildIt (Watch Mode)\n * (c) 2026 Vanaware - MIT License\n */\n",
-    },
   },
 };
 
 /**
- * Carrega as configurações de alvos para o modo watch a partir de um arquivo JSONC externo
- * (ex: `watch.jsonc` ou `watch.json`).
+ * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
  *
- * Se o arquivo não for encontrado ou não contiver alvos válidos, retorna o objeto padrão `CONFIGURACOES_WATCH_PADRAO`.
- *
- * @param caminhoConfig Caminho opcional do arquivo de configuração
- * @param baseDir Diretório base para resolução de arquivos relativos
- * @returns Configuração carregada com alvos de monitoramento
+ * @param configPath Caminho explícito opcional para o arquivo
+ * @param baseDir Diretório base do projeto (padrão: ".")
+ * @returns Configuração resolvida de alvos do watch
  */
 export async function carregarConfigWatch(
-  caminhoConfig?: string,
+  configPath?: string,
   baseDir: string = ".",
 ): Promise<WatchConfigResult> {
-  const parsed = await loadConfig<WatchConfigFile>(
+  const parsed = await loadConfig<WatchConfigFile | WatchGlobalConfig>(
     "watch",
-    caminhoConfig,
+    configPath,
     baseDir,
   );
 
-  const result: WatchConfigResult = {
-    targets: { ...CONFIGURACOES_WATCH_PADRAO, },
-  };
+  if (!parsed) {
+    console.warn("⚠️ Arquivo de configuração watch não encontrado. Usando padrões.");
+    return { targets: CONFIGURACOES_PADRAO_WATCH };
+  }
 
-  if (parsed) {
-    // Caso 1: Objeto possui a chave "targets"
-    if (parsed.targets && typeof parsed.targets === "object") {
-      result.targets = parsed.targets;
-      return result;
-    }
+  let targets: WatchGlobalConfig = {};
 
-    // Caso 2: Objeto possui a chave em português "alvos"
-    if (parsed.alvos && typeof parsed.alvos === "object") {
-      result.targets = parsed.alvos;
-      return result;
-    }
-
-    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed,).filter(
-      (k,) => !k.startsWith("$",) && !["version",].includes(k,),
-    );
-
-    if (filteredKeys.length > 0) {
-      const resultado: GlobalTargetConfig = {};
-      let hasValidTargets = false;
-
-      for (const key of filteredKeys) {
-        const val = (parsed as Record<string, unknown>)[key];
-        if (val && typeof val === "object") {
-          resultado[key] = val as GlobalTargetConfig[string];
-          hasValidTargets = true;
-        }
-      }
-
-      if (hasValidTargets) {
-        result.targets = resultado;
-        return result;
+  if ("targets" in parsed && parsed.targets && typeof parsed.targets === "object") {
+    targets = parsed.targets as WatchGlobalConfig;
+  } else if ("alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object") {
+    targets = parsed.alvos as WatchGlobalConfig;
+  } else {
+    // Procura por chaves que parecem definições de target (possuem entryPoints)
+    for (const [key, value] of Object.entries(parsed)) {
+      if (
+        key !== "$schema" &&
+        key !== "version" &&
+        value &&
+        typeof value === "object" &&
+        "entryPoints" in value
+      ) {
+        targets[key] = value as WatchTargetConfig;
       }
     }
   }
 
-  return result;
+  if (Object.keys(targets).length === 0) {
+    targets = CONFIGURACOES_PADRAO_WATCH;
+  }
+
+  return { targets };
 }

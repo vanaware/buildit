@@ -3,7 +3,6 @@
   "version": "0.3.7",
   "targets": {
     "ui": {
-      "mode": "watch",
       "default": true,
       "srcdir": "packages/ui/src",
       "distdir": "packages/server/build/dist",
@@ -26,7 +25,7 @@
       "legalComments": "eof",
       "outfile": "app.js",
       "banner": {
-        "js": "/*!\n * BuildIt (Watch Mode)\n * (c) 2026 Vanaware - MIT License\n */\n"
+        "js": "/*!\n * BuildIt v__APP_VERSION__ [DEV WATCH]\n * (c) 2026 Vanaware - MIT License\n */\n"
       }
     }
   }

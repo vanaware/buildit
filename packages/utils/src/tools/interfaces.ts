@@ -47,16 +47,11 @@ export interface ParsedVersion {
  * Argumentos de linha de comando parseados.
  */
 export interface ParsedArgs {
-  /** Alvos de build a processar (exclui alvos watch) */
+  /** Alvos de build a processar */
   targets: string[];
   /** Flag global para não incrementar versão */
   globalNoVersion: boolean;
-  /** Nome do alvo watch a executar, ou null se não estiver em modo watch */
-  watchTarget: string | null;
 }
-
-/** Modo de operação do alvo */
-export type TargetMode = "build" | "watch";
 
 /** Plataformas suportadas pelo esbuild */
 export type EsbuildPlatform = "browser" | "node" | "neutral";
@@ -130,22 +125,8 @@ export interface TargetConfig {
    *
    * - `true` ou `undefined`: Incluído por padrão (comportamento padrão)
    * - `false`: Só roda quando explicitamente solicitado via CLI
-   *
-   * ⚠️ Esta propriedade é IGNORADA para alvos com `mode: 'watch'`.
-   * Alvos watch nunca são incluídos na lista de targets padrão.
    */
   default?: boolean;
-  /**
-   * Modo de operação do alvo.
-   *
-   * - `'build'`: Alvo normal de build (padrão). Compila e termina.
-   * - `'watch'`: Modo de desenvolvimento contínuo. Monitora mudanças
-   *   e rebuilda automaticamente. O processo fica vivo até Ctrl+C.
-   *
-   * ⚠️ Se múltiplos alvos tiverem `mode: 'watch'`, apenas o PRIMEIRO
-   * (na ordem do CONFIG) é executado quando a flag `watch` é usada.
-   */
-  mode?: TargetMode;
   // --- Configurações do Esbuild (TODAS configuráveis) ---
   /** Arquivos de entrada do bundle */
   entryPoints: string[];
@@ -244,7 +225,7 @@ export type EsbuildGlobalConfig = GlobalTargetConfig;
 export interface EsbuildOptions {
   /** Configuração direta de alvos em memória */
   config: GlobalTargetConfig;
-  /** Alvos específicos a compilar. Se vazio e não houver watchTarget, não executa nada. */
+  /** Alvos específicos a compilar. Se vazio, não executa nada. */
   targets?: string[];
   /** Se true, não incrementa a versão */
   noversion?: boolean;
@@ -256,10 +237,126 @@ export interface EsbuildOptions {
   baseDir?: string;
   /** Caminho para o deno.jsonc raiz */
   denoJsoncPath?: string;
-  /** Alvo watch específico a executar */
-  watchTarget?: string;
   /** Se true, suprime logs não críticos */
   silencioso?: boolean;
+}
+
+// ============================================================================
+// 📦 TIPOS E INTERFACES WATCH
+// ============================================================================
+/**
+ * Configuração de um alvo de desenvolvimento contínuo (Watch).
+ * Não necessita da flag `watch: boolean` ou `mode`, pois todo alvo watch é intrinsecamente contínuo.
+ */
+export interface WatchTargetConfig {
+  /** Diretório de arquivos estáticos/públicos */
+  publicdir?: string;
+  /** Diretório de código-fonte */
+  srcdir?: string;
+  /** Diretório de saída */
+  distdir?: string;
+  /** Se deve processar/copiar o arquivo index.html */
+  indexHtml?: boolean;
+  /** Lista de caminhos para limpar antes do primeiro build */
+  clean?: string[];
+  /** Se o alvo roda por padrão quando nenhum alvo é passado via CLI */
+  default?: boolean;
+  /** Arquivos de entrada */
+  entryPoints: string[];
+  /** Plataforma alvo (browser, node, neutral) */
+  platform?: EsbuildPlatform;
+  /** Formato de saída (esm, cjs, iife) */
+  format?: EsbuildFormat;
+  /** Se deve agrupar dependências no bundle */
+  bundle?: boolean;
+  /** Se deve minificar o código */
+  minify?: boolean;
+  /** Tipo de sourcemap a ser gerado */
+  sourcemap?: EsbuildSourcemap;
+  /** Configuração de JSX */
+  jsx?: EsbuildJsx;
+  /** Origem de importação do JSX (ex: preact) */
+  jsxImportSource?: string;
+  /** Condições personalizadas de exportação */
+  conditions?: string[];
+  /** Mapa de substituições globais */
+  define?: Record<string, string>;
+  /** Coisas para remover do código (ex: console, debugger) */
+  drop?: EsbuildDrop[];
+  /** Módulos a serem tratados como externos */
+  external?: string[];
+  /** Se deve gravar o resultado no disco */
+  write?: boolean;
+  /** Como tratar comentários legais (ex: linked, inline) */
+  legalComments?: EsbuildLegalComments;
+  /** Se deve preservar nomes originais de funções/classes */
+  keepNames?: boolean;
+  /** Caminho explícito do arquivo de saída */
+  outfile?: string;
+  /** Mapeamento de loaders por extensão */
+  loader?: Record<string, EsbuildLoader>;
+  /** Mapa de aliases de módulos */
+  alias?: Record<string, string>;
+  /** Arquivos para injetar no bundle */
+  inject?: string[];
+  /** Texto a ser adicionado no topo dos arquivos gerados */
+  banner?: { js?: string; css?: string };
+  /** Texto a ser adicionado no final dos arquivos gerados */
+  footer?: { js?: string; css?: string };
+  /** Ambiente alvo */
+  target?: string | string[];
+  /** Conjunto de caracteres */
+  charset?: EsbuildCharset;
+  /** Nível de detalhamento do log */
+  logLevel?: EsbuildLogLevel;
+  /** Plugins do esbuild customizados */
+  plugins?: unknown[];
+}
+
+/** Configuração global de alvos do modo Watch */
+export interface WatchGlobalConfig {
+  [targetName: string]: WatchTargetConfig;
+}
+
+/** Estrutura do arquivo de configuração `watch.jsonc` */
+export interface WatchConfigFile {
+  /** URL do JSON Schema para validação e autocomplete no editor */
+  $schema?: string;
+  /** Versão semântica da configuração */
+  version?: string;
+  /** Alvos de watch configurados no projeto */
+  targets?: WatchGlobalConfig;
+  /** Alias em português para alvos de watch configurados */
+  alvos?: WatchGlobalConfig;
+  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
+  [key: string]: unknown;
+}
+
+/** Resultado do carregamento da configuração do Watch */
+export interface WatchConfigResult {
+  targets: WatchGlobalConfig;
+}
+
+/** Opções para execução programática do Watch */
+export interface WatchOptions {
+  /** Configuração direta de alvos em memória */
+  config: WatchGlobalConfig;
+  /** Alvos específicos a monitorar. Se não fornecido, executa os alvos padrão. */
+  targets?: string[];
+  /** Diretório base de resolução */
+  baseDir?: string;
+  /** Caminho para o deno.jsonc raiz */
+  denoJsoncPath?: string;
+  /** Se true, suprime logs não críticos */
+  silencioso?: boolean;
+}
+
+/** Objeto de controle de um processo Watch ativo */
+export interface WatchHandle {
+  /** Nome do alvo em execução */
+  target: string;
+  /** Encerra o context do esbuild */
+  close: () => Promise<void>;
 }
 
 // ============================================================================
@@ -643,57 +740,3 @@ export interface EsbuildResult {
   /** Total duration of the build operation in milliseconds. */
   durationMs: number;
 }
-
-// ============================================================================
-// 📦 TIPOS WATCH (desenvolvimento incremental com esbuild context)
-// ============================================================================
-
-/**
- * Estrutura do arquivo de configuração externo `watch.jsonc`.
- */
-export interface WatchConfigFile {
-  /** URL do JSON Schema para validação e autocomplete no editor */
-  $schema?: string;
-  /** Versão semântica da configuração */
-  version?: string;
-  /** Alvos watch configurados no projeto */
-  targets?: GlobalTargetConfig;
-  /** Alias em português para alvos configurados */
-  alvos?: GlobalTargetConfig;
-  /** Suporte a alvos definidos diretamente no nível raiz do JSON */
-  [key: string]: unknown;
-}
-
-/**
- * Resultado do carregamento da configuração watch.
- */
-export interface WatchConfigResult {
-  targets: GlobalTargetConfig;
-}
-
-/**
- * Opções para execução programática do Watch Engine.
- */
-export interface WatchOptions {
-  /** Configuração direta de alvos em memória */
-  config: GlobalTargetConfig;
-  /** Alvos específicos a monitorar. Se não especificado, monitora todos com default !== false */
-  targets?: string[];
-  /** Diretório base de resolução */
-  baseDir?: string;
-  /** Caminho para o deno.jsonc raiz */
-  denoJsoncPath?: string;
-  /** Se true, não bloqueia o processo (retorna após iniciar os watchers) */
-  unref?: boolean;
-}
-
-/**
- * Resultado da inicialização do watch para um alvo.
- */
-export interface WatchResult {
-  target: string;
-  success: boolean;
-  srcdir?: string;
-  distdir?: string;
-}
-

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BuildIt esbuild Configuration",
+  "description": "Schema oficial de configuração para o orquestrador de build esbuild do BuildIt.",
   "type": "object",
   "properties": {
     "$schema": {
@@ -11,112 +12,200 @@
       "type": "string",
       "description": "Versão semântica da configuração do projeto."
     },
+    "versionPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lista de arquivos ou diretórios onde o arquivo version.ts sincronizado será gravado."
+    },
+    "forcepackagesversion": {
+      "type": "boolean",
+      "description": "Se true, sincroniza a nova versão para todos os pacotes do workspace (deno.json / deno.jsonc)."
+    },
     "targets": {
       "type": "object",
-      "description": "Dicionário de alvos de compilação.",
+      "description": "Dicionário de alvos de compilação em lote.",
       "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "mode": {
-            "enum": ["build", "watch"],
-            "description": "Modo de execução. 'build' compila e finaliza. 'watch' inicia o observador de arquivos."
-          },
-          "default": {
-            "type": "boolean",
-            "description": "Se true, é executado automaticamente quando nenhum alvo específico é passado na CLI."
-          },
-          "srcdir": {
-            "type": "string",
-            "description": "Diretório base dos fontes do alvo."
-          },
-          "distdir": {
-            "type": "string",
-            "description": "Diretório de destino final onde os artefatos compilados são gravados."
-          },
-          "publicdir": {
-            "type": "string",
-            "description": "Diretório de ativos estáticos copiados recursivamente para distdir."
-          },
-          "indexHtml": {
-            "type": "boolean",
-            "description": "Se true, busca o index.html em srcdir ou publicdir e copia para distdir."
-          },
-          "clean": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Lista de caminhos para limpar antes do build (relativos a distdir)."
-          },
-          "entryPoints": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Arquivos de entrada a serem compilados (relativos a srcdir)."
-          },
-          "platform": {
-            "enum": ["browser", "node", "neutral"],
-            "description": "Plataforma alvo de execução do bundle gerado."
-          },
-          "format": {
-            "enum": ["esm", "cjs", "iife"],
-            "description": "Formato do módulo de saída."
-          },
-          "bundle": {
-            "type": "boolean",
-            "description": "Se agrupa dependências e imports externos em arquivos consolidados."
-          },
-          "minify": {
-            "type": "boolean",
-            "description": "Se aplica minificação total."
-          },
-          "sourcemap": {
-            "oneOf": [
-              { "type": "boolean" },
-              { "enum": ["linked", "inline", "external"] }
-            ],
-            "description": "Estratégia de geração de mapa de fontes (.map)."
-          },
-          "jsx": {
-            "enum": ["automatic", "transform", "preserve"],
-            "description": "Modo de transformação de JSX/TSX."
-          },
-          "jsxImportSource": {
-            "type": "string",
-            "description": "Pacote para runtime automático do JSX (ex: 'preact', 'react')."
-          },
-          "define": {
-            "type": "object",
-            "additionalProperties": { "type": "string" },
-            "description": "Mapa de substituição de constantes globais em tempo de compilação."
-          },
-          "drop": {
-            "type": "array",
-            "items": { "enum": ["console", "debugger"] },
-            "description": "Instruções a serem eliminadas do código compilado."
-          },
-          "external": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "Módulos a não empacotar."
-          },
-          "metafile": {
-            "type": "boolean",
-            "description": "Se gera arquivo de metadados em formato JSON."
-          },
-          "write": {
-            "type": "boolean",
-            "description": "Se grava os arquivos compilados no disco."
-          },
-          "splitting": {
-            "type": "boolean",
-            "description": "Habilita divisão de código em chunks (requer format: 'esm')."
-          },
-          "outfile": {
-            "type": "string",
-            "description": "Nome ou caminho explícito do arquivo de saída."
-          }
-        },
-        "required": ["entryPoints"]
+        "$ref": "#/definitions/TargetConfig"
+      }
+    },
+    "alvos": {
+      "type": "object",
+      "description": "Alias em português para targets.",
+      "additionalProperties": {
+        "$ref": "#/definitions/TargetConfig"
       }
     }
   },
-  "required": ["targets"]
+  "definitions": {
+    "TargetConfig": {
+      "type": "object",
+      "required": ["entryPoints"],
+      "properties": {
+        "default": {
+          "type": "boolean",
+          "description": "Se true, é executado automaticamente quando nenhum alvo específico é passado na CLI.",
+          "default": true
+        },
+        "srcdir": {
+          "type": "string",
+          "description": "Diretório base dos fontes do alvo."
+        },
+        "distdir": {
+          "type": "string",
+          "description": "Diretório de destino final onde os artefatos compilados são gravados."
+        },
+        "publicdir": {
+          "type": "string",
+          "description": "Diretório de ativos estáticos copiados recursivamente para distdir."
+        },
+        "indexHtml": {
+          "type": "boolean",
+          "description": "Se true, busca o index.html em srcdir e copia para distdir."
+        },
+        "clean": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de caminhos para limpar antes do build (relativos a distdir, use '.' para limpar todo o distdir)."
+        },
+        "entryPoints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Arquivos de entrada a serem compilados (relativos a srcdir)."
+        },
+        "platform": {
+          "enum": ["browser", "node", "neutral"],
+          "description": "Plataforma alvo de execução do bundle gerado.",
+          "default": "browser"
+        },
+        "format": {
+          "enum": ["esm", "cjs", "iife"],
+          "description": "Formato do módulo de saída.",
+          "default": "esm"
+        },
+        "bundle": {
+          "type": "boolean",
+          "description": "Se agrupa dependências e imports externos em arquivos consolidados.",
+          "default": true
+        },
+        "minify": {
+          "type": "boolean",
+          "description": "Se aplica minificação total de identificadores, sintaxe e espaços em branco.",
+          "default": false
+        },
+        "sourcemap": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "enum": ["linked", "inline", "external"] }
+          ],
+          "description": "Estratégia de geração de mapa de fontes (.map)."
+        },
+        "jsx": {
+          "enum": ["automatic", "transform", "preserve"],
+          "description": "Modo de transformação de JSX/TSX.",
+          "default": "automatic"
+        },
+        "jsxImportSource": {
+          "type": "string",
+          "description": "Pacote para runtime automático do JSX (ex: 'preact', 'react')."
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Condições personalizadas para resolução de exports do package.json."
+        },
+        "define": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Mapa de substituição de constantes globais em tempo de compilação."
+        },
+        "drop": {
+          "type": "array",
+          "items": { "enum": ["console", "debugger"] },
+          "description": "Instruções a serem eliminadas do código compilado."
+        },
+        "external": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Módulos ou pacotes a serem tratados como externos e não empacotados."
+        },
+        "metafile": {
+          "type": "boolean",
+          "description": "Se true, gera o arquivo metafile.json contendo árvore de dependências e métricas de tamanho."
+        },
+        "write": {
+          "type": "boolean",
+          "description": "Se true, grava a saída em disco.",
+          "default": true
+        },
+        "treeShaking": {
+          "type": "boolean",
+          "description": "Se habilita a eliminação de código morto (dead code elimination)."
+        },
+        "legalComments": {
+          "enum": ["none", "inline", "eof", "linked", "external"],
+          "description": "Preservação e posicionamento de comentários de licença e copyright."
+        },
+        "keepNames": {
+          "type": "boolean",
+          "description": "Preserva os nomes originais de funções e classes mesmo quando minificado."
+        },
+        "outfile": {
+          "type": "string",
+          "description": "Caminho do arquivo de saída consolidado (relativo ao distdir quando este for fornecido)."
+        },
+        "splitting": {
+          "type": "boolean",
+          "description": "Habilita a divisão de código (code splitting) para carregamento dinâmico em ESM."
+        },
+        "loader": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": ["js", "jsx", "ts", "tsx", "css", "json", "text", "base64", "dataurl", "file", "binary", "empty", "copy"]
+          },
+          "description": "Mapeamento de loaders por extensão de arquivo."
+        },
+        "alias": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Aliases de módulos ou caminhos de importação."
+        },
+        "inject": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Arquivos para injetar no topo do bundle antes dos entrypoints."
+        },
+        "banner": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Comentários ou trechos de código adicionados no início do arquivo gerado. Suporta __APP_VERSION__."
+        },
+        "footer": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Comentários ou trechos de código adicionados no final do arquivo gerado. Suporta __APP_VERSION__."
+        },
+        "target": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ],
+          "description": "Ambiente alvo JavaScript/ECMAScript (ex: 'es2022', 'chrome100', 'esnext')."
+        },
+        "charset": {
+          "enum": ["ascii", "utf8"],
+          "description": "Conjunto de caracteres dos arquivos gerados."
+        },
+        "logLevel": {
+          "enum": ["verbose", "debug", "info", "warning", "error", "silent"],
+          "description": "Nível de detalhamento dos logs gerados pelo esbuild."
+        }
+      }
+    }
+  }
 }

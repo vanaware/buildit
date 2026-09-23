@@ -46,7 +46,6 @@ import * as esbuild from "esbuild";
 import { denoPlugin, } from "@deno/esbuild-plugin";
 import { updateProjectVersion, } from "../tools/version.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";
-import { carregarConfigEsbuild, } from "./config.ts";
 
 /**
  * Injeta o Deno Plugin nas opções do esbuild.
@@ -66,8 +65,6 @@ export const buildWithDenoPlugin = (
 
 /**
  * Executa programaticamente a compilação com esbuild para os alvos configurados.
- * A ordem de execução é estritamente garantida pelo Engine seguindo a ordem
- * declarada na configuração (fonte única da verdade).
  *
  * @param opcoes Opções completas de execução (incluindo configuração já parseada)
  * @returns Lista de resultados obtidos por alvo
@@ -77,14 +74,8 @@ export async function esBuild(
 ): Promise<EsbuildResult[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
+  const targets = opcoes.targets;
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
-
-  // Garante estritamente que a ordem de execução siga a declaração na configuração
-  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
-
-  if (targetsParaExecutar.length === 0) {
-    return [];
-  }
 
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
@@ -93,6 +84,13 @@ export async function esBuild(
     versionPaths: opcoes.versionPaths,
     forcepackagesversion: opcoes.forcepackagesversion,
   },);
+
+  // Garante estritamente que a ordem de execução siga a declaração na configuração
+  const targetsParaExecutar = resolverOrdemTargets(configs, targets,);
+
+  if (targetsParaExecutar.length === 0) {
+    return [];
+  }
 
   const resultados: EsbuildResult[] = [];
 

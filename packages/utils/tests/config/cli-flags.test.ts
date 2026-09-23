@@ -6,30 +6,28 @@ import { GlobalTargetConfig } from "../../src/tools/interfaces.ts";
 describe("parseArgs", () => {
   const config: GlobalTargetConfig = {
     ui: {
-      mode: "build",
       entryPoints: ["main.tsx"],
       srcdir: "src",
       distdir: "dist",
       default: true,
     },
     sw: {
-      mode: "build",
       entryPoints: ["sw.ts"],
       srcdir: "src",
       distdir: "dist",
       default: false,
     },
-    watch: {
-      mode: "watch",
-      entryPoints: ["main.tsx"],
+    worker: {
+      entryPoints: ["worker.ts"],
       srcdir: "src",
       distdir: "dist",
-    }
+      default: true,
+    },
   };
 
   it("deve usar alvos padrão se nenhum for especificado", () => {
     const res = parseArgs([], config);
-    assertEquals(res.targets, ["ui"]);
+    assertEquals(res.targets, ["ui", "worker"]);
     assertEquals(res.globalNoVersion, false);
   });
 
@@ -41,12 +39,6 @@ describe("parseArgs", () => {
   it("deve filtrar alvos solicitados", () => {
     const res = parseArgs(["ui", "sw"], config);
     assertEquals(res.targets, ["ui", "sw"]);
-  });
-
-  it("deve identificar modo watch", () => {
-    const res = parseArgs(["watch"], config);
-    assertEquals(res.watchTarget, "watch");
-    assertEquals(res.targets, []);
   });
 
   it("deve respeitar a ordem do config independente da ordem dos args", () => {

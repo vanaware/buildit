@@ -1,8 +1,8 @@
 /**
  * @module @vanaware/buildit/watch
- * @description Módulo de desenvolvimento contínuo (Watch Mode) com esbuild context.
+ * @description Módulo de desenvolvimento contínuo (Watch) para Deno e Preact.
  */
 
-export { watchCli, } from "./cli.ts";
-export { carregarConfigWatch, CONFIGURACOES_WATCH_PADRAO, } from "./config.ts";
-export { startTargetWatcher, watchEngine, } from "./engine.ts";
+export * from "./engine.ts";
+export * from "./config.ts";
+export * from "./cli.ts";

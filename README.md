@@ -1,8 +1,8 @@
 # 🛠️ BuildIt
 
-**Build orchestration, bundling, and AI context export utilities for Deno & Web projects.**
+**Build orchestration, continuous development watcher, bundling, and AI context export utilities for Deno & Web projects.**
 
-BuildIt is a modular, high-performance toolkit tailored for modern Deno 2.x workspaces. It provides automated bundling pipelines (via esbuild and native `Deno.bundle`), semantic version stamping, and intelligent source-code consolidation for AI model context windows (LLM snapshots).
+BuildIt is a modular, high-performance toolkit tailored for modern Deno 2.x workspaces. It provides automated production bundling pipelines (via esbuild and native `Deno.bundle`), real-time continuous development watching, semantic version stamping, and intelligent source-code consolidation for AI model context windows (LLM snapshots).
 
 [![Deno 2.x](https://img.shields.io/badge/Deno-2.x-black?logo=deno)](https://deno.com/)
 [![JSR Package](https://jsr.io/badges/@vanaware/buildit)](https://jsr.io/@vanaware/buildit)
@@ -14,24 +14,27 @@ BuildIt is a modular, high-performance toolkit tailored for modern Deno 2.x work
 
 ## ✨ Core Engines
 
-BuildIt consolidates three specialized developer tools, all driven by declarative `.jsonc` configuration files:
+BuildIt consolidates four specialized developer tools, all driven by declarative `.jsonc` configuration files:
 
 ### 1. ⚡ `esbuild` Pipeline (`esbuild.ts` & `esbuild.jsonc`)
-- **Lightning-Fast Bundling:** Uses esbuild with `@deno/esbuild-plugin` to resolve remote imports, NPM specifiers, and JSR packages.
+- **Lightning-Fast Production Bundling:** Uses esbuild with `@deno/esbuild-plugin` to resolve remote imports, NPM specifiers, and JSR packages.
 - **Declarative Targets:** Define multiple build targets in `esbuild.jsonc` (e.g., `ui`, `server`, `standalone`).
 - **Automated Asset Management:** Cleans distribution directories, copies static files from `public/`, and automatically injects semantic release versions and hash timestamps into `manifest.json` and generated scripts.
-- **Continuous Watch Mode:** Automatically watches file trees and recompiles instantly.
 
-### 2. 📦 `denobuild` Engine (`build.ts` & `denobuild.jsonc`)
+### 2. 👀 `watch` Engine (`watch.ts` & `watch.jsonc`)
+- **Real-Time Continuous Development:** Powered by `esbuild.context` for sub-millisecond incremental rebuilds during development.
+- **Isolated Development Workflow:** Completely separated from production bundling, keeping configurations clean and focused.
+
+### 3. 📦 `denobuild` Engine (`denobuild.ts` & `denobuild.jsonc`)
 - **Native Deno Bundler:** Built on top of Deno's native `Deno.bundle` API (`--unstable-bundle`).
-- **Zero External Binaries:** Produces standalone ECMAScript modules without requiring third-party native bundlers or external binaries.
+- **Zero External Binaries:** Produces standalone ECMAScript modules without requiring third-party native bundlers.
 - **Compile-Time Defines:** Injects dynamic compile-time constants and environment flags directly into the output code.
 
-### 3. 📝 `export` Context Exporter (`export.ts` & `export.jsonc`)
+### 4. 📝 `export` Context Exporter (`export.ts` & `export.jsonc`)
 - **AI-Ready Snapshots:** Consolidates source code into structured Markdown documents optimized for LLMs (such as Gemini, Claude, and GPT).
 - **Intelligent Filtering:** Enforces allowed extensions, subdirectories, root files, and ignore patterns.
 - **Anti-Loop Protection:** Prevents infinite directory traversals, symlink traps, and output file self-inclusion.
-- **Dynamic Markdown Escaping:** Automatically escapes backticks inside source files to guarantee valid, uncorrupted code fences in generated snapshots.
+- **Read-Only Version Mode:** Enriches Markdown headers with project version information without mutating or bumping version numbers.
 
 ---
 
@@ -40,15 +43,17 @@ BuildIt consolidates three specialized developer tools, all driven by declarativ
 ```
 buildit/
 ├── packages/
-│   ├── utils/          # 📦 @vanaware/buildit (Core library with all 3 engines & CLI runners)
+│   ├── utils/          # 📦 @vanaware/buildit (Core library with all 4 engines, schemas & CLI runners)
 │   ├── ui/             # 🖥️ @buildit/ui (Reactive dashboard built with Preact, Signals & BeerCSS)
 │   └── server/         # 🌐 @buildit/server (High-performance static file server on port 3000)
 ├── snapshots/          # 📄 Generated Markdown AI context snapshots (ui.md, server.md, docs.md, utils.md)
-├── esbuild.jsonc       # ⚙️ Configuration for esbuild pipeline
+├── esbuild.jsonc       # ⚙️ Configuration for esbuild production pipeline
+├── watch.jsonc         # ⚙️ Configuration for continuous development watch engine
 ├── denobuild.jsonc     # ⚙️ Configuration for Deno.bundle engine
 ├── export.jsonc        # ⚙️ Configuration for AI context export targets
 ├── esbuild.ts          # 🚀 CLI entrypoint for esbuild orchestration
-├── build.ts            # 🚀 CLI entrypoint for native denobuild
+├── watch.ts            # 🚀 CLI entrypoint for continuous watching
+├── denobuild.ts        # 🚀 CLI entrypoint for native denobuild
 └── export.ts           # 🚀 CLI entrypoint for snapshot export
 ```
 
@@ -62,28 +67,10 @@ For complete API and configuration details, see the **[API and Configuration Ref
 ### Installation & Imports
 
 ```ts
-// esbuild Orchestration
-import { runEsbuild } from "jsr:@vanaware/buildit/esbuild";
-
-// Deno.bundle Native Engine
-import { runDenoBuild } from "jsr:@vanaware/buildit/denobuild";
-
-// AI Context Exporter
-import { runExport } from "jsr:@vanaware/buildit/export";
-```
-
-### Programmatic Context Export Example
-
-```ts
-import { runExport } from "jsr:@vanaware/buildit/export";
-
-const result = await runExport({
-  target: "ui",
-  configPath: "./export.jsonc",
-});
-
-console.log(`Snapshot generated at: ${result.outputPath}`);
-console.log(`Processed ${result.filesCount} files in ${result.durationMs}ms`);
+import { esBuild } from "jsr:@vanaware/buildit/esbuild";
+import { watchEngine } from "jsr:@vanaware/buildit/watch";
+import { denoBuild } from "jsr:@vanaware/buildit/denobuild";
+import { exportEngine } from "jsr:@vanaware/buildit/export";
 ```
 
 ### JSR Export Map
@@ -91,102 +78,48 @@ console.log(`Processed ${result.filesCount} files in ${result.durationMs}ms`);
 | Specifier | Description |
 |---|---|
 | `@vanaware/buildit` | Root module re-exporting core utilities and shared interfaces |
-| `@vanaware/buildit/esbuild` | esbuild bundling engine and configuration loaders |
+| `@vanaware/buildit/esbuild` | esbuild production bundling engine and configuration loaders |
 | `@vanaware/buildit/esbuild/cli` | Command-line runner for the esbuild pipeline |
+| `@vanaware/buildit/watch` | Continuous development watch engine with `esbuild.context` |
+| `@vanaware/buildit/watch/cli` | Command-line runner for continuous watch and live rebuilds |
 | `@vanaware/buildit/denobuild` | Native `Deno.bundle` engine and options resolver |
 | `@vanaware/buildit/denobuild/cli` | Command-line runner for denobuild |
 | `@vanaware/buildit/export` | Core walker, markdown formatter, and snapshot engine |
 | `@vanaware/buildit/export/cli` | Command-line runner for AI context exports |
-| `@vanaware/buildit/config` | JSONC file loaders and fallback configurations |
-| `@vanaware/buildit/interfaces` | TypeScript contracts and options types |
 
 ---
 
-## 🚀 Getting Started
+## 💡 JSON Schemas ($schema)
 
-### Prerequisites
+BuildIt provides official JSON Schemas inside `packages/utils/schema/` for instant autocomplete and validation in VSCode, Zed, Cursor, and Neovim:
 
-All you need is [Deno 2.x](https://deno.com/) installed on your machine.
-*(A minimal `package.json` and `install-script.sh` are included solely for cloud container compatibility).*
-
-### Running the Development Server
-
-To build the UI distribution and start the local server on port 3000:
-
-```bash
-deno task dev
-```
-
-Or when running in an npm-bridged environment:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to access the interactive dashboard.
-
----
-
-## 🛠️ CLI Commands & Deno Tasks
-
-### Building the Project
-
-```bash
-# Build with esbuild (default production build):
-deno task build
-
-# Build a specific target without incrementing version:
-deno run -A ./esbuild.ts ui noversion
-
-# Run with file watcher:
-deno run -A ./esbuild.ts ui watch
-
-# Build with native Deno.bundle:
-deno task denobuild
-```
-
-### Exporting AI Context Snapshots
-
-```bash
-# Generate all snapshots configured in export.jsonc:
-deno task export
-
-# Generate a specific target:
-deno run --allow-read --allow-write ./export.ts ui
-deno run --allow-read --allow-write ./export.ts docs
-deno run --allow-read --allow-write ./export.ts utils
-```
-
-### Quality Assurance & Testing
-
-All tests are written using standard BDD syntax (`@std/testing/bdd`) and assertions (`@std/assert`):
-
-```bash
-# Run the test suite:
-deno task test
-
-# Run linter:
-deno task lint
-
-# Run type checks:
-deno task check
-
-# Run full quality check (lint + format + type check + tests):
-deno task tests
+```jsonc
+{
+  "$schema": "./packages/utils/schema/esbuild.json",
+  "targets": {
+    "ui": {
+      "entryPoints": ["main.tsx"],
+      "distdir": "dist",
+      "format": "esm"
+    }
+  }
+}
 ```
 
 ---
 
-## 🖥️ Interactive Dashboard Features
+## 📜 Development & Automation Tasks
 
-The embedded web interface (`packages/ui/`) provides:
-- **Workspace Overview:** Live inventory of workspace packages, dependencies, and JSR modules.
-- **CLI & Configuration Explorer:** Interactive documentation of `esbuild.jsonc`, `denobuild.jsonc`, and `export.jsonc` with syntax highlights.
-- **Interactive Build Simulator:** Test pipeline parameters (minify, sourcemaps, clean dist) with simulated real-time logs powered by `@preact/signals`.
-- **Snapshot Manager:** Review exported Markdown context sizes, target rules, and AI ingestion instructions.
-
----
+| Task | Command | Description |
+| :--- | :--- | :--- |
+| `deno task esbuild` | `deno run -A ./esbuild.ts` | Runs the production esbuild pipeline |
+| `deno task watch` | `deno run -A ./watch.ts` | Starts the real-time development watcher |
+| `deno task denobuild` | `deno run --unstable-bundle -A ./denobuild.ts` | Runs native Deno.bundle |
+| `deno task export` | `deno run -A ./export.ts` | Generates AI context snapshots |
+| `deno task test` | `deno test -P` | Executes all BDD unit and integration tests |
+| `deno task check` | `deno check ...` | Validates TypeScript types across the codebase |
+| `deno task lint` | `deno lint` | Lints all packages and scripts |
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT © 2026 Vanaware

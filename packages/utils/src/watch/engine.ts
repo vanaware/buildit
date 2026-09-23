@@ -1,134 +1,197 @@
 /**
  * @module @vanaware/buildit/watch/engine
- * @description Mecanismo programático para monitoramento contínuo (Watch Mode) com esbuild e Deno.
+ * @description Motor de desenvolvimento contínuo (Watch) utilizando esbuild context e @deno/esbuild-plugin.
  */
 
+import { join } from "@std/path";
 import * as esbuild from "esbuild";
-import { denoPlugin, } from "@deno/esbuild-plugin";
-import { join, } from "@std/path";
-import { copyStaticFiles, } from "../tools/paths.ts";
-import { buildEsbuildOptions, } from "../esbuild/engine.ts";
-import { readProjectVersion, } from "../tools/version.ts";
-import { resolverOrdemTargets, } from "../tools/targets.ts";
-import { validateTargetConfig, } from "../tools/validate.ts";
+import { denoPlugin } from "@deno/esbuild-plugin";
 import type {
-  TargetConfig,
+  WatchGlobalConfig,
+  WatchHandle,
   WatchOptions,
-  WatchResult,
+  WatchTargetConfig,
 } from "../tools/interfaces.ts";
+import {
+  cleanTarget,
+  copyStaticFiles,
+  listAssetsForCache,
+  resolveEntryPoints,
+  resolveOutputPaths,
+} from "../tools/paths.ts";
+import { readProjectVersion } from "../tools/version.ts";
+import { resolverOrdemTargets } from "../tools/targets.ts";
+import { validateTargetConfig } from "../tools/validate.ts";
 
 /**
- * Inicia o contexto de monitoramento contínuo para um alvo específico.
- *
- * @param targetName Nome do alvo
- * @param config Configuração do alvo
- * @param appVersion Versão atual da aplicação
- * @param denoJsoncPath Caminho para o deno.jsonc
- * @returns Contexto ativo do esbuild
+ * Constrói as opções do esbuild específicas para monitoramento contínuo.
  */
-export async function startTargetWatcher(
+export async function buildWatchEsbuildOptions(
   targetName: string,
-  config: TargetConfig,
+  config: WatchTargetConfig,
   appVersion: string,
-  denoJsoncPath: string,
+  listAssetsFn?: (distDir: string) => Promise<string[]>,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  validateTargetConfig(targetName, config,);
+  const finalDefine: Record<string, string> = {
+    ...config.define,
+    __APP_VERSION__: JSON.stringify(`v${appVersion}`),
+  };
 
-  console.log(`\n${"=".repeat(60,)}`,);
-  console.log(`👀 INICIANDO WATCH: ${targetName.toUpperCase()}`,);
-  console.log(`${"=".repeat(60,)}`,);
+  if (targetName === "sw" && listAssetsFn && config.distdir) {
+    const assets = await listAssetsFn(config.distdir);
+    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets);
+  }
 
-  // Copia arquivos estáticos no início
-  await copyStaticFiles(config, appVersion,);
-
-  const esbuildOptions = await buildEsbuildOptions(
-    targetName,
-    config,
-    appVersion,
+  const resolvedEntryPoints = resolveEntryPoints(
+    config.srcdir,
+    config.entryPoints,
   );
 
-  esbuildOptions.plugins = [
-    ...(esbuildOptions.plugins || []),
-    denoPlugin({ configPath: denoJsoncPath, },),
+  const { outfile, outdir } = resolveOutputPaths(config);
+
+  // deno-lint-ignore no-explicit-any
+  const options: any = {
+    entryPoints: resolvedEntryPoints,
+    sourcemap: config.sourcemap ?? "inline",
+  };
+
+  if (outfile) {
+    options.outfile = outfile;
+  } else if (outdir) {
+    options.outdir = outdir;
+  }
+
+  const optionalProps = [
+    "platform",
+    "format",
+    "bundle",
+    "minify",
+    "jsx",
+    "jsxImportSource",
+    "conditions",
+    "external",
+    "drop",
+    "write",
+    "legalComments",
+    "keepNames",
+    "loader",
+    "alias",
+    "inject",
+    "target",
+    "charset",
+    "logLevel",
+    "plugins",
   ];
 
-  const ctx = await esbuild.context(esbuildOptions,);
-  await ctx.watch();
+  for (const prop of optionalProps) {
+    // deno-lint-ignore no-explicit-any
+    if ((config as any)[prop] !== undefined) {
+      // deno-lint-ignore no-explicit-any
+      options[prop] = (config as any)[prop];
+    }
+  }
 
-  const resolvedOut = esbuildOptions.outfile ||
-    (config.distdir ? `${config.distdir}/` : "N/A");
-  console.log(`✅ [${targetName}] Watcher ativo!`);
-  console.log(`📁 Monitorando: ${config.srcdir ?? "."}/`);
-  console.log(`📦 Saída: ${resolvedOut}`);
-  console.log(`📌 Versão: v${appVersion}\n`);
+  if (config.banner !== undefined) {
+    const banner: { js?: string; css?: string } = {};
+    if (config.banner.js !== undefined) {
+      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion);
+    }
+    if (config.banner.css !== undefined) {
+      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion);
+    }
+    if (banner.js !== undefined || banner.css !== undefined) {
+      options.banner = banner;
+    }
+  }
 
-  return ctx;
+  if (config.footer !== undefined) {
+    const footer: { js?: string; css?: string } = {};
+    if (config.footer.js !== undefined) {
+      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion);
+    }
+    if (config.footer.css !== undefined) {
+      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion);
+    }
+    if (footer.js !== undefined || footer.css !== undefined) {
+      options.footer = footer;
+    }
+  }
+
+  options.define = finalDefine;
+  return options;
 }
 
 /**
- * Executa programaticamente o motor de watch para os alvos configurados.
- * A ordem de execução e inicialização é estritamente garantida pela ordem
- * declarada na configuração.
+ * Inicializa o processo de desenvolvimento contínuo (Watch) para os alvos configurados.
  *
- * @param opcoes Opções completas de execução do Watch
- * @returns Lista de resultados dos alvos inicializados
+ * @param opcoes Opções de execução do watch
+ * @returns Lista de handles de controle para encerramento gracioso
  */
 export async function watchEngine(
   opcoes: WatchOptions,
-): Promise<WatchResult[]> {
+): Promise<WatchHandle[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc");
+  const version = await readProjectVersion(denoJsoncPath, baseDir);
 
-  // Garantia da ordem exclusivamente pelo Engine
-  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
+  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets);
 
   if (targetsParaExecutar.length === 0) {
-    console.warn("⚠️ Nenhum alvo selecionado para watch.");
+    if (!opcoes.silencioso) {
+      console.warn("⚠️ Nenhum alvo selecionado para watch.");
+    }
     return [];
   }
 
-  // Lê a versão atual do projeto sem qualquer incremento (watch mode é 100% read-only de versão)
-  const currentVersion = await readProjectVersion(denoJsoncPath, baseDir,);
-
-  const resultados: WatchResult[] = [];
-  // deno-lint-ignore no-explicit-any
-  const activeContexts: any[] = [];
+  const handles: WatchHandle[] = [];
 
   for (const targetName of targetsParaExecutar) {
     const targetConfig = configs[targetName];
-    if (!targetConfig) {
-      console.warn(`⚠️ Alvo '${targetName}' não encontrado no config.`);
-      continue;
+    if (!targetConfig) continue;
+
+    validateTargetConfig(targetName, targetConfig);
+
+    if (!opcoes.silencioso) {
+      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`);
     }
 
-    try {
-      const ctx = await startTargetWatcher(
-        targetName,
-        targetConfig,
-        currentVersion,
-        denoJsoncPath,
-      );
-      activeContexts.push(ctx,);
-      resultados.push({
-        target: targetName,
-        success: true,
-        srcdir: targetConfig.srcdir,
-        distdir: targetConfig.distdir,
-      },);
-    } catch (error) {
-      console.error(`❌ Falha ao iniciar watcher para [${targetName}]:`, error,);
-      throw error;
+    if (targetConfig.clean && targetConfig.clean.length > 0 && targetConfig.distdir) {
+      await cleanTarget(targetConfig.distdir, targetConfig.clean);
     }
+
+    await copyStaticFiles(targetConfig, version);
+
+    const esbuildOptions = await buildWatchEsbuildOptions(
+      targetName,
+      targetConfig,
+      version,
+      listAssetsForCache,
+    );
+
+    esbuildOptions.plugins = [
+      ...(esbuildOptions.plugins || []),
+      denoPlugin({ configPath: denoJsoncPath }),
+    ];
+
+    const ctx = await esbuild.context(esbuildOptions);
+    await ctx.watch();
+
+    if (!opcoes.silencioso) {
+      console.log(`✅ [${targetName}] Monitorando alterações em tempo real...`);
+      const resolvedOutfile = esbuildOptions.outfile ||
+        (targetConfig.distdir ? `${targetConfig.distdir}/` : "disco");
+      console.log(`📦 Saída: ${resolvedOutfile}`);
+    }
+
+    handles.push({
+      target: targetName,
+      close: async () => {
+        await ctx.dispose();
+      },
+    });
   }
 
-  console.log("💡 Todos os watchers foram iniciados. Pressione Ctrl+C para encerrar.\n",);
-
-  if (!opcoes.unref) {
-    // Mantém o processo vivo indefinidamente em modo interativo
-    await new Promise(() => {},);
-  }
-
-  return resultados;
+  return handles;
 }

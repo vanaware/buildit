@@ -1,8 +1,12 @@
-# buildit
+# @vanaware/buildit
 
-Build orchestration, bundling, and AI context export utilities for Deno and Web projects.
+Build orchestration, continuous development watcher, bundling, and AI context export utilities for Deno and Web projects.
 
-`buildit` provides modular engines to bundle web applications using esbuild or native `Deno.bundle`, alongside an intelligent snapshot generator that formats codebase context into structured Markdown for LLMs.
+`buildit` provides 4 modular engines for modern web development:
+1. ⚡ **esbuild Engine**: Production-ready bundling with `@deno/esbuild-plugin` and asset pipelines.
+2. 👀 **Watch Engine**: Real-time continuous development rebuilder based on `esbuild.context`.
+3. 📦 **Deno.bundle Engine**: Native runtime bundling with zero external binary dependencies.
+4. 📝 **AI Context Exporter**: Intelligent snapshot generator structuring codebase context into Markdown for LLMs.
 
 ## Installation
 
@@ -10,123 +14,134 @@ Build orchestration, bundling, and AI context export utilities for Deno and Web 
 deno add jsr:@vanaware/buildit
 ```
 
-## Basic Usage
-
-Exporting codebase context for AI workflows:
-
-```ts
-import { runExport } from "jsr:@vanaware/buildit/export";
-
-// Generate an AI context snapshot for the UI target
-const result = await runExport({
-  target: "ui",
-  configPath: "./export.jsonc",
-});
-
-console.log(`Snapshot generated at ${result.outputPath}`);
-console.log(`Included ${result.filesCount} files in ${result.durationMs}ms`);
-```
-
 ## CLI Usage
 
-`buildit` includes CLI runners for all three engines. You can run them directly via `deno run`:
+`buildit` includes CLI runners for all four utilities. You can execute them directly via `deno run` or via JSR:
 
-### ⚡ esbuild CLI
-Bundle your application using the esbuild engine.
+### ⚡ esbuild CLI (Production Bundling)
 ```bash
-# Run with default esbuild.jsonc
+# Run all default targets defined in esbuild.jsonc
 deno run -A jsr:@vanaware/buildit/esbuild/cli
 
-# Specify targets and skip version bump
+# Run specific targets and skip version bump
 deno run -A jsr:@vanaware/buildit/esbuild/cli ui --noversion
 ```
 
-### 📦 Deno.bundle CLI
-Package your application using the native Deno.bundle engine.
+### 👀 Watch CLI (Continuous Development)
 ```bash
-# Run with default denobuild.jsonc
-deno run -A jsr:@vanaware/buildit/denobuild/cli
+# Start watching targets defined in watch.jsonc
+deno run -A jsr:@vanaware/buildit/watch/cli
 
-# Run specific targets
-deno run -A jsr:@vanaware/buildit/denobuild/cli ui
+# Watch a specific target
+deno run -A jsr:@vanaware/buildit/watch/cli ui
 ```
 
-### 📝 Export CLI
-Generate AI context snapshots.
+### 📦 Deno.bundle CLI (Native Packaging)
 ```bash
-# Run with default export.jsonc
+# Run with default denobuild.jsonc
+deno run --unstable-bundle -A jsr:@vanaware/buildit/denobuild/cli ui
+```
+
+### 📝 Export CLI (AI Context Snapshots)
+```bash
+# Export all default snapshots defined in export.jsonc
 deno run -A jsr:@vanaware/buildit/export/cli
 
-# Run specific modes
+# Export specific snapshots
 deno run -A jsr:@vanaware/buildit/export/cli ui docs
 ```
 
-## Features
+---
 
-- ⚡ **esbuild Pipeline**: High-speed bundling with `@deno/esbuild-plugin`, asset management, and version stamping.
-- 📦 **Native Deno Bundler**: Standalone packaging powered by `Deno.bundle` (`--unstable-bundle`) without external binary dependencies.
-- 📝 **AI Context Snapshots**: Structured Markdown generator with recursive path scanning, token-friendly delimiters, and anti-loop safeguards.
-- ⚙️ **Declarative JSONC Config**: Type-safe configuration loaders supporting `.jsonc` and JSON Schemas.
-- 🏷️ **Semantic Versioning**: Automated SemVer synchronization and build timestamp injection across workspaces.
+## 💡 Configuration Schemas ($schema)
 
-## Configuration Schemas
+All configuration files support official JSON Schemas for instant validation, autocomplete, and inline documentation in VSCode, Cursor, Zed, and Neovim.
 
-The configuration files support JSON Schemas for improved editor experience. You can find them in the `schema/` directory:
+The schemas are distributed inside the package under the `schema/` directory:
+- `schema/esbuild.json` (for `esbuild.jsonc`)
+- `schema/watch.json` (for `watch.jsonc`)
+- `schema/denobuild.json` (for `denobuild.jsonc`)
+- `schema/export.json` (for `export.jsonc`)
 
-- `packages/utils/schema/esbuild.json`
-- `packages/utils/schema/denobuild.json`
-- `packages/utils/schema/export.json`
+### How to use $schema in your files:
 
-To use them, add the `$schema` property to your config files:
+Add the `$schema` property pointing to the local schema or URL:
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/vanaware/buildit/main/packages/utils/schema/esbuild.json",
-  "targets": { ... }
+  "$schema": "./packages/utils/schema/esbuild.json",
+  "version": "1.0.0",
+  "targets": {
+    "ui": {
+      "entryPoints": ["main.tsx"],
+      "distdir": "dist",
+      "format": "esm"
+    }
+  }
 }
 ```
 
-## API Overview
+---
+
+## Programmatic API
+
+```ts
+import { esBuild } from "jsr:@vanaware/buildit/esbuild";
+import { watchEngine } from "jsr:@vanaware/buildit/watch";
+import { exportEngine } from "jsr:@vanaware/buildit/export";
+
+// 1. Run esbuild compilation
+await esBuild({
+  config: {
+    ui: {
+      entryPoints: ["packages/ui/src/main.tsx"],
+      distdir: "dist",
+    },
+  },
+  noversion: true,
+});
+
+// 2. Start continuous watch mode
+const handles = await watchEngine({
+  config: {
+    ui: {
+      entryPoints: ["packages/ui/src/main.tsx"],
+      distdir: "dist",
+      sourcemap: "inline",
+    },
+  },
+});
+
+// 3. Generate AI context snapshot
+await exportEngine({
+  config: {
+    ui: {
+      arquivoSaida: "snapshots/ui.md",
+      pastaBase: "packages/ui",
+      subpastasPermitidas: ["src"],
+      arquivosRaizPermitidos: ["deno.jsonc"],
+      extensoesPermitidas: [".ts", ".tsx"],
+      incluiVersao: true,
+      instrucaoCustomizada: "Contexto UI",
+    },
+  },
+});
+```
+
+## API Exports Overview
 
 | Export Path | Description |
 | :--- | :--- |
-| `.` | Root entrypoint re-exporting core types, configuration loaders, and version helpers. |
-| `./esbuild` | esbuild bundling engine, file watchers, asset copy, and manifest stampers. |
-| `./esbuild/cli` | CLI runner for esbuild pipelines. |
-| `./denobuild` | Native `Deno.bundle` packaging engine and defines injector. |
+| `.` | Root entrypoint with shared utilities, version sync, and target resolution helpers. |
+| `./esbuild` | esbuild bundling engine, static asset copier, and manifest stampers. |
+| `./esbuild/cli` | CLI runner for production esbuild pipelines. |
+| `./watch` | Continuous development watch engine with `esbuild.context`. |
+| `./watch/cli` | CLI runner for continuous watch and live rebuilds. |
+| `./denobuild` | Native `Deno.bundle` packaging engine. |
 | `./denobuild/cli` | CLI runner for native `Deno.bundle`. |
-| `./export` | LLM context generator, AST/file scanner, and Markdown formatter. |
+| `./export` | LLM context generator, path scanner, and Markdown formatter. |
 | `./export/cli` | CLI runner for AI context exports. |
-| `./config` | JSONC configuration parsers and CLI flag utilities. |
-| `./interfaces` | TypeScript interfaces, target configuration types, and contracts. |
 
-## Examples
+## License
 
-### Bundling with esbuild
-
-```ts
-import { runEsbuild } from "jsr:@vanaware/buildit/esbuild";
-
-await runEsbuild({
-  targets: ["ui"],
-  configPath: "./esbuild.jsonc",
-  noversion: true,
-});
-```
-
-### Packaging with Native Deno.bundle
-
-```ts
-import { runDenoBuild } from "jsr:@vanaware/buildit/denobuild";
-
-await runDenoBuild({
-  targets: ["ui"],
-  configPath: "./denobuild.jsonc",
-  noversion: true,
-});
-```
-
-## Documentation
-
-For full API references, type definitions, and generated docs, visit the
-[package page on JSR](https://jsr.io/@vanaware/buildit).
+MIT

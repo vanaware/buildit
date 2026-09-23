@@ -1,4 +1,4 @@
-export { loadConfig, } from "./jsonc.ts";
+export { loadConfig } from "./jsonc.ts";
 
 // ⚙️ Gerenciamento de Versão
 export {
@@ -8,9 +8,9 @@ export {
 } from "./version.ts";
 
 // 🛠️ Utilitários de CLI e Validação
-export { parseArgs, } from "./cli-flags.ts";
-export { resolverOrdemTargets, } from "./targets.ts";
-export { validateTargetConfig, } from "./validate.ts";
+export { parseArgs } from "./cli-flags.ts";
+export { validateTargetConfig } from "./validate.ts";
+export { resolverOrdemTargets } from "./targets.ts";
 export {
   cleanTarget,
   copyStaticFiles,
@@ -43,10 +43,11 @@ export type {
   ParsedArgs,
   ParsedVersion,
   TargetConfig,
-  TargetMode,
   VersionUpdateOptions,
   WatchConfigFile,
   WatchConfigResult,
+  WatchGlobalConfig,
+  WatchHandle,
   WatchOptions,
-  WatchResult,
+  WatchTargetConfig,
 } from "./interfaces.ts";
