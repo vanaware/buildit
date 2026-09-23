@@ -1,10 +1,7 @@
 import { copy, emptyDir, ensureDir, walk, } from "@std/fs";
 import { dirname, isAbsolute, join, } from "@std/path";
 
-import type {
-  DenoBundleTargetConfig,
-  TargetConfig,
-} from "./interfaces.ts";
+import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
 
 // ============================================================================
 // 🛡️ VALIDAÇÃO DE PATHS (pura, testável)
@@ -243,4 +240,26 @@ export async function copyStaticFiles(
       console.log(`⚠️ ${srcHtml} não encontrado, pulando cópia do HTML.`,);
     }
   }
+}
+
+/**
+ * Procura por deno.json ou deno.jsonc no diretório "./" (cwd).
+ * Retorna o caminho absoluto do primeiro encontrado, ou null.
+ * Prioriza deno.json sobre deno.jsonc (mesma ordem do Deno).
+ */
+export function findDenoConfig(): string | null {
+  const candidates = ["deno.json", "deno.jsonc",];
+
+  for (const name of candidates) {
+    try {
+      const stat = Deno.statSync(name,); // relativo ao cwd
+      if (stat.isFile) return name;
+    } catch (err) {
+      if (err instanceof Deno.errors.NotFound) continue;
+      if (err instanceof Deno.errors.PermissionDenied) continue;
+      throw err;
+    }
+  }
+
+  return null;
 }
