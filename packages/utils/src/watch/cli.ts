@@ -30,8 +30,8 @@ export function watchCli(): Command<any, any, any, any, any, any, any, any> {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     })
-    .arguments("[targets...:string]", ["Alvo de watch (máximo 1 permitido)"])
-    .action(async function (options, ...args): Promise<void> {
+    .arguments("[target:string]")
+    .action(async function (options, target?: string): Promise<void> {
       const baseDir = (options.baseDir as string) || ".";
       const configPath = options.appConfig as string;
       const loaded = await carregarConfigWatch(configPath, baseDir);
@@ -46,7 +46,7 @@ export function watchCli(): Command<any, any, any, any, any, any, any, any> {
       try {
         const handles = await watchEngine({
           config: configs,
-          targets: args.length > 0 ? (args as string[]) : undefined,
+          target: target || undefined,
           baseDir,
           denoJsoncPath: denoConfigPath,
           silencioso: false,

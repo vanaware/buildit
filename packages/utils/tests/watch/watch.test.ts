@@ -2,6 +2,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { carregarConfigWatch, CONFIGURACOES_PADRAO_WATCH } from "../../src/watch/config.ts";
 import { watchEngine } from "../../src/watch/engine.ts";
+import { watchCli } from "../../src/watch/cli.ts";
 import type { WatchGlobalConfig } from "../../src/tools/interfaces.ts";
 
 describe("carregarConfigWatch", () => {
@@ -35,8 +36,53 @@ describe("carregarConfigWatch", () => {
   });
 });
 
+describe("watchCli Validação de Argumentos (Cliffy)", () => {
+  it("Cliffy deve rejeitar quando mais de 1 argumento posicional for passado", async () => {
+    const cli = watchCli().throwErrors();
+    await assertRejects(
+      async () => {
+        await cli.parse(["ui", "sw"]);
+      },
+      Error,
+      "Too many arguments: sw",
+    );
+  });
+});
+
 describe("watchEngine Restrições de Alvos e Lock", () => {
-  it("deve rejeitar se múltiplos alvos forem passados", async () => {
+  it("deve aceitar target como string única", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
+      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
+      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+
+      const config: WatchGlobalConfig = {
+        first: {
+          default: true,
+          entryPoints: ["main.ts"],
+          srcdir: `${tempDir}/src`,
+          distdir: `${tempDir}/dist`,
+        },
+      };
+
+      const handles = await watchEngine({
+        config,
+        target: "first",
+        baseDir: tempDir,
+        lockFile: `${tempDir}/.watch.lock`,
+        silencioso: true,
+      });
+
+      assertEquals(handles.length, 1);
+      assertEquals(handles[0].target, "first");
+      await handles[0].close();
+    } finally {
+      await Deno.remove(tempDir, { recursive: true });
+    }
+  });
+
+  it("deve rejeitar se múltiplos alvos forem passados no array targets", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const config: WatchGlobalConfig = {
@@ -88,7 +134,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         async () => {
           await watchEngine({
             config,
-            targets: ["inexistente"],
+            target: "inexistente",
             baseDir: tempDir,
             lockFile: `${tempDir}/.watch.lock`,
             silencioso: true,
@@ -161,7 +207,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       const lockPath = `${tempDir}/.watch.lock`;
       const handles = await watchEngine({
         config,
-        targets: ["first"],
+        target: "first",
         baseDir: tempDir,
         lockFile: lockPath,
         silencioso: true,
@@ -172,7 +218,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
           async () => {
             await watchEngine({
               config,
-              targets: ["first"],
+              target: "first",
               baseDir: tempDir,
               lockFile: lockPath,
               silencioso: true,

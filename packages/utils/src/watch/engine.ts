@@ -136,24 +136,24 @@ export async function watchEngine(
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc");
   const version = await readProjectVersion(denoJsoncPath, baseDir);
 
-  // 1. Validação estrita: apenas 1 literal de alvo é permitido
-  if (opcoes.targets && opcoes.targets.length > 1) {
-    throw new Error(
-      `❌ O modo watch suporta apenas 1 alvo por execução. Foram fornecidos ${opcoes.targets.length}: ${
-        opcoes.targets.join(", ")
-      }.`,
-    );
+  // 1. Resolução do alvo solicitado (prioriza target singular ou primeiro elemento de targets)
+  let requested = opcoes.target;
+  if (!requested && opcoes.targets && opcoes.targets.length > 0) {
+    if (opcoes.targets.length > 1) {
+      throw new Error(
+        `❌ O modo watch suporta apenas 1 alvo por execução. Foram fornecidos ${opcoes.targets.length}: ${
+          opcoes.targets.join(", ")
+        }.`,
+      );
+    }
+    requested = opcoes.targets[0];
   }
 
   // 2. Resolução do alvo: se não for passado literal, executa apenas o primeiro default
   let targetName: string;
   const configKeys = Object.keys(configs);
 
-  if (opcoes.targets && opcoes.targets.length === 1) {
-    const requested = opcoes.targets[0];
-    if (!requested) {
-      return [];
-    }
+  if (requested) {
     const matchingKey = configKeys.find(
       (k) => k.toLowerCase() === requested.toLowerCase(),
     );

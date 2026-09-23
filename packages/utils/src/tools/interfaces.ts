@@ -343,7 +343,9 @@ export interface WatchConfigResult {
 export interface WatchOptions {
   /** Configuração direta de alvos em memória */
   config: WatchGlobalConfig;
-  /** Alvos específicos a monitorar. No modo watch, no máximo 1 alvo é permitido. Se não fornecido, executa o primeiro alvo padrão. */
+  /** Alvo específico a monitorar (no máximo 1 permitido). Se não fornecido, executa o primeiro alvo padrão. */
+  target?: string;
+  /** Alvos a monitorar (máximo 1 permitido no modo watch). Se não fornecido, executa o primeiro alvo padrão. */
   targets?: string[];
   /** Diretório base de resolução */
   baseDir?: string;
