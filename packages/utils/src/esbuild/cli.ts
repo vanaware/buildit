@@ -24,41 +24,53 @@ export function esBuildCli() {
     .name("esbuild",)
     .description("BuildIt esbuild Orchestrator",)
     .version(APP_VERSION,)
-    .option("-c, --config [file]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
       default: "esbuild.jsonc",
       env: { prefix: "ESBUILD_", },
     },)
-    .option("-n, --noversion", "Desabilita o incremento automático de versão", {
-      default: false,
-    },)
-    .option("-f, --forcepackagesversion", "Propaga a versão para os subpacotes do workspace", {
-      default: false,
-    },)
-    .option("--version-path <path:string>", "Diretório ou arquivo adicional onde salvar o version.ts", {
-      collect: true,
-    },)
-    .option("--deno-jsonc [file]", "Configuração do Deno", {
-      default: findDenoConfig(),
-      env: { prefix: "DENO_", },
+    .option(
+      "-n, --noVersion",
+      "Desabilita o incremento automático de versão",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "-f, --force-packages-version",
+      "Propaga a versão para os subpacotes do workspace",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "--version-path [path:string]",
+      "Diretório ou arquivo adicional onde salvar o version.ts",
+      {
+        collect: true,
+      },
+    )
+    .option("--deno-config [file:string]", "Configuração do Deno", {
+      default: findDenoConfig() ?? "deno.jsonc",
+      env: true,
     },)
     .arguments("[targets...:string]", ["Alvos de build",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
       const baseDir = ".";
-      const configPath = options.config as string;
+      const configPath = options.appConfig as string;
       const loaded = await carregarConfigEsbuild(configPath, baseDir,);
       const configs = loaded.targets;
 
       const rawArgs = [
         ...args,
-        ...(options.noversion ? ["noversion",] : []),
+        ...(options.noVersion ? ["noversion",] : []),
       ];
       const { targets, globalNoVersion, watchTarget, } = parseArgs(
         rawArgs,
         configs,
       );
 
-      const DENO_JSONC_PATH = options.denoJsonc as string || "deno.jsonc";
+      const DENO_JSONC_PATH = options.denoConfig as string || "deno.jsonc";
 
       console.log(
         "\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)",
@@ -79,8 +91,9 @@ export function esBuildCli() {
         const finalVersion = await updateProjectVersion({
           denoJsonPath: DENO_JSONC_PATH,
           noversion: globalNoVersion || (watchTarget !== null),
-          versionPaths: (options.versionPath as string[]) ?? loaded.versionPaths,
-          forcepackagesversion: options.forcepackagesversion ??
+          versionPaths: (options.versionPath as string[]) ??
+            loaded.versionPaths,
+          forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
         },);
 

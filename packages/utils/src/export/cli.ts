@@ -94,7 +94,7 @@ export function exportCli() {
     .name("export",)
     .description("BuildIt Context Exporter",)
     .version(APP_VERSION,)
-    .option("-c, --config [file]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
       default: "export.jsonc",
       env: { prefix: "EXPORT_", },
     },)
@@ -102,8 +102,8 @@ export function exportCli() {
       default: "./",
       env: true,
     },)
-    .option("--deno-jsonc [file]", "Configuração do Deno", {
-      default: findDenoConfig(),
+    .option("--deno-config [file:string]", "Configuração do Deno", {
+      default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     },)
     .arguments("[modos...:string]", ["Modos de exportação",],)
@@ -115,7 +115,7 @@ export function exportCli() {
       try {
         await exportEngine({
           modos: args,
-          caminhoConfig: options.config as string,
+          caminhoConfig: options.appConfig as string,
           versaoApp: await readProjectVersion(),
         },);
 

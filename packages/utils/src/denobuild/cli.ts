@@ -18,27 +18,39 @@ export function denoBuildCli() {
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
     .version(APP_VERSION,)
-    .option("-c, --config [file]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
       default: "denobuild.jsonc",
       env: { prefix: "DENOBUILD_", },
     },)
-    .option("-n, --noversion", "Desabilita o incremento automático de versão", {
-      default: false,
-    },)
-    .option("-f, --forcepackagesversion", "Propaga a versão para os subpacotes do workspace", {
-      default: false,
-    },)
-    .option("--version-path <path:string>", "Diretório ou arquivo adicional onde salvar o version.ts", {
-      collect: true,
-    },)
-    .option("--deno-jsonc [file]", "Configuração do Deno", {
-      default: findDenoConfig(),
-      env: { prefix: "DENO_", },
+    .option(
+      "-n, --noVersion",
+      "Desabilita o incremento automático de versão",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "-f, --force-packages-version",
+      "Propaga a versão para os subpacotes do workspace",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "--version-path [path:string]",
+      "Diretório ou arquivo adicional onde salvar o version.ts",
+      {
+        collect: true,
+      },
+    )
+    .option("--deno-config [file:string]", "Configuração do Deno", {
+      default: findDenoConfig() ?? "deno.jsonc",
+      env: true,
     },)
     .arguments("[targets...:string]", ["Alvos de build",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
-      const configPath = options.config as string;
+      const configPath = options.appConfig as string;
       const loaded = await carregarConfigDenoBuild(configPath,);
 
       console.log(
@@ -49,9 +61,10 @@ export function denoBuildCli() {
       try {
         await denoBuild({
           targets: args,
-          noversion: options.noversion,
-          versionPaths: (options.versionPath as string[]) ?? loaded.versionPaths,
-          forcepackagesversion: options.forcepackagesversion ??
+          noversion: options.noVersion,
+          versionPaths: (options.versionPath as string[]) ??
+            loaded.versionPaths,
+          forcepackagesversion: options.forcePackagesVersion ??
             loaded.forcepackagesversion,
           caminhoConfig: configPath,
           config: loaded.targets,
