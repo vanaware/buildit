@@ -7,7 +7,6 @@ import { join } from "@std/path";
 import * as esbuild from "esbuild";
 import { denoPlugin } from "@deno/esbuild-plugin";
 import type {
-  WatchGlobalConfig,
   WatchHandle,
   WatchOptions,
   WatchTargetConfig,
@@ -20,8 +19,8 @@ import {
   resolveOutputPaths,
 } from "../tools/paths.ts";
 import { readProjectVersion } from "../tools/version.ts";
-import { resolverOrdemTargets } from "../tools/targets.ts";
 import { validateTargetConfig } from "../tools/validate.ts";
+import { acquireWatchLock } from "./lock.ts";
 
 /**
  * Constrói as opções do esbuild específicas para monitoramento contínuo.
@@ -123,10 +122,11 @@ export async function buildWatchEsbuildOptions(
 }
 
 /**
- * Inicializa o processo de desenvolvimento contínuo (Watch) para os alvos configurados.
+ * Inicializa o processo de desenvolvimento contínuo (Watch) para um único alvo.
+ * Restringe estritamente a execução a 1 alvo por vez e impede instâncias simultâneas via lock.
  *
  * @param opcoes Opções de execução do watch
- * @returns Lista de handles de controle para encerramento gracioso
+ * @returns Lista contendo o handle de controle para encerramento gracioso
  */
 export async function watchEngine(
   opcoes: WatchOptions,
@@ -136,28 +136,75 @@ export async function watchEngine(
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc");
   const version = await readProjectVersion(denoJsoncPath, baseDir);
 
-  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets);
+  // 1. Validação estrita: apenas 1 literal de alvo é permitido
+  if (opcoes.targets && opcoes.targets.length > 1) {
+    throw new Error(
+      `❌ O modo watch suporta apenas 1 alvo por execução. Foram fornecidos ${opcoes.targets.length}: ${
+        opcoes.targets.join(", ")
+      }.`,
+    );
+  }
 
-  if (targetsParaExecutar.length === 0) {
-    if (!opcoes.silencioso) {
-      console.warn("⚠️ Nenhum alvo selecionado para watch.");
+  // 2. Resolução do alvo: se não for passado literal, executa apenas o primeiro default
+  let targetName: string;
+  const configKeys = Object.keys(configs);
+
+  if (opcoes.targets && opcoes.targets.length === 1) {
+    const requested = opcoes.targets[0];
+    if (!requested) {
+      return [];
     }
+    const matchingKey = configKeys.find(
+      (k) => k.toLowerCase() === requested.toLowerCase(),
+    );
+    if (!matchingKey || !configs[matchingKey]) {
+      throw new Error(
+        `❌ Alvo '${requested}' não encontrado na configuração de watch. Alvos disponíveis: ${
+          configKeys.join(", ")
+        }.`,
+      );
+    }
+    targetName = matchingKey;
+  } else {
+    // Se não for passado nenhum literal, busca o primeiro com default !== false
+    const defaultTargets = configKeys.filter(
+      (k) => configs[k]?.default !== false,
+    );
+
+    const firstDefault = defaultTargets[0];
+    if (!firstDefault) {
+      if (!opcoes.silencioso) {
+        console.warn("⚠️ Nenhum alvo configurado para watch.");
+      }
+      return [];
+    }
+
+    targetName = firstDefault;
+  }
+
+  const targetConfig = configs[targetName];
+  if (!targetConfig) {
     return [];
   }
 
-  const handles: WatchHandle[] = [];
+  validateTargetConfig(targetName, targetConfig);
 
-  for (const targetName of targetsParaExecutar) {
-    const targetConfig = configs[targetName];
-    if (!targetConfig) continue;
+  // 3. Bloqueio de concorrência: adquire o lock para o watch
+  const releaseLock = await acquireWatchLock(
+    baseDir,
+    targetName,
+    opcoes.lockFile,
+  );
 
-    validateTargetConfig(targetName, targetConfig);
-
+  try {
     if (!opcoes.silencioso) {
       console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`);
     }
 
-    if (targetConfig.clean && targetConfig.clean.length > 0 && targetConfig.distdir) {
+    if (
+      targetConfig.clean && targetConfig.clean.length > 0 &&
+      targetConfig.distdir
+    ) {
       await cleanTarget(targetConfig.distdir, targetConfig.clean);
     }
 
@@ -185,13 +232,20 @@ export async function watchEngine(
       console.log(`📦 Saída: ${resolvedOutfile}`);
     }
 
-    handles.push({
+    const handle: WatchHandle = {
       target: targetName,
       close: async () => {
-        await ctx.dispose();
+        try {
+          await ctx.dispose();
+        } finally {
+          await releaseLock();
+        }
       },
-    });
-  }
+    };
 
-  return handles;
+    return [handle];
+  } catch (error) {
+    await releaseLock();
+    throw error;
+  }
 }

@@ -12,7 +12,8 @@ import { findDenoConfig } from "../tools/paths.ts";
 /**
  * Cria a instância do comando CLI para o modo watch.
  */
-export function watchCli() {
+// deno-lint-ignore no-explicit-any
+export function watchCli(): Command<any, any, any, any, any, any, any, any> {
   return new Command()
     .name("watch")
     .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)")
@@ -29,7 +30,7 @@ export function watchCli() {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     })
-    .arguments("[targets...:string]", ["Alvos de watch"])
+    .arguments("[targets...:string]", ["Alvo de watch (máximo 1 permitido)"])
     .action(async function (options, ...args): Promise<void> {
       const baseDir = (options.baseDir as string) || ".";
       const configPath = options.appConfig as string;
@@ -45,7 +46,7 @@ export function watchCli() {
       try {
         const handles = await watchEngine({
           config: configs,
-          targets: args.length > 0 ? args : undefined,
+          targets: args.length > 0 ? (args as string[]) : undefined,
           baseDir,
           denoJsoncPath: denoConfigPath,
           silencioso: false,
@@ -58,10 +59,27 @@ export function watchCli() {
 
         console.log("\n💡 Pressione Ctrl+C para encerrar o monitoramento.\n");
 
+        // Tratamento gracioso de sinais de encerramento
+        const onSignal = async () => {
+          console.log("\n🛑 Encerrando modo watch...");
+          for (const handle of handles) {
+            await handle.close();
+          }
+          Deno.exit(0);
+        };
+
+        try {
+          Deno.addSignalListener("SIGINT", onSignal);
+          Deno.addSignalListener("SIGTERM", onSignal);
+        } catch {
+          // Ignora se o runtime não suportar SignalListener
+        }
+
         // Manter o processo vivo
         await new Promise(() => {});
       } catch (error) {
-        console.error("\n🛑 Falha na inicialização do Watch:", error);
+        const mensagem = error instanceof Error ? error.message : String(error);
+        console.error(`\n🛑 Falha na inicialização do Watch:\n${mensagem}`);
         Deno.exit(1);
       }
     });

@@ -4,15 +4,18 @@
  */
 
 import { Command, } from "@cliffy/command";
+import { readProjectVersion, } from "../tools/version.ts";
 import { carregarConfigDenoBuild, } from "./config.ts";
 import { denoBuild, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
+import { parseArgs, } from "../tools/cli-flags.ts";
 
 /**
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
  */
-export function denoBuildCli() {
+// deno-lint-ignore no-explicit-any
+export function denoBuildCli(): Command<any, any, any, any, any, any, any, any> {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
@@ -44,7 +47,15 @@ export function denoBuildCli() {
       const loaded = await carregarConfigDenoBuild(configPath, baseDir,);
       const configs = loaded.targets;
 
-      const rawTargets = args.length > 0 ? args : undefined;
+      const rawArgs = [
+        ...args,
+        ...(options.noversion ? ["noversion",] : []),
+      ];
+
+      const { targets, globalNoVersion, } = parseArgs(
+        rawArgs,
+        configs,
+      );
 
       console.log(
         "\n🚀 Iniciando Orquestrador de Build BuildIt (denobuild / Deno.bundle API)",
@@ -52,16 +63,18 @@ export function denoBuildCli() {
       console.log(`   📦 Motor: Deno.bundle (nativo, --unstable-bundle)`,);
 
       console.log(
-        `📋 Alvos solicitados: ${rawTargets ? rawTargets.join(", ") : "(padrão)"}`,
+        `📋 Alvos de build (ordem segura do CONFIG): ${
+          targets.join(", ",) || "(nenhum)"
+        }`,
       );
-      console.log(`🔒 Noversion: ${options.noversion}\n`,);
+      console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
       try {
         await denoBuild({
           config: configs,
-          targets: rawTargets,
+          targets,
           baseDir,
-          noversion: options.noversion,
+          noversion: globalNoVersion,
           versionPaths: loaded.versionPaths,
           forcepackagesversion: loaded.forcepackagesversion,
           denoJsoncPath: options.denoConfig as string,

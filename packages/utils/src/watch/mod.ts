@@ -6,3 +6,4 @@
 export * from "./engine.ts";
 export * from "./config.ts";
 export * from "./cli.ts";
+export * from "./lock.ts";

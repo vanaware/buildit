@@ -52,6 +52,7 @@ describe("esbuild - paths", () => {
 describe("esbuild - config", () => {
   it("deve ter configurações padrão válidas", () => {
     assert(CONFIGURACOES_PADRAO.ui !== undefined);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.mode, "build");
+    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true);
+    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser");
   });
 });

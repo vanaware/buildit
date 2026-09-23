@@ -315,6 +315,7 @@ export interface WatchTargetConfig {
 
 /** Configuração global de alvos do modo Watch */
 export interface WatchGlobalConfig {
+  /** Configuração específica de cada alvo de watch indexada por seu nome */
   [targetName: string]: WatchTargetConfig;
 }
 
@@ -334,6 +335,7 @@ export interface WatchConfigFile {
 
 /** Resultado do carregamento da configuração do Watch */
 export interface WatchConfigResult {
+  /** Mapeamento de alvos carregados prontos para monitoramento */
   targets: WatchGlobalConfig;
 }
 
@@ -341,10 +343,12 @@ export interface WatchConfigResult {
 export interface WatchOptions {
   /** Configuração direta de alvos em memória */
   config: WatchGlobalConfig;
-  /** Alvos específicos a monitorar. Se não fornecido, executa os alvos padrão. */
+  /** Alvos específicos a monitorar. No modo watch, no máximo 1 alvo é permitido. Se não fornecido, executa o primeiro alvo padrão. */
   targets?: string[];
   /** Diretório base de resolução */
   baseDir?: string;
+  /** Caminho customizado opcional para o arquivo de lock de processo */
+  lockFile?: string;
   /** Caminho para o deno.jsonc raiz */
   denoJsoncPath?: string;
   /** Se true, suprime logs não críticos */

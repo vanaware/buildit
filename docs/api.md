@@ -108,6 +108,8 @@ O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. 
 
 - **Sem flags redundantes**: Não requer `mode` nem `watch: boolean` (todo alvo watch é intrinsecamente contínuo).
 - **Sem poluição de versão**: O modo watch lê a versão atual sem incrementá-la.
+- **Alvo Único por Execução**: Embora múltiplos alvos possam ser definidos na configuração, o motor do watch permite a execução de **apenas 1 alvo por vez**. Se mais de um alvo for informado na CLI, o processo rejeitará com uma mensagem de erro clara. Se nenhum alvo for especificado, apenas o primeiro alvo com `default: true` será executado.
+- **Lock de Concorrência Exclusivo**: Para prevenir conflitos de portas, compilações duplicadas ou gravação concorrente em disco, a engine adquire automaticamente um lock de processo (`.buildit-watch.lock`). Se outra instância do watch estiver ativa no mesmo projeto, uma nova execução é impedida até o encerramento do processo anterior.
 
 ---
 
