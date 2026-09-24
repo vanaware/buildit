@@ -309,3 +309,97 @@ export async function updateProjectVersion(
     currentVersion: finalVersion,
   },);
 }
+
+/**
+ * Procura deno.jsonc (preferido) ou deno.json subindo a árvore de diretórios a partir de startDir.
+ * Equivalente TypeScript para a função `find_deno_file` de `lib-version.sh`.
+ *
+ * @param startDir Diretório inicial para busca (padrão: ".")
+ * @returns Caminho do arquivo encontrado ou null caso não encontre
+ *
+ * @example
+ * ```typescript
+ * const file = findDenoFile();
+ * console.log(file); // ".../deno.jsonc"
+ * ```
+ */
+export function findDenoFile(startDir: string = ".",): string | null {
+  try {
+    let current = isAbsolute(startDir,) ? startDir : Deno.realPathSync(startDir,);
+    while (current && current !== "/") {
+      const jsonc = join(current, "deno.jsonc",);
+      try {
+        if (Deno.statSync(jsonc,).isFile) return jsonc;
+      } catch {
+        // tenta próximo
+      }
+
+      const json = join(current, "deno.json",);
+      try {
+        if (Deno.statSync(json,).isFile) return json;
+      } catch {
+        // tenta próximo
+      }
+
+      const parent = dirname(current,);
+      if (parent === current) break;
+      current = parent;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Extrai o valor bruto do campo "version" a partir do conteúdo textual de um arquivo deno.json[c].
+ * Equivalente TypeScript para a função `extract_raw_version` de `lib-version.sh`.
+ *
+ * @param content Conteúdo textual do arquivo JSON/JSONC
+ * @returns Versão bruta encontrada ou null
+ *
+ * @example
+ * ```typescript
+ * const raw = extractRawVersion('{\n  "version": "0.3.14#abc1234"\n}'); // "0.3.14#abc1234"
+ * ```
+ */
+export function extractRawVersion(content: string,): string | null {
+  const match = content.match(/^[ \t]*"version"\s*:\s*"([^"]*)"/m,);
+  return match && match[1] !== undefined ? match[1] : null;
+}
+
+/**
+ * Normaliza qualquer string de versão para o formato semver canônico estrito "MAJOR.MINOR.PATCH".
+ * Remove prefixos como "v", metadados de build (+build), identificadores de pre-release (-alpha)
+ * e sufixos de commit hash (#hash), garantindo exatamente 3 componentes numéricos.
+ * Equivalente TypeScript para a função `sanitize_version` de `lib-version.sh`.
+ *
+ * @param raw Versão original bruta (ex: "v1.2.3-beta+exp.sha.5114f85", "0.3.14#muesu7z0")
+ * @returns Versão semver sanitizada (ex: "1.2.3", "0.3.14")
+ *
+ * @example
+ * ```typescript
+ * sanitizeVersion("v0.3.14#abc"); // "0.3.14"
+ * sanitizeVersion("1.2"); // "1.2.0"
+ * sanitizeVersion("invalid"); // "0.0.0"
+ * ```
+ */
+export function sanitizeVersion(raw: string,): string {
+  if (!raw) return "0.0.0";
+  // Remove caracteres não-numéricos no início (ex: "v")
+  let clean = raw.replace(/^[^0-9]+/, "",);
+  // Remove sufixos iniciados por '-', '+', ou '#'
+  clean = clean.replace(/[-+#].*$/, "",);
+  // Remove tudo exceto dígitos e pontos
+  clean = clean.replace(/[^0-9.]/g, "",);
+  // Remove múltiplos pontos seguidos e pontos nas pontas
+  clean = clean.replace(/\.+/g, ".",).replace(/^\./, "",).replace(/\.$/, "",);
+
+  const parts = clean.split(".",);
+  const ma = parts[0] && /^\d+$/.test(parts[0],) ? parts[0] : "0";
+  const mi = parts[1] && /^\d+$/.test(parts[1],) ? parts[1] : "0";
+  const pa = parts[2] && /^\d+$/.test(parts[2],) ? parts[2] : "0";
+
+  return `${ma}.${mi}.${pa}`;
+}
+

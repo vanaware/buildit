@@ -127,3 +127,11 @@ Explicação:
 - [x] Nome do projeto parametrizado via opção `projeto` (padrão: "BuildIt") tanto em nível global quanto por modo em `export.jsonc`
 - [x] Esquema `packages/utils/schema/export.json` e interfaces em `interfaces.ts` atualizados com JSDoc completo
 - [x] Testes BDD em `packages/utils/tests/export/utils.test.ts` cobrindo cenários com cabeçalho padrão, cabeçalho customizado e nome de projeto customizado
+
+**TODO LIST 3**
+- [x] Portabilidade de `lib-version.sh` para TypeScript em `packages/utils/src/tools/version.ts`
+- [x] Implementação de `sanitize-version` CLI com Cliffy em `packages/utils/src/version/sanitize/`
+- [x] Implementação de `tag-version` CLI com Cliffy em `packages/utils/src/version/tag/`
+- [x] Exportação dos novos módulos em `@vanaware/buildit` (JSR ready)
+- [x] Criação de runners na raiz (`sanitize-version.ts`, `tag-version.ts`) e atualização de `deno.jsonc` tasks
+- [x] Testes BDD completos para os novos utilitários de versão

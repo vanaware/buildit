@@ -367,3 +367,58 @@ export interface EsbuildResult {
   success: boolean;
   durationMs: number;
 }
+
+/** Opções para execução de sanitização de versão em arquivos deno.json[c]. */
+export interface SanitizeVersionOptions {
+  /** Caminho do arquivo a ser sanitizado. Se omitido, busca recursivamente pelo mais próximo. */
+  filePath?: string;
+  /** Diretório base de busca caso filePath não seja especificado. */
+  baseDir?: string;
+  /** Se true, não emite logs no console durante a execução. */
+  silencioso?: boolean;
+}
+
+/** Resultado da operação de sanitização de versão. */
+export interface SanitizeVersionResult {
+  /** Caminho do arquivo processado. */
+  filePath: string;
+  /** Versão original encontrada no arquivo. */
+  rawVersion: string;
+  /** Versão sanitizada no formato semver canônico (MAJOR.MINOR.PATCH). */
+  sanitizedVersion: string;
+  /** Indica se o arquivo em disco foi modificado. */
+  updated: boolean;
+}
+
+/** Opções para criação e publicação de tags git baseadas na versão. */
+export interface TagVersionOptions {
+  /** Caminho do arquivo deno.json[c]. Se omitido, busca automaticamente. */
+  file?: string;
+  /** Mensagem customizada do commit. Padrão: "Versão vMAJOR.MINOR". */
+  message?: string;
+  /** Se true, executa a sanitização do arquivo deno.json[c] em disco antes de comitar. */
+  sanitize?: boolean;
+  /** Se true, apenas simula as operações do git sem persistir commits ou tags. */
+  dryRun?: boolean;
+  /** Diretório base de execução. */
+  baseDir?: string;
+  /** Se true, não emite logs no console durante a execução. */
+  silencioso?: boolean;
+}
+
+/** Resultado da operação de tag git. */
+export interface TagVersionResult {
+  /** Nome da tag gerada (ex: "v0.3"). */
+  tagName: string;
+  /** Versão original bruta. */
+  rawVersion: string;
+  /** Versão semver sanitizada. */
+  sanitizedVersion: string;
+  /** Mensagem utilizada no commit. */
+  message: string;
+  /** Se o repositório foi alterado e comitado. */
+  committed: boolean;
+  /** Se a tag foi criada e publicada. */
+  tagged: boolean;
+}
+

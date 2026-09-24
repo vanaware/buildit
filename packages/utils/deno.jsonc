@@ -41,6 +41,10 @@
     "./export": "./src/export/mod.ts",
     "./export/cli": "./src/export/cli.ts",
     "./denobuild": "./src/denobuild/mod.ts",
-    "./denobuild/cli": "./src/denobuild/cli.ts"
+    "./denobuild/cli": "./src/denobuild/cli.ts",
+    "./sanitize-version": "./src/version/sanitize/mod.ts",
+    "./sanitize-version/cli": "./src/version/sanitize/cli.ts",
+    "./tag-version": "./src/version/tag/mod.ts",
+    "./tag-version/cli": "./src/version/tag/cli.ts"
   }
 }

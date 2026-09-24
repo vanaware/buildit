@@ -2,9 +2,19 @@ export { loadConfig } from "./jsonc.ts";
 
 // ⚙️ Gerenciamento de Versão
 export {
+  currentVersion,
+  extractRawVersion,
+  extractVersionFromContent,
+  findDenoFile,
+  formatVersion,
+  incrementVersion,
+  parseVersion,
   readProjectVersion,
+  replaceVersionInContent,
+  sanitizeVersion,
   syncVersion,
   updateProjectVersion,
+  writeVersionFile,
 } from "./version.ts";
 
 // 🛠️ Utilitários de CLI e Validação
@@ -53,6 +63,10 @@ export type {
   GlobalTargetConfig,
   ParsedArgs,
   ParsedVersion,
+  SanitizeVersionOptions,
+  SanitizeVersionResult,
+  TagVersionOptions,
+  TagVersionResult,
   TargetConfig,
   VersionUpdateOptions,
   WatchConfigFile,
