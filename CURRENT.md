@@ -148,3 +148,4 @@ Explicação:
 - [x] Revisão final do `AGENTS.md` para diretrizes de desenvolvimento estáveis
 - [x] Execução de suíte final de testes de integração e validação de workspace
 - [x] Verificação e atualização dos GitHub Actions workflows (`jsr-publish.yml` e `gh-pages.yml`) para compatibilidade com Deno 2.x e o novo sistema de versionamento TypeScript
+- [x] Criação de documentação específica sobre o impacto do `baseDir` na resolução de caminhos (`docs/impacto-basedir.md`)

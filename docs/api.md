@@ -11,6 +11,7 @@ Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildi
 7. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
 8. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
 9. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
+10. [📂 Impacto do `baseDir` na Resolução de Caminhos](./impacto-basedir.md)
 
 ---
 
