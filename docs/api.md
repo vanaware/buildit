@@ -1,15 +1,16 @@
 # 📖 Referência da API e Configurações do BuildIt
 
-Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 4 utilitários:
+Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 6 utilitários:
 
-1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc)
-2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc)
-3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc)
-4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc)
-5. [🧼 Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version)
-6. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
-7. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
-8. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
+1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc) — [Ver Topologia](./topology-esbuild.md)
+2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc) — [Ver Topologia](./topology-watch.md)
+3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc) — [Ver Topologia](./topology-denobuild.md)
+4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc) — [Ver Topologia](./topology-export.md)
+5. [🧼 Sanitizador de Versão (`sanitize-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-sanitize-version.md)
+6. [🏷️ Publicador de Versão (`tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-tag-version.md)
+7. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
+8. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
+9. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
 
 ---
 

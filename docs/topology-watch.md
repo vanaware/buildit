@@ -35,8 +35,10 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
        │       └──► [Registro de listeners para SIGINT, SIGTERM, unload]
        │
        ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [se configurado]
+       │       └──► [Itera targetConfig.clean.includes/excludes]
        │
-       ├──► copyStaticFiles(targetConfig, version)
+       ├──► copyStaticFiles(targetConfig, version, baseDir, distDir)
+       │       └──► [Loop targetConfig.copyFiles: { includes, excludes, basedir }]
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
@@ -101,8 +103,8 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
 * **Função**: `buildWatchEsbuildOptions` & `esbuild.context`
 * **Arquivo**: `packages/utils/src/watch/engine.ts`
 * **Ações e Subfunções**:
-  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída antes da primeira compilação.
-  2. `copyStaticFiles(targetConfig, version)`: Copia arquivos públicos e prepara templates HTML.
+  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída baseada em `includes`/`excludes`.
+  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
      - Define `__APP_VERSION__`.
      - Coleta assets para cache se `targetName === "sw"`.

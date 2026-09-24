@@ -35,8 +35,10 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
                ├──► validateTargetConfig(targetName, config)
                │
                ├──► cleanTarget(config.distdir, config.clean) [se configurado]
+               │       └──► [Itera config.clean.includes/excludes]
                │
-               ├──► copyStaticFiles(config, appVersion)
+               ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
+               │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │
                ├──► listAssetsForCache(config.distdir) [se target === "sw"]
                │
@@ -97,8 +99,8 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
   - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utilitário para coletar assets do cache
 * **Ações e Subfunções**:
   1. `validateTargetConfig(targetName, config)`: Validação estrutural prévia.
-  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída antes do build.
-  3. `copyStaticFiles(config, appVersion)`: Cópia de diretório público e substituição no HTML.
+  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída baseada em `includes`/`excludes` antes do build.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
   4. Preparação de constantes `defines` em memória:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
      - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`).

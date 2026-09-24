@@ -39,11 +39,14 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
                ├──► validateTargetConfig(targetName, config)
                │
                ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► Deno.remove(...) / emptyDir(...)
+               │       └──► [Itera config.clean.includes/excludes]
+               │               └──► Deno.remove(...) / emptyDir(...)
                │
-               ├──► copyStaticFiles(config, appVersion)
-               │       ├──► ensureDir(...) / copy(...)
-               │       └──► replaceVersionInFile(indexHtml, appVersion) [se indexHtml: true]
+               ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
+               │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
+               │               ├──► expandGlob(includes, { root: basedir, exclude: excludes })
+               │               ├──► replaceVersionInFile(manifest.json, appVersion)
+               │               └──► Log "index.html copiado" [se index.html detectado]
                │
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
                │       ├──► listAssetsForCache(config.distdir) [se target === "sw"]
@@ -110,10 +113,12 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Valida campos obrigatórios (`entryPoints`, regras de `outfile`/`outdir`).
      - Lança erro imediato (fail-fast) se a configuração for inválida.
   2. `cleanTarget(config.distdir, config.clean)` (`packages/utils/src/tools/paths.ts`):
-     - Esvazia ou remove caminhos especificados em `config.clean` dentro de `distdir`.
-  3. `copyStaticFiles(config, appVersion)` (`packages/utils/src/tools/paths.ts`):
-     - Copia assets de `publicdir` para `distdir`.
-     - Se `indexHtml: true`, substitui tags de versão e cache busting no HTML.
+     - Esvazia ou remove caminhos especificados em `config.clean.includes` e `config.clean.excludes` dentro de `distdir`.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)` (`packages/utils/src/tools/paths.ts`):
+     - Executa a cópia recursiva de arquivos baseada no array `config.copyFiles`.
+     - Utiliza `expandGlob` com suporte a `includes`, `excludes` e `basedir` personalizado.
+     - Se o arquivo for `manifest.json`, injeta a versão da aplicação.
+     - Detecta `index.html` para log de console.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
      - Monta o dicionário de `define` com `__APP_VERSION__`.
      - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`.

@@ -31,11 +31,9 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
                │
                ├──► coletarArquivosParaExportacao(config, baseDir)
                │       │
-               │       ├──► [Modo Moderno: expandGlob(padrao, { root, exclude })]
-               │       │       ├──► normalizarCaminho(caminhoRelativo)
-               │       │       └──► correspondeGlobs(caminhoRelativo, config.excludes)
-               │       │
-               │       └──► [Modo Legado Fallback: walk(baseDir) + deveIncluirArquivo]
+               │       └──► expandGlob(padrao, { root, exclude })
+               │               ├──► normalizarCaminho(caminhoRelativo)
+               │               └──► correspondeGlobs(caminhoRelativo, config.excludes)
                │
                ├──► ensureDirForFile(caminhoSaida)
                │
@@ -103,12 +101,12 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
   2. Abertura do Stream de Escrita:
      - `ensureDirForFile(caminhoSaida)`: Cria pastas pai no disco.
      - `Deno.open(caminhoSaida, { write: true, create: true, truncate: true })`: Inicializa o arquivo para streaming.
-     - `writer.write(encoder.encode(cabecalho))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
+     - `writer.write(encoder.encode(gerarCabecalho(config, modo, versaoApp)))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
   3. Processamento Individual de Arquivos:
      - Para cada arquivo coletado, lê via `Deno.readTextFile(caminhoCompleto)`.
      - `formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)`:
        - `mapearExtensao(ext)`: Mapeia extensões especiais (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (\`\`\` ou mais) para garantir que o code block seja válido.
+       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (``` ou mais) para garantir que o code block seja válido.
      - `writer.write(encoder.encode(blocoMarkdown))`: Envia o bloco Markdown diretamente para o stream em disco.
   4. Finalização:
      - `writer.close()`: Garante o fechamento limpo do arquivo.
@@ -125,7 +123,6 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 | `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
 | `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
 | `correspondeGlobs()` | `formatter` / `engine` | `caminho: string`, `padroes: string[]` | `boolean` | Avaliação de regex gerada via `globToRegExp` |
-| `deveIncluirArquivo()` | Testes / Fallback | `caminho: string`, `config: ExportConfig` | `boolean` | Validação de inclusão/exclusão |
 | `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string` | `string` | Formatação de string Markdown em memória |
 | `formatarArquivoMarkdown()` | `exportarModo` | `caminho: string`, `conteudo: string` | `string` | Formatação com code fence e syntax highlight |
 | `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Escape dinâmico de crases Markdown |
