@@ -210,12 +210,23 @@ export interface WatchHandle {
   close: () => Promise<void>;
 }
 
+/** Configuração de um modo de exportação de snapshot. */
 export interface ExportConfig {
+  /** Caminho do arquivo de saída Markdown gerado. */
   arquivoSaida: string;
+  /** Padrões glob de arquivos a serem incluídos. */
   includes?: string[];
+  /** Padrões glob de arquivos a serem excluídos. */
   excludes?: string[];
+  /** Se deve incluir a versão da aplicação no cabeçalho. */
   incluiVersao?: boolean;
+  /** Instrução personalizada para a IA. */
   instrucaoCustomizada?: string;
+  /** Texto ou instruções customizadas para o bloco de cabeçalho da IA. */
+  cabecalho?: string;
+  /** Nome do projeto exibido no cabeçalho (padrão: "BuildIt"). */
+  projeto?: string;
+  /** Se o modo deve ser executado por padrão quando nenhum modo for especificado. */
   default?: boolean;
 }
 
@@ -285,9 +296,17 @@ export interface DenoBuildOptions {
   silencioso?: boolean;
 }
 
+/** Arquivo de configuração de exportação (export.jsonc). */
 export interface ExportConfigFile {
+  /** Schema JSON opcional. */
   $schema?: string;
+  /** Versão do arquivo de configuração. */
   version?: string;
+  /** Nome global do projeto (padrão: "BuildIt"). */
+  projeto?: string;
+  /** Bloco global de cabeçalho customizado para IA. */
+  cabecalho?: string;
+  /** Dicionário de modos de exportação. */
   modos: Record<string, ExportConfig>;
 }
 

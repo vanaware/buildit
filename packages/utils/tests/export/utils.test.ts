@@ -332,6 +332,39 @@ describe("gerarCabecalho", () => {
     const resultado = gerarCabecalho(config, "ui", "1.0.0",);
     assertStringIncludes(resultado, "Gerado automaticamente em:",);
   });
+
+  it("usa cabeçalho padrão com diretrizes de arquivo quando cabecalho não for fornecido", () => {
+    const config = makeConfig();
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(
+      resultado,
+      "> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).",
+    );
+    assertStringIncludes(
+      resultado,
+      "> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.",
+    );
+  });
+
+  it("permite substituir o cabeçalho através da opção cabecalho", () => {
+    const customCabecalho = "> Diretriz especial e única para este projeto.";
+    const config = makeConfig({ cabecalho: customCabecalho, },);
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(resultado, customCabecalho,);
+    assertEquals(
+      resultado.includes("Cada arquivo começa com um título indicando seu caminho relativo exato",),
+      false,
+    );
+  });
+
+  it("permite customizar o nome do projeto via opção projeto", () => {
+    const config = makeConfig({ projeto: "MeuSuperApp", },);
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(
+      resultado,
+      "# Contexto Exportado do Projeto MeuSuperApp - Modo: UI",
+    );
+  });
 });
 
 describe("formatarArquivoMarkdown", () => {

@@ -168,16 +168,20 @@ export function gerarCabecalho(
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
   const instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
+  const projeto = config.projeto ?? "BuildIt";
+
+  const padraoCabecalho =
+    `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
+
+  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim();
 
   return `> **INSTRUÇÃO PARA A IA:** 
 > ${instrucao}
-> O projeto é o **BuildIt ${versaoDisplay}** estruturado em módulos. 
-> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).
-> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
+${cabecalho}
 
 ---
 
-# Contexto Exportado do Projeto BuildIt ${versaoDisplay}- Modo: ${modo.toUpperCase()}
+# Contexto Exportado do Projeto ${projeto} ${versaoDisplay}- Modo: ${modo.toUpperCase()}
 
 Gerado automaticamente em: ${new Date().toISOString()}
 

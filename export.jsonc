@@ -1,6 +1,7 @@
 {
   "$schema": "./packages/utils/schema/export.json",
   "version": "0.3.1",
+  "projeto": "BuildIt",
   "modos": {
     "ui": {
       "arquivoSaida": "snapshots/ui.md",
@@ -25,7 +26,7 @@
       "excludes": [],
       "incluiVersao": false,
       "instrucaoCustomizada": "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
-      "default": false
+      "default": true
     },
     "server": {
       "arquivoSaida": "snapshots/server.md",

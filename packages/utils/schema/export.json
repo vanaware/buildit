@@ -11,6 +11,14 @@
       "type": "string",
       "description": "Versão semântica da configuração."
     },
+    "projeto": {
+      "type": "string",
+      "description": "Nome global do projeto exibido no cabeçalho do contexto exportado (padrão: BuildIt)."
+    },
+    "cabecalho": {
+      "type": "string",
+      "description": "Instrução ou texto de cabeçalho customizado para a IA (substitui o bloco padrão de diretrizes)."
+    },
     "modos": {
       "type": "object",
       "description": "Dicionário contendo as configurações de cada modo de exportação.",
@@ -38,6 +46,14 @@
           "instrucaoCustomizada": {
             "type": "string",
             "description": "Mensagem de orientação para o modelo de IA."
+          },
+          "cabecalho": {
+            "type": "string",
+            "description": "Instrução ou texto de cabeçalho customizado para a IA específico deste modo."
+          },
+          "projeto": {
+            "type": "string",
+            "description": "Nome do projeto específico deste modo (sobrescreve o global)."
           },
           "default": {
             "type": "boolean",

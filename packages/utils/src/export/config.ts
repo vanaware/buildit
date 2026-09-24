@@ -103,7 +103,25 @@ export async function carregarConfigExport(
       "modos" in parsed &&
       typeof (parsed as ExportConfigFile).modos === "object"
     ) {
-      return (parsed as ExportConfigFile).modos;
+      const rootProjeto = (parsed as ExportConfigFile).projeto;
+      const rootCabecalho = (parsed as ExportConfigFile).cabecalho;
+      const modos = (parsed as ExportConfigFile).modos;
+
+      if (rootProjeto !== undefined || rootCabecalho !== undefined) {
+        for (const [modoKey, modoConfig] of Object.entries(modos)) {
+          modos[modoKey] = {
+            ...(rootProjeto !== undefined && modoConfig.projeto === undefined
+              ? { projeto: rootProjeto }
+              : {}),
+            ...(rootCabecalho !== undefined && modoConfig.cabecalho === undefined
+              ? { cabecalho: rootCabecalho }
+              : {}),
+            ...modoConfig,
+          };
+        }
+      }
+
+      return modos;
     }
     return parsed as unknown as Record<string, ExportConfig>;
   }

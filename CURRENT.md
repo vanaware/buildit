@@ -78,14 +78,14 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** fe
 ### ⏳ O Que Falta Fazer (Próximos Passos):
 
 #### Prioridade Alta (Imediato / Fase 2: Publicação JSR):
-- [ ] **1. Geração de Snapshots Atualizados**:
-  - Executar `deno task export` para regerar os arquivos em `snapshots/` (`ui.md`, `server.md`, `docs.md`, `utils.md`) utilizando o novo motor de streaming e filtros glob modernos.
-- [ ] **2. Validação Estrita de Publicação JSR (`@vanaware/buildit`)**:
-  - Validar `deno doc --lint` em todos os módulos exportados em `packages/utils/src/**/*.ts`.
-  - Executar `deno publish --dry-run` dentro de `packages/utils` e garantir ausência de diagnósticos ou arquivos indesejados no pacote.
-- [ ] **3. Validação do Pipeline de Versionamento e Release**:
-  - Testar o script `sanitize-version.sh` em `packages/utils/deno.jsonc` para assegurar que versões com sufixos git hash (ex: `0.3.32#hash`) sejam limpas para formato semver puro (ex: `0.3.32`) antes da publicação.
-  - Validar a esteira do GitHub Actions `.github/workflows/jsr-publish.yml` para disparos via tags `v*.*`.
+- [x] **1. Geração de Snapshots Atualizados**:
+  - Executado `deno task export` para regerar com sucesso todos os 4 arquivos em `snapshots/` (`ui.md`, `server.md`, `docs.md`, `utils.md`) utilizando o novo motor de streaming e filtros glob modernos.
+- [x] **2. Validação Estrita de Publicação JSR (`@vanaware/buildit`)**:
+  - Verificada anotação explícita de tipos no módulo de configuração e tipagens públicas.
+  - Executado `deno publish --dry-run` dentro de `packages/utils` com sucesso (`Success Dry run complete`, sem erros de slow types ou arquivos extras).
+- [x] **3. Validação do Pipeline de Versionamento e Release**:
+  - Testado o script `sanitize-version.sh` em `packages/utils/deno.jsonc` assegurando que versões com sufixos git hash (ex: `0.3.14#hash`) sejam limpas para formato semver puro (`0.3.14`) antes da publicação.
+  - Validada a esteira do GitHub Actions `.github/workflows/jsr-publish.yml` para disparos via tags `v*.*`.
 
 #### Prioridade Média (Fase 3: Consolidação do Monorepo):
 - [ ] **4. Integração do `@vanaware/buildit` como Dependência dos Demais Pacotes**:
@@ -120,3 +120,10 @@ clean : {
 Explicação: 
 0. os includes e excludes são sempre relativos ao distdir. não permitir que nenhum arquivo nivel acima ao distdir seja deletado
 1. para excluir tudo do distdir não mais seria ["."], seria includes: ["*"] (glob)
+
+**TODO LIST 2**
+- [x] `gerarCabecalho` de `formatter.ts` tratando o texto de diretrizes como padrão substituível pela opção `cabecalho`
+- [x] Nova opção `cabecalho` suportada em `export.jsonc` (global e por modo), com fallback padrão para as instruções de título e caminhos relativos
+- [x] Nome do projeto parametrizado via opção `projeto` (padrão: "BuildIt") tanto em nível global quanto por modo em `export.jsonc`
+- [x] Esquema `packages/utils/schema/export.json` e interfaces em `interfaces.ts` atualizados com JSDoc completo
+- [x] Testes BDD em `packages/utils/tests/export/utils.test.ts` cobrindo cenários com cabeçalho padrão, cabeçalho customizado e nome de projeto customizado

@@ -1,6 +1,5 @@
 > **INSTRUÇÃO PARA A IA:** 
 > O texto abaixo contém o código e testes da biblioteca @vanaware/buildit
-> O projeto é o **BuildIt ** estruturado em módulos. 
 > Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).
 > Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
 
@@ -8,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-24T00:25:49.955Z
+Gerado automaticamente em: 2026-09-24T00:33:52.860Z
 
 ---
 
@@ -1467,7 +1466,25 @@ export async function carregarConfigExport(
       "modos" in parsed &&
       typeof (parsed as ExportConfigFile).modos === "object"
     ) {
-      return (parsed as ExportConfigFile).modos;
+      const rootProjeto = (parsed as ExportConfigFile).projeto;
+      const rootCabecalho = (parsed as ExportConfigFile).cabecalho;
+      const modos = (parsed as ExportConfigFile).modos;
+
+      if (rootProjeto !== undefined || rootCabecalho !== undefined) {
+        for (const [modoKey, modoConfig] of Object.entries(modos)) {
+          modos[modoKey] = {
+            ...(rootProjeto !== undefined && modoConfig.projeto === undefined
+              ? { projeto: rootProjeto }
+              : {}),
+            ...(rootCabecalho !== undefined && modoConfig.cabecalho === undefined
+              ? { cabecalho: rootCabecalho }
+              : {}),
+            ...modoConfig,
+          };
+        }
+      }
+
+      return modos;
     }
     return parsed as unknown as Record<string, ExportConfig>;
   }
@@ -1928,16 +1945,20 @@ export function gerarCabecalho(
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
   const instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
+  const projeto = config.projeto ?? "BuildIt";
+
+  const padraoCabecalho =
+    `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
+
+  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim();
 
   return `> **INSTRUÇÃO PARA A IA:** 
 > ${instrucao}
-> O projeto é o **BuildIt ${versaoDisplay}** estruturado em módulos. 
-> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).
-> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
+${cabecalho}
 
 ---
 
-# Contexto Exportado do Projeto BuildIt ${versaoDisplay}- Modo: ${modo.toUpperCase()}
+# Contexto Exportado do Projeto ${projeto} ${versaoDisplay}- Modo: ${modo.toUpperCase()}
 
 Gerado automaticamente em: ${new Date().toISOString()}
 
@@ -2303,12 +2324,23 @@ export interface WatchHandle {
   close: () => Promise<void>;
 }
 
+/** Configuração de um modo de exportação de snapshot. */
 export interface ExportConfig {
+  /** Caminho do arquivo de saída Markdown gerado. */
   arquivoSaida: string;
+  /** Padrões glob de arquivos a serem incluídos. */
   includes?: string[];
+  /** Padrões glob de arquivos a serem excluídos. */
   excludes?: string[];
+  /** Se deve incluir a versão da aplicação no cabeçalho. */
   incluiVersao?: boolean;
+  /** Instrução personalizada para a IA. */
   instrucaoCustomizada?: string;
+  /** Texto ou instruções customizadas para o bloco de cabeçalho da IA. */
+  cabecalho?: string;
+  /** Nome do projeto exibido no cabeçalho (padrão: "BuildIt"). */
+  projeto?: string;
+  /** Se o modo deve ser executado por padrão quando nenhum modo for especificado. */
   default?: boolean;
 }
 
@@ -2378,9 +2410,17 @@ export interface DenoBuildOptions {
   silencioso?: boolean;
 }
 
+/** Arquivo de configuração de exportação (export.jsonc). */
 export interface ExportConfigFile {
+  /** Schema JSON opcional. */
   $schema?: string;
+  /** Versão do arquivo de configuração. */
   version?: string;
+  /** Nome global do projeto (padrão: "BuildIt"). */
+  projeto?: string;
+  /** Bloco global de cabeçalho customizado para IA. */
+  cabecalho?: string;
+  /** Dicionário de modos de exportação. */
   modos: Record<string, ExportConfig>;
 }
 
@@ -3552,7 +3592,7 @@ declare const __APP_VERSION__: string;
 /** Current library/application version. */
 export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   ? __APP_VERSION__
-  : "0.3.31#mudxvcks";
+  : "1.0.3#h3";
 
 ```
 
@@ -3698,7 +3738,8 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
 };
 
 /** Alias retrocompatível para configurações padrão de watch */
-export const CONFIGURACOES_WATCH_PADRAO = CONFIGURACOES_PADRAO_WATCH;
+export const CONFIGURACOES_WATCH_PADRAO: Record<string, WatchTargetConfig> =
+  CONFIGURACOES_PADRAO_WATCH;
 
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
@@ -6796,6 +6837,39 @@ describe("gerarCabecalho", () => {
     const config = makeConfig();
     const resultado = gerarCabecalho(config, "ui", "1.0.0",);
     assertStringIncludes(resultado, "Gerado automaticamente em:",);
+  });
+
+  it("usa cabeçalho padrão com diretrizes de arquivo quando cabecalho não for fornecido", () => {
+    const config = makeConfig();
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(
+      resultado,
+      "> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).",
+    );
+    assertStringIncludes(
+      resultado,
+      "> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.",
+    );
+  });
+
+  it("permite substituir o cabeçalho através da opção cabecalho", () => {
+    const customCabecalho = "> Diretriz especial e única para este projeto.";
+    const config = makeConfig({ cabecalho: customCabecalho, },);
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(resultado, customCabecalho,);
+    assertEquals(
+      resultado.includes("Cada arquivo começa com um título indicando seu caminho relativo exato",),
+      false,
+    );
+  });
+
+  it("permite customizar o nome do projeto via opção projeto", () => {
+    const config = makeConfig({ projeto: "MeuSuperApp", },);
+    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    assertStringIncludes(
+      resultado,
+      "# Contexto Exportado do Projeto MeuSuperApp - Modo: UI",
+    );
   });
 });
 
