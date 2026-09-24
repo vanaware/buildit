@@ -93,3 +93,30 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** fe
 - [ ] **5. Limpeza de Legados do WorkerDB**:
   - Avaliar e remover resquícios ou dependências antigas do fork original de banco de dados que não se aplicam ao propósito da ferramenta de build e exportação, mantendo o repositório focado e leve.
 
+antes de executar os próximos passos, faremos os seguintes ajustes:    
+**TODO LIST**    
+- [ ] utilitário export não precisa ter falback para o legado, pode manter apenas o novo sistema por glob e brace expansion
+- [ ] utilitário denobuild e esbuild o parseArgs deverá ser reformulado, a parte que detecta noversion fica dentro do cli e é enviada para o engine já resolvido , mas a parte que determina a correta ordem de execução fica dentro de engine para garantir que a ordem seja sempre executada independente de a lista de alvos vier via cli ou direto pelo engine. o resolverOrdemTargets já faz isso ?
+- [ ] baseDir deveria ser passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas  listados em srcdir, distdir, publicdir, clean 
+- [ ] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos, index.html e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude, da seguinte forma abaixo:
+copyFiles : [{
+  basedir? : string
+  includes? : string[] => aceita globs e brace expansion
+  excludes? : string[] => aceita globs e brace expansion
+},]
+Explicação: 
+0. será feito join deste basedir com o "basedir geral"
+1. se basedir informado, includes e excludes são relativos ao base dir e é preservada árvore de diretórios na cópia relativas ao basedir
+2. se basedir informado e includes inexistente, vazio ou "*", copia tudo do diretório basedir, mas respeitar excludes
+3. se basedir inexistente, includes e excludes são relativos ao "basedir geral" e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
+4. o copyfiles é um array, assim podemos ter vários conjuntos de configurações de cópia definidas
+5. o indexhtml é copiado usando uma das configurações acima (não tem mais o indexHtml: boolean)
+6. se o arquivo copiado for um manifest.json continua injetando a versão e se for index.html informe no console.log (no futuro vamos criar uma forma de injetar tags de versão e cache busting no HTML)
+
+clean : {
+  includes? : string[] => aceita globs e brace expansion
+  excludes? : string[] => aceita globs e brace expansion
+}
+Explicação: 
+0. os includes e excludes são sempre relativos ao distdir. não permitir que nenhum arquivo nivel acima ao distdir seja deletado
+1. para excluir tudo do distdir não mais seria ["."], seria includes: ["*"] (glob)
