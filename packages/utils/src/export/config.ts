@@ -123,7 +123,8 @@ export async function carregarConfigExport(
 
       return modos;
     }
-    return parsed as unknown as Record<string, ExportConfig>;
+    console.warn("⚠️ Arquivo de configuração de exportação inválido: chave 'modos' não encontrada.");
+    return {};
   }
 
   return { ...CONFIGURACOES_PADRAO, };

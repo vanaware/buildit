@@ -148,4 +148,6 @@ Explicação:
 - [x] Revisão final do `AGENTS.md` para diretrizes de desenvolvimento estáveis
 - [x] Execução de suíte final de testes de integração e validação de workspace
 - [x] Verificação e atualização dos GitHub Actions workflows (`jsr-publish.yml` e `gh-pages.yml`) para compatibilidade com Deno 2.x e o novo sistema de versionamento TypeScript
+- [x] Modernização do utilitário `export`: remoção total da retrocompatibilidade com chaves legadas, mantendo exclusivamente o sistema baseado em `modos`, `includes` e `excludes` via globs.
+- [x] Melhoria na documentação técnica: detalhamento da injeção automática de `__GENERATED_ASSETS__` para o alvo `sw` (Service Worker) em `api.md` e documentos de topologia.
 - [x] Criação de documentação específica sobre o impacto do `baseDir` na resolução de caminhos (`docs/impacto-basedir.md`)

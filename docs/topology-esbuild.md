@@ -121,7 +121,7 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Detecta `index.html` para log de console.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
      - Monta o dicionário de `define` com `__APP_VERSION__`.
-     - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`.
+     - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída, sendo ideal para automatizar a lista de pré-cache em Service Workers.
      - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
      - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
      - Formata `banner` e `footer` com substituição de versão.

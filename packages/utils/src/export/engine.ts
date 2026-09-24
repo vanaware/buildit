@@ -55,8 +55,7 @@ export function parseArgs(
 
 /**
  * Coleta a lista ordenada e deduplicada de arquivos que devem ser incluídos no snapshot.
- * Utiliza `expandGlob` para varredura otimizada direta quando `includes` está configurado,
- * ou recorre ao `walk` legado quando propriedades antigas são fornecidas.
+ * Utiliza `expandGlob` para varredura otimizada direta.
  *
  * @param config Configuração do modo de exportação
  * @param baseDir Diretório base do projeto

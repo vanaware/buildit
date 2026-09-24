@@ -103,7 +103,7 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
   3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
   4. Preparação de constantes `defines` em memória:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
-     - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`).
+     - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` para estratégias de caching offline.
   5. `buildBundleOptions(config)` (`packages/utils/src/denobuild/bundle.ts`):
      - Monta o objeto de opções esperado pela API instável `Deno.bundle`.
      - Mapeia entry points, target de plataforma (`browser`/`deno`), formato (`esm`/`cjs`/`iife`), sourcemap e minify.

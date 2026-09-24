@@ -72,7 +72,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
 | `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
 | `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade (ex: `"esnext"`, `"chrome110"`). |
+| `target` | `"sw" \| string` | `"esnext"` | Ambientes alvos de compatibilidade. Se o nome do alvo (chave no config) for `"sw"`, o motor injeta automaticamente a constante `__GENERATED_ASSETS__` (lista de caminhos de arquivos no `distdir`) para facilitar a configuração de cache do Service Worker. |
 | `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
 | `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
 
@@ -139,6 +139,7 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
 | `define` | `Record<string, string>` | Injeção de constantes globais. |
 | `outfile` | `string` | Nome explícito do arquivo gerado. |
+| `target` | `"sw" \| string` | Se o nome do alvo (chave) for `"sw"`, o motor injeta `__GENERATED_ASSETS__` (lista de arquivos no `distdir`) para cache do Service Worker. |
 
 ---
 

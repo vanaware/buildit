@@ -100,16 +100,12 @@ export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
 
 /**
  * Determina se um determinado arquivo deve ser incluído no snapshot baseado na configuração do modo.
- * Suporta a sintaxe moderna baseada em `includes` / `excludes` (globs) e mantém suporte a propriedades legadas.
+ * Utiliza a sintaxe baseada em `includes` / `excludes` (globs).
  *
  * Regras aplicadas:
  * 1. Proteção anti-loop: sempre exclui arquivos dentro de pastas `exports/` ou `snapshots/`.
- * 2. Se configurado com `includes`:
- *    - Se casar com qualquer padrão de `excludes`, retorna `false`.
- *    - Se casar com qualquer padrão de `includes`, retorna `true`.
- * 3. Modo Legado (se `includes` não estiver definido):
- *    - Verifica caminhos adicionais permitidos.
- *    - Valida pastaBase, arquivos raiz, subpastas e extensões permitidas.
+ * 2. Se casar com qualquer padrão de `excludes`, retorna `false`.
+ * 3. Se casar com qualquer padrão de `includes`, retorna `true`.
  *
  * @param caminhoRelativo Caminho relativo do arquivo no repositório
  * @param config Configuração do modo de exportação
