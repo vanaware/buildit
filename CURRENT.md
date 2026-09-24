@@ -95,10 +95,10 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** fe
 
 antes de executar os próximos passos, faremos os seguintes ajustes:    
 **TODO LIST**    
-- [ ] utilitário export não precisa ter falback para o legado, pode manter apenas o novo sistema por glob e brace expansion
-- [ ] utilitário denobuild e esbuild o parseArgs deverá ser reformulado, a parte que detecta noversion fica dentro do cli e é enviada para o engine já resolvido , mas a parte que determina a correta ordem de execução fica dentro de engine para garantir que a ordem seja sempre executada independente de a lista de alvos vier via cli ou direto pelo engine. o resolverOrdemTargets já faz isso ?
-- [ ] baseDir deveria ser passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas  listados em srcdir, distdir, publicdir, clean 
-- [ ] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos, index.html e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude, da seguinte forma abaixo:
+- [x] utilitário export não precisa ter falback para o legado, pode manter apenas o novo sistema por glob e brace expansion
+- [x] utilitário denobuild e esbuild o parseArgs deverá ser reformulado, a parte que detecta noversion fica dentro do cli e é enviada para o engine já resolvido , mas a parte que determina a correta ordem de execução fica dentro de engine para garantir que a ordem seja sempre executada independente de a lista de alvos vier via cli ou direto pelo engine. o resolverOrdemTargets já faz isso ? *(Sim, delegado para `resolverOrdemTargets` dentro de `engine.ts` em `esbuild` e `denobuild`)*
+- [x] baseDir deveria ser passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas listados em srcdir, distdir, publicdir, clean *(Implementado via `resolveWithBase` e propagação do `baseDir`)*
+- [x] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos, index.html e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude, da seguinte forma abaixo:
 copyFiles : [{
   basedir? : string
   includes? : string[] => aceita globs e brace expansion

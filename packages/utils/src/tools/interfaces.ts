@@ -68,13 +68,27 @@ export type EsbuildLoader =
   | "empty"
   | "copy";
 
+/** Configuração de um conjunto de arquivos estáticos a serem copiados. */
+export interface CopyFileConfig {
+  basedir?: string;
+  includes?: string[];
+  excludes?: string[];
+}
+
+/** Configuração de limpeza prévia de arquivos e pastas no diretório de saída. */
+export interface CleanConfig {
+  includes?: string[];
+  excludes?: string[];
+}
+
 /** Configuração de um alvo de build (esbuild). */
 export interface TargetConfig {
   publicdir?: string;
   srcdir?: string;
   distdir?: string;
   indexHtml?: boolean;
-  clean?: string[];
+  clean?: CleanConfig | string[];
+  copyFiles?: CopyFileConfig[];
   default?: boolean;
   entryPoints: string[];
   platform?: EsbuildPlatform;
@@ -136,7 +150,8 @@ export interface WatchTargetConfig {
   srcdir?: string;
   distdir?: string;
   indexHtml?: boolean;
-  clean?: string[];
+  clean?: CleanConfig | string[];
+  copyFiles?: CopyFileConfig[];
   default?: boolean;
   entryPoints: string[];
   platform?: EsbuildPlatform;
@@ -202,11 +217,6 @@ export interface ExportConfig {
   incluiVersao?: boolean;
   instrucaoCustomizada?: string;
   default?: boolean;
-  extensoesPermitidas?: string[];
-  pastaBase?: string;
-  subpastasPermitidas?: string[];
-  caminhosAdicionaisPermitidos?: string[];
-  arquivosRaizPermitidos?: string[];
 }
 
 export type DenoBundlePlatform = "browser" | "deno";
@@ -219,7 +229,8 @@ export interface DenoBundleTargetConfig {
   distdir?: string;
   publicdir?: string;
   indexHtml?: boolean;
-  clean?: string[];
+  clean?: CleanConfig | string[];
+  copyFiles?: CopyFileConfig[];
   default?: boolean;
   mode?: "build" | "watch";
   entryPoints: string[];

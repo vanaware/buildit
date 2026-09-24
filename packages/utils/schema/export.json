@@ -42,30 +42,6 @@
           "default": {
             "type": "boolean",
             "description": "Se o modo deve ser executado por padrão."
-          },
-          "extensoesPermitidas": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "[Legado] Lista de extensões de arquivos a serem capturadas."
-          },
-          "pastaBase": {
-            "type": "string",
-            "description": "[Legado] Pasta base onde a busca se inicia."
-          },
-          "subpastasPermitidas": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "[Legado] Lista de subdiretórios que podem ser varridos recursivamente."
-          },
-          "arquivosRaizPermitidos": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "[Legado] Nomes exatos de arquivos localizados diretamente na raiz de pastaBase."
-          },
-          "caminhosAdicionaisPermitidos": {
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "[Legado] Arquivos ou diretórios localizados fora de pastaBase."
           }
         },
         "required": [

@@ -11,6 +11,7 @@ import {
   copyStaticFiles,
   ensureDirForFile,
   listAssetsForCache,
+  resolveWithBase,
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
@@ -52,17 +53,25 @@ export async function processBundleTarget(
   config: DenoBundleTargetConfig,
   appVersion: string,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  baseDir: string = ".",
 ): Promise<DenoBuildResult> {
-  validateTargetConfig(targetName, config,);
+  const resolvedConfig: DenoBundleTargetConfig = {
+    ...config,
+    srcdir: resolveWithBase(config.srcdir, baseDir,),
+    distdir: resolveWithBase(config.distdir, baseDir,),
+    publicdir: resolveWithBase(config.publicdir, baseDir,),
+  };
+
+  validateTargetConfig(targetName, resolvedConfig,);
 
   console.log(`\n${"=".repeat(60,)}`,);
   console.log(`🎯 PROCESSANDO ALVO: ${targetName.toUpperCase()}`,);
   console.log(`${"=".repeat(60,)}`,);
 
   // 1. Limpar diretório de saída
-  if (config.clean && config.clean.length > 0) {
-    if (config.distdir) {
-      await cleanTarget(config.distdir, config.clean,);
+  if (resolvedConfig.clean) {
+    if (resolvedConfig.distdir) {
+      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     } else {
       console.warn(
         `⚠️ 'clean' configurado mas 'distdir' ausente. Pulando limpeza.`,
@@ -71,16 +80,16 @@ export async function processBundleTarget(
   }
 
   // 2. Copiar arquivos estáticos
-  await copyStaticFiles(config, appVersion,);
+  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
 
   // 3. Preparar defines
   const defines: Record<string, string> = {
-    ...config.define,
+    ...resolvedConfig.define,
     __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
   };
 
-  if (targetName === "sw" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir,);
+  if (targetName === "sw" && listAssetsFn && resolvedConfig.distdir) {
+    const assets = await listAssetsFn(resolvedConfig.distdir,);
     defines["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
     console.log(`📋 ${assets.length} assets listados para cache do SW`,);
   }
@@ -88,7 +97,7 @@ export async function processBundleTarget(
   // 4. Executar bundle
   console.log(`🔨 Compilando com Deno.bundle...`,);
   const startTime = performance.now();
-  const bundleOptions = buildBundleOptions(config,);
+  const bundleOptions = buildBundleOptions(resolvedConfig,);
   const result = await Deno.bundle(bundleOptions,);
 
   // 5. Verificar erros
@@ -192,6 +201,12 @@ export async function denoBuild(
   // Garante estritamente que a ordem de execução siga a declaração na configuração
   const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
 
+  console.log(
+    `📋 Alvos de build (ordem segura do CONFIG): ${
+      targetsParaExecutar.join(", ",) || "(nenhum)"
+    }`,
+  );
+
   if (targetsParaExecutar.length === 0) {
     return [];
   }
@@ -221,6 +236,7 @@ export async function denoBuild(
       targetConfig,
       finalVersion,
       listFn,
+      baseDir,
     );
     resultados.push(res,);
   }

@@ -51,12 +51,55 @@
         },
         "indexHtml": {
           "type": "boolean",
-          "description": "Se true, busca o index.html em srcdir e copia para distdir."
+          "description": "Se true, busca o index.html em srcdir e copia para distdir (legado)."
+        },
+        "copyFiles": {
+          "type": "array",
+          "description": "Conjuntos de regras de cópia de arquivos estáticos para o distdir.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "basedir": {
+                "type": "string",
+                "description": "Diretório base de origem dos arquivos."
+              },
+              "includes": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Lista de padrões glob/brace expansion para incluir."
+              },
+              "excludes": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Lista de padrões glob/brace expansion para excluir."
+              }
+            }
+          }
         },
         "clean": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Lista de caminhos para limpar antes da primeira compilação."
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "includes": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Padrões glob/brace expansion relativos a distdir a remover (use '*' para tudo)."
+                },
+                "excludes": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Padrões glob/brace expansion relativos a distdir a preservar."
+                }
+              }
+            },
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Lista de caminhos para limpar antes da primeira compilação."
+            }
+          ],
+          "description": "Regras de limpeza prévia no diretório de saída."
         },
         "entryPoints": {
           "type": "array",

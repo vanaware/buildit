@@ -25,30 +25,6 @@ export function normalizarCaminho(caminho: string,): string {
 }
 
 /**
- * Normaliza um caminho para comparação de prefixos de diretório.
- * Remove prefixos `./` ou `.` redundantes e trailing slash.
- *
- * @param caminho Caminho do diretório
- * @returns Prefixo limpo pronto para comparação de início de string
- *
- * @example
- * ```typescript
- * normalizarPrefixo("./packages/ui/"); // "packages/ui"
- * ```
- */
-export function normalizarPrefixo(caminho: string,): string {
-  let normalized = caminho.replace(/\\/g, "/",).toLowerCase();
-  if (normalized === "./" || normalized === ".") {
-    return "";
-  }
-  if (normalized.startsWith("./",)) {
-    normalized = normalized.substring(2,);
-  }
-  normalized = normalized.replace(/\/$/, "",);
-  return normalized;
-}
-
-/**
  * Calcula a quantidade mínima de crases necessárias para envolver um texto
  * em um bloco de código markdown, evitando conflitos quando o próprio conteúdo
  * possui crases consecutivas.
@@ -159,84 +135,14 @@ export function deveIncluirArquivo(
   }
 
   // 🌟 MODO MODERNO: Padrões `includes` e `excludes` (globs com brace expansion)
+  if (config.excludes && config.excludes.length > 0) {
+    if (correspondeGlobs(caminhoRelativo, config.excludes,)) {
+      return false;
+    }
+  }
+
   if (config.includes && config.includes.length > 0) {
-    if (config.excludes && config.excludes.length > 0) {
-      if (correspondeGlobs(caminhoRelativo, config.excludes,)) {
-        return false;
-      }
-    }
     return correspondeGlobs(caminhoRelativo, config.includes,);
-  }
-
-  // 🔍 MODO LEGADO (fallback retrocompatível)
-  if (
-    config.caminhosAdicionaisPermitidos &&
-    config.caminhosAdicionaisPermitidos.length > 0
-  ) {
-    const correspondeAdicional = config.caminhosAdicionaisPermitidos.some(
-      (caminhoExtra,) => {
-        const extraNormalizado = normalizarCaminho(caminhoExtra,);
-        return (
-          caminhoNormalizado === extraNormalizado ||
-          caminhoNormalizado.startsWith(extraNormalizado + "/",)
-        );
-      },
-    );
-
-    if (correspondeAdicional) {
-      const extensoes = config.extensoesPermitidas ?? [];
-      if (extensoes.length === 0) return true;
-      return extensoes.some(
-        (ext,) =>
-          caminhoNormalizado.endsWith(ext,) || caminhoNormalizado === ext,
-      );
-    }
-  }
-
-  const prefixoBase = normalizarPrefixo(config.pastaBase ?? "./",);
-  const prefixoBaseComBarra = prefixoBase !== "" ? prefixoBase + "/" : "";
-
-  if (
-    prefixoBaseComBarra !== "" &&
-    !caminhoNormalizado.startsWith(prefixoBaseComBarra,)
-  ) {
-    return false;
-  }
-
-  const caminhoInterno = prefixoBaseComBarra !== ""
-    ? caminhoNormalizado.substring(prefixoBaseComBarra.length,)
-    : caminhoNormalizado;
-
-  const estaNaRaiz = !caminhoInterno.includes("/",);
-
-  if (estaNaRaiz) {
-    const arquivosRaiz = config.arquivosRaizPermitidos ?? [];
-    return arquivosRaiz.some(
-      (raiz,) => normalizarCaminho(raiz,) === caminhoInterno,
-    );
-  }
-
-  const subpastas = config.subpastasPermitidas ?? [];
-  let emSubpastaPermitida = false;
-
-  if (subpastas.length === 0) {
-    emSubpastaPermitida = true;
-  } else {
-    emSubpastaPermitida = subpastas.some((sub,) => {
-      const subNormalizada = normalizarCaminho(sub,) + "/";
-      return (
-        caminhoInterno.startsWith(subNormalizada,) ||
-        caminhoInterno === normalizarCaminho(sub,)
-      );
-    },);
-  }
-
-  if (emSubpastaPermitida) {
-    const extensoes = config.extensoesPermitidas ?? [];
-    if (extensoes.length === 0) return true;
-    return extensoes.some(
-      (ext,) => caminhoNormalizado.endsWith(ext,) || caminhoNormalizado === ext,
-    );
   }
 
   return false;

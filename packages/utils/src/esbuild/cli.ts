@@ -46,13 +46,9 @@ export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
       const loaded = await carregarConfigEsbuild(configPath, baseDir,);
       const configs = loaded.targets;
 
-      const rawArgs = [
-        ...args,
-        ...(options.noversion ? ["noversion",] : []),
-      ];
       const { targets, globalNoVersion, } = parseArgs(
-        rawArgs,
-        configs,
+        args,
+        { noversion: Boolean(options.noversion,) },
       );
 
       const DENO_JSONC_PATH = options.denoConfig as string || "deno.jsonc";
@@ -60,18 +56,12 @@ export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
       console.log(
         "\n🚀 Iniciando Orquestrador de Build BuildIt (esbuild nativo + @deno/esbuild-plugin)",
       );
-
-      console.log(
-        `📋 Alvos de build (ordem segura do CONFIG): ${
-          targets.join(", ",) || "(nenhum)"
-        }`,
-      );
       console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
       try {
         await esBuild({
           config: configs,
-          targets,
+          targets: targets.length > 0 ? targets : undefined,
           noversion: globalNoVersion,
           versionPaths: loaded.versionPaths,
           forcepackagesversion: loaded.forcepackagesversion,

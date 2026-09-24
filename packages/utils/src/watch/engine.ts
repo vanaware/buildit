@@ -17,6 +17,7 @@ import {
   listAssetsForCache,
   resolveEntryPoints,
   resolveOutputPaths,
+  resolveWithBase,
 } from "../tools/paths.ts";
 import { readProjectVersion } from "../tools/version.ts";
 import { validateTargetConfig } from "../tools/validate.ts";
@@ -175,7 +176,14 @@ export async function watchEngine(
     return [];
   }
 
-  validateTargetConfig(targetName, targetConfig);
+  const resolvedConfig: WatchTargetConfig = {
+    ...targetConfig,
+    srcdir: resolveWithBase(targetConfig.srcdir, baseDir),
+    distdir: resolveWithBase(targetConfig.distdir, baseDir),
+    publicdir: resolveWithBase(targetConfig.publicdir, baseDir),
+  };
+
+  validateTargetConfig(targetName, resolvedConfig);
 
   // 3. Bloqueio de concorrência: adquire o lock para o watch
   const releaseLock = await acquireWatchLock(
@@ -189,18 +197,15 @@ export async function watchEngine(
       console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`);
     }
 
-    if (
-      targetConfig.clean && targetConfig.clean.length > 0 &&
-      targetConfig.distdir
-    ) {
-      await cleanTarget(targetConfig.distdir, targetConfig.clean);
+    if (resolvedConfig.clean && resolvedConfig.distdir) {
+      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean);
     }
 
-    await copyStaticFiles(targetConfig, version);
+    await copyStaticFiles(resolvedConfig, version, baseDir, resolvedConfig.distdir);
 
     const esbuildOptions = await buildWatchEsbuildOptions(
       targetName,
-      targetConfig,
+      resolvedConfig,
       version,
       listAssetsForCache,
     );
@@ -216,7 +221,7 @@ export async function watchEngine(
     if (!opcoes.silencioso) {
       console.log(`✅ [${targetName}] Monitorando alterações em tempo real...`);
       const resolvedOutfile = esbuildOptions.outfile ||
-        (targetConfig.distdir ? `${targetConfig.distdir}/` : "disco");
+        (resolvedConfig.distdir ? `${resolvedConfig.distdir}/` : "disco");
       console.log(`📦 Saída: ${resolvedOutfile}`);
     }
 

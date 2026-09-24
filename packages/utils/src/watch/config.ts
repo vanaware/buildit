@@ -17,8 +17,10 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
     default: true,
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
-    publicdir: "packages/ui/public",
-    indexHtml: true,
+    copyFiles: [
+      { basedir: "packages/ui/public" },
+      { basedir: "packages/ui/src", includes: ["index.html"] },
+    ],
     entryPoints: ["main.tsx"],
     platform: "browser",
     format: "esm",
@@ -35,7 +37,8 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
 };
 
 /** Alias retrocompatível para configurações padrão de watch */
-export const CONFIGURACOES_WATCH_PADRAO = CONFIGURACOES_PADRAO_WATCH;
+export const CONFIGURACOES_WATCH_PADRAO: Record<string, WatchTargetConfig> =
+  CONFIGURACOES_PADRAO_WATCH;
 
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).

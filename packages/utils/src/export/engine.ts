@@ -3,12 +3,11 @@
  * @description Mecanismo de varredura otimizada de diretórios (expandGlob), filtragem e streaming de snapshots Markdown.
  */
 
-import { expandGlob, walk, } from "@std/fs";
+import { expandGlob, } from "@std/fs";
 import { join, relative, } from "@std/path";
 import { readProjectVersion, } from "../tools/version.ts";
 import {
   correspondeGlobs,
-  deveIncluirArquivo,
   formatarArquivoMarkdown,
   gerarCabecalho,
   normalizarCaminho,
@@ -105,17 +104,6 @@ export async function coletarArquivosParaExportacao(
         }
       } catch {
         // Ignora padrões que não encontram caminhos ou com sintaxe inválida
-      }
-    }
-  } else {
-    // 🔍 MODO LEGADO: Varredura com walk global e filtro deveIncluirArquivo
-    for await (const entry of walk(baseDir, { includeDirs: false, },)) {
-      const caminhoRelativo = relative(baseDir, entry.path,).replace(
-        /\\/g,
-        "/",
-      );
-      if (deveIncluirArquivo(caminhoRelativo, config,)) {
-        arquivosEncontrados.add(caminhoRelativo,);
       }
     }
   }

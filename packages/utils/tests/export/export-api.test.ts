@@ -50,7 +50,7 @@ describe("exportEngine programmatic API", () => {
     await Deno.remove(tempDir, { recursive: true });
   });
 
-  it("deve manter retrocompatibilidade com configurações que usam campos legados", async () => {
+  it("deve exportar com sucesso utilizando includes e globs", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src");
     await Deno.mkdir(srcDir, { recursive: true });
@@ -61,10 +61,7 @@ describe("exportEngine programmatic API", () => {
       config: {
         direto: {
           arquivoSaida: "direct.md",
-          extensoesPermitidas: [".ts"],
-          pastaBase: "src",
-          subpastasPermitidas: [],
-          arquivosRaizPermitidos: ["index.ts"],
+          includes: ["src/**/*.{ts,tsx}"],
           incluiVersao: false,
           instrucaoCustomizada: "Teste direto",
         },

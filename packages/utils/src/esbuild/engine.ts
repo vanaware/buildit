@@ -23,6 +23,7 @@ import {
   listAssetsForCache,
   resolveEntryPoints,
   resolveOutputPaths,
+  resolveWithBase,
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
@@ -110,6 +111,7 @@ export async function esBuild(
       finalVersion,
       (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
       listAssetsForCache,
+      baseDir,
     );
     const durationMs = Number((performance.now() - startTime).toFixed(0,),);
 
@@ -130,6 +132,7 @@ export async function esBuild(
  * @param appVersion Versão da aplicação
  * @param esbuildBuildFn Função de build do esbuild (com plugins injetados)
  * @param listAssetsFn Função opcional para listar assets
+ * @param baseDir Diretório base do projeto para resolução de caminhos
  */
 export async function processTarget(
   targetName: string,
@@ -138,18 +141,26 @@ export async function processTarget(
   // deno-lint-ignore no-explicit-any
   esbuildBuildFn: (options: any,) => Promise<any>,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  baseDir: string = ".",
 ): Promise<void> {
+  const resolvedConfig: TargetConfig = {
+    ...config,
+    srcdir: resolveWithBase(config.srcdir, baseDir,),
+    distdir: resolveWithBase(config.distdir, baseDir,),
+    publicdir: resolveWithBase(config.publicdir, baseDir,),
+  };
+
   // 🔥 VALIDAÇÃO FAIL-FAST: Verifica configuração ANTES de qualquer operação
-  validateTargetConfig(targetName, config,);
+  validateTargetConfig(targetName, resolvedConfig,);
 
   console.log(`\n${"=".repeat(60,)}`,);
   console.log(`🎯 PROCESSANDO ALVO: ${targetName.toUpperCase()}`,);
   console.log(`${"=".repeat(60,)}`,);
 
-  if (config.clean && config.clean.length > 0) {
+  if (resolvedConfig.clean) {
     // 🔥 CORREÇÃO: Só limpa se distdir existe
-    if (config.distdir) {
-      await cleanTarget(config.distdir, config.clean,);
+    if (resolvedConfig.distdir) {
+      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     } else {
       console.warn(
         `⚠️ 'clean' configurado mas 'distdir' ausente. Pulando limpeza.`,
@@ -157,11 +168,11 @@ export async function processTarget(
     }
   }
 
-  await copyStaticFiles(config, appVersion,);
+  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
 
   const esbuildOptions = await buildEsbuildOptions(
     targetName,
-    config,
+    resolvedConfig,
     appVersion,
     listAssetsFn,
   );
@@ -175,8 +186,8 @@ export async function processTarget(
     console.log(`✅ [${targetName}] Build concluído em ${duration}ms`,);
 
     // 🔥 CORREÇÃO: Só salva metafile se distdir existe
-    if (config.metafile && result.metafile && config.distdir) {
-      const metafilePath = join(config.distdir, `${targetName}-metafile.json`,);
+    if (resolvedConfig.metafile && result.metafile && resolvedConfig.distdir) {
+      const metafilePath = join(resolvedConfig.distdir, `${targetName}-metafile.json`,);
       await Deno.writeTextFile(
         metafilePath,
         JSON.stringify(result.metafile, null, 2,),

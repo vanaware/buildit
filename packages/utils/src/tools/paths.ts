@@ -1,10 +1,16 @@
-import { copy, emptyDir, ensureDir, walk, } from "@std/fs";
-import { dirname, isAbsolute, join, } from "@std/path";
+import { copy, emptyDir, ensureDir, expandGlob, walk, } from "@std/fs";
+import { basename, dirname, globToRegExp, isAbsolute, join, relative, } from "@std/path";
 
-import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
+import type {
+  CleanConfig,
+  CopyFileConfig,
+  DenoBundleTargetConfig,
+  TargetConfig,
+  WatchTargetConfig,
+} from "./interfaces.ts";
 
 // ============================================================================
-// 🛡️ VALIDAÇÃO DE PATHS (pura, testável)
+// 🛡️ VALIDAÇÃO DE PATHS E GLOBS (pura, testável)
 // ============================================================================
 /**
  * Verifica se um caminho é seguro (evita path traversal e caminhos absolutos).
@@ -15,6 +21,47 @@ export function isSafePath(cleanPath: string,): boolean {
   if (cleanPath.includes("..",)) return false;
   if (isAbsolute(cleanPath,)) return false;
   return true;
+}
+
+/**
+ * Resolve um caminho relativo adicionando o baseDir caso fornecido e não seja caminho absoluto.
+ *
+ * @param pathStr Caminho a ser resolvido
+ * @param baseDir Diretório base geral
+ * @returns Caminho resolvido com baseDir
+ */
+export function resolveWithBase(
+  pathStr: string | undefined,
+  baseDir: string = ".",
+): string | undefined {
+  if (!pathStr) return undefined;
+  if (isAbsolute(pathStr,) || baseDir === "." || !baseDir) return pathStr;
+  return join(baseDir, pathStr,);
+}
+
+/**
+ * Testa se um caminho relativo corresponde a algum dos padrões glob fornecidos.
+ *
+ * @param caminho Caminho relativo a ser testado
+ * @param padroes Lista de padrões glob (suporta brace expansion e globstar)
+ * @returns True se o caminho casar com ao menos um padrão
+ */
+export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
+  const caminhoNormalizado = caminho.replace(/\\/g, "/",);
+  for (const padrao of padroes) {
+    try {
+      const reg = globToRegExp(padrao, {
+        globstar: true,
+        caseInsensitive: true,
+      },);
+      if (reg.test(caminhoNormalizado,) || reg.test(caminho,)) {
+        return true;
+      }
+    } catch {
+      // Ignora padrão inválido
+    }
+  }
+  return false;
 }
 
 // ============================================================================
@@ -106,38 +153,93 @@ export async function ensureDirForFile(filePath: string): Promise<void> {
 // ============================================================================
 /**
  * Limpa os diretórios/arquivos configurados no alvo.
+ * Suporta globs e brace expansion através de { includes, excludes } ou array de caminhos.
+ *
+ * Regras:
+ * 0. Includes e excludes são sempre relativos ao distdir. Não permite que nenhum arquivo nível acima ao distdir seja deletado.
+ * 1. Para excluir tudo do distdir usa-se includes: ["*"] (ou legado ["."]).
+ *
  * @param distDir Diretório de saída
- * @param cleanPaths Lista de caminhos relativos para limpar
+ * @param cleanConfig Configuração de limpeza ({ includes, excludes }) ou lista de caminhos
  */
 export async function cleanTarget(
   distDir: string,
-  cleanPaths: string[],
+  cleanConfig?: CleanConfig | string[],
 ): Promise<void> {
-  if (!cleanPaths || cleanPaths.length === 0) return;
+  if (!cleanConfig || !distDir) return;
+  try {
+    const stat = await Deno.stat(distDir,);
+    if (!stat.isDirectory) return;
+  } catch {
+    // Diretório de saída ainda não existe no disco
+    return;
+  }
+
+  // Normaliza CleanConfig
+  const config: CleanConfig = Array.isArray(cleanConfig,)
+    ? { includes: cleanConfig.map((p,) => p === "." ? "*" : p), }
+    : cleanConfig;
+
+  if (!config || !config.includes || config.includes.length === 0) return;
+
   console.log(`🧹 Limpando em ${distDir}...`,);
-  for (const cleanPath of cleanPaths) {
-    if (!isSafePath(cleanPath,)) {
-      console.warn(
-        `   ⚠️ Path perigoso ignorado (traversal/absoluto): "${cleanPath}"`,
-      );
+  const includes = config.includes;
+  const excludes = config.excludes ?? [];
+
+  // Otimização: Se includes for ["*"] e excludes vazio, esvazia diretamente o distDir
+  if (
+    includes.length === 1 &&
+    includes[0] === "*" &&
+    excludes.length === 0
+  ) {
+    try {
+      await emptyDir(distDir,);
+      console.log(`   ✅ Diretório esvaziado: ${distDir}`,);
+      return;
+    } catch (error) {
+      console.warn(`   ⚠️ Falha ao esvaziar ${distDir}:`, error,);
+      return;
+    }
+  }
+
+  // Limpeza via globs / brace expansion
+  for (const padrao of includes) {
+    // Proteção direta contra caminhos com traversal ou absolutos no padrão
+    if (!isSafePath(padrao,)) {
+      console.warn(`   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,);
       continue;
     }
-    if (cleanPath === ".") {
-      try {
-        await emptyDir(distDir,);
-        console.log(`   ✅ Diretório esvaziado: ${distDir}`,);
-      } catch (error) {
-        console.warn(`   ⚠️ Falha ao esvaziar ${distDir}:`, error,);
+
+    try {
+      for await (
+        const entry of expandGlob(padrao, {
+          root: distDir,
+          exclude: excludes,
+          includeDirs: true,
+        },)
+      ) {
+        const rel = relative(distDir, entry.path,).replace(/\\/g, "/",);
+
+        // 🔒 Regra 0: Proteção estrita contra path traversal / nível acima ao distdir
+        if (rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === ".") {
+          console.warn(`   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,);
+          continue;
+        }
+
+        // Verifica excludes
+        if (excludes.length > 0 && correspondeGlobs(rel, excludes,)) {
+          continue;
+        }
+
+        try {
+          await Deno.remove(entry.path, { recursive: true, },);
+          console.log(`   ✅ Removido: ${rel}`,);
+        } catch {
+          // pode já ter sido removido recursivamente por pasta pai
+        }
       }
-    } else {
-      const fullPath = join(distDir, cleanPath,);
-      try {
-        await Deno.stat(fullPath,);
-        await Deno.remove(fullPath, { recursive: true, },);
-        console.log(`   ✅ Removido: ${cleanPath}`,);
-      } catch {
-        console.log(`   ⏭️  Não existia: ${cleanPath}`,);
-      }
+    } catch (err) {
+      console.warn(`   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`, err,);
     }
   }
 }
@@ -181,75 +283,212 @@ export async function listAssetsForCache(
 }
 
 /**
- * Copia arquivos estáticos da pasta publicdir e srcdir para o distdir.
- * @param config Configuração do alvo
- * @param appVersion Versão da aplicação para injeção no manifest
+ * Copia arquivos estáticos para o distdir seguindo as regras de copyFiles.
+ *
+ * Regras:
+ * 0. Será feito join de item.basedir com generalBaseDir
+ * 1. Se basedir informado, includes e excludes são relativos ao basedir e preserva a árvore de diretórios relativas ao basedir
+ * 2. Se basedir informado e includes inexistente, vazio ou "*", copia tudo do diretório basedir, respeitando excludes
+ * 3. Se basedir inexistente, includes e excludes são relativos ao generalBaseDir e árvore NÃO é preservada (arquivos copiados diretamente no distdir)
+ * 4. copyFiles é um array
+ * 5. index.html é copiado usando essa configuração
+ * 6. se o arquivo copiado for manifest.json continua injetando a versão, e se for index.html informa no console.log
+ *
+ * @param copyFiles Lista de configurações de cópia
+ * @param distDir Diretório de saída final (já resolvido)
+ * @param appVersion Versão da aplicação para injeção no manifest.json
+ * @param generalBaseDir Diretório base geral da execução (padrão ".")
  */
-export async function copyStaticFiles(
-  config: TargetConfig | DenoBundleTargetConfig,
+export async function copyTargetFiles(
+  copyFiles: CopyFileConfig[] | undefined,
+  distDir: string,
   appVersion: string,
+  generalBaseDir: string = ".",
 ): Promise<void> {
-  // 🔥 CORREÇÃO: Valida distdir e srcdir antes de operações
-  if (!config.distdir) {
-    if (config.publicdir) {
-      console.warn(
-        `⚠️ 'publicdir' configurado mas 'distdir' ausente. Pulando cópia de estáticos.`,
-      );
-    }
-    if (config.indexHtml) {
-      console.warn(
-        `⚠️ 'indexHtml' é true mas 'distdir' ausente. Pulando cópia do HTML.`,
-      );
-    }
-    return;
-  }
-
-  if (config.indexHtml && !config.srcdir) {
+  if (!copyFiles || copyFiles.length === 0) return;
+  if (!distDir) {
     console.warn(
-      `⚠️ 'indexHtml' é true mas 'srcdir' ausente. Pulando cópia do HTML.`,
+      `⚠️ 'copyFiles' configurado mas 'distdir' ausente. Pulando cópia.`,
     );
     return;
   }
 
-  const distDir = config.distdir;
   await ensureDir(distDir,);
 
-  if (config.publicdir) {
-    try {
-      await copy(config.publicdir, distDir, { overwrite: true, },);
-      console.log(
-        `📁 Arquivos de ${config.publicdir} copiados para ${distDir}`,
-      );
-      const manifestPath = join(distDir, "manifest.json",);
+  for (const item of copyFiles) {
+    const hasItemBase = typeof item.basedir === "string" && item.basedir.trim().length > 0;
+    // 0. Será feito join deste basedir com o "basedir geral"
+    const effectiveBaseDir = hasItemBase
+      ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(item.basedir!,)
+        ? join(generalBaseDir, item.basedir!,)
+        : item.basedir!)
+      : (generalBaseDir ?? ".");
+
+    if (hasItemBase) {
+      // 1. se basedir informado, includes e excludes são relativos ao basedir e é preservada a árvore
+      // 2. se basedir informado e includes inexistente, vazio ou "*", copia tudo do basedir respeitando excludes
+      const isAll = !item.includes ||
+        item.includes.length === 0 ||
+        (item.includes.length === 1 && item.includes[0] === "*");
+
+      const patterns = isAll ? ["**/*",] : item.includes!;
+
       try {
-        const manifestText = await Deno.readTextFile(manifestPath,);
-        const manifestObj = JSON.parse(manifestText,);
-        manifestObj.version = appVersion;
-        await Deno.writeTextFile(
-          manifestPath,
-          JSON.stringify(manifestObj, null, 2,),
-        );
-        console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+        const stat = await Deno.stat(effectiveBaseDir,);
+        if (!stat.isDirectory) {
+          console.warn(`⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,);
+          continue;
+        }
       } catch {
-        // manifest.json não existe
+        console.warn(`⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,);
+        continue;
       }
-    } catch {
-      console.log(
-        `⚠️ Pasta ${config.publicdir} não encontrada, pulando cópia.`,
-      );
+
+      for (const padrao of patterns) {
+        try {
+          for await (
+            const entry of expandGlob(padrao, {
+              root: effectiveBaseDir,
+              exclude: item.excludes,
+              includeDirs: false,
+            },)
+          ) {
+            if (entry.isFile) {
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+
+              if (item.excludes && item.excludes.length > 0) {
+                if (correspondeGlobs(relPath, item.excludes,)) {
+                  continue;
+                }
+              }
+
+              const destPath = join(distDir, relPath,);
+              await ensureDirForFile(destPath,);
+              await copy(entry.path, destPath, { overwrite: true, },);
+
+              const fileName = basename(entry.path,).toLowerCase();
+              if (fileName === "index.html") {
+                console.log(`📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,);
+              }
+              if (fileName === "manifest.json") {
+                try {
+                  const manifestText = await Deno.readTextFile(destPath,);
+                  const manifestObj = JSON.parse(manifestText,);
+                  manifestObj.version = appVersion;
+                  await Deno.writeTextFile(
+                    destPath,
+                    JSON.stringify(manifestObj, null, 2,),
+                  );
+                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                } catch {
+                  // manifest não é JSON válido
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+        }
+      }
+      console.log(`📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,);
+    } else {
+      // 3. se basedir inexistente, includes e excludes são relativos ao "basedir geral"
+      // e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
+      const patterns = item.includes && item.includes.length > 0 ? item.includes : [];
+      for (const padrao of patterns) {
+        try {
+          for await (
+            const entry of expandGlob(padrao, {
+              root: effectiveBaseDir,
+              exclude: item.excludes,
+              includeDirs: false,
+            },)
+          ) {
+            if (entry.isFile) {
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+              if (item.excludes && item.excludes.length > 0) {
+                if (correspondeGlobs(relPath, item.excludes,)) {
+                  continue;
+                }
+              }
+
+              const fileName = basename(entry.path,);
+              const destPath = join(distDir, fileName,);
+              await ensureDirForFile(destPath,);
+              await copy(entry.path, destPath, { overwrite: true, },);
+
+              if (fileName.toLowerCase() === "index.html") {
+                console.log(`📄 index.html copiado para ${destPath}`,);
+              }
+              if (fileName.toLowerCase() === "manifest.json") {
+                try {
+                  const manifestText = await Deno.readTextFile(destPath,);
+                  const manifestObj = JSON.parse(manifestText,);
+                  manifestObj.version = appVersion;
+                  await Deno.writeTextFile(
+                    destPath,
+                    JSON.stringify(manifestObj, null, 2,),
+                  );
+                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                } catch {
+                  // manifest não é JSON válido
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+        }
+      }
     }
   }
+}
 
-  if (config.indexHtml && config.srcdir) {
-    const srcDir = config.srcdir;
-    const srcHtml = join(srcDir, "index.html",);
-    const destHtml = join(distDir, "index.html",);
-    try {
-      await copy(srcHtml, destHtml, { overwrite: true, },);
-      console.log(`📄 index.html copiado de ${srcDir} para ${distDir}`,);
-    } catch {
-      console.log(`⚠️ ${srcHtml} não encontrado, pulando cópia do HTML.`,);
+/**
+ * Copia arquivos estáticos para o distdir (novo suporte a copyFiles e retrocompatibilidade com publicdir/indexHtml).
+ * @param config Configuração do alvo
+ * @param appVersion Versão da aplicação para injeção no manifest
+ * @param generalBaseDir Diretório base geral da execução (padrão ".")
+ * @param distDir Diretório de saída opcional já resolvido
+ */
+export async function copyStaticFiles(
+  config: TargetConfig | DenoBundleTargetConfig | WatchTargetConfig,
+  appVersion: string,
+  generalBaseDir: string = ".",
+  distDir?: string,
+): Promise<void> {
+  const effectiveDistDir = distDir ?? (config.distdir
+    ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(config.distdir,)
+      ? join(generalBaseDir, config.distdir,)
+      : config.distdir)
+    : undefined);
+
+  if (!effectiveDistDir) {
+    if (config.copyFiles || config.publicdir || config.indexHtml) {
+      console.warn(
+        `⚠️ Arquivos estáticos configurados mas 'distdir' ausente. Pulando cópia.`,
+      );
     }
+    return;
+  }
+
+  // 1. Caso use o novo sistema: copyFiles
+  if (config.copyFiles && config.copyFiles.length > 0) {
+    await copyTargetFiles(config.copyFiles, effectiveDistDir, appVersion, generalBaseDir,);
+    return;
+  }
+
+  // 2. Fallback retrocompatível para publicdir e indexHtml
+  const legacyCopyFiles: CopyFileConfig[] = [];
+  if (config.publicdir) {
+    legacyCopyFiles.push({ basedir: config.publicdir, },);
+  }
+  if (config.indexHtml && config.srcdir) {
+    legacyCopyFiles.push({ basedir: config.srcdir, includes: ["index.html",], },);
+  }
+
+  if (legacyCopyFiles.length > 0) {
+    await copyTargetFiles(legacyCopyFiles, effectiveDistDir, appVersion, generalBaseDir,);
   }
 }
 

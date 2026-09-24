@@ -171,135 +171,126 @@ describe("deveIncluirArquivo", () => {
     });
   });
 
-  describe("caminhos adicionais (legado)", () => {
+  describe("caminhos adicionais e arquivos raiz via glob", () => {
     it("permite caminho adicional com extensão válida", () => {
-      const config = makeConfig({
-        pastaBase: "src",
-        caminhosAdicionaisPermitidos: [".github/workflows",],
-        extensoesPermitidas: [".yml", ".yaml",],
-      },);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}"],
+      };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/deploy.yml", config,),
+        deveIncluirArquivo(".github/workflows/deploy.yml", config),
         true,
       );
       assertEquals(
-        deveIncluirArquivo(".github/workflows/ci.yaml", config,),
+        deveIncluirArquivo(".github/workflows/ci.yaml", config),
         true,
       );
     });
 
-    it("bloqueia caminho adicional com extensão inválida", () => {
-      const config = makeConfig({
-        pastaBase: "src",
-        caminhosAdicionaisPermitidos: [".github/workflows",],
-        extensoesPermitidas: [".yml",],
-      },);
+    it("bloqueia caminho com extensão que não casa com glob", () => {
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: [".github/workflows/*.yml"],
+      };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/segredo.png", config,),
+        deveIncluirArquivo(".github/workflows/segredo.png", config),
         false,
       );
     });
 
     it("permite arquivo exato no caminho adicional", () => {
-      const config = makeConfig({
-        pastaBase: "src",
-        caminhosAdicionaisPermitidos: ["README.md",],
-        extensoesPermitidas: [".md",],
-      },);
-      assertEquals(deveIncluirArquivo("README.md", config,), true,);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["README.md"],
+      };
+      assertEquals(deveIncluirArquivo("README.md", config), true);
     });
   });
 
-  describe("pastaBase e subpastas (legado)", () => {
-    it("permite arquivo dentro de pastaBase e subpasta permitida", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/server",
-        subpastasPermitidas: ["src", "docs",],
-        extensoesPermitidas: [".ts", ".md",],
-      },);
+  describe("pastas e subpastas via glob", () => {
+    it("permite arquivo dentro de subpasta permitida", () => {
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["monorepo/server/{src,docs}/**/*.{ts,md}"],
+      };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/src/main.ts", config,),
+        deveIncluirArquivo("monorepo/server/src/main.ts", config),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config,),
+        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config),
         true,
       );
     });
 
-    it("bloqueia arquivo fora de pastaBase", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/server",
-        subpastasPermitidas: ["src",],
-      },);
+    it("bloqueia arquivo fora das pastas incluídas", () => {
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["monorepo/server/src/**/*"],
+      };
       assertEquals(
-        deveIncluirArquivo("monorepo/ui/src/app.tsx", config,),
+        deveIncluirArquivo("monorepo/ui/src/app.tsx", config),
         false,
       );
     });
 
-    it("bloqueia arquivo em subpasta não permitida", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/server",
-        subpastasPermitidas: ["src",],
-        extensoesPermitidas: [".js",],
-      },);
+    it("bloqueia arquivo em subpasta excluída", () => {
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["monorepo/server/**/*"],
+        excludes: ["monorepo/server/dist/**/*"],
+      };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/dist/bundle.js", config,),
+        deveIncluirArquivo("monorepo/server/dist/bundle.js", config),
         false,
       );
     });
   });
 
-  describe("arquivos raiz (legado)", () => {
+  describe("arquivos raiz via glob", () => {
     it("permite arquivos raiz explicitamente configurados", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/server",
-        arquivosRaizPermitidos: ["deno.json", "deploy.sh",],
-        subpastasPermitidas: [],
-      },);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["monorepo/server/{deno.json,deploy.sh}"],
+      };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deno.json", config,),
+        deveIncluirArquivo("monorepo/server/deno.json", config),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deploy.sh", config,),
+        deveIncluirArquivo("monorepo/server/deploy.sh", config),
         true,
       );
     });
 
     it("bloqueia arquivos raiz não configurados", () => {
-      const config = makeConfig({
-        pastaBase: "monorepo/server",
-        arquivosRaizPermitidos: ["deno.json",],
-        subpastasPermitidas: [],
-      },);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["monorepo/server/deno.json"],
+      };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/package.json", config,),
+        deveIncluirArquivo("monorepo/server/package.json", config),
         false,
       );
     });
   });
 
-  describe("configuração tipo docs (legado)", () => {
+  describe("configuração tipo docs via glob", () => {
     it("captura raiz e subpasta docs", () => {
-      const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["docs",],
-        arquivosRaizPermitidos: ["readme.md",],
-        extensoesPermitidas: [".md",],
-      },);
-      assertEquals(deveIncluirArquivo("readme.md", config,), true,);
-      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["readme.md", "docs/**/*.md"],
+      };
+      assertEquals(deveIncluirArquivo("readme.md", config), true);
+      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config), true);
     });
 
     it("bloqueia código fonte fora de docs", () => {
-      const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["docs",],
-        extensoesPermitidas: [".md",],
-      },);
-      assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
+      const config: ExportConfig = {
+        arquivoSaida: "snapshot.md",
+        includes: ["docs/**/*.md"],
+      };
+      assertEquals(deveIncluirArquivo("src/main.ts", config), false);
     });
   });
 });

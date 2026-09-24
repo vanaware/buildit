@@ -19,9 +19,13 @@ export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
     default: true,
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
-    publicdir: "packages/ui/public",
-    indexHtml: true,
-    clean: ["."],
+    copyFiles: [
+      { basedir: "packages/ui/public" },
+      { basedir: "packages/ui/src", includes: ["index.html"] },
+    ],
+    clean: {
+      includes: ["*"],
+    },
     entryPoints: ["main.tsx"],
     platform: "browser",
     format: "esm",
