@@ -1,6 +1,6 @@
 {
-  "version": "0.3.31#mudxvcks",
-  "description": "Asynchronous database layer for Web Workers, IndexedDB, and OPFS.",
+  "version": "0.3.14",
+  "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",
     "./packages/ui",
@@ -23,7 +23,8 @@
     "@std/testing": "jsr:@std/testing@^1.0.20",
     "@std/path": "jsr:@std/path@^1.1.6",
     "@std/fs": "jsr:@std/fs@^1.0.24",
-    "@std/jsonc": "jsr:@std/jsonc@^1.0.2"
+    "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
+    "@vanaware/buildit": "./packages/utils/src/mod.ts"
   },
   "catalog": {
     "esbuild": "^0.28.2"

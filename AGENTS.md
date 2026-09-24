@@ -6,9 +6,8 @@ Welcome to the BuildIt project! This file (`AGENTS.md`) is automatically injecte
 - **Deno Only**: This project runs entirely on Deno. 
 - **NO Node.js or Local NPM**: Do NOT use `npm install`, do NOT create a `node_modules` directory locally, and do NOT rely on Node.js specific APIs.
 - **Dependency Management**: All dependencies are managed exclusively via `deno.json` using `npm:` and `jsr:` specifiers (e.g., `npm:preact`, `jsr:@std/testing`).
-- **JSR Publication**: The repository publishes multiple libraries to JSR:
-  - `@vanaware/buildit` (in `packages/worker-db/`): The core non-blocking persistence engine.
-  - `@vanaware/opfs-explorer` (in `packages/service-worker/`): The pluggable Service Worker OPFS explorer.
+- **JSR Publication**: The repository publishes the core library to JSR:
+  - `@vanaware/buildit` (in `packages/utils/`): A suite of utilities for build orchestration, bundling, and AI context export.
   - Publishing is automated via GitHub Actions in `.github/workflows/jsr-publish.yml`. All published packages MUST strictly follow the guidelines in `docs/publish-jsr-rules.md` (complete JSDoc, valid `deno doc --lint`, descriptive README with executable examples).
 - **Bundling**: We use Deno's native (and unstable) bundler via the `esbuild.ts` script or esbuild (`deno task esbuild`). This script parses typescript and generates the final output exclusively in the `packages/server/build/dist/` directory.
 
@@ -31,14 +30,10 @@ Welcome to the BuildIt project! This file (`AGENTS.md`) is automatically injecte
 - **No Direct Deno.test**: Do NOT use the raw `Deno.test()` syntax for new tests.
 - **Command**: Run tests using `deno task test` or `deno task check-all`.
 
-## 5. Offline & PWA & Deployment
-- **Service Worker & OPFS Explorer**: The app is an offline-capable Progressive Web App with `@vanaware/opfs-explorer` integrated in `packages/service-worker/src/sw.ts`.
-- **Dynamic Routing & Zero Hardcoding**:
-  - **No Hardcoded Base Paths**: Never hardcode repository names or paths like `/buildit/`. In the UI (`packages/ui/src/main.tsx`), always derive paths dynamically using `new URL("./", globalThis.location.href).pathname`.
-  - **Configurable OPFS Explorer Subfolders**: The OPFS explorer route is not hardcoded to `/opfs/`. Developers can configure custom subfolders (e.g., `createOpfsFetchHandler("files")`, `createOpfsFetchHandler("arquivos")`, or `OpfsExplorerOptions`). The explorer dynamically adapts to any Service Worker scope (local `/`, GitHub Pages `/{repo-name}/`, etc.).
+## 5. Deployment & PWA
 - **Manifest**: Configuration for the installable app lives in `packages/ui/public/manifest.json`.
 - Assets in `public/` are automatically copied to the distribution folder during the build process.
-- **Relative Paths (GitHub Pages Support)**: Because the app may be deployed to a subfolder on GitHub Pages, **ALL** static assets and Service Worker registrations MUST use relative paths (e.g., `./manifest.json` and `navigator.serviceWorker.register("./service-worker.js")`) instead of absolute root paths (`/`).
+- **Relative Paths (GitHub Pages Support)**: Because the app may be deployed to a subfolder on GitHub Pages, **ALL** static assets MUST use relative paths (e.g., `./manifest.json` and `./main.js`) instead of absolute root paths (`/`).
 - **CI/CD**: The project contains a GitHub Actions workflow (`.github/workflows/gh-pages.yml`) that automatically builds and deploys the contents of the `packages/server/build/dist/` directory to GitHub Pages.
 
 ## 6. AI Studio Environment Constraints & Bootstrapping

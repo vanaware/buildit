@@ -1,6 +1,6 @@
 # Arquivo `CURRENT.md`
 
-## Status Atual: Fase 1 (Concluída) ➔ Fase 2 (Preparação para Publicação & Estabilização)
+## Status Atual: Fase 3 (Concluída) ➔ Fase 4 (Estabilização & Documentação Final)
 
 Este repositório é um fork do workerdb e foi refatorado para criar e disponibilizar a biblioteca **`@vanaware/buildit`**.
 
@@ -88,9 +88,9 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** fe
   - Validada a esteira do GitHub Actions `.github/workflows/jsr-publish.yml` para disparos via tags `v*.*`.
 
 #### Prioridade Média (Fase 3: Consolidação do Monorepo):
-- [ ] **4. Integração do `@vanaware/buildit` como Dependência dos Demais Pacotes**:
+- [x] **4. Integração do `@vanaware/buildit` como Dependência dos Demais Pacotes**:
   - Configurar `packages/server` e `packages/ui` para referenciar utilitários compartilhados de build e versionamento caso necessário, mantendo isolamento de dependências.
-- [ ] **5. Limpeza de Legados do WorkerDB**:
+- [x] **5. Limpeza de Legados do WorkerDB**:
   - Avaliar e remover resquícios ou dependências antigas do fork original de banco de dados que não se aplicam ao propósito da ferramenta de build e exportação, mantendo o repositório focado e leve.
 
 antes de executar os próximos passos, faremos os seguintes ajustes:    

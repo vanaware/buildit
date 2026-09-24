@@ -25,7 +25,10 @@
 
     // Signals — mapeados explicitamente para evitar npm
     "@preact/signals": "https://esm.sh/@preact/signals@2.11.2?deps=preact@10.29.8",
-    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4"
+    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4",
+
+    // Bibliotecas Internas — integrando utilitários de build e contexto
+    "@vanaware/buildit": "../utils/src/mod.ts"
   },
 
   // 🛠️ Scripts de Automação
