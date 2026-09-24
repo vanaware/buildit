@@ -138,7 +138,10 @@ Explicação:
 - [x] Criação de runners na raiz (`sanitize-version.ts`, `tag-version.ts`) e atualização de `deno.jsonc` tasks
 - [x] Testes BDD completos para os novos utilitários de versão
 
-**TODO LIST 4 (Finalização)**
+**TODO LIST 4 (Finalização & UX)**
+- [x] Simplificação radical da UI: migração de sistema multi-abas para Dashboard unificado
+- [x] Novo componente `AppDashboard.tsx` focando na experiência de simulação de build
+- [x] Remoção de componentes legados e redundantes (`OverviewCard`, `ToolDetails`, etc.)
 - [x] Atualização da documentação técnica em `docs/api.md` com novos utilitários
 - [x] Sincronização do `README.md` da raiz com a nova estrutura de 6 ferramentas
 - [x] Atualização do `packages/utils/README.md` com instruções de uso JSR para versão

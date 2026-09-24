@@ -1,11 +1,6 @@
 import { render, } from "preact";
-import { activeTab, } from "./stores/app.ts";
 import { Header, } from "./components/Header.tsx";
-import { Navigation, } from "./components/Navigation.tsx";
-import { OverviewCard, } from "./components/OverviewCard.tsx";
-import { ToolDetails, } from "./components/ToolDetails.tsx";
-import { SimulatorCard, } from "./components/SimulatorCard.tsx";
-import { SnapshotsCard, } from "./components/SnapshotsCard.tsx";
+import { AppDashboard, } from "./components/AppDashboard.tsx";
 
 const App = () => {
   return (
@@ -13,12 +8,7 @@ const App = () => {
       <Header />
       <main class="responsive">
         <div class="space"></div>
-        <Navigation />
-
-        {activeTab.value === "overview" && <OverviewCard />}
-        {activeTab.value === "cli" && <ToolDetails />}
-        {activeTab.value === "interactive" && <SimulatorCard />}
-        {activeTab.value === "snapshots" && <SnapshotsCard />}
+        <AppDashboard />
 
         <div class="large-space"></div>
         <footer class="responsive center-align">

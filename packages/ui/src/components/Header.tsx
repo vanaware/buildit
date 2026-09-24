@@ -31,17 +31,6 @@ export const Header = () => {
         </div>
         <button
           type="button"
-          class="border round wave small none s-inline-flex"
-          onClick={() => (activeTab.value = "cli")}>
-          <i>
-            menu_book
-          </i>
-          <span>
-            Docs &amp; CLI
-          </span>
-        </button>
-        <button
-          type="button"
           class="circle transparent wave"
           onClick={toggleTheme}
           title={themeMode.value === "dark"
