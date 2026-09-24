@@ -1,14 +1,16 @@
 # Arquivo `CURRENT.md`
 
-## Status Atual: Fase 3 (Concluída) ➔ Fase 4 (Estabilização & Documentação Final)
+## Status Atual: Fase 4 (Estabilização & Documentação Final) ➔ Fase 5 (Concluída)
 
 Este repositório é um fork do workerdb e foi refatorado para criar e disponibilizar a biblioteca **`@vanaware/buildit`**.
 
-A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** ferramentas/utilitários centrais, todos controlados por arquivos de configuração externos declarativos (`.jsonc`), suportados por JSON Schemas formais e exportados via JSR:
-1. **esbuild** => Orquestrador de build de produção ultrarrápido derivado de `esbuild.ts` via `esbuild.jsonc` *(✅ Concluído)*
-2. **watch** => Monitor de desenvolvimento contínuo derivado de `watch.ts` via `watch.jsonc` com controle de PID lock *(✅ Concluído)*
-3. **denobuild** => Bundler nativo Deno derivado de `denobuild.ts` via `denobuild.jsonc` utilizando `Deno.bundle` *(✅ Concluído)*
-4. **export** => Consolidar e exportar contexto de código para IAs derivado de `export.ts` via `export.jsonc` *(✅ Concluído & Modernizado com `includes`/`excludes` + `expandGlob` + Streaming O(1))*
+A biblioteca está consolidada no pacote `packages/utils` contendo **seis** ferramentas/utilitários centrais, todos controlados por arquivos de configuração externos declarativos (`.jsonc`), suportados por JSON Schemas formais e exportados via JSR:
+1. **esbuild** => Orquestrador de build de produção ultrarrápido *(✅ Concluído)*
+2. **watch** => Monitor de desenvolvimento contínuo *(✅ Concluído)*
+3. **denobuild** => Bundler nativo Deno utilizando `Deno.bundle` *(✅ Concluído)*
+4. **export** => Consolidar e exportar contexto de código para IAs *(✅ Concluído)*
+5. **sanitize-version** => Normalização SemVer estrita do `deno.jsonc` *(✅ Concluído)*
+6. **tag-version** => Automação de release e push de tags git *(✅ Concluído)*
 
 ---
 
@@ -67,9 +69,9 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **quatro** fe
   - `stores/app.ts` & testes BDD: Reatividade pura via `@preact/signals` sem hooks e sem Tailwind.
 
 #### 4. Conformidade JSR e Documentação
-- `packages/utils/deno.jsonc`: Configurado para publicação com name `@vanaware/buildit`, versionamento semântico, `publish.include`/`publish.exclude` restritivos e exportação modular (`.`, `./esbuild`, `./esbuild/cli`, `./watch`, `./watch/cli`, `./export`, `./export/cli`, `./denobuild`, `./denobuild/cli`).
-- `packages/utils/README.md`: Documentação completa de uso com exemplos CLI e programáticos.
-- `docs/api.md`: Referência técnica de configurações JSONC e APIs TypeScript dos 4 motores.
+- `packages/utils/deno.jsonc`: Configurado para publicação com name `@vanaware/buildit`, versionamento semântico, `publish.include`/`publish.exclude` restritivos e exportação modular.
+- `packages/utils/README.md` & `README.md` (raiz): Documentação completa de uso com exemplos CLI e programáticos, incluindo os novos utilitários de versão.
+- `docs/api.md`: Referência técnica atualizada abrangendo os 6 motores e utilitários.
 - `docs/publish-jsr-rules.md`: Guia de conformidade com regras JSR (JSDoc, ausência de referências a nódulos locais, licença MIT).
 - CI/CD em `.github/workflows/jsr-publish.yml` configurado para publicação automatizada com sanitização de versão.
 
@@ -135,3 +137,10 @@ Explicação:
 - [x] Exportação dos novos módulos em `@vanaware/buildit` (JSR ready)
 - [x] Criação de runners na raiz (`sanitize-version.ts`, `tag-version.ts`) e atualização de `deno.jsonc` tasks
 - [x] Testes BDD completos para os novos utilitários de versão
+
+**TODO LIST 4 (Finalização)**
+- [x] Atualização da documentação técnica em `docs/api.md` com novos utilitários
+- [x] Sincronização do `README.md` da raiz com a nova estrutura de 6 ferramentas
+- [x] Atualização do `packages/utils/README.md` com instruções de uso JSR para versão
+- [x] Revisão final do `AGENTS.md` para diretrizes de desenvolvimento estáveis
+- [x] Execução de suíte final de testes de integração e validação de workspace

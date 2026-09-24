@@ -7,6 +7,7 @@ Build orchestration, continuous development watcher, bundling, and AI context ex
 2. 👀 **Watch Engine**: Real-time continuous development rebuilder based on `esbuild.context`.
 3. 📦 **Deno.bundle Engine**: Native runtime bundling with zero external binary dependencies.
 4. 📝 **AI Context Exporter**: Intelligent snapshot generator structuring codebase context into Markdown for LLMs.
+5. 🧼 **Version Automation**: Utilities for SemVer sanitization and automated Git tagging.
 
 ## Installation
 
@@ -49,6 +50,15 @@ deno run -A jsr:@vanaware/buildit/export/cli
 
 # Export specific snapshots
 deno run -A jsr:@vanaware/buildit/export/cli ui docs
+```
+
+### 🧼 Versioning CLI
+```bash
+# Sanitize deno.jsonc version to strict MAJOR.MINOR.PATCH
+deno run -A jsr:@vanaware/buildit/sanitize-version/cli
+
+# Create and push a new git tag based on current version
+deno run -A jsr:@vanaware/buildit/tag-version/cli
 ```
 
 ---
@@ -139,6 +149,10 @@ await exportEngine({
 | `./denobuild/cli` | CLI runner for native `Deno.bundle`. |
 | `./export` | LLM context generator, path scanner, and Markdown formatter. |
 | `./export/cli` | CLI runner for AI context exports. |
+| `./sanitize-version` | Utility for version normalization. |
+| `./sanitize-version/cli` | CLI runner for version sanitization. |
+| `./tag-version` | Automated Git tag and release engine. |
+| `./tag-version/cli` | CLI runner for automated tagging. |
 
 ## License
 

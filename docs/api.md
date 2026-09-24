@@ -6,9 +6,10 @@ Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildi
 2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc)
 3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc)
 4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc)
-5. [💡 Como Usar os Schemas no Editor ($schema)](#-5-como-usar-os-schemas-no-editor-schema)
-6. [🛠️ Utilitários de Versão e CLI](#-6-utilitários-de-versão-e-cli)
-7. [💻 API Programática em TypeScript](#-7-api-programática-em-typescript)
+5. [🧼 Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version)
+6. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
+7. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
+8. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
 
 ---
 
@@ -174,7 +175,26 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
 
 ---
 
-## 💡 5. Como Usar os Schemas no Editor ($schema)
+## 🧼 5. Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)
+
+O BuildIt inclui utilitários especializados para manter o arquivo `deno.jsonc` em conformidade com o padrão SemVer e automatizar a criação de tags git.
+
+### 🧼 `sanitize-version`
+Normaliza o campo `"version"` para o formato estrito `MAJOR.MINOR.PATCH`.
+- **Comportamento:** Remove sufixos como `#hash`, `-alpha`, `+build`.
+- **Injeção:** Se o campo `"version"` estiver ausente, ele insere `"version": "0.0.0"` automaticamente.
+
+### 🏷️ `tag-version`
+Automatiza o fluxo de release local e remoto:
+1.  (Opcional) Sanitiza o arquivo `deno.jsonc` em disco.
+2.  Executa `git add -A` e `git commit -m "Versão vX.Y"`.
+3.  Executa `git push` do código.
+4.  Remove tags locais e remotas antigas com o mesmo prefixo `vMAJOR.MINOR`.
+5.  Cria uma nova tag anotada e executa `git push --force origin vX.Y`.
+
+---
+
+## 💡 6. Como Usar os Schemas no Editor ($schema)
 
 Cada utilitário possui um JSON Schema oficial no diretório `packages/utils/schema/`:
 
@@ -206,7 +226,7 @@ Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo 
 
 ---
 
-## 🛠️ 6. Utilitários de Versão e CLI
+## 🛠️ 7. Utilitários de Versão e CLI
 
 ### Flags Comuns a Todos os CLIs
 
@@ -227,7 +247,7 @@ O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
 
 ---
 
-## 💻 7. API Programática em TypeScript
+## 💻 8. API Programática em TypeScript
 
 A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
 
