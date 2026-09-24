@@ -147,3 +147,4 @@ Explicação:
 - [x] Atualização do `packages/utils/README.md` com instruções de uso JSR para versão
 - [x] Revisão final do `AGENTS.md` para diretrizes de desenvolvimento estáveis
 - [x] Execução de suíte final de testes de integração e validação de workspace
+- [x] Verificação e atualização dos GitHub Actions workflows (`jsr-publish.yml` e `gh-pages.yml`) para compatibilidade com Deno 2.x e o novo sistema de versionamento TypeScript

@@ -24,11 +24,11 @@ jobs:
           cache: true
         
       - name: Install dependencies
-        run: deno ci
+        run: deno install
 
       - name: Sanitize Version
         run: |
-          sh ./sanitize-version.sh ./packages/utils/deno.jsonc
+          deno run -A ./sanitize-version.ts ./packages/utils/deno.jsonc
 
       - name: Publish BuildIt to JSR
         run: |
