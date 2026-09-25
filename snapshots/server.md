@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: SERVER
 
-Gerado automaticamente em: 2026-09-24T00:33:52.844Z
+Gerado automaticamente em: 2026-09-25T00:31:55.828Z
 
 ---
 
@@ -45,7 +45,7 @@ jobs:
           cache: true
       
       - name: Install dependencies
-        run: deno ci
+        run: deno install
 
       - name: Build Application
         run: deno task build noversion
@@ -102,11 +102,11 @@ jobs:
           cache: true
         
       - name: Install dependencies
-        run: deno ci
+        run: deno install
 
       - name: Sanitize Version
         run: |
-          sh ./sanitize-version.sh ./packages/utils/deno.jsonc
+          deno run -A ./sanitize-version.ts ./packages/utils/deno.jsonc
 
       - name: Publish BuildIt to JSR
         run: |
@@ -129,7 +129,8 @@ jobs:
     ]
   },
   "imports": {
-    "@std/http": "jsr:@std/http@^1.1.3"
+    "@std/http": "jsr:@std/http@^1.1.3",
+    "@vanaware/buildit": "../utils/src/mod.ts"
   },
   "tasks": {
     "test": "deno test --allow-env --allow-net --allow-read tests/",
@@ -150,42 +151,42 @@ jobs:
 ## Arquivo: `packages/server/src/main.ts`
 
 ```ts
-import { serveDir } from "@std/http/file-server";
-import { fromFileUrl } from "@std/path";
+import { serveDir, } from "@std/http/file-server";
+import { fromFileUrl, } from "@std/path";
 
 const port = 3000;
 
 const fsRoot = (() => {
   try {
-    Deno.statSync("./build/dist");
+    Deno.statSync("./build/dist",);
     return "./build/dist";
   } catch {
-    return fromFileUrl(new URL("../build/dist", import.meta.url));
+    return fromFileUrl(new URL("../build/dist", import.meta.url,),);
   }
 })();
 
-console.log(`🚀 Iniciando servidor na porta: ${port} (fsRoot: ${fsRoot})`);
+console.log(`🚀 Iniciando servidor na porta: ${port} (fsRoot: ${fsRoot})`,);
 
-Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
+Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
   try {
-    const url = new URL(req.url);
+    const url = new URL(req.url,);
 
     const staticResponse = await serveDir(req, {
       fsRoot,
       showDirListing: false,
       quiet: true,
-    });
+    },);
 
     staticResponse.headers.set(
       "Cache-Control",
       "no-store, no-cache, must-revalidate, proxy-revalidate",
     );
-    staticResponse.headers.set("Pragma", "no-cache");
-    staticResponse.headers.set("Expires", "0");
+    staticResponse.headers.set("Pragma", "no-cache",);
+    staticResponse.headers.set("Expires", "0",);
 
     // Permitir escopo global para Service Worker
-    if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js")) {
-      staticResponse.headers.set("Service-Worker-Allowed", "/");
+    if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js",)) {
+      staticResponse.headers.set("Service-Worker-Allowed", "/",);
     }
 
     return staticResponse;
@@ -197,11 +198,10 @@ Deno.serve({ port, hostname: "0.0.0.0" }, async (req) => {
 
     return new Response("Internal Server Error", {
       status: 500,
-      headers: { "content-type": "text/plain; charset=utf-8" },
-    });
+      headers: { "content-type": "text/plain; charset=utf-8", },
+    },);
   }
-});
-
+},);
 
 ```
 

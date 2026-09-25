@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: DOCS
 
-Gerado automaticamente em: 2026-09-24T00:33:52.831Z
+Gerado automaticamente em: 2026-09-25T00:31:55.816Z
 
 ---
 
@@ -25,15 +25,18 @@ deno 2.9.7
 ````md
 # 📖 Referência da API e Configurações do BuildIt
 
-Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 4 utilitários:
+Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 6 utilitários:
 
-1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc)
-2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc)
-3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc)
-4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc)
-5. [💡 Como Usar os Schemas no Editor ($schema)](#-5-como-usar-os-schemas-no-editor-schema)
-6. [🛠️ Utilitários de Versão e CLI](#-6-utilitários-de-versão-e-cli)
-7. [💻 API Programática em TypeScript](#-7-api-programática-em-typescript)
+1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc) — [Ver Topologia](./topology-esbuild.md)
+2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc) — [Ver Topologia](./topology-watch.md)
+3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc) — [Ver Topologia](./topology-denobuild.md)
+4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc) — [Ver Topologia](./topology-export.md)
+5. [🧼 Sanitizador de Versão (`sanitize-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-sanitize-version.md)
+6. [🏷️ Publicador de Versão (`tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-tag-version.md)
+7. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
+8. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
+9. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
+10. [📂 Impacto do `baseDir` na Resolução de Caminhos](./impacto-basedir.md)
 
 ---
 
@@ -94,7 +97,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
 | `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
 | `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade (ex: `"esnext"`, `"chrome110"`). |
+| `target` | `"sw" \| string` | `"esnext"` | Ambientes alvos de compatibilidade. Se o nome do alvo (chave no config) for `"sw"`, o motor injeta automaticamente a constante `__GENERATED_ASSETS__` (lista de caminhos de arquivos no `distdir`) para facilitar a configuração de cache do Service Worker. |
 | `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
 | `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
 
@@ -161,6 +164,7 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
 | `define` | `Record<string, string>` | Injeção de constantes globais. |
 | `outfile` | `string` | Nome explícito do arquivo gerado. |
+| `target` | `"sw" \| string` | Se o nome do alvo (chave) for `"sw"`, o motor injeta `__GENERATED_ASSETS__` (lista de arquivos no `distdir`) para cache do Service Worker. |
 
 ---
 
@@ -199,7 +203,26 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
 
 ---
 
-## 💡 5. Como Usar os Schemas no Editor ($schema)
+## 🧼 5. Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)
+
+O BuildIt inclui utilitários especializados para manter o arquivo `deno.jsonc` em conformidade com o padrão SemVer e automatizar a criação de tags git.
+
+### 🧼 `sanitize-version`
+Normaliza o campo `"version"` para o formato estrito `MAJOR.MINOR.PATCH`.
+- **Comportamento:** Remove sufixos como `#hash`, `-alpha`, `+build`.
+- **Injeção:** Se o campo `"version"` estiver ausente, ele insere `"version": "0.0.0"` automaticamente.
+
+### 🏷️ `tag-version`
+Automatiza o fluxo de release local e remoto:
+1.  (Opcional) Sanitiza o arquivo `deno.jsonc` em disco.
+2.  Executa `git add -A` e `git commit -m "Versão vX.Y"`.
+3.  Executa `git push` do código.
+4.  Remove tags locais e remotas antigas com o mesmo prefixo `vMAJOR.MINOR`.
+5.  Cria uma nova tag anotada e executa `git push --force origin vX.Y`.
+
+---
+
+## 💡 6. Como Usar os Schemas no Editor ($schema)
 
 Cada utilitário possui um JSON Schema oficial no diretório `packages/utils/schema/`:
 
@@ -231,7 +254,7 @@ Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo 
 
 ---
 
-## 🛠️ 6. Utilitários de Versão e CLI
+## 🛠️ 7. Utilitários de Versão e CLI
 
 ### Flags Comuns a Todos os CLIs
 
@@ -252,7 +275,7 @@ O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
 
 ---
 
-## 💻 7. API Programática em TypeScript
+## 💻 8. API Programática em TypeScript
 
 A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
 
@@ -290,6 +313,91 @@ const handles = await watchEngine({
 ```
 
 ````
+
+---
+
+## Arquivo: `docs/impacto-basedir.md`
+
+```md
+# Guia Técnico: O Impacto do `baseDir` no BuildIt
+
+Este documento explica detalhadamente como a opção `basedir` (configurável via CLI `-b` ou `--base-dir`) influencia o comportamento de leitura, escrita e resolução de caminhos em todos os utilitários do ecossistema BuildIt.
+
+---
+
+## 1. O que é o `baseDir`?
+
+O `baseDir` é o **Diretório Raiz de Execução** (ou Workspace Root). Ele define o ponto de ancoragem para todos os caminhos relativos declarados nos arquivos de configuração (`.jsonc`).
+
+- **Padrão:** Se não informado, o BuildIt assume `.` (o diretório atual onde o comando foi disparado).
+- **Escopo:** O impacto é **global** em cada utilitário, afetando desde a localização do arquivo de configuração até a geração dos arquivos de saída.
+
+---
+
+## 2. Impacto por Utilitário
+
+### ⚡ esbuild & 📦 denobuild (Build de Produção)
+
+Neste contexto, o `baseDir` atua como o prefixo para a estrutura do monorepo ou projeto.
+
+1.  **Resolução de Pastas Centrais**:
+    - `srcdir`, `distdir` e `publicdir` são resolvidos usando `join(baseDir, path)`. Se você estiver na raiz do monorepo e rodar `--base-dir packages/ui`, o BuildIt procurará a origem em `packages/ui/src`.
+2.  **EntryPoints**:
+    - São resolvidos em relação ao `srcdir` já prefixado pelo `baseDir`.
+3.  **Cópia de Arquivos (`copyFiles`)**:
+    - Atua como o `generalBaseDir`. Cada entrada no array `copyFiles` que possuir um `basedir` próprio será resolvida em relação ao `baseDir` global da execução.
+    - Exemplo: Se `baseDir` é `packages/ui` e o item tem `basedir: "public"`, a varredura real ocorre em `packages/ui/public`.
+4.  **Limpeza (`clean`)**:
+    - O diretório `distdir` (alvo da limpeza) é prefixado pelo `baseDir`. As regras de inclusão/exclusão de limpeza operam estritamente dentro desse caminho resultante.
+
+### 👀 watch (Monitoramento de Desenvolvimento)
+
+O `watch` herda todo o comportamento do `esbuild`, mas adiciona uma camada crítica de segurança:
+
+1.  **Lock File (`.buildit-watch.lock`)**:
+    - O arquivo de trava de PID é criado na raiz do `baseDir`.
+    - **Por que isso importa?** Isso permite que você execute múltiplos processos `watch` no mesmo servidor, desde que apontem para `baseDir` diferentes, evitando colisões de processos que tentam monitorar o mesmo projeto.
+
+### 📝 export (Snapshot para IA)
+
+O `export` é o utilitário mais sensível ao `baseDir`, pois ele determina o que "entra na foto".
+
+1.  **Raiz do Glob**:
+    - O `baseDir` é passado como o parâmetro `root` para a função `expandGlob`. Padrões como `src/**/*.ts` só encontrarão arquivos dentro do `baseDir`.
+2.  **Caminhos no Markdown**:
+    - O utilitário calcula o caminho relativo de cada arquivo usando `relative(baseDir, arquivo.path)`. Isso garante que o snapshot gerado seja limpo e não exponha a estrutura absoluta de pastas do seu servidor/máquina.
+3.  **Destino do Snapshot**:
+    - O arquivo gerado (ex: `exports/ui.md`) é criado dentro do `baseDir`. Se você rodar com `--base-dir packages/utils`, o resultado irá para `packages/utils/exports/ui.md`.
+
+### 🧼 sanitize-version & 🏷️ tag-version (Versionamento)
+
+1.  **Localização do `deno.jsonc`**:
+    - Se o caminho do arquivo não for absoluto, o utilitário tenta localizá-lo dentro do `baseDir`.
+
+---
+
+## 3. Resumo de Comportamento de Paths
+
+| Tipo de Caminho | Comportamento com `baseDir` |
+| :--- | :--- |
+| **Caminho Absoluto** (`/etc/config`) | **Ignora** o `baseDir`. O sistema usa o caminho literal. |
+| **Caminho Relativo** (`src/main.ts`) | **Prefixa** com `baseDir` → `join(baseDir, "src/main.ts")`. |
+| **Padrão Glob** (`**/*.ts`) | **Restringe** a busca ao escopo do `baseDir`. |
+
+---
+
+## 4. Status da Implementação
+
+A implementação do `baseDir` é **Sistêmica e Global**. 
+
+Ela foi refatorada para ser propagada desde a camada de CLI (`packages/utils/src/*/cli.ts`) até o motor (`engine.ts`) e finalmente para as funções de baixo nível em `packages/utils/src/tools/paths.ts`. 
+
+### Pontos de Verificação (Garantia de Integridade):
+- [x] **Consistência**: Todos os utilitários usam a mesma função `resolveWithBase` para normalização.
+- [x] **Segurança**: Funções de escrita e deleção (`cleanTarget`, `copyStaticFiles`) validam se o caminho final não "escapa" do diretório pretendido através de travas contra path traversal.
+- [x] **Transparência**: Os logs de console exibem os caminhos resolvidos para que o usuário saiba exatamente onde o BuildIt está operando.
+
+```
 
 ---
 
@@ -823,8 +931,10 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
                ├──► validateTargetConfig(targetName, config)
                │
                ├──► cleanTarget(config.distdir, config.clean) [se configurado]
+               │       └──► [Itera config.clean.includes/excludes]
                │
-               ├──► copyStaticFiles(config, appVersion)
+               ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
+               │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │
                ├──► listAssetsForCache(config.distdir) [se target === "sw"]
                │
@@ -885,11 +995,11 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
   - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utilitário para coletar assets do cache
 * **Ações e Subfunções**:
   1. `validateTargetConfig(targetName, config)`: Validação estrutural prévia.
-  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída antes do build.
-  3. `copyStaticFiles(config, appVersion)`: Cópia de diretório público e substituição no HTML.
+  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída baseada em `includes`/`excludes` antes do build.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
   4. Preparação de constantes `defines` em memória:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
-     - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`).
+     - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` para estratégias de caching offline.
   5. `buildBundleOptions(config)` (`packages/utils/src/denobuild/bundle.ts`):
      - Monta o objeto de opções esperado pela API instável `Deno.bundle`.
      - Mapeia entry points, target de plataforma (`browser`/`deno`), formato (`esm`/`cjs`/`iife`), sourcemap e minify.
@@ -971,11 +1081,14 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
                ├──► validateTargetConfig(targetName, config)
                │
                ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► Deno.remove(...) / emptyDir(...)
+               │       └──► [Itera config.clean.includes/excludes]
+               │               └──► Deno.remove(...) / emptyDir(...)
                │
-               ├──► copyStaticFiles(config, appVersion)
-               │       ├──► ensureDir(...) / copy(...)
-               │       └──► replaceVersionInFile(indexHtml, appVersion) [se indexHtml: true]
+               ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
+               │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
+               │               ├──► expandGlob(includes, { root: basedir, exclude: excludes })
+               │               ├──► replaceVersionInFile(manifest.json, appVersion)
+               │               └──► Log "index.html copiado" [se index.html detectado]
                │
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
                │       ├──► listAssetsForCache(config.distdir) [se target === "sw"]
@@ -1042,13 +1155,15 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Valida campos obrigatórios (`entryPoints`, regras de `outfile`/`outdir`).
      - Lança erro imediato (fail-fast) se a configuração for inválida.
   2. `cleanTarget(config.distdir, config.clean)` (`packages/utils/src/tools/paths.ts`):
-     - Esvazia ou remove caminhos especificados em `config.clean` dentro de `distdir`.
-  3. `copyStaticFiles(config, appVersion)` (`packages/utils/src/tools/paths.ts`):
-     - Copia assets de `publicdir` para `distdir`.
-     - Se `indexHtml: true`, substitui tags de versão e cache busting no HTML.
+     - Esvazia ou remove caminhos especificados em `config.clean.includes` e `config.clean.excludes` dentro de `distdir`.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)` (`packages/utils/src/tools/paths.ts`):
+     - Executa a cópia recursiva de arquivos baseada no array `config.copyFiles`.
+     - Utiliza `expandGlob` com suporte a `includes`, `excludes` e `basedir` personalizado.
+     - Se o arquivo for `manifest.json`, injeta a versão da aplicação.
+     - Detecta `index.html` para log de console.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
      - Monta o dicionário de `define` com `__APP_VERSION__`.
-     - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`.
+     - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída, sendo ideal para automatizar a lista de pré-cache em Service Workers.
      - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
      - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
      - Formata `banner` e `footer` com substituição de versão.
@@ -1122,11 +1237,9 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
                │
                ├──► coletarArquivosParaExportacao(config, baseDir)
                │       │
-               │       ├──► [Modo Moderno: expandGlob(padrao, { root, exclude })]
-               │       │       ├──► normalizarCaminho(caminhoRelativo)
-               │       │       └──► correspondeGlobs(caminhoRelativo, config.excludes)
-               │       │
-               │       └──► [Modo Legado Fallback: walk(baseDir) + deveIncluirArquivo]
+               │       └──► expandGlob(padrao, { root, exclude })
+               │               ├──► normalizarCaminho(caminhoRelativo)
+               │               └──► correspondeGlobs(caminhoRelativo, config.excludes)
                │
                ├──► ensureDirForFile(caminhoSaida)
                │
@@ -1194,12 +1307,12 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
   2. Abertura do Stream de Escrita:
      - `ensureDirForFile(caminhoSaida)`: Cria pastas pai no disco.
      - `Deno.open(caminhoSaida, { write: true, create: true, truncate: true })`: Inicializa o arquivo para streaming.
-     - `writer.write(encoder.encode(cabecalho))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
+     - `writer.write(encoder.encode(gerarCabecalho(config, modo, versaoApp)))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
   3. Processamento Individual de Arquivos:
      - Para cada arquivo coletado, lê via `Deno.readTextFile(caminhoCompleto)`.
      - `formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)`:
        - `mapearExtensao(ext)`: Mapeia extensões especiais (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (\`\`\` ou mais) para garantir que o code block seja válido.
+       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (``` ou mais) para garantir que o code block seja válido.
      - `writer.write(encoder.encode(blocoMarkdown))`: Envia o bloco Markdown diretamente para o stream em disco.
   4. Finalização:
      - `writer.close()`: Garante o fechamento limpo do arquivo.
@@ -1216,13 +1329,168 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 | `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
 | `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
 | `correspondeGlobs()` | `formatter` / `engine` | `caminho: string`, `padroes: string[]` | `boolean` | Avaliação de regex gerada via `globToRegExp` |
-| `deveIncluirArquivo()` | Testes / Fallback | `caminho: string`, `config: ExportConfig` | `boolean` | Validação de inclusão/exclusão |
 | `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string` | `string` | Formatação de string Markdown em memória |
 | `formatarArquivoMarkdown()` | `exportarModo` | `caminho: string`, `conteudo: string` | `string` | Formatação com code fence e syntax highlight |
 | `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Escape dinâmico de crases Markdown |
 | `mapearExtensao()` | `formatarArquivoMarkdown` | `extensao: string` | `string` (linguagem de highlight) | Normalização de highlight de sintaxe |
 
 `````
+
+---
+
+## Arquivo: `docs/topology-sanitize-version.md`
+
+````md
+# Topologia de Execução: `sanitize-version`
+
+Este documento descreve a topologia de execução do utilitário **`sanitize-version`**, responsável por normalizar a versão no arquivo `deno.jsonc` para o formato estrito SemVer (`MAJOR.MINOR.PATCH`).
+
+---
+
+## 1. Diagrama de Chamadas (Call Graph)
+
+```
+[CLI / Terminal]
+       │
+       ▼
+sanitizeVersionCli() (packages/utils/src/version/sanitize/cli.ts)
+       │
+       ├──► findDenoConfig()
+       │
+       ▼
+sanitizeVersion(opcoes: SanitizeOptions) (packages/utils/src/version/sanitize/mod.ts)
+       │
+       ├──► Deno.readTextFile(denoJsonPath)
+       ├──► parseJsonc(content)
+       │
+       ├──► [Se version ausente]
+       │       └──► version = "0.0.0"
+       │
+       ├──► parseVersion(version) (packages/utils/src/tools/version.ts)
+       │       └──► [Regex extraction: major, minor, patch]
+       │
+       ├──► formatVersion(parsed)
+       │       └──► `${major}.${minor}.${patch}`
+       │
+       ├──► replaceVersionInContent(content, newVersion)
+       │       └──► [Regex replacement in JSONC string]
+       │
+       └──► Deno.writeTextFile(denoJsonPath, updatedContent)
+```
+
+---
+
+## 2. Mapeamento Passo a Passo de Execução
+
+### Passo 1: Inicialização do CLI
+* **Função**: `sanitizeVersionCli()`
+* **Arquivo**: `packages/utils/src/version/sanitize/cli.ts`
+* **Entrada**: Argumentos CLI via Cliffy (`[path:string]`).
+* **Ações**:
+  1. Resolve o caminho do `deno.jsonc` (padrão: `./deno.jsonc`).
+  2. Chama `sanitizeVersion({ denoJsonPath })`.
+  3. Exibe mensagem de sucesso com a versão normalizada.
+
+### Passo 2: Normalização da Versão
+* **Função**: `sanitizeVersion(opcoes)`
+* **Arquivo**: `packages/utils/src/version/sanitize/mod.ts`
+* **Ações**:
+  1. Lê o conteúdo do arquivo `deno.jsonc`.
+  2. Extrai o campo `version` atual.
+  3. Utiliza `parseVersion` para capturar apenas os componentes numéricos (ignorando sufixos git ou pré-release).
+  4. Formata a nova string de versão.
+  5. Substitui a versão no conteúdo original (preservando comentários e formatação JSONC).
+  6. Grava o arquivo de volta no disco.
+
+---
+
+## 3. Tabela Resumo
+
+| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+|---|---|---|---|---|
+| `sanitizeVersionCli()` | Deno CLI | `Deno.args` | `void` | Log de console |
+| `sanitizeVersion()` | CLI / API | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
+| `parseVersion()` | `sanitizeVersion` | `string` | `ParsedVersion` | Puro |
+| `formatVersion()` | `sanitizeVersion` | `ParsedVersion` | `string` | Puro |
+
+````
+
+---
+
+## Arquivo: `docs/topology-tag-version.md`
+
+````md
+# Topologia de Execução: `tag-version`
+
+Este documento descreve a topologia de execução do utilitário **`tag-version`**, que automatiza o ciclo de release git (commit, limpeza de tags e push).
+
+---
+
+## 1. Diagrama de Chamadas (Call Graph)
+
+```
+[CLI / Terminal]
+       │
+       ▼
+tagVersionCli() (packages/utils/src/version/tag/cli.ts)
+       │
+       ├──► findDenoConfig()
+       │
+       ▼
+tagVersion(opcoes: TagOptions) (packages/utils/src/version/tag/mod.ts)
+       │
+       ├──► [Se sanitize === true]
+       │       └──► sanitizeVersion({ denoJsonPath })
+       │
+       ├──► readProjectVersion(denoJsonPath)
+       │
+       ├──► [Git Flow]
+       │       ├──► git add -A
+       │       ├──► git commit -m "Versão vX.Y.Z"
+       │       ├──► git push
+       │       │
+       │       ├──► git tag -d vX.Y (local)
+       │       ├──► git push origin :refs/tags/vX.Y (remote)
+       │       │
+       │       ├──► git tag -a vX.Y -m "Release vX.Y.Z"
+       │       └──► git push origin vX.Y
+```
+
+---
+
+## 2. Mapeamento Passo a Passo de Execução
+
+### Passo 1: Inicialização do CLI
+* **Função**: `tagVersionCli()`
+* **Arquivo**: `packages/utils/src/version/tag/cli.ts`
+* **Entrada**: Argumentos CLI (`--no-sanitize`, `[path:string]`).
+* **Ações**:
+  1. Resolve o caminho do `deno.jsonc`.
+  2. Chama `tagVersion({ denoJsonPath, sanitize: true })`.
+
+### Passo 2: Orquestração do Release Git
+* **Função**: `tagVersion(opcoes)`
+* **Arquivo**: `packages/utils/src/version/tag/mod.ts`
+* **Ações**:
+  1. Opcionalmente normaliza a versão no disco via `sanitizeVersion`.
+  2. Lê a versão atual do `deno.jsonc`.
+  3. Executa uma sequência de comandos `git` usando `Deno.Command`:
+     - **Commit**: Adiciona todas as mudanças e cria um commit com a versão.
+     - **Push**: Envia o branch atual para o remoto.
+     - **Cleanup**: Remove tags anteriores do mesmo nível (MAJOR.MINOR) para garantir que a tag de release aponte sempre para o commit mais recente.
+     - **Tagging**: Cria uma nova tag anotada e envia para o origin com `--force`.
+
+---
+
+## 3. Tabela Resumo
+
+| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+|---|---|---|---|---|
+| `tagVersionCli()` | Deno CLI | `Deno.args` | `void` | Execução de comandos Git |
+| `tagVersion()` | CLI / API | `TagOptions` | `Promise<void>` | Mutação de estado Git local/remoto |
+| `sanitizeVersion()` | `tagVersion` | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
+
+````
 
 ---
 
@@ -1266,8 +1534,10 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
        │       └──► [Registro de listeners para SIGINT, SIGTERM, unload]
        │
        ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [se configurado]
+       │       └──► [Itera targetConfig.clean.includes/excludes]
        │
-       ├──► copyStaticFiles(targetConfig, version)
+       ├──► copyStaticFiles(targetConfig, version, baseDir, distDir)
+       │       └──► [Loop targetConfig.copyFiles: { includes, excludes, basedir }]
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
@@ -1332,8 +1602,8 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
 * **Função**: `buildWatchEsbuildOptions` & `esbuild.context`
 * **Arquivo**: `packages/utils/src/watch/engine.ts`
 * **Ações e Subfunções**:
-  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída antes da primeira compilação.
-  2. `copyStaticFiles(targetConfig, version)`: Copia arquivos públicos e prepara templates HTML.
+  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída baseada em `includes`/`excludes`.
+  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
      - Define `__APP_VERSION__`.
      - Coleta assets para cache se `targetName === "sw"`.

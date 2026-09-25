@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-24T00:33:52.860Z
+Gerado automaticamente em: 2026-09-25T00:31:55.841Z
 
 ---
 
@@ -103,7 +103,11 @@ if (import.meta.main) {
     "./export": "./src/export/mod.ts",
     "./export/cli": "./src/export/cli.ts",
     "./denobuild": "./src/denobuild/mod.ts",
-    "./denobuild/cli": "./src/denobuild/cli.ts"
+    "./denobuild/cli": "./src/denobuild/cli.ts",
+    "./sanitize-version": "./src/version/sanitize/mod.ts",
+    "./sanitize-version/cli": "./src/version/sanitize/cli.ts",
+    "./tag-version": "./src/version/tag/mod.ts",
+    "./tag-version/cli": "./src/version/tag/cli.ts"
   }
 }
 
@@ -220,7 +224,16 @@ import { parseArgs, } from "../tools/cli-flags.ts";
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
  */
 // deno-lint-ignore no-explicit-any
-export function denoBuildCli(): Command<any, any, any, any, any, any, any, any> {
+export function denoBuildCli(): Command<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+> {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
@@ -254,7 +267,7 @@ export function denoBuildCli(): Command<any, any, any, any, any, any, any, any> 
 
       const { targets, globalNoVersion, } = parseArgs(
         args,
-        { noversion: Boolean(options.noversion,) },
+        { noversion: Boolean(options.noversion,), },
       );
 
       console.log(
@@ -322,11 +335,11 @@ export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
     clean: {
-      includes: ["*"],
+      includes: ["*",],
     },
     entryPoints: ["main.tsx",],
     platform: "browser",
@@ -374,41 +387,10 @@ export async function carregarConfigDenoBuild(
     result.versionPaths = parsed.versionPaths;
     result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso 1: Objeto possui a chave "targets"
+    // Caso Único: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
       result.targets = parsed.targets;
       return result;
-    }
-
-    // Caso 2: Objeto possui a chave em português "alvos"
-    if (parsed.alvos && typeof parsed.alvos === "object") {
-      result.targets = parsed.alvos;
-      return result;
-    }
-
-    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed,).filter(
-      (k,) =>
-        !k.startsWith("$",) &&
-        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
-    );
-
-    if (filteredKeys.length > 0) {
-      const resultado: DenoBundleGlobalConfig = {};
-      let hasValidTargets = false;
-
-      for (const key of filteredKeys) {
-        const val = (parsed as Record<string, unknown>)[key];
-        if (val && typeof val === "object") {
-          resultado[key] = val as DenoBundleGlobalConfig[string];
-          hasValidTargets = true;
-        }
-      }
-
-      if (hasValidTargets) {
-        result.targets = resultado;
-        return result;
-      }
     }
   }
 
@@ -504,7 +486,12 @@ export async function processBundleTarget(
   }
 
   // 2. Copiar arquivos estáticos
-  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
+  await copyStaticFiles(
+    resolvedConfig,
+    appVersion,
+    baseDir,
+    resolvedConfig.distdir,
+  );
 
   // 3. Preparar defines
   const defines: Record<string, string> = {
@@ -570,7 +557,7 @@ export async function processBundleTarget(
   }
 
   for (const outputFile of outputFiles) {
-    await ensureDirForFile(outputFile.path);
+    await ensureDirForFile(outputFile.path,);
 
     let content = outputFile.text();
     if (hasDefines) {
@@ -761,7 +748,7 @@ export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
 
       const { targets, globalNoVersion, } = parseArgs(
         args,
-        { noversion: Boolean(options.noversion,) },
+        { noversion: Boolean(options.noversion,), },
       );
 
       const DENO_JSONC_PATH = options.denoConfig as string || "deno.jsonc";
@@ -814,7 +801,7 @@ if (import.meta.main) {
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { loadConfig } from "../tools/jsonc.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
 import type {
   EsbuildConfigFile,
   EsbuildConfigResult,
@@ -830,19 +817,19 @@ export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
     clean: {
-      includes: ["*"],
+      includes: ["*",],
     },
-    entryPoints: ["main.tsx"],
+    entryPoints: ["main.tsx",],
     platform: "browser",
     format: "esm",
     bundle: true,
     minify: false,
     sourcemap: "linked",
-    conditions: ["browser"],
+    conditions: ["browser",],
     jsx: "automatic",
     jsxImportSource: "preact",
     metafile: true,
@@ -874,14 +861,14 @@ export async function carregarConfigEsbuild(
   );
 
   const result: EsbuildConfigResult = {
-    targets: { ...CONFIGURACOES_PADRAO },
+    targets: { ...CONFIGURACOES_PADRAO, },
   };
 
   if (parsed) {
     result.versionPaths = parsed.versionPaths;
     result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso 1: Objeto possui a chave "targets"
+    // Caso Único: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
       result.targets = parsed.targets;
       return result;
@@ -894,10 +881,10 @@ export async function carregarConfigEsbuild(
     }
 
     // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed).filter(
-      (k) =>
-        !k.startsWith("$") &&
-        !["version", "versionPaths", "forcepackagesversion"].includes(k),
+    const filteredKeys = Object.keys(parsed,).filter(
+      (k,) =>
+        !k.startsWith("$",) &&
+        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
     );
 
     if (filteredKeys.length > 0) {
@@ -1026,31 +1013,40 @@ export async function esBuild(
 
   const resultados: EsbuildResult[] = [];
 
-  for (const targetName of targetsParaExecutar) {
-    const targetConfig = configs[targetName];
-    if (!targetConfig) {
-      console.warn(
-        `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+  try {
+    for (const targetName of targetsParaExecutar) {
+      const targetConfig = configs[targetName];
+      if (!targetConfig) {
+        console.warn(
+          `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+        );
+        continue;
+      }
+
+      const startTime = performance.now();
+      await processTarget(
+        targetName,
+        targetConfig,
+        finalVersion,
+        (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
+        listAssetsForCache,
+        baseDir,
       );
-      continue;
+      const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+
+      resultados.push({
+        target: targetName,
+        success: true,
+        durationMs,
+      },);
     }
-
-    const startTime = performance.now();
-    await processTarget(
-      targetName,
-      targetConfig,
-      finalVersion,
-      (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
-      listAssetsForCache,
-      baseDir,
-    );
-    const durationMs = Number((performance.now() - startTime).toFixed(0,),);
-
-    resultados.push({
-      target: targetName,
-      success: true,
-      durationMs,
-    },);
+  } finally {
+    // ✨ GARANTIA DE ENCERRAMENTO: No Deno, o processo do esbuild (npm) precisa ser parado explicitamente
+    try {
+      await esbuild.stop();
+    } catch {
+      // Ignora erros no stop()
+    }
   }
 
   return resultados;
@@ -1099,7 +1095,12 @@ export async function processTarget(
     }
   }
 
-  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
+  await copyStaticFiles(
+    resolvedConfig,
+    appVersion,
+    baseDir,
+    resolvedConfig.distdir,
+  );
 
   const esbuildOptions = await buildEsbuildOptions(
     targetName,
@@ -1118,7 +1119,10 @@ export async function processTarget(
 
     // 🔥 CORREÇÃO: Só salva metafile se distdir existe
     if (resolvedConfig.metafile && result.metafile && resolvedConfig.distdir) {
-      const metafilePath = join(resolvedConfig.distdir, `${targetName}-metafile.json`,);
+      const metafilePath = join(
+        resolvedConfig.distdir,
+        `${targetName}-metafile.json`,
+      );
       await Deno.writeTextFile(
         metafilePath,
         JSON.stringify(result.metafile, null, 2,),
@@ -1126,7 +1130,13 @@ export async function processTarget(
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
   } catch (error) {
-    console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
+    if (error instanceof TypeError && (error as unknown as { message?: string }).message?.includes("unref")) {
+      console.error(`❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`);
+      console.error(`💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`);
+      console.error(`👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`);
+    } else {
+      console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
+    }
     throw error;
   }
 }
@@ -1285,13 +1295,13 @@ export type {
  * @module @vanaware/buildit/export/cli
  * @description Ponto de entrada para execução do exportador de contexto via linha de comando (CLI).
  */
-import { readProjectVersion } from "../tools/version.ts";
-import { exportEngine } from "./engine.ts";
-import { APP_VERSION } from "../version.ts";
-import { findDenoConfig } from "../tools/paths.ts";
-import { carregarConfigExport } from "./config.ts";
+import { readProjectVersion, } from "../tools/version.ts";
+import { exportEngine, } from "./engine.ts";
+import { APP_VERSION, } from "../version.ts";
+import { findDenoConfig, } from "../tools/paths.ts";
+import { carregarConfigExport, } from "./config.ts";
 
-import { Command } from "@cliffy/command";
+import { Command, } from "@cliffy/command";
 
 /**
  * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.
@@ -1299,22 +1309,22 @@ import { Command } from "@cliffy/command";
 // deno-lint-ignore no-explicit-any
 export function exportCli(): Command<any, any, any, any, any, any, any, any> {
   return new Command()
-    .name("export")
-    .description("BuildIt Context Exporter")
-    .version(APP_VERSION)
+    .name("export",)
+    .description("BuildIt Context Exporter",)
+    .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
       default: "export.jsonc",
-      env: { prefix: "EXPORT_" },
-    })
+      env: { prefix: "EXPORT_", },
+    },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
       default: "./",
       env: true,
-    })
+    },)
     .option("-d, --deno-config [file:string]", "Configuração do Deno", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
-    })
-    .arguments("[modos...:string]", ["Modos de exportação"])
+    },)
+    .arguments("[modos...:string]", ["Modos de exportação",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
       const baseDir = (options.baseDir as string) || ".";
@@ -1324,7 +1334,7 @@ export function exportCli(): Command<any, any, any, any, any, any, any, any> {
       );
       const modos = args.length > 0 ? (args as string[]) : undefined;
 
-      console.log("\n🚀 Iniciando Exportação de Contexto BuildIt");
+      console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
       try {
         await exportEngine({
           config: configs,
@@ -1335,23 +1345,23 @@ export function exportCli(): Command<any, any, any, any, any, any, any, any> {
             baseDir,
           ),
           denoJsoncPath: options.denoConfig as string,
-        });
+        },);
 
-        const elapsed = (performance.now() - startTime).toFixed(0);
-        console.log(`\n${"=".repeat(60)}`);
-        console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`);
-        console.log(`⏱️ Tempo total: ${elapsed}ms`);
-        console.log(`${"=".repeat(60)}\n`);
+        const elapsed = (performance.now() - startTime).toFixed(0,);
+        console.log(`\n${"=".repeat(60,)}`,);
+        console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`,);
+        console.log(`⏱️ Tempo total: ${elapsed}ms`,);
+        console.log(`${"=".repeat(60,)}\n`,);
       } catch (error) {
-        console.error("\n🛑 Pipeline de exportação falhou:", error);
-        Deno.exit(1);
+        console.error("\n🛑 Pipeline de exportação falhou:", error,);
+        Deno.exit(1,);
       }
-    });
+    },);
 }
 
 if (import.meta.main) {
   const cli = exportCli();
-  await cli.parse(Deno.args);
+  await cli.parse(Deno.args,);
 }
 
 ```
@@ -1471,13 +1481,14 @@ export async function carregarConfigExport(
       const modos = (parsed as ExportConfigFile).modos;
 
       if (rootProjeto !== undefined || rootCabecalho !== undefined) {
-        for (const [modoKey, modoConfig] of Object.entries(modos)) {
+        for (const [modoKey, modoConfig,] of Object.entries(modos,)) {
           modos[modoKey] = {
             ...(rootProjeto !== undefined && modoConfig.projeto === undefined
-              ? { projeto: rootProjeto }
+              ? { projeto: rootProjeto, }
               : {}),
-            ...(rootCabecalho !== undefined && modoConfig.cabecalho === undefined
-              ? { cabecalho: rootCabecalho }
+            ...(rootCabecalho !== undefined &&
+                modoConfig.cabecalho === undefined
+              ? { cabecalho: rootCabecalho, }
               : {}),
             ...modoConfig,
           };
@@ -1486,7 +1497,10 @@ export async function carregarConfigExport(
 
       return modos;
     }
-    return parsed as unknown as Record<string, ExportConfig>;
+    console.warn(
+      "⚠️ Arquivo de configuração de exportação inválido: chave 'modos' não encontrada.",
+    );
+    return {};
   }
 
   return { ...CONFIGURACOES_PADRAO, };
@@ -1556,8 +1570,7 @@ export function parseArgs(
 
 /**
  * Coleta a lista ordenada e deduplicada de arquivos que devem ser incluídos no snapshot.
- * Utiliza `expandGlob` para varredura otimizada direta quando `includes` está configurado,
- * ou recorre ao `walk` legado quando propriedades antigas são fornecidas.
+ * Utiliza `expandGlob` para varredura otimizada direta.
  *
  * @param config Configuração do modo de exportação
  * @param baseDir Diretório base do projeto
@@ -1877,16 +1890,12 @@ export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
 
 /**
  * Determina se um determinado arquivo deve ser incluído no snapshot baseado na configuração do modo.
- * Suporta a sintaxe moderna baseada em `includes` / `excludes` (globs) e mantém suporte a propriedades legadas.
+ * Utiliza a sintaxe baseada em `includes` / `excludes` (globs).
  *
  * Regras aplicadas:
  * 1. Proteção anti-loop: sempre exclui arquivos dentro de pastas `exports/` ou `snapshots/`.
- * 2. Se configurado com `includes`:
- *    - Se casar com qualquer padrão de `excludes`, retorna `false`.
- *    - Se casar com qualquer padrão de `includes`, retorna `true`.
- * 3. Modo Legado (se `includes` não estiver definido):
- *    - Verifica caminhos adicionais permitidos.
- *    - Valida pastaBase, arquivos raiz, subpastas e extensões permitidas.
+ * 2. Se casar com qualquer padrão de `excludes`, retorna `false`.
+ * 3. Se casar com qualquer padrão de `includes`, retorna `true`.
  *
  * @param caminhoRelativo Caminho relativo do arquivo no repositório
  * @param config Configuração do modo de exportação
@@ -2042,6 +2051,11 @@ export type {
  */
 
 export * from "./tools/mod.ts";
+export {
+  sanitizeVersionCli,
+  sanitizeVersionFile,
+} from "./version/sanitize/mod.ts";
+export { tagVersionCli, tagVersionEngine, } from "./version/tag/mod.ts";
 
 export { APP_VERSION as version, } from "./version.ts";
 
@@ -2072,15 +2086,19 @@ import {
  */
 export function parseArgs(
   args: string[],
-  optionsOrConfig?: { noversion?: boolean } | GlobalTargetConfig | DenoBundleGlobalConfig,
+  optionsOrConfig?:
+    | { noversion?: boolean }
+    | GlobalTargetConfig
+    | DenoBundleGlobalConfig,
 ): ParsedArgs {
   const lowerArgs = args.map((a,) => a.toLowerCase());
   const hasNoVersionInArgs = lowerArgs.includes("noversion",);
   const hasNoVersionInOptions = Boolean(
-    optionsOrConfig && "noversion" in optionsOrConfig && (optionsOrConfig as { noversion?: boolean }).noversion,
+    optionsOrConfig && "noversion" in optionsOrConfig &&
+      (optionsOrConfig as { noversion?: boolean }).noversion,
   );
   const globalNoVersion = hasNoVersionInArgs || hasNoVersionInOptions;
-  const rawTargets = args.filter((arg,) => arg.toLowerCase() !== "noversion",);
+  const rawTargets = args.filter((arg,) => arg.toLowerCase() !== "noversion");
 
   // Se optionsOrConfig for uma configuração de alvos (retrocompatibilidade com testes existentes):
   if (
@@ -2091,7 +2109,8 @@ export function parseArgs(
     const configKeys = Object.keys(optionsOrConfig,);
     if (rawTargets.length === 0) {
       const defaultTargets = configKeys.filter((t,) => {
-        const cfg = (optionsOrConfig as Record<string, { default?: boolean }>)[t];
+        const cfg =
+          (optionsOrConfig as Record<string, { default?: boolean }>)[t];
         return cfg?.default !== false;
       },);
       return { targets: defaultTargets, globalNoVersion, };
@@ -2302,7 +2321,6 @@ export interface WatchConfigFile {
   $schema?: string;
   version?: string;
   targets?: WatchGlobalConfig;
-  alvos?: WatchGlobalConfig;
   [key: string]: unknown;
 }
 
@@ -2376,7 +2394,6 @@ export interface DenoBuildConfigFile {
   $schema?: string;
   version?: string;
   targets?: DenoBundleGlobalConfig;
-  alvos?: DenoBundleGlobalConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
@@ -2464,7 +2481,6 @@ export interface EsbuildConfigFile {
   $schema?: string;
   version?: string;
   targets?: GlobalTargetConfig;
-  alvos?: GlobalTargetConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
@@ -2482,6 +2498,60 @@ export interface EsbuildResult {
   durationMs: number;
 }
 
+/** Opções para execução de sanitização de versão em arquivos deno.json[c]. */
+export interface SanitizeVersionOptions {
+  /** Caminho do arquivo a ser sanitizado. Se omitido, busca recursivamente pelo mais próximo. */
+  filePath?: string;
+  /** Diretório base de busca caso filePath não seja especificado. */
+  baseDir?: string;
+  /** Se true, não emite logs no console durante a execução. */
+  silencioso?: boolean;
+}
+
+/** Resultado da operação de sanitização de versão. */
+export interface SanitizeVersionResult {
+  /** Caminho do arquivo processado. */
+  filePath: string;
+  /** Versão original encontrada no arquivo. */
+  rawVersion: string;
+  /** Versão sanitizada no formato semver canônico (MAJOR.MINOR.PATCH). */
+  sanitizedVersion: string;
+  /** Indica se o arquivo em disco foi modificado. */
+  updated: boolean;
+}
+
+/** Opções para criação e publicação de tags git baseadas na versão. */
+export interface TagVersionOptions {
+  /** Caminho do arquivo deno.json[c]. Se omitido, busca automaticamente. */
+  file?: string;
+  /** Mensagem customizada do commit. Padrão: "Versão vMAJOR.MINOR". */
+  message?: string;
+  /** Se true, executa a sanitização do arquivo deno.json[c] em disco antes de comitar. */
+  sanitize?: boolean;
+  /** Se true, apenas simula as operações do git sem persistir commits ou tags. */
+  dryRun?: boolean;
+  /** Diretório base de execução. */
+  baseDir?: string;
+  /** Se true, não emite logs no console durante a execução. */
+  silencioso?: boolean;
+}
+
+/** Resultado da operação de tag git. */
+export interface TagVersionResult {
+  /** Nome da tag gerada (ex: "v0.3"). */
+  tagName: string;
+  /** Versão original bruta. */
+  rawVersion: string;
+  /** Versão semver sanitizada. */
+  sanitizedVersion: string;
+  /** Mensagem utilizada no commit. */
+  message: string;
+  /** Se o repositório foi alterado e comitado. */
+  committed: boolean;
+  /** Se a tag foi criada e publicada. */
+  tagged: boolean;
+}
+
 ```
 
 ---
@@ -2489,35 +2559,33 @@ export interface EsbuildResult {
 ## Arquivo: `packages/utils/src/tools/jsonc.ts`
 
 ```ts
-import { parse as parseJsonc } from "@std/jsonc";
-import { join } from "@std/path";
+import { parse as parseJsonc, } from "@std/jsonc";
+import { join, } from "@std/path";
 
 /**
  * Carrega e faz o parse de um arquivo JSON ou JSONC de forma segura.
  * Tenta carregar o arquivo especificado ou busca por alternativas padrão.
- * 
+ *
  * @param fileName Nome base do arquivo (ex: "denobuild")
  * @param explicitPath Caminho explícito fornecido pelo usuário (opcional)
  * @param baseDir Diretório base para busca (default: ".")
  * @returns O objeto parseado ou null se não encontrado/inválido
  */
-export async function loadConfig<T>(
+export async function loadConfig<T,>(
   fileName: string,
   explicitPath?: string,
   baseDir: string = ".",
 ): Promise<T | null> {
-  const candidates = explicitPath
-    ? [explicitPath]
-    : [
-      join(baseDir, `${fileName}.jsonc`),
-      join(baseDir, `${fileName}.json`),
-    ];
+  const candidates = explicitPath ? [explicitPath,] : [
+    join(baseDir, `${fileName}.jsonc`,),
+    join(baseDir, `${fileName}.json`,),
+  ];
 
   for (const path of candidates) {
     try {
-      const content = await Deno.readTextFile(path);
-      const parsed = parseJsonc(content);
-      
+      const content = await Deno.readTextFile(path,);
+      const parsed = parseJsonc(content,);
+
       if (parsed && typeof parsed === "object") {
         return parsed as T;
       }
@@ -2525,7 +2593,10 @@ export async function loadConfig<T>(
       // Se o usuário passou um caminho específico e ele não existe ou está quebrado, avisamos.
       // Se for a busca padrão, falhamos silenciosamente para tentar o próximo candidato.
       if (explicitPath && !(error instanceof Deno.errors.NotFound)) {
-        console.warn(`⚠️ Erro ao ler arquivo de configuração em ${path}:`, error);
+        console.warn(
+          `⚠️ Erro ao ler arquivo de configuração em ${path}:`,
+          error,
+        );
       }
     }
   }
@@ -2540,19 +2611,29 @@ export async function loadConfig<T>(
 ## Arquivo: `packages/utils/src/tools/mod.ts`
 
 ```ts
-export { loadConfig } from "./jsonc.ts";
+export { loadConfig, } from "./jsonc.ts";
 
 // ⚙️ Gerenciamento de Versão
 export {
+  currentVersion,
+  extractRawVersion,
+  extractVersionFromContent,
+  findDenoFile,
+  formatVersion,
+  incrementVersion,
+  parseVersion,
   readProjectVersion,
+  replaceVersionInContent,
+  sanitizeVersion,
   syncVersion,
   updateProjectVersion,
+  writeVersionFile,
 } from "./version.ts";
 
 // 🛠️ Utilitários de CLI e Validação
-export { parseArgs } from "./cli-flags.ts";
-export { validateTargetConfig } from "./validate.ts";
-export { resolverOrdemTargets } from "./targets.ts";
+export { parseArgs, } from "./cli-flags.ts";
+export { validateTargetConfig, } from "./validate.ts";
+export { resolverOrdemTargets, } from "./targets.ts";
 export {
   cleanTarget,
   copyStaticFiles,
@@ -2563,9 +2644,7 @@ export {
   resolveOutputPaths,
 } from "./paths.ts";
 
-export {
-  EXTENSOES_PADRAO,
-} from "./interfaces.ts";
+export { EXTENSOES_PADRAO, } from "./interfaces.ts";
 
 export type {
   DenoBuildOptions,
@@ -2595,6 +2674,10 @@ export type {
   GlobalTargetConfig,
   ParsedArgs,
   ParsedVersion,
+  SanitizeVersionOptions,
+  SanitizeVersionResult,
+  TagVersionOptions,
+  TagVersionResult,
   TargetConfig,
   VersionUpdateOptions,
   WatchConfigFile,
@@ -2613,7 +2696,14 @@ export type {
 
 ```ts
 import { copy, emptyDir, ensureDir, expandGlob, walk, } from "@std/fs";
-import { basename, dirname, globToRegExp, isAbsolute, join, relative, } from "@std/path";
+import {
+  basename,
+  dirname,
+  globToRegExp,
+  isAbsolute,
+  join,
+  relative,
+} from "@std/path";
 
 import type {
   CleanConfig,
@@ -2755,10 +2845,10 @@ export function resolveEntryPoints(
  * Garante que o diretório pai de um arquivo existe.
  * @param filePath Caminho do arquivo
  */
-export async function ensureDirForFile(filePath: string): Promise<void> {
-  const dir = dirname(filePath);
+export async function ensureDirForFile(filePath: string,): Promise<void> {
+  const dir = dirname(filePath,);
   if (dir && dir !== ".") {
-    await ensureDir(dir);
+    await ensureDir(dir,);
   }
 }
 
@@ -2820,7 +2910,9 @@ export async function cleanTarget(
   for (const padrao of includes) {
     // Proteção direta contra caminhos com traversal ou absolutos no padrão
     if (!isSafePath(padrao,)) {
-      console.warn(`   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,);
+      console.warn(
+        `   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,
+      );
       continue;
     }
 
@@ -2835,8 +2927,12 @@ export async function cleanTarget(
         const rel = relative(distDir, entry.path,).replace(/\\/g, "/",);
 
         // 🔒 Regra 0: Proteção estrita contra path traversal / nível acima ao distdir
-        if (rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === ".") {
-          console.warn(`   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,);
+        if (
+          rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === "."
+        ) {
+          console.warn(
+            `   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,
+          );
           continue;
         }
 
@@ -2853,7 +2949,10 @@ export async function cleanTarget(
         }
       }
     } catch (err) {
-      console.warn(`   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`, err,);
+      console.warn(
+        `   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`,
+        err,
+      );
     }
   }
 }
@@ -2930,7 +3029,8 @@ export async function copyTargetFiles(
   await ensureDir(distDir,);
 
   for (const item of copyFiles) {
-    const hasItemBase = typeof item.basedir === "string" && item.basedir.trim().length > 0;
+    const hasItemBase = typeof item.basedir === "string" &&
+      item.basedir.trim().length > 0;
     // 0. Será feito join deste basedir com o "basedir geral"
     const effectiveBaseDir = hasItemBase
       ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(item.basedir!,)
@@ -2950,11 +3050,15 @@ export async function copyTargetFiles(
       try {
         const stat = await Deno.stat(effectiveBaseDir,);
         if (!stat.isDirectory) {
-          console.warn(`⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,);
+          console.warn(
+            `⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,
+          );
           continue;
         }
       } catch {
-        console.warn(`⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,);
+        console.warn(
+          `⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,
+        );
         continue;
       }
 
@@ -2968,7 +3072,10 @@ export async function copyTargetFiles(
             },)
           ) {
             if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(
+                /\\/g,
+                "/",
+              );
 
               if (item.excludes && item.excludes.length > 0) {
                 if (correspondeGlobs(relPath, item.excludes,)) {
@@ -2982,7 +3089,9 @@ export async function copyTargetFiles(
 
               const fileName = basename(entry.path,).toLowerCase();
               if (fileName === "index.html") {
-                console.log(`📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,);
+                console.log(
+                  `📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,
+                );
               }
               if (fileName === "manifest.json") {
                 try {
@@ -2993,7 +3102,9 @@ export async function copyTargetFiles(
                     destPath,
                     JSON.stringify(manifestObj, null, 2,),
                   );
-                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                  console.log(
+                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                  );
                 } catch {
                   // manifest não é JSON válido
                 }
@@ -3001,14 +3112,21 @@ export async function copyTargetFiles(
             }
           }
         } catch (err) {
-          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+          console.warn(
+            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            err,
+          );
         }
       }
-      console.log(`📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,);
+      console.log(
+        `📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,
+      );
     } else {
       // 3. se basedir inexistente, includes e excludes são relativos ao "basedir geral"
       // e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
-      const patterns = item.includes && item.includes.length > 0 ? item.includes : [];
+      const patterns = item.includes && item.includes.length > 0
+        ? item.includes
+        : [];
       for (const padrao of patterns) {
         try {
           for await (
@@ -3019,7 +3137,10 @@ export async function copyTargetFiles(
             },)
           ) {
             if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(
+                /\\/g,
+                "/",
+              );
               if (item.excludes && item.excludes.length > 0) {
                 if (correspondeGlobs(relPath, item.excludes,)) {
                   continue;
@@ -3043,7 +3164,9 @@ export async function copyTargetFiles(
                     destPath,
                     JSON.stringify(manifestObj, null, 2,),
                   );
-                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                  console.log(
+                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                  );
                 } catch {
                   // manifest não é JSON válido
                 }
@@ -3051,7 +3174,10 @@ export async function copyTargetFiles(
             }
           }
         } catch (err) {
-          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+          console.warn(
+            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            err,
+          );
         }
       }
     }
@@ -3071,11 +3197,13 @@ export async function copyStaticFiles(
   generalBaseDir: string = ".",
   distDir?: string,
 ): Promise<void> {
-  const effectiveDistDir = distDir ?? (config.distdir
-    ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(config.distdir,)
-      ? join(generalBaseDir, config.distdir,)
-      : config.distdir)
-    : undefined);
+  const effectiveDistDir = distDir ??
+    (config.distdir
+      ? (generalBaseDir && generalBaseDir !== "." &&
+          !isAbsolute(config.distdir,)
+        ? join(generalBaseDir, config.distdir,)
+        : config.distdir)
+      : undefined);
 
   if (!effectiveDistDir) {
     if (config.copyFiles || config.publicdir || config.indexHtml) {
@@ -3088,7 +3216,12 @@ export async function copyStaticFiles(
 
   // 1. Caso use o novo sistema: copyFiles
   if (config.copyFiles && config.copyFiles.length > 0) {
-    await copyTargetFiles(config.copyFiles, effectiveDistDir, appVersion, generalBaseDir,);
+    await copyTargetFiles(
+      config.copyFiles,
+      effectiveDistDir,
+      appVersion,
+      generalBaseDir,
+    );
     return;
   }
 
@@ -3098,11 +3231,19 @@ export async function copyStaticFiles(
     legacyCopyFiles.push({ basedir: config.publicdir, },);
   }
   if (config.indexHtml && config.srcdir) {
-    legacyCopyFiles.push({ basedir: config.srcdir, includes: ["index.html",], },);
+    legacyCopyFiles.push({
+      basedir: config.srcdir,
+      includes: ["index.html",],
+    },);
   }
 
   if (legacyCopyFiles.length > 0) {
-    await copyTargetFiles(legacyCopyFiles, effectiveDistDir, appVersion, generalBaseDir,);
+    await copyTargetFiles(
+      legacyCopyFiles,
+      effectiveDistDir,
+      appVersion,
+      generalBaseDir,
+    );
   }
 }
 
@@ -3148,29 +3289,29 @@ export function findDenoConfig(): string | null {
  * @param requestedTargets Lista opcional de alvos solicitados pelo usuário (ex: via CLI)
  * @returns Lista de alvos filtrados respeitando a ordem original da configuração
  */
-export function resolverOrdemTargets<T extends object>(
+export function resolverOrdemTargets<T extends object,>(
   config: T,
   requestedTargets?: string[],
 ): string[] {
-  const configKeys = Object.keys(config);
+  const configKeys = Object.keys(config,);
 
   if (!requestedTargets || requestedTargets.length === 0) {
     // Retorna todos os alvos que não possuem default: false
-    return configKeys.filter((key) => {
+    return configKeys.filter((key,) => {
       const targetConfig = (config as Record<string, unknown>)[key];
       if (targetConfig && typeof targetConfig === "object") {
         return (targetConfig as { default?: boolean }).default !== false;
       }
       return true;
-    });
+    },);
   }
 
   // Normaliza os alvos solicitados para comparação case-insensitive
-  const normalizedRequested = requestedTargets.map((t) => t.toLowerCase());
+  const normalizedRequested = requestedTargets.map((t,) => t.toLowerCase());
 
   // Preserva estritamente a ordem das chaves do objeto de configuração
-  return configKeys.filter((key) =>
-    normalizedRequested.includes(key.toLowerCase())
+  return configKeys.filter((key,) =>
+    normalizedRequested.includes(key.toLowerCase(),)
   );
 }
 
@@ -3183,10 +3324,7 @@ export function resolverOrdemTargets<T extends object>(
 ```ts
 import { dirname, isAbsolute, join, } from "@std/path";
 
-import type {
-  DenoBundleTargetConfig,
-  TargetConfig,
-} from "./interfaces.ts";
+import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
 
 // ============================================================================
 // 🎯 VALIDAÇÃO DE CONFIGURAÇÃO DO ALVO (fail-fast com mensagens claras)
@@ -3266,7 +3404,7 @@ export function validateTargetConfig(
 
 ## Arquivo: `packages/utils/src/tools/version.ts`
 
-```ts
+````ts
 /**
  * @module @vanaware/buildit/config/version
  * @description Gerenciamento centralizado de versões semânticas e sincronização
@@ -3279,19 +3417,19 @@ import { APP_VERSION as FALLBACK_VERSION, } from "../version.ts";
 
 import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
 
-import { loadConfig } from "./jsonc.ts";
+import { loadConfig, } from "./jsonc.ts";
 
 /**
  * Obtém a versão atual do arquivo de configuração deno.jsonc.
  * @param denoJsoncPath Caminho para o deno.jsonc
  * @returns Versão atual
  */
-export async function currentVersion(denoJsoncPath: string): Promise<string> {
-  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath);
+export async function currentVersion(denoJsoncPath: string,): Promise<string> {
+  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath,);
   if (!parsed?.version) {
-    throw new Error("❌ Versão não encontrada no deno.jsonc");
+    throw new Error("❌ Versão não encontrada no deno.jsonc",);
   }
-  console.log(`📌 Versão Atual: v${parsed.version}`);
+  console.log(`📌 Versão Atual: v${parsed.version}`,);
   return parsed.version;
 }
 
@@ -3303,17 +3441,17 @@ async function syncWorkspaceDir(
   newVersion: string,
   wsRelPath: string,
 ): Promise<void> {
-  for (const fileName of ["deno.jsonc", "deno.json"]) {
-    const configPath = join(wsPath, fileName);
+  for (const fileName of ["deno.jsonc", "deno.json",]) {
+    const configPath = join(wsPath, fileName,);
     try {
-      const content = await Deno.readTextFile(configPath);
-      const updated = replaceVersionInContent(content, newVersion);
-      await Deno.writeTextFile(configPath, updated);
-      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName)}`);
+      const content = await Deno.readTextFile(configPath,);
+      const updated = replaceVersionInContent(content, newVersion,);
+      await Deno.writeTextFile(configPath, updated,);
+      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName,)}`,);
       return; // Sucesso, para de procurar neste workspace
     } catch (err) {
       if (!(err instanceof Deno.errors.NotFound)) {
-        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err);
+        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err,);
       }
     }
   }
@@ -3336,7 +3474,7 @@ export async function incrementVersion(
     denoJsonPath: denoJsoncPath,
     buildHash,
     forcepackagesversion: true,
-  });
+  },);
 }
 
 /**
@@ -3579,7 +3717,102 @@ export async function updateProjectVersion(
   },);
 }
 
-```
+/**
+ * Procura deno.jsonc (preferido) ou deno.json subindo a árvore de diretórios a partir de startDir.
+ * Equivalente TypeScript para a função `find_deno_file` de `lib-version.sh`.
+ *
+ * @param startDir Diretório inicial para busca (padrão: ".")
+ * @returns Caminho do arquivo encontrado ou null caso não encontre
+ *
+ * @example
+ * ```typescript
+ * const file = findDenoFile();
+ * console.log(file); // ".../deno.jsonc"
+ * ```
+ */
+export function findDenoFile(startDir: string = ".",): string | null {
+  try {
+    let current = isAbsolute(startDir,)
+      ? startDir
+      : Deno.realPathSync(startDir,);
+    while (current && current !== "/") {
+      const jsonc = join(current, "deno.jsonc",);
+      try {
+        if (Deno.statSync(jsonc,).isFile) return jsonc;
+      } catch {
+        // tenta próximo
+      }
+
+      const json = join(current, "deno.json",);
+      try {
+        if (Deno.statSync(json,).isFile) return json;
+      } catch {
+        // tenta próximo
+      }
+
+      const parent = dirname(current,);
+      if (parent === current) break;
+      current = parent;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Extrai o valor bruto do campo "version" a partir do conteúdo textual de um arquivo deno.json[c].
+ * Equivalente TypeScript para a função `extract_raw_version` de `lib-version.sh`.
+ *
+ * @param content Conteúdo textual do arquivo JSON/JSONC
+ * @returns Versão bruta encontrada ou null
+ *
+ * @example
+ * ```typescript
+ * const raw = extractRawVersion('{\n  "version": "0.3.14#abc1234"\n}'); // "0.3.14#abc1234"
+ * ```
+ */
+export function extractRawVersion(content: string,): string | null {
+  const match = content.match(/^[ \t]*"version"\s*:\s*"([^"]*)"/m,);
+  return match && match[1] !== undefined ? match[1] : null;
+}
+
+/**
+ * Normaliza qualquer string de versão para o formato semver canônico estrito "MAJOR.MINOR.PATCH".
+ * Remove prefixos como "v", metadados de build (+build), identificadores de pre-release (-alpha)
+ * e sufixos de commit hash (#hash), garantindo exatamente 3 componentes numéricos.
+ * Equivalente TypeScript para a função `sanitize_version` de `lib-version.sh`.
+ *
+ * @param raw Versão original bruta (ex: "v1.2.3-beta+exp.sha.5114f85", "0.3.14#muesu7z0")
+ * @returns Versão semver sanitizada (ex: "1.2.3", "0.3.14")
+ *
+ * @example
+ * ```typescript
+ * sanitizeVersion("v0.3.14#abc"); // "0.3.14"
+ * sanitizeVersion("1.2"); // "1.2.0"
+ * sanitizeVersion("invalid"); // "0.0.0"
+ * ```
+ */
+export function sanitizeVersion(raw: string,): string {
+  if (!raw) return "0.0.0";
+  // Remove caracteres não-numéricos no início (ex: "v")
+  let clean = raw.replace(/^[^0-9]+/, "",);
+  // Remove sufixos iniciados por '-', '+', ou '#'
+  clean = clean.replace(/[-+#].*$/, "",);
+  // Remove tudo exceto dígitos e pontos
+  clean = clean.replace(/[^0-9.]/g, "",);
+  // Remove múltiplos pontos seguidos e pontos nas pontas
+  clean = clean.replace(/\.+/g, ".",).replace(/^\./, "",).replace(/\.$/, "",);
+
+  const parts = clean.split(".",);
+  const ma = parts[0] && /^\d+$/.test(parts[0],) ? parts[0] : "0";
+  const mi = parts[1] && /^\d+$/.test(parts[1],) ? parts[1] : "0";
+  const pa = parts[2] && /^\d+$/.test(parts[2],) ? parts[2] : "0";
+
+  return `${ma}.${mi}.${pa}`;
+}
+
+````
 
 ---
 
@@ -3592,7 +3825,544 @@ declare const __APP_VERSION__: string;
 /** Current library/application version. */
 export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   ? __APP_VERSION__
-  : "1.0.3#h3";
+  : "0.3.18#mug856ww";
+
+```
+
+---
+
+## Arquivo: `packages/utils/src/version/sanitize/cli.ts`
+
+```ts
+/**
+ * @module @vanaware/buildit/version/sanitize/cli
+ * @description Ponto de entrada CLI para sanitização de versão via Cliffy.
+ */
+
+import { Command, } from "@cliffy/command";
+import { APP_VERSION, } from "../../version.ts";
+import { sanitizeVersionFile, } from "./engine.ts";
+
+/**
+ * Cria o comando CLI para sanitização de versão do deno.json[c].
+ *
+ * @returns Instância do comando Cliffy configurado
+ */
+// deno-lint-ignore no-explicit-any
+export function sanitizeVersionCli(): Command<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+> {
+  return new Command()
+    .name("sanitize-version",)
+    .description(
+      "Normaliza a versão do deno.json[c] para formato semver estrito (MAJOR.MINOR.PATCH)",
+    )
+    .version(APP_VERSION,)
+    .arguments("[file:string]",)
+    .option("-b, --base-dir [dir:string]", "Diretório base de busca", {
+      default: ".",
+      env: { prefix: "BUILDIT_", },
+    },)
+    .action(async function (options, file,): Promise<void> {
+      try {
+        await sanitizeVersionFile({
+          filePath: file as string | undefined,
+          baseDir: options.baseDir as string,
+        },);
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : error,);
+        Deno.exit(1,);
+      }
+    },);
+}
+
+if (import.meta.main) {
+  const cli = sanitizeVersionCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `packages/utils/src/version/sanitize/engine.ts`
+
+````ts
+/**
+ * @module @vanaware/buildit/version/sanitize/engine
+ * @description Motor de sanitização de versão semântica em arquivos deno.json e deno.jsonc.
+ */
+
+import {
+  extractRawVersion,
+  findDenoFile,
+  replaceVersionInContent,
+  sanitizeVersion,
+} from "../../tools/version.ts";
+import type {
+  SanitizeVersionOptions,
+  SanitizeVersionResult,
+} from "../../tools/interfaces.ts";
+
+/**
+ * Normaliza o campo "version" de um arquivo deno.json[c] para o formato semver estrito (MAJOR.MINOR.PATCH).
+ * Se o campo "version" não existir, injeta `"version": "0.0.0"` no início do arquivo.
+ *
+ * @param options Opções de execução da sanitização
+ * @returns Objeto com o resultado da sanitização
+ *
+ * @example
+ * ```typescript
+ * const result = await sanitizeVersionFile({ filePath: "deno.jsonc" });
+ * console.log(result.sanitizedVersion); // "0.3.14"
+ * ```
+ */
+export async function sanitizeVersionFile(
+  options: SanitizeVersionOptions = {},
+): Promise<SanitizeVersionResult> {
+  const baseDir = options.baseDir ?? ".";
+  let targetPath = options.filePath;
+
+  if (targetPath) {
+    try {
+      const stat = await Deno.stat(targetPath,);
+      if (!stat.isFile) {
+        throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
+      }
+    } catch {
+      throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
+    }
+  } else {
+    const found = findDenoFile(baseDir,);
+    if (!found) {
+      throw new Error(
+        `❌ Erro: Nenhum deno.json[c] encontrado a partir de ${baseDir}`,
+      );
+    }
+    targetPath = found;
+  }
+
+  if (!options.silencioso) {
+    console.log(`🔍 Buscando versão em: ${targetPath}`,);
+  }
+
+  let content = await Deno.readTextFile(targetPath,);
+  let rawVersion = extractRawVersion(content,);
+
+  if (rawVersion === null) {
+    if (!options.silencioso) {
+      console.log(
+        `⚠️  Nenhum campo 'version' encontrado. Inserindo "0.0.0"...`,
+      );
+    }
+    const braceIndex = content.indexOf("{",);
+    if (braceIndex === -1) {
+      throw new Error(
+        `❌ Arquivo ${targetPath} não contém JSON/JSONC válido.`,
+      );
+    }
+    content = content.slice(0, braceIndex + 1,) + '\n  "version": "0.0.0",' +
+      content.slice(braceIndex + 1,);
+    rawVersion = "0.0.0";
+    await Deno.writeTextFile(targetPath, content,);
+  }
+
+  if (!options.silencioso) {
+    console.log(`📌 Versão original: ${rawVersion}`,);
+  }
+
+  const sanitizedVersion = sanitizeVersion(rawVersion,);
+  if (!options.silencioso) {
+    console.log(`✅ Versão sanitizada: ${sanitizedVersion}`,);
+  }
+
+  let updated = false;
+  if (rawVersion !== sanitizedVersion) {
+    const updatedContent = replaceVersionInContent(content, sanitizedVersion,);
+    await Deno.writeTextFile(targetPath, updatedContent,);
+    updated = true;
+    if (!options.silencioso) {
+      console.log(
+        `📝 Arquivo atualizado: ${rawVersion} → ${sanitizedVersion}`,
+      );
+    }
+  } else {
+    if (!options.silencioso) {
+      console.log(`✨ Já estava no formato semver correto.`,);
+    }
+  }
+
+  return {
+    filePath: targetPath,
+    rawVersion,
+    sanitizedVersion,
+    updated,
+  };
+}
+
+````
+
+---
+
+## Arquivo: `packages/utils/src/version/sanitize/mod.ts`
+
+```ts
+/**
+ * @module @vanaware/buildit/version/sanitize
+ * @description Módulo de sanitização semver de arquivos deno.json e deno.jsonc.
+ */
+
+export { sanitizeVersionFile, } from "./engine.ts";
+export { sanitizeVersionCli, } from "./cli.ts";
+
+```
+
+---
+
+## Arquivo: `packages/utils/src/version/tag/cli.ts`
+
+```ts
+/**
+ * @module @vanaware/buildit/version/tag/cli
+ * @description Ponto de entrada CLI para publicação de tags git via Cliffy.
+ */
+
+import { Command, } from "@cliffy/command";
+import { APP_VERSION, } from "../../version.ts";
+import { tagVersionEngine, } from "./engine.ts";
+
+/**
+ * Cria o comando CLI para bump e publicação de tags git.
+ *
+ * @returns Instância do comando Cliffy configurado
+ */
+// deno-lint-ignore no-explicit-any
+export function tagVersionCli(): Command<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+> {
+  return new Command()
+    .name("tag-version",)
+    .description(
+      "Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR)",
+    )
+    .version(APP_VERSION,)
+    .option("-m, --message <msg:string>", "Mensagem personalizada do commit",)
+    .option(
+      "-s, --sanitize",
+      "Sanitiza o arquivo deno.json[c] em disco antes do commit",
+      {
+        default: false,
+      },
+    )
+    .option("-f, --file <file:string>", "Caminho específico do deno.json[c]",)
+    .option("-b, --base-dir <dir:string>", "Diretório base de busca", {
+      default: ".",
+    },)
+    .option(
+      "--dry-run",
+      "Simula as operações git sem efetuar commits ou pushes",
+      {
+        default: false,
+      },
+    )
+    .action(async function (options,): Promise<void> {
+      try {
+        await tagVersionEngine({
+          file: options.file,
+          message: options.message,
+          sanitize: options.sanitize,
+          baseDir: options.baseDir,
+          dryRun: options.dryRun,
+        },);
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : error,);
+        Deno.exit(1,);
+      }
+    },);
+}
+
+if (import.meta.main) {
+  const cli = tagVersionCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `packages/utils/src/version/tag/engine.ts`
+
+````ts
+/**
+ * @module @vanaware/buildit/version/tag/engine
+ * @description Motor de criação e publicação automatizada de tags git baseado na versão do deno.json[c].
+ */
+
+import {
+  extractRawVersion,
+  findDenoFile,
+  sanitizeVersion,
+} from "../../tools/version.ts";
+import { sanitizeVersionFile, } from "../sanitize/engine.ts";
+import type {
+  TagVersionOptions,
+  TagVersionResult,
+} from "../../tools/interfaces.ts";
+
+/**
+ * Executa um comando git capturando stdout, stderr e código de saída.
+ */
+async function runGit(
+  args: string[],
+  cwd?: string,
+): Promise<{ success: boolean; code: number; stdout: string; stderr: string }> {
+  try {
+    const cmd = new Deno.Command("git", {
+      args,
+      cwd,
+      stdout: "piped",
+      stderr: "piped",
+    },);
+    const output = await cmd.output();
+    const decoder = new TextDecoder();
+    return {
+      success: output.success,
+      code: output.code,
+      stdout: decoder.decode(output.stdout,).trim(),
+      stderr: decoder.decode(output.stderr,).trim(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error,),
+    };
+  }
+}
+
+/**
+ * Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR).
+ *
+ * @param options Opções de configuração da tag
+ * @returns Resultado da operação
+ *
+ * @example
+ * ```typescript
+ * const res = await tagVersionEngine({ sanitize: true });
+ * console.log(res.tagName); // "v0.3"
+ * ```
+ */
+export async function tagVersionEngine(
+  options: TagVersionOptions = {},
+): Promise<TagVersionResult> {
+  const baseDir = options.baseDir ?? ".";
+  const dryRun = options.dryRun ?? false;
+  const silencioso = options.silencioso ?? false;
+
+  let targetFile = options.file;
+  if (!targetFile) {
+    const found = findDenoFile(baseDir,);
+    if (!found) {
+      throw new Error(`❌ deno.json[c] não encontrado a partir de ${baseDir}`,);
+    }
+    targetFile = found;
+  }
+
+  // Sanitiza em disco se solicitado
+  if (options.sanitize) {
+    if (!silencioso) {
+      console.log(`🧼 Sanitizando ${targetFile} antes do commit...`,);
+    }
+    await sanitizeVersionFile({
+      filePath: targetFile,
+      baseDir,
+      silencioso,
+    },);
+  }
+
+  // Extrai e sanitiza versão em memória
+  const fileContent = await Deno.readTextFile(targetFile,);
+  const rawVersion = extractRawVersion(fileContent,);
+  if (!rawVersion) {
+    throw new Error(`❌ Campo "version" ausente em ${targetFile}`,);
+  }
+
+  const sanitizedVersion = sanitizeVersion(rawVersion,);
+  const [major = "0", minor = "0",] = sanitizedVersion.split(".",);
+  const tagName = `v${major}.${minor}`;
+  const message = options.message || `Versão ${tagName}`;
+
+  if (!silencioso) {
+    console.log(
+      "============================================================",
+    );
+    console.log("🚀 INICIANDO TAG VERSION BUMP",);
+    console.log(
+      "============================================================",
+    );
+    console.log(`📌 Versão original:    ${rawVersion}`,);
+    console.log(`🧼 Versão sanitizada:  ${sanitizedVersion}`,);
+    console.log(`🏷️  Tag alvo:           ${tagName}`,);
+    console.log(`📝 Mensagem de commit: ${message}`,);
+    if (dryRun) {
+      console.log("🔍 MODO DRY-RUN: Nenhuma alteração git será persistida.",);
+    }
+    console.log(
+      "============================================================",
+    );
+  }
+
+  // Sanidade: repositório git?
+  const isGit = await runGit(["rev-parse", "--is-inside-work-tree",], baseDir,);
+  if (!isGit.success) {
+    if (dryRun) {
+      if (!silencioso) {
+        console.warn(
+          "⚠️ Aviso: Diretório não é um repositório git ativo (dry-run prossegue).",
+        );
+      }
+      return {
+        tagName,
+        rawVersion,
+        sanitizedVersion,
+        message,
+        committed: false,
+        tagged: false,
+      };
+    }
+    throw new Error("❌ Não está dentro de um repositório git.",);
+  }
+
+  if (dryRun) {
+    if (!silencioso) {
+      console.log(`\n📦 [Dry-Run] 1/3 - Simularia git add -A, commit e push`,);
+      console.log(
+        `🧹 [Dry-Run] 2/3 - Simularia limpeza de tag antiga (${tagName})`,
+      );
+      console.log(
+        `🏷️  [Dry-Run] 3/3 - Simularia criação e push de ${tagName}`,
+      );
+      console.log("\n✅ [Dry-Run] Concluído com sucesso.",);
+      console.log(
+        "============================================================",
+      );
+    }
+    return {
+      tagName,
+      rawVersion,
+      sanitizedVersion,
+      message,
+      committed: false,
+      tagged: false,
+    };
+  }
+
+  // 1/3 - Empacotando e enviando código fonte
+  if (!silencioso) {
+    console.log("\n📦 1/3 - Empacotando e enviando código fonte...",);
+  }
+  await runGit(["add", "-A",], baseDir,);
+
+  const diffCached = await runGit(["diff", "--cached", "--quiet",], baseDir,);
+  let committed = false;
+  if (diffCached.code !== 0) {
+    const commitResult = await runGit(["commit", "-m", message,], baseDir,);
+    if (!commitResult.success) {
+      throw new Error(`❌ Falha no commit git: ${commitResult.stderr}`,);
+    }
+    committed = true;
+  } else {
+    if (!silencioso) {
+      console.log("ℹ️  Nada para comitar.",);
+    }
+  }
+
+  const pushResult = await runGit(["push",], baseDir,);
+  if (!pushResult.success && !silencioso) {
+    console.warn(
+      `⚠️ Aviso no push do código (pode não haver remote configurado): ${pushResult.stderr}`,
+    );
+  }
+
+  // 2/3 - Limpando tag antiga
+  if (!silencioso) {
+    console.log(`\n🧹 2/3 - Limpando tag antiga (${tagName})...`,);
+  }
+  await runGit(["push", "origin", "--delete", tagName,], baseDir,);
+  await runGit(["tag", "-d", tagName,], baseDir,);
+
+  // 3/3 - Publicando nova tag
+  if (!silencioso) {
+    console.log("\n🏷️  3/3 - Publicando nova tag...",);
+  }
+  const tagCreate = await runGit([
+    "tag",
+    "-a",
+    "-m",
+    `Versão ${tagName}`,
+    tagName,
+  ], baseDir,);
+  if (!tagCreate.success) {
+    throw new Error(`❌ Falha ao criar tag git: ${tagCreate.stderr}`,);
+  }
+
+  const tagPush = await runGit(
+    ["push", "--force", "origin", tagName,],
+    baseDir,
+  );
+  if (!tagPush.success && !silencioso) {
+    console.warn(
+      `⚠️ Aviso no push da tag origin ${tagName}: ${tagPush.stderr}`,
+    );
+  }
+
+  if (!silencioso) {
+    console.log("\n✅ NOVA TAG ADICIONADA COM SUCESSO!",);
+    console.log("Acompanhe o andamento na aba Actions do seu repositório.",);
+    console.log(
+      "============================================================",
+    );
+  }
+
+  return {
+    tagName,
+    rawVersion,
+    sanitizedVersion,
+    message,
+    committed,
+    tagged: true,
+  };
+}
+
+````
+
+---
+
+## Arquivo: `packages/utils/src/version/tag/mod.ts`
+
+```ts
+/**
+ * @module @vanaware/buildit/version/tag
+ * @description Módulo de automação de tags git baseado na versão semântica.
+ */
+
+export { tagVersionEngine, } from "./engine.ts";
+export { tagVersionCli, } from "./cli.ts";
 
 ```
 
@@ -3606,11 +4376,11 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
  * @description Ponto de entrada CLI para o monitoramento e recarregamento contínuo (Watch).
  */
 
-import { Command } from "@cliffy/command";
-import { carregarConfigWatch } from "./config.ts";
-import { watchEngine } from "./engine.ts";
-import { APP_VERSION } from "../version.ts";
-import { findDenoConfig } from "../tools/paths.ts";
+import { Command, } from "@cliffy/command";
+import { carregarConfigWatch, } from "./config.ts";
+import { watchEngine, } from "./engine.ts";
+import { APP_VERSION, } from "../version.ts";
+import { findDenoConfig, } from "../tools/paths.ts";
 
 /**
  * Cria a instância do comando CLI para o modo watch.
@@ -3618,26 +4388,26 @@ import { findDenoConfig } from "../tools/paths.ts";
 // deno-lint-ignore no-explicit-any
 export function watchCli(): Command<any, any, any, any, any, any, any, any> {
   return new Command()
-    .name("watch")
-    .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)")
-    .version(APP_VERSION)
+    .name("watch",)
+    .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
+    .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
       default: "watch.jsonc",
-      env: { prefix: "WATCH_" },
-    })
+      env: { prefix: "WATCH_", },
+    },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
       default: "./",
       env: true,
-    })
+    },)
     .option("-d, --deno-config [file:string]", "Configuração do Deno", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
-    })
-    .arguments("[target:string]")
-    .action(async function (options, target?: string): Promise<void> {
+    },)
+    .arguments("[target:string]",)
+    .action(async function (options, target?: string,): Promise<void> {
       const baseDir = (options.baseDir as string) || ".";
       const configPath = options.appConfig as string;
-      const loaded = await carregarConfigWatch(configPath, baseDir);
+      const loaded = await carregarConfigWatch(configPath, baseDir,);
       const configs = loaded.targets;
 
       const denoConfigPath = (options.denoConfig as string) || "deno.jsonc";
@@ -3653,43 +4423,45 @@ export function watchCli(): Command<any, any, any, any, any, any, any, any> {
           baseDir,
           denoJsoncPath: denoConfigPath,
           silencioso: false,
-        });
+        },);
 
         if (handles.length === 0) {
-          console.log("ℹ️ Nenhum processo watch ativo.");
+          console.log("ℹ️ Nenhum processo watch ativo.",);
           return;
         }
 
-        console.log("\n💡 Pressione Ctrl+C para encerrar o monitoramento.\n");
+        console.log("\n💡 Pressione Ctrl+C para encerrar o monitoramento.\n",);
 
         // Tratamento gracioso de sinais de encerramento
         const onSignal = async () => {
-          console.log("\n🛑 Encerrando modo watch...");
+          console.log("\n🛑 Encerrando modo watch...",);
           for (const handle of handles) {
             await handle.close();
           }
-          Deno.exit(0);
+          Deno.exit(0,);
         };
 
         try {
-          Deno.addSignalListener("SIGINT", onSignal);
-          Deno.addSignalListener("SIGTERM", onSignal);
+          Deno.addSignalListener("SIGINT", onSignal,);
+          Deno.addSignalListener("SIGTERM", onSignal,);
         } catch {
           // Ignora se o runtime não suportar SignalListener
         }
 
         // Manter o processo vivo
-        await new Promise(() => {});
+        await new Promise(() => {},);
       } catch (error) {
-        const mensagem = error instanceof Error ? error.message : String(error);
-        console.error(`\n🛑 Falha na inicialização do Watch:\n${mensagem}`);
-        Deno.exit(1);
+        const mensagem = error instanceof Error
+          ? error.message
+          : String(error,);
+        console.error(`\n🛑 Falha na inicialização do Watch:\n${mensagem}`,);
+        Deno.exit(1,);
       }
-    });
+    },);
 }
 
 if (import.meta.main) {
-  await watchCli().parse(Deno.args);
+  await watchCli().parse(Deno.args,);
 }
 
 ```
@@ -3704,7 +4476,7 @@ if (import.meta.main) {
  * @description Carregamento e validação de configurações para o modo de desenvolvimento contínuo (Watch).
  */
 
-import { loadConfig } from "../tools/jsonc.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
 import type {
   WatchConfigFile,
   WatchConfigResult,
@@ -3719,16 +4491,16 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
-    entryPoints: ["main.tsx"],
+    entryPoints: ["main.tsx",],
     platform: "browser",
     format: "esm",
     bundle: true,
     minify: false,
     sourcemap: "inline",
-    conditions: ["browser"],
+    conditions: ["browser",],
     jsx: "automatic",
     jsxImportSource: "preact",
     write: true,
@@ -3736,10 +4508,6 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
     outfile: "app.js",
   },
 };
-
-/** Alias retrocompatível para configurações padrão de watch */
-export const CONFIGURACOES_WATCH_PADRAO: Record<string, WatchTargetConfig> =
-  CONFIGURACOES_PADRAO_WATCH;
 
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
@@ -3759,19 +4527,25 @@ export async function carregarConfigWatch(
   );
 
   if (!parsed) {
-    console.warn("⚠️ Arquivo de configuração watch não encontrado. Usando padrões.");
-    return { targets: CONFIGURACOES_PADRAO_WATCH };
+    console.warn(
+      "⚠️ Arquivo de configuração watch não encontrado. Usando padrões.",
+    );
+    return { targets: CONFIGURACOES_PADRAO_WATCH, };
   }
 
   let targets: WatchGlobalConfig = {};
 
-  if ("targets" in parsed && parsed.targets && typeof parsed.targets === "object") {
+  if (
+    "targets" in parsed && parsed.targets && typeof parsed.targets === "object"
+  ) {
     targets = parsed.targets as WatchGlobalConfig;
-  } else if ("alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object") {
+  } else if (
+    "alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object"
+  ) {
     targets = parsed.alvos as WatchGlobalConfig;
   } else {
     // Procura por chaves que parecem definições de target (possuem entryPoints)
-    for (const [key, value] of Object.entries(parsed)) {
+    for (const [key, value,] of Object.entries(parsed,)) {
       if (
         key !== "$schema" &&
         key !== "version" &&
@@ -3784,11 +4558,11 @@ export async function carregarConfigWatch(
     }
   }
 
-  if (Object.keys(targets).length === 0) {
+  if (Object.keys(targets,).length === 0) {
     targets = CONFIGURACOES_PADRAO_WATCH;
   }
 
-  return { targets };
+  return { targets, };
 }
 
 ```
@@ -3803,9 +4577,9 @@ export async function carregarConfigWatch(
  * @description Motor de desenvolvimento contínuo (Watch) utilizando esbuild context e @deno/esbuild-plugin.
  */
 
-import { join } from "@std/path";
+import { join, } from "@std/path";
 import * as esbuild from "esbuild";
-import { denoPlugin } from "@deno/esbuild-plugin";
+import { denoPlugin, } from "@deno/esbuild-plugin";
 import type {
   WatchHandle,
   WatchOptions,
@@ -3819,9 +4593,9 @@ import {
   resolveOutputPaths,
   resolveWithBase,
 } from "../tools/paths.ts";
-import { readProjectVersion } from "../tools/version.ts";
-import { validateTargetConfig } from "../tools/validate.ts";
-import { acquireWatchLock } from "./lock.ts";
+import { readProjectVersion, } from "../tools/version.ts";
+import { validateTargetConfig, } from "../tools/validate.ts";
+import { acquireWatchLock, } from "./lock.ts";
 
 /**
  * Constrói as opções do esbuild específicas para monitoramento contínuo.
@@ -3830,17 +4604,17 @@ export async function buildWatchEsbuildOptions(
   targetName: string,
   config: WatchTargetConfig,
   appVersion: string,
-  listAssetsFn?: (distDir: string) => Promise<string[]>,
+  listAssetsFn?: (distDir: string,) => Promise<string[]>,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
   const finalDefine: Record<string, string> = {
     ...config.define,
-    __APP_VERSION__: JSON.stringify(`v${appVersion}`),
+    __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
   };
 
   if (targetName === "sw" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir);
-    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets);
+    const assets = await listAssetsFn(config.distdir,);
+    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
   }
 
   const resolvedEntryPoints = resolveEntryPoints(
@@ -3848,7 +4622,7 @@ export async function buildWatchEsbuildOptions(
     config.entryPoints,
   );
 
-  const { outfile, outdir } = resolveOutputPaths(config);
+  const { outfile, outdir, } = resolveOutputPaths(config,);
 
   // deno-lint-ignore no-explicit-any
   const options: any = {
@@ -3895,10 +4669,10 @@ export async function buildWatchEsbuildOptions(
   if (config.banner !== undefined) {
     const banner: { js?: string; css?: string } = {};
     if (config.banner.js !== undefined) {
-      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion);
+      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (config.banner.css !== undefined) {
-      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion);
+      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (banner.js !== undefined || banner.css !== undefined) {
       options.banner = banner;
@@ -3908,10 +4682,10 @@ export async function buildWatchEsbuildOptions(
   if (config.footer !== undefined) {
     const footer: { js?: string; css?: string } = {};
     if (config.footer.js !== undefined) {
-      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion);
+      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (config.footer.css !== undefined) {
-      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion);
+      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (footer.js !== undefined || footer.css !== undefined) {
       options.footer = footer;
@@ -3934,22 +4708,22 @@ export async function watchEngine(
 ): Promise<WatchHandle[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc");
-  const version = await readProjectVersion(denoJsoncPath, baseDir);
+  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const version = await readProjectVersion(denoJsoncPath, baseDir,);
 
   // 1. Resolução do alvo: se fornecido utiliza opcoes.target, senão executa o primeiro default
   let targetName: string;
-  const configKeys = Object.keys(configs);
+  const configKeys = Object.keys(configs,);
   const requested = opcoes.target;
 
   if (requested) {
     const matchingKey = configKeys.find(
-      (k) => k.toLowerCase() === requested.toLowerCase(),
+      (k,) => k.toLowerCase() === requested.toLowerCase(),
     );
     if (!matchingKey || !configs[matchingKey]) {
       throw new Error(
         `❌ Alvo '${requested}' não encontrado na configuração de watch. Alvos disponíveis: ${
-          configKeys.join(", ")
+          configKeys.join(", ",)
         }.`,
       );
     }
@@ -3957,13 +4731,13 @@ export async function watchEngine(
   } else {
     // Se não for passado nenhum literal, busca o primeiro com default !== false
     const defaultTargets = configKeys.filter(
-      (k) => configs[k]?.default !== false,
+      (k,) => configs[k]?.default !== false,
     );
 
     const firstDefault = defaultTargets[0];
     if (!firstDefault) {
       if (!opcoes.silencioso) {
-        console.warn("⚠️ Nenhum alvo configurado para watch.");
+        console.warn("⚠️ Nenhum alvo configurado para watch.",);
       }
       return [];
     }
@@ -3978,12 +4752,12 @@ export async function watchEngine(
 
   const resolvedConfig: WatchTargetConfig = {
     ...targetConfig,
-    srcdir: resolveWithBase(targetConfig.srcdir, baseDir),
-    distdir: resolveWithBase(targetConfig.distdir, baseDir),
-    publicdir: resolveWithBase(targetConfig.publicdir, baseDir),
+    srcdir: resolveWithBase(targetConfig.srcdir, baseDir,),
+    distdir: resolveWithBase(targetConfig.distdir, baseDir,),
+    publicdir: resolveWithBase(targetConfig.publicdir, baseDir,),
   };
 
-  validateTargetConfig(targetName, resolvedConfig);
+  validateTargetConfig(targetName, resolvedConfig,);
 
   // 3. Bloqueio de concorrência: adquire o lock para o watch
   const releaseLock = await acquireWatchLock(
@@ -3994,14 +4768,19 @@ export async function watchEngine(
 
   try {
     if (!opcoes.silencioso) {
-      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`);
+      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`,);
     }
 
     if (resolvedConfig.clean && resolvedConfig.distdir) {
-      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean);
+      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     }
 
-    await copyStaticFiles(resolvedConfig, version, baseDir, resolvedConfig.distdir);
+    await copyStaticFiles(
+      resolvedConfig,
+      version,
+      baseDir,
+      resolvedConfig.distdir,
+    );
 
     const esbuildOptions = await buildWatchEsbuildOptions(
       targetName,
@@ -4012,17 +4791,19 @@ export async function watchEngine(
 
     esbuildOptions.plugins = [
       ...(esbuildOptions.plugins || []),
-      denoPlugin({ configPath: denoJsoncPath }),
+      denoPlugin({ configPath: denoJsoncPath, },),
     ];
 
-    const ctx = await esbuild.context(esbuildOptions);
+    const ctx = await esbuild.context(esbuildOptions,);
     await ctx.watch();
 
     if (!opcoes.silencioso) {
-      console.log(`✅ [${targetName}] Monitorando alterações em tempo real...`);
+      console.log(
+        `✅ [${targetName}] Monitorando alterações em tempo real...`,
+      );
       const resolvedOutfile = esbuildOptions.outfile ||
         (resolvedConfig.distdir ? `${resolvedConfig.distdir}/` : "disco");
-      console.log(`📦 Saída: ${resolvedOutfile}`);
+      console.log(`📦 Saída: ${resolvedOutfile}`,);
     }
 
     const handle: WatchHandle = {
@@ -4036,7 +4817,7 @@ export async function watchEngine(
       },
     };
 
-    return [handle];
+    return [handle,];
   } catch (error) {
     await releaseLock();
     throw error;
@@ -4055,7 +4836,7 @@ export async function watchEngine(
  * @description Mecanismo de controle de concorrência e Lock para evitar instâncias simultâneas do modo Watch.
  */
 
-import { join } from "@std/path";
+import { join, } from "@std/path";
 
 /** Estrutura armazenada no arquivo de lock do Watch */
 export interface WatchLockData {
@@ -4075,14 +4856,14 @@ export interface WatchLockData {
  * @param pid ID do processo a verificar
  * @returns `true` se o processo estiver ativo, `false` caso contrário
  */
-export function isProcessRunning(pid: number): boolean {
+export function isProcessRunning(pid: number,): boolean {
   if (pid <= 0) return false;
   if (pid === Deno.pid) return true;
 
   try {
     if (Deno.build.os === "linux") {
       try {
-        Deno.statSync(`/proc/${pid}`);
+        Deno.statSync(`/proc/${pid}`,);
         return true;
       } catch {
         return false;
@@ -4090,10 +4871,10 @@ export function isProcessRunning(pid: number): boolean {
     }
 
     const cmd = new Deno.Command("kill", {
-      args: ["-0", String(pid)],
+      args: ["-0", String(pid,),],
       stdout: "null",
       stderr: "null",
-    });
+    },);
     const res = cmd.outputSync();
     return res.success;
   } catch {
@@ -4115,22 +4896,22 @@ export async function acquireWatchLock(
   target: string,
   customLockPath?: string,
 ): Promise<() => Promise<void>> {
-  const lockPath = customLockPath ?? join(baseDir, ".buildit-watch.lock");
+  const lockPath = customLockPath ?? join(baseDir, ".buildit-watch.lock",);
 
   // 1. Verificar se já existe um arquivo de lock
   try {
-    const existingContent = await Deno.readTextFile(lockPath);
-    const existingLock = JSON.parse(existingContent) as WatchLockData;
+    const existingContent = await Deno.readTextFile(lockPath,);
+    const existingLock = JSON.parse(existingContent,) as WatchLockData;
 
     if (existingLock && typeof existingLock.pid === "number") {
-      if (isProcessRunning(existingLock.pid)) {
+      if (isProcessRunning(existingLock.pid,)) {
         throw new Error(
           `❌ Já existe uma instância do watch em execução (PID: ${existingLock.pid}, Alvo: "${existingLock.target}", Iniciada em: ${existingLock.startedAt}). Encerre o processo anterior para evitar conflitos.`,
         );
       } else {
         // O processo anterior morreu sem limpar o lock (órfão)
         try {
-          await Deno.remove(lockPath);
+          await Deno.remove(lockPath,);
         } catch {
           // Ignora erro se outro processo já removeu
         }
@@ -4139,7 +4920,7 @@ export async function acquireWatchLock(
   } catch (err) {
     if (
       err instanceof Error &&
-      err.message.startsWith("❌ Já existe uma instância do watch")
+      err.message.startsWith("❌ Já existe uma instância do watch",)
     ) {
       throw err;
     }
@@ -4154,7 +4935,7 @@ export async function acquireWatchLock(
     baseDir,
   };
 
-  await Deno.writeTextFile(lockPath, JSON.stringify(lockData, null, 2));
+  await Deno.writeTextFile(lockPath, JSON.stringify(lockData, null, 2,),);
 
   // 3. Prepara a liberação segura do lock
   let released = false;
@@ -4162,10 +4943,10 @@ export async function acquireWatchLock(
     if (released) return;
     released = true;
     try {
-      const currentContent = await Deno.readTextFile(lockPath);
-      const currentLock = JSON.parse(currentContent) as WatchLockData;
+      const currentContent = await Deno.readTextFile(lockPath,);
+      const currentLock = JSON.parse(currentContent,) as WatchLockData;
       if (currentLock.pid === Deno.pid) {
-        await Deno.remove(lockPath);
+        await Deno.remove(lockPath,);
       }
     } catch {
       // Ignora erros caso o arquivo já tenha sido removido
@@ -4175,17 +4956,17 @@ export async function acquireWatchLock(
   // Garante liberação na saída do processo
   const unloadHandler = () => {
     try {
-      const currentContent = Deno.readTextFileSync(lockPath);
-      const currentLock = JSON.parse(currentContent) as WatchLockData;
+      const currentContent = Deno.readTextFileSync(lockPath,);
+      const currentLock = JSON.parse(currentContent,) as WatchLockData;
       if (currentLock.pid === Deno.pid) {
-        Deno.removeSync(lockPath);
+        Deno.removeSync(lockPath,);
       }
     } catch {
       // Ignora erros
     }
   };
 
-  globalThis.addEventListener("unload", unloadHandler, { once: true });
+  globalThis.addEventListener("unload", unloadHandler, { once: true, },);
 
   return release;
 }
@@ -4243,27 +5024,27 @@ describe("bdd_example", () => {
 ## Arquivo: `packages/utils/tests/config/cli-flags.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
-import { parseArgs } from "../../src/tools/cli-flags.ts";
-import { GlobalTargetConfig } from "../../src/tools/interfaces.ts";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { parseArgs, } from "../../src/tools/cli-flags.ts";
+import { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
 
 describe("parseArgs", () => {
   const config: GlobalTargetConfig = {
     ui: {
-      entryPoints: ["main.tsx"],
+      entryPoints: ["main.tsx",],
       srcdir: "src",
       distdir: "dist",
       default: true,
     },
     sw: {
-      entryPoints: ["sw.ts"],
+      entryPoints: ["sw.ts",],
       srcdir: "src",
       distdir: "dist",
       default: false,
     },
     worker: {
-      entryPoints: ["worker.ts"],
+      entryPoints: ["worker.ts",],
       srcdir: "src",
       distdir: "dist",
       default: true,
@@ -4271,24 +5052,24 @@ describe("parseArgs", () => {
   };
 
   it("deve usar alvos padrão se nenhum for especificado", () => {
-    const res = parseArgs([], config);
-    assertEquals(res.targets, ["ui", "worker"]);
-    assertEquals(res.globalNoVersion, false);
+    const res = parseArgs([], config,);
+    assertEquals(res.targets, ["ui", "worker",],);
+    assertEquals(res.globalNoVersion, false,);
   });
 
   it("deve identificar a flag noversion", () => {
-    const res = parseArgs(["noversion"], config);
-    assertEquals(res.globalNoVersion, true);
+    const res = parseArgs(["noversion",], config,);
+    assertEquals(res.globalNoVersion, true,);
   });
 
   it("deve filtrar alvos solicitados", () => {
-    const res = parseArgs(["ui", "sw"], config);
-    assertEquals(res.targets, ["ui", "sw"]);
+    const res = parseArgs(["ui", "sw",], config,);
+    assertEquals(res.targets, ["ui", "sw",],);
   });
 
   it("deve respeitar a ordem do config independente da ordem dos args", () => {
-    const res = parseArgs(["sw", "ui"], config);
-    assertEquals(res.targets, ["ui", "sw"]);
+    const res = parseArgs(["sw", "ui",], config,);
+    assertEquals(res.targets, ["ui", "sw",],);
   });
 });
 
@@ -4299,12 +5080,12 @@ describe("parseArgs", () => {
 ## Arquivo: `packages/utils/tests/config/version.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals, assertThrows } from "@std/assert";
-import { join } from "@std/path";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, assertThrows, } from "@std/assert";
+import { join, } from "@std/path";
 import {
-  parseVersion,
   formatVersion,
+  parseVersion,
   readProjectVersion,
   updateProjectVersion,
   writeVersionFile,
@@ -4313,96 +5094,108 @@ import {
 describe("version utils", () => {
   describe("parseVersion e formatVersion", () => {
     it("deve parsear versões semânticas válidas", () => {
-      const parsed = parseVersion("1.2.3#abc");
-      assertEquals(parsed, { major: 1, minor: 2, patch: 3 });
+      const parsed = parseVersion("1.2.3#abc",);
+      assertEquals(parsed, { major: 1, minor: 2, patch: 3, },);
     });
 
     it("deve formatar componentes em formato semântico", () => {
-      const formatted = formatVersion(1, 2, 4, "hash123");
-      assertEquals(formatted, "1.2.4#hash123");
+      const formatted = formatVersion(1, 2, 4, "hash123",);
+      assertEquals(formatted, "1.2.4#hash123",);
     });
 
     it("deve rejeitar versões inválidas", () => {
       assertThrows(() => {
-        parseVersion("invalid");
-      });
+        parseVersion("invalid",);
+      },);
     });
   });
 
   describe("readProjectVersion", () => {
     it("deve ler a versão do deno.jsonc raiz", async () => {
       const tempDir = await Deno.makeTempDir();
-      const denoJsonc = join(tempDir, "deno.jsonc");
-      await Deno.writeTextFile(denoJsonc, JSON.stringify({ version: "0.5.0" }));
+      const denoJsonc = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        denoJsonc,
+        JSON.stringify({ version: "0.5.0", },),
+      );
 
-      const ver = await readProjectVersion(denoJsonc);
-      assertEquals(ver, "0.5.0");
+      const ver = await readProjectVersion(denoJsonc,);
+      assertEquals(ver, "0.5.0",);
 
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     });
   });
 
   describe("updateProjectVersion e versionPaths", () => {
     it("deve respeitar a opção noversion e não incrementar patch", async () => {
       const tempDir = await Deno.makeTempDir();
-      const denoJsonc = join(tempDir, "deno.jsonc");
-      await Deno.writeTextFile(denoJsonc, JSON.stringify({ version: "1.0.0" }));
+      const denoJsonc = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        denoJsonc,
+        JSON.stringify({ version: "1.0.0", },),
+      );
 
       const ver = await updateProjectVersion({
         denoJsonPath: denoJsonc,
         noversion: true,
-        versionPaths: [join(tempDir, "version.ts")],
-      });
+        versionPaths: [join(tempDir, "version.ts",),],
+      },);
 
-      assertEquals(ver, "1.0.0");
-      const generated = await Deno.readTextFile(join(tempDir, "version.ts"));
-      assertEquals(generated.includes('1.0.0'), true);
+      assertEquals(ver, "1.0.0",);
+      const generated = await Deno.readTextFile(join(tempDir, "version.ts",),);
+      assertEquals(generated.includes("1.0.0",), true,);
 
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     });
 
     it("deve incrementar a versão e salvar em múltiplos versionPaths", async () => {
       const tempDir = await Deno.makeTempDir();
-      const denoJsonc = join(tempDir, "deno.jsonc");
-      await Deno.writeTextFile(denoJsonc, JSON.stringify({ version: "1.0.0" }));
+      const denoJsonc = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        denoJsonc,
+        JSON.stringify({ version: "1.0.0", },),
+      );
 
-      const path1 = join(tempDir, "pkg1", "version.ts");
-      const path2 = join(tempDir, "pkg2"); // diretório
+      const path1 = join(tempDir, "pkg1", "version.ts",);
+      const path2 = join(tempDir, "pkg2",); // diretório
 
       const ver = await updateProjectVersion({
         denoJsonPath: denoJsonc,
         noversion: false,
         buildHash: "fixedhash",
-        versionPaths: [path1, path2],
-      });
+        versionPaths: [path1, path2,],
+      },);
 
-      assertEquals(ver, "1.0.1#fixedhash");
+      assertEquals(ver, "1.0.1#fixedhash",);
 
-      const file1 = await Deno.readTextFile(path1);
-      const file2 = await Deno.readTextFile(join(path2, "version.ts"));
+      const file1 = await Deno.readTextFile(path1,);
+      const file2 = await Deno.readTextFile(join(path2, "version.ts",),);
 
-      assertEquals(file1.includes("1.0.1#fixedhash"), true);
-      assertEquals(file2.includes("1.0.1#fixedhash"), true);
+      assertEquals(file1.includes("1.0.1#fixedhash",), true,);
+      assertEquals(file2.includes("1.0.1#fixedhash",), true,);
 
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     });
 
     it("deve propagar a versão nos workspaces quando forcepackagesversion for true", async () => {
       const tempDir = await Deno.makeTempDir();
-      const rootJson = join(tempDir, "deno.jsonc");
-      const subpkgDir = join(tempDir, "packages", "sub");
-      await Deno.mkdir(subpkgDir, { recursive: true });
+      const rootJson = join(tempDir, "deno.jsonc",);
+      const subpkgDir = join(tempDir, "packages", "sub",);
+      await Deno.mkdir(subpkgDir, { recursive: true, },);
 
       await Deno.writeTextFile(
         rootJson,
         JSON.stringify({
           version: "2.0.0",
-          workspace: ["./packages/sub"],
-        }),
+          workspace: ["./packages/sub",],
+        },),
       );
 
-      const subJson = join(subpkgDir, "deno.jsonc");
-      await Deno.writeTextFile(subJson, JSON.stringify({ name: "sub", version: "2.0.0" }));
+      const subJson = join(subpkgDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        subJson,
+        JSON.stringify({ name: "sub", version: "2.0.0", },),
+      );
 
       const ver = await updateProjectVersion({
         denoJsonPath: rootJson,
@@ -4410,14 +5203,14 @@ describe("version utils", () => {
         buildHash: "testws",
         forcepackagesversion: true,
         versionPaths: [],
-      });
+      },);
 
-      assertEquals(ver, "2.0.1#testws");
+      assertEquals(ver, "2.0.1#testws",);
 
-      const subContent = await Deno.readTextFile(subJson);
-      assertEquals(subContent.includes("2.0.1#testws"), true);
+      const subContent = await Deno.readTextFile(subJson,);
+      assertEquals(subContent.includes("2.0.1#testws",), true,);
 
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     });
   });
 });
@@ -4429,25 +5222,28 @@ describe("version utils", () => {
 ## Arquivo: `packages/utils/tests/denobuild/denobuild-api.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
-import { join } from "@std/path";
-import { denoBuild } from "../../src/denobuild/engine.ts";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { join, } from "@std/path";
+import { denoBuild, } from "../../src/denobuild/engine.ts";
 
 describe("denoBuild programmatic API", () => {
   it("deve aceitar objeto DenoBundleGlobalConfig em memória diretamente", async () => {
     const tempDir = await Deno.makeTempDir();
-    const srcDir = join(tempDir, "src");
-    const distDir = join(tempDir, "dist");
-    await Deno.mkdir(srcDir, { recursive: true });
+    const srcDir = join(tempDir, "src",);
+    const distDir = join(tempDir, "dist",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
 
     // Cria entrypoint
-    await Deno.writeTextFile(join(srcDir, "main.ts"), 'export const version = "test";');
+    await Deno.writeTextFile(
+      join(srcDir, "main.ts",),
+      'export const version = "test";',
+    );
 
     const config = {
       app: {
         mode: "build" as const,
-        entryPoints: ["main.ts"],
+        entryPoints: ["main.ts",],
         srcdir: srcDir,
         distdir: distDir,
         platform: "browser" as const,
@@ -4457,17 +5253,17 @@ describe("denoBuild programmatic API", () => {
 
     const results = await denoBuild({
       config,
-      targets: ["app"],
+      targets: ["app",],
       baseDir: tempDir,
       noversion: true,
       silencioso: true,
-    });
+    },);
 
-    assertEquals(results.length, 1);
-    assertEquals(results[0]?.target, "app");
-    assertEquals(results[0]?.success, true);
+    assertEquals(results.length, 1,);
+    assertEquals(results[0]?.target, "app",);
+    assertEquals(results[0]?.success, true,);
 
-    await Deno.remove(tempDir, { recursive: true });
+    await Deno.remove(tempDir, { recursive: true, },);
   });
 });
 
@@ -4489,42 +5285,40 @@ import {
   applyDefines,
   buildBundleOptions,
 } from "../../src/denobuild/bundle.ts";
-import {
-  CONFIGURACOES_PADRAO,
-} from "../../src/denobuild/mod.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/denobuild/mod.ts";
 
 describe("denobuild - applyDefines", () => {
   it("deve substituir identificadores simples", () => {
     const code = "const version = __APP_VERSION__;";
-    const defines = { "__APP_VERSION__": '"1.2.3"' };
-    const result = applyDefines(code, defines);
-    assertEquals(result, 'const version = "1.2.3";');
+    const defines = { "__APP_VERSION__": '"1.2.3"', };
+    const result = applyDefines(code, defines,);
+    assertEquals(result, 'const version = "1.2.3";',);
   });
 
   it("deve substituir múltiplos identificadores", () => {
     const code = "if (__DEBUG__) console.log(__MSG__);";
-    const defines = { "__DEBUG__": "true", "__MSG__": '"hello"' };
-    const result = applyDefines(code, defines);
-    assertEquals(result, 'if (true) console.log("hello");');
+    const defines = { "__DEBUG__": "true", "__MSG__": '"hello"', };
+    const result = applyDefines(code, defines,);
+    assertEquals(result, 'if (true) console.log("hello");',);
   });
 
   it("deve lidar com caracteres especiais em chaves", () => {
     const code = "process.env.NODE_ENV";
-    const defines = { "process.env.NODE_ENV": '"production"' };
-    const result = applyDefines(code, defines);
-    assertEquals(result, '"production"');
+    const defines = { "process.env.NODE_ENV": '"production"', };
+    const result = applyDefines(code, defines,);
+    assertEquals(result, '"production"',);
   });
 });
 
 describe("denobuild - buildBundleOptions", () => {
   it("deve gerar opções básicas a partir da configuração", () => {
     const config = CONFIGURACOES_PADRAO.ui!;
-    const options = buildBundleOptions(config);
-    
-    assertEquals(options.minify, false);
-    assertEquals(options.platform, "browser");
-    assertEquals(options.format, "esm");
-    assertEquals(options.write, false);
+    const options = buildBundleOptions(config,);
+
+    assertEquals(options.minify, false,);
+    assertEquals(options.platform, "browser",);
+    assertEquals(options.format, "esm",);
+    assertEquals(options.write, false,);
   });
 });
 
@@ -4537,63 +5331,63 @@ describe("denobuild - buildBundleOptions", () => {
 ```ts
 /// <reference lib="deno.ns" />
 
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
-import { parseArgs } from "../../src/tools/cli-flags.ts";
-import type { GlobalTargetConfig } from "../../src/tools/interfaces.ts";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { parseArgs, } from "../../src/tools/cli-flags.ts";
+import type { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
 
 // Helper para criar config mínima
-function makeTarget(overrides: Record<string, unknown> = {}) {
+function makeTarget(overrides: Record<string, unknown> = {},) {
   return {
     srcdir: "src",
     distdir: "dist",
-    entryPoints: ["a.ts"],
+    entryPoints: ["a.ts",],
     ...overrides,
   };
 }
 
 describe("parseArgs", () => {
   const CONFIG_DEFAULT: GlobalTargetConfig = {
-    ui: makeTarget({ default: true }),
-    worker: makeTarget({ default: true }),
-    sw: makeTarget({ default: true }),
-    admin: makeTarget({ default: false }),
+    ui: makeTarget({ default: true, },),
+    worker: makeTarget({ default: true, },),
+    sw: makeTarget({ default: true, },),
+    admin: makeTarget({ default: false, },),
   };
 
   it("deve usar alvos padrão se nenhum for especificado", () => {
-    const result = parseArgs([], CONFIG_DEFAULT);
-    assertEquals(result.targets, ["ui", "worker", "sw"]);
-    assertEquals(result.globalNoVersion, false);
+    const result = parseArgs([], CONFIG_DEFAULT,);
+    assertEquals(result.targets, ["ui", "worker", "sw",],);
+    assertEquals(result.globalNoVersion, false,);
   });
 
   it("inclui alvo com default: false quando solicitado explicitamente", () => {
-    const result = parseArgs(["admin"], CONFIG_DEFAULT);
-    assertEquals(result.targets, ["admin"]);
-    assertEquals(result.globalNoVersion, false);
+    const result = parseArgs(["admin",], CONFIG_DEFAULT,);
+    assertEquals(result.targets, ["admin",],);
+    assertEquals(result.globalNoVersion, false,);
   });
 
   it("deve detectar flag noversion isolada", () => {
-    const result = parseArgs(["noversion"], CONFIG_DEFAULT);
-    assertEquals(result.targets, ["ui", "worker", "sw"]);
-    assertEquals(result.globalNoVersion, true);
+    const result = parseArgs(["noversion",], CONFIG_DEFAULT,);
+    assertEquals(result.targets, ["ui", "worker", "sw",],);
+    assertEquals(result.globalNoVersion, true,);
   });
 
   it("deve combinar alvos específicos e flag noversion", () => {
-    const result = parseArgs(["ui", "noversion"], CONFIG_DEFAULT);
-    assertEquals(result.targets, ["ui"]);
-    assertEquals(result.globalNoVersion, true);
+    const result = parseArgs(["ui", "noversion",], CONFIG_DEFAULT,);
+    assertEquals(result.targets, ["ui",],);
+    assertEquals(result.globalNoVersion, true,);
   });
 
   it("deve ser case-insensitive para os argumentos", () => {
-    const result = parseArgs(["UI", "NOVERSION"], CONFIG_DEFAULT);
-    assertEquals(result.targets, ["ui"]);
-    assertEquals(result.globalNoVersion, true);
+    const result = parseArgs(["UI", "NOVERSION",], CONFIG_DEFAULT,);
+    assertEquals(result.targets, ["ui",],);
+    assertEquals(result.globalNoVersion, true,);
   });
 
   it("CONFIG vazio retorna tudo vazio", () => {
-    const result = parseArgs([], {});
-    assertEquals(result.targets, []);
-    assertEquals(result.globalNoVersion, false);
+    const result = parseArgs([], {},);
+    assertEquals(result.targets, [],);
+    assertEquals(result.globalNoVersion, false,);
   });
 });
 
@@ -4604,26 +5398,26 @@ describe("parseArgs", () => {
 ## Arquivo: `packages/utils/tests/esbuild/esbuild-api.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
-import { parseArgs } from "../../src/tools/cli-flags.ts";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { parseArgs, } from "../../src/tools/cli-flags.ts";
 
 describe("esbuild API & CLI flags integration", () => {
   it("deve integrar flags CLI com parseArgs", () => {
     const config = {
       ui: {
         mode: "build" as const,
-        entryPoints: ["main.tsx"],
+        entryPoints: ["main.tsx",],
         srcdir: "src",
         distdir: "dist",
       },
     };
 
-    const rawArgs = ["ui", "noversion"];
-    const parsed = parseArgs(rawArgs, config);
+    const rawArgs = ["ui", "noversion",];
+    const parsed = parseArgs(rawArgs, config,);
 
-    assertEquals(parsed.targets, ["ui"]);
-    assertEquals(parsed.globalNoVersion, true);
+    assertEquals(parsed.targets, ["ui",],);
+    assertEquals(parsed.globalNoVersion, true,);
   });
 });
 
@@ -5145,56 +5939,48 @@ describe("buildEsbuildOptions", () => {
  */
 
 import { describe, it, } from "@std/testing/bdd";
-import { assertEquals, assert, } from "@std/assert";
-import {
-  parseVersion,
-  formatVersion,
-} from "../../src/tools/version.ts";
-import {
-  isSafePath,
-  resolveOutputPaths,
-} from "../../src/tools/paths.ts";
-import {
-  CONFIGURACOES_PADRAO,
-} from "../../src/esbuild/mod.ts";
+import { assert, assertEquals, } from "@std/assert";
+import { formatVersion, parseVersion, } from "../../src/tools/version.ts";
+import { isSafePath, resolveOutputPaths, } from "../../src/tools/paths.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/esbuild/mod.ts";
 
 describe("esbuild - versioning", () => {
   it("deve parsear versão semântica com hash", () => {
-    const v = parseVersion("1.2.3#hash");
-    assertEquals(v.major, 1);
-    assertEquals(v.minor, 2);
-    assertEquals(v.patch, 3);
+    const v = parseVersion("1.2.3#hash",);
+    assertEquals(v.major, 1,);
+    assertEquals(v.minor, 2,);
+    assertEquals(v.patch, 3,);
   });
 
   it("deve formatar versão corretamente", () => {
-    const v = formatVersion(0, 3, 8, "test");
-    assertEquals(v, "0.3.8#test");
+    const v = formatVersion(0, 3, 8, "test",);
+    assertEquals(v, "0.3.8#test",);
   });
 });
 
 describe("esbuild - paths", () => {
   it("deve validar caminhos seguros", () => {
-    assert(isSafePath("dist/output.js"));
-    assert(!isSafePath("../secret.js"));
-    assert(!isSafePath("/etc/passwd"));
+    assert(isSafePath("dist/output.js",),);
+    assert(!isSafePath("../secret.js",),);
+    assert(!isSafePath("/etc/passwd",),);
   });
 
   it("deve resolver caminhos de saída corretamente", () => {
     const config = {
       outfile: "bundle.js",
       distdir: "dist",
-      entryPoints: ["main.ts"]
+      entryPoints: ["main.ts",],
     };
-    const resolved = resolveOutputPaths(config);
-    assertEquals(resolved.outfile, "dist/bundle.js");
+    const resolved = resolveOutputPaths(config,);
+    assertEquals(resolved.outfile, "dist/bundle.js",);
   });
 });
 
 describe("esbuild - config", () => {
   it("deve ter configurações padrão válidas", () => {
-    assert(CONFIGURACOES_PADRAO.ui !== undefined);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser");
+    assert(CONFIGURACOES_PADRAO.ui !== undefined,);
+    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true,);
+    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser",);
   });
 });
 
@@ -5796,12 +6582,8 @@ describe("processTarget (integração)", () => {
 /// <reference lib="deno.ns" />
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, assertThrows, } from "@std/assert";
-import {
-  resolveOutputPaths,
-} from "../../src/tools/paths.ts";
-import {
-  validateTargetConfig,
-} from "../../src/tools/validate.ts";
+import { resolveOutputPaths, } from "../../src/tools/paths.ts";
+import { validateTargetConfig, } from "../../src/tools/validate.ts";
 import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 
 describe("validateTargetConfig", () => {
@@ -6259,30 +7041,36 @@ describe("incrementVersion (integração)", () => {
 ## Arquivo: `packages/utils/tests/export/export-api.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals } from "@std/assert";
-import { join } from "@std/path";
-import { exportEngine } from "../../src/export/engine.ts";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { join, } from "@std/path";
+import { exportEngine, } from "../../src/export/engine.ts";
 
 describe("exportEngine programmatic API", () => {
   it("deve aceitar configuração baseada em includes/excludes e realizar streaming para o disco", async () => {
     const tempDir = await Deno.makeTempDir();
-    const srcDir = join(tempDir, "src");
-    await Deno.mkdir(srcDir, { recursive: true });
+    const srcDir = join(tempDir, "src",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
 
     // Cria deno.jsonc com versão customizada do projeto
-    const denoJsonc = join(tempDir, "deno.jsonc");
-    await Deno.writeTextFile(denoJsonc, JSON.stringify({ version: "0.9.5" }));
+    const denoJsonc = join(tempDir, "deno.jsonc",);
+    await Deno.writeTextFile(
+      denoJsonc,
+      JSON.stringify({ version: "0.9.5", },),
+    );
 
     // Cria arquivos de teste
-    await Deno.writeTextFile(join(srcDir, "sample.ts"), 'export const hello = "world";');
-    await Deno.writeTextFile(join(srcDir, "ignore.test.ts"), 'test');
+    await Deno.writeTextFile(
+      join(srcDir, "sample.ts",),
+      'export const hello = "world";',
+    );
+    await Deno.writeTextFile(join(srcDir, "ignore.test.ts",), "test",);
 
     const configEmMemoria = {
       testMode: {
         arquivoSaida: "snapshots/test-out.md",
-        includes: ["src/**/*.{ts,tsx}"],
-        excludes: ["**/*.test.ts"],
+        includes: ["src/**/*.{ts,tsx}",],
+        excludes: ["**/*.test.ts",],
         incluiVersao: true,
         instrucaoCustomizada: "Snapshot de teste para IA",
         default: true,
@@ -6291,55 +7079,66 @@ describe("exportEngine programmatic API", () => {
 
     const resultados = await exportEngine({
       config: configEmMemoria,
-      modos: ["testMode"],
+      modos: ["testMode",],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
       silencioso: true,
-    });
+    },);
 
-    assertEquals(resultados.length, 1);
-    assertEquals(resultados[0]?.modo, "testMode");
-    assertEquals(resultados[0]?.arquivos, 1);
-    assertEquals(resultados[0]?.bytes > 0, true);
+    assertEquals(resultados.length, 1,);
+    assertEquals(resultados[0]?.modo, "testMode",);
+    assertEquals(resultados[0]?.arquivos, 1,);
+    assertEquals(resultados[0]?.bytes > 0, true,);
 
-    const snapshotConteudo = await Deno.readTextFile(join(tempDir, "snapshots", "test-out.md"));
-    assertEquals(snapshotConteudo.includes("[v0.9.5]"), true);
-    assertEquals(snapshotConteudo.includes("Snapshot de teste para IA"), true);
-    assertEquals(snapshotConteudo.includes('export const hello = "world";'), true);
-    assertEquals(snapshotConteudo.includes('ignore.test.ts'), false);
+    const snapshotConteudo = await Deno.readTextFile(
+      join(tempDir, "snapshots", "test-out.md",),
+    );
+    assertEquals(snapshotConteudo.includes("[v0.9.5]",), true,);
+    assertEquals(
+      snapshotConteudo.includes("Snapshot de teste para IA",),
+      true,
+    );
+    assertEquals(
+      snapshotConteudo.includes('export const hello = "world";',),
+      true,
+    );
+    assertEquals(snapshotConteudo.includes("ignore.test.ts",), false,);
 
-    await Deno.remove(tempDir, { recursive: true });
+    await Deno.remove(tempDir, { recursive: true, },);
   });
 
   it("deve exportar com sucesso utilizando includes e globs", async () => {
     const tempDir = await Deno.makeTempDir();
-    const srcDir = join(tempDir, "src");
-    await Deno.mkdir(srcDir, { recursive: true });
+    const srcDir = join(tempDir, "src",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
 
-    await Deno.writeTextFile(join(srcDir, "index.ts"), 'console.log("direct config");');
+    await Deno.writeTextFile(
+      join(srcDir, "index.ts",),
+      'console.log("direct config");',
+    );
 
     const resultados = await exportEngine({
       config: {
         direto: {
           arquivoSaida: "direct.md",
-          includes: ["src/**/*.{ts,tsx}"],
+          includes: ["src/**/*.{ts,tsx}",],
           incluiVersao: false,
           instrucaoCustomizada: "Teste direto",
         },
       },
-      modos: ["direto"],
+      modos: ["direto",],
       baseDir: tempDir,
       silencioso: true,
-    });
+    },);
 
-    assertEquals(resultados.length, 1);
-    assertEquals(resultados[0]?.modo, "direto");
-    assertEquals(resultados[0]?.arquivos, 1);
+    assertEquals(resultados.length, 1,);
+    assertEquals(resultados[0]?.modo, "direto",);
+    assertEquals(resultados[0]?.arquivos, 1,);
 
-    const snapshot = await Deno.readTextFile(join(tempDir, "direct.md"));
-    assertEquals(snapshot.includes('console.log("direct config");'), true);
+    const snapshot = await Deno.readTextFile(join(tempDir, "direct.md",),);
+    assertEquals(snapshot.includes('console.log("direct config");',), true,);
 
-    await Deno.remove(tempDir, { recursive: true });
+    await Deno.remove(tempDir, { recursive: true, },);
   });
 });
 
@@ -6358,12 +7157,8 @@ describe("exportEngine programmatic API", () => {
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
-import {
-  CONFIGURACOES_PADRAO,
-} from "../../src/export/mod.ts";
-import {
-  deveIncluirArquivo,
-} from "../../src/export/formatter.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/export/mod.ts";
+import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
 import {
   coletarArquivosParaExportacao,
   parseArgs,
@@ -6388,7 +7183,7 @@ describe("deveIncluirArquivo", () => {
         "packages/server/{src,docs}/**/*.{ts,md}",
         ".github/workflows/**/*.{yaml,yml}",
       ],
-      excludes: ["**/*.test.ts"],
+      excludes: ["**/*.test.ts",],
     };
 
     assertEquals(
@@ -6408,8 +7203,8 @@ describe("deveIncluirArquivo", () => {
   it("deve BLOQUEAR caminhos contemplados pelo padrão excludes", () => {
     const config: ExportConfig = {
       arquivoSaida: "snapshots/custom.md",
-      includes: ["packages/server/src/**/*.{ts,tsx}"],
-      excludes: ["**/*.test.ts", "**/dist/**"],
+      includes: ["packages/server/src/**/*.{ts,tsx}",],
+      excludes: ["**/*.test.ts", "**/dist/**",],
     };
 
     assertEquals(
@@ -6429,7 +7224,7 @@ describe("deveIncluirArquivo", () => {
   it("deve BLOQUEAR arquivos fora dos padrões includes", () => {
     const config: ExportConfig = {
       arquivoSaida: "snapshots/custom.md",
-      includes: ["packages/server/src/**/*.{ts,tsx}"],
+      includes: ["packages/server/src/**/*.{ts,tsx}",],
     };
 
     assertEquals(
@@ -6446,15 +7241,18 @@ describe("deveIncluirArquivo", () => {
 describe("coletarArquivosParaExportacao (expandGlob)", () => {
   it("deve coletar arquivos usando brace expansion e respeitar excludes de forma ordenada", async () => {
     const tempDir = await Deno.makeTempDir();
-    const srcDir = join(tempDir, "src");
-    const testDir = join(tempDir, "tests");
-    await Deno.mkdir(srcDir, { recursive: true });
-    await Deno.mkdir(testDir, { recursive: true });
+    const srcDir = join(tempDir, "src",);
+    const testDir = join(tempDir, "tests",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
+    await Deno.mkdir(testDir, { recursive: true, },);
 
-    await Deno.writeTextFile(join(srcDir, "index.ts"), "console.log(1);");
-    await Deno.writeTextFile(join(srcDir, "app.tsx"), "export default () => {};");
-    await Deno.writeTextFile(join(srcDir, "helper.test.ts"), "test");
-    await Deno.writeTextFile(join(testDir, "suite.test.ts"), "test");
+    await Deno.writeTextFile(join(srcDir, "index.ts",), "console.log(1);",);
+    await Deno.writeTextFile(
+      join(srcDir, "app.tsx",),
+      "export default () => {};",
+    );
+    await Deno.writeTextFile(join(srcDir, "helper.test.ts",), "test",);
+    await Deno.writeTextFile(join(testDir, "suite.test.ts",), "test",);
 
     const config: ExportConfig = {
       arquivoSaida: "snapshots/out.md",
@@ -6466,14 +7264,14 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
       ],
     };
 
-    const arquivos = await coletarArquivosParaExportacao(config, tempDir);
+    const arquivos = await coletarArquivosParaExportacao(config, tempDir,);
 
     assertEquals(arquivos, [
       "src/app.tsx",
       "src/index.ts",
-    ]);
+    ],);
 
-    await Deno.remove(tempDir, { recursive: true });
+    await Deno.remove(tempDir, { recursive: true, },);
   });
 });
 
@@ -6625,18 +7423,30 @@ describe("mapearExtensao", () => {
 
 describe("correspondeGlobs", () => {
   it("deve corresponder com wildcards simples", () => {
-    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts"]), true);
-    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts"]), false);
+    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts",],), true,);
+    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts",],), false,);
   });
 
   it("deve corresponder com globstar recursivo", () => {
-    assertEquals(correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**"]), true);
+    assertEquals(
+      correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**",],),
+      true,
+    );
   });
 
   it("deve corresponder com brace expansion", () => {
-    assertEquals(correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}"]), true);
-    assertEquals(correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}"]), true);
-    assertEquals(correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}"]), false);
+    assertEquals(
+      correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}",],),
+      true,
+    );
+    assertEquals(
+      correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}",],),
+      true,
+    );
+    assertEquals(
+      correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}",],),
+      false,
+    );
   });
 });
 
@@ -6669,11 +7479,11 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo que casa com includes e não casa com excludes", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["src/**/*.{ts,tsx}"],
-        excludes: ["**/*.test.ts"],
+        includes: ["src/**/*.{ts,tsx}",],
+        excludes: ["**/*.test.ts",],
       };
-      assertEquals(deveIncluirArquivo("src/app.tsx", config), true);
-      assertEquals(deveIncluirArquivo("src/app.test.ts", config), false);
+      assertEquals(deveIncluirArquivo("src/app.tsx", config,), true,);
+      assertEquals(deveIncluirArquivo("src/app.test.ts", config,), false,);
     });
   });
 
@@ -6681,14 +7491,14 @@ describe("deveIncluirArquivo", () => {
     it("permite caminho adicional com extensão válida", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}"],
+        includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/deploy.yml", config),
+        deveIncluirArquivo(".github/workflows/deploy.yml", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo(".github/workflows/ci.yaml", config),
+        deveIncluirArquivo(".github/workflows/ci.yaml", config,),
         true,
       );
     });
@@ -6696,10 +7506,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia caminho com extensão que não casa com glob", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: [".github/workflows/*.yml"],
+        includes: [".github/workflows/*.yml",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/segredo.png", config),
+        deveIncluirArquivo(".github/workflows/segredo.png", config,),
         false,
       );
     });
@@ -6707,9 +7517,9 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo exato no caminho adicional", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["README.md"],
+        includes: ["README.md",],
       };
-      assertEquals(deveIncluirArquivo("README.md", config), true);
+      assertEquals(deveIncluirArquivo("README.md", config,), true,);
     });
   });
 
@@ -6717,14 +7527,14 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo dentro de subpasta permitida", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/{src,docs}/**/*.{ts,md}"],
+        includes: ["monorepo/server/{src,docs}/**/*.{ts,md}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/src/main.ts", config),
+        deveIncluirArquivo("monorepo/server/src/main.ts", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config),
+        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config,),
         true,
       );
     });
@@ -6732,10 +7542,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivo fora das pastas incluídas", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/src/**/*"],
+        includes: ["monorepo/server/src/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/ui/src/app.tsx", config),
+        deveIncluirArquivo("monorepo/ui/src/app.tsx", config,),
         false,
       );
     });
@@ -6743,11 +7553,11 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivo em subpasta excluída", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/**/*"],
-        excludes: ["monorepo/server/dist/**/*"],
+        includes: ["monorepo/server/**/*",],
+        excludes: ["monorepo/server/dist/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/dist/bundle.js", config),
+        deveIncluirArquivo("monorepo/server/dist/bundle.js", config,),
         false,
       );
     });
@@ -6757,14 +7567,14 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivos raiz explicitamente configurados", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/{deno.json,deploy.sh}"],
+        includes: ["monorepo/server/{deno.json,deploy.sh}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deno.json", config),
+        deveIncluirArquivo("monorepo/server/deno.json", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deploy.sh", config),
+        deveIncluirArquivo("monorepo/server/deploy.sh", config,),
         true,
       );
     });
@@ -6772,10 +7582,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivos raiz não configurados", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/deno.json"],
+        includes: ["monorepo/server/deno.json",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/package.json", config),
+        deveIncluirArquivo("monorepo/server/package.json", config,),
         false,
       );
     });
@@ -6785,18 +7595,18 @@ describe("deveIncluirArquivo", () => {
     it("captura raiz e subpasta docs", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["readme.md", "docs/**/*.md"],
+        includes: ["readme.md", "docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("readme.md", config), true);
-      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config), true);
+      assertEquals(deveIncluirArquivo("readme.md", config,), true,);
+      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
     });
 
     it("bloqueia código fonte fora de docs", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["docs/**/*.md"],
+        includes: ["docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("src/main.ts", config), false);
+      assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
     });
   });
 });
@@ -6858,7 +7668,9 @@ describe("gerarCabecalho", () => {
     const resultado = gerarCabecalho(config, "ui", "1.0.0",);
     assertStringIncludes(resultado, customCabecalho,);
     assertEquals(
-      resultado.includes("Cada arquivo começa com um título indicando seu caminho relativo exato",),
+      resultado.includes(
+        "Cada arquivo começa com um título indicando seu caminho relativo exato",
+      ),
       false,
     );
   });
@@ -7072,9 +7884,9 @@ describe("resolverOrdemTargets", () => {
 ## Arquivo: `packages/utils/tests/tools/paths.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assert, assertEquals } from "@std/assert";
-import { join } from "@std/path";
+import { describe, it, } from "@std/testing/bdd";
+import { assert, assertEquals, } from "@std/assert";
+import { join, } from "@std/path";
 import {
   cleanTarget,
   copyStaticFiles,
@@ -7086,134 +7898,164 @@ import {
 describe("paths.ts - Utilitários e novas funcionalidades", () => {
   describe("correspondeGlobs", () => {
     it("deve validar padrões glob simples e extensões", () => {
-      assertEquals(correspondeGlobs("src/main.ts", ["**/*.ts"]), true);
-      assertEquals(correspondeGlobs("src/main.ts", ["**/*.js"]), false);
-      assertEquals(correspondeGlobs("dist/app.min.js", ["*.js", "**/*.js"]), true);
+      assertEquals(correspondeGlobs("src/main.ts", ["**/*.ts",],), true,);
+      assertEquals(correspondeGlobs("src/main.ts", ["**/*.js",],), false,);
+      assertEquals(
+        correspondeGlobs("dist/app.min.js", ["*.js", "**/*.js",],),
+        true,
+      );
     });
 
     it("deve suportar brace expansion", () => {
-      assertEquals(correspondeGlobs("file.jpg", ["*.{png,jpg,gif}"]), true);
-      assertEquals(correspondeGlobs("file.svg", ["*.{png,jpg,gif}"]), false);
-      assertEquals(correspondeGlobs("file.png", ["*.{png,jpg,gif}"]), true);
+      assertEquals(correspondeGlobs("file.jpg", ["*.{png,jpg,gif}",],), true,);
+      assertEquals(correspondeGlobs("file.svg", ["*.{png,jpg,gif}",],), false,);
+      assertEquals(correspondeGlobs("file.png", ["*.{png,jpg,gif}",],), true,);
     });
   });
 
   describe("resolveWithBase", () => {
     it("deve juntar baseDir quando o caminho for relativo e baseDir for diferente de .", () => {
-      assertEquals(resolveWithBase("src", "packages/ui"), join("packages/ui", "src"));
-      assertEquals(resolveWithBase("dist", "."), "dist");
-      assertEquals(resolveWithBase(undefined, "packages/ui"), undefined);
+      assertEquals(
+        resolveWithBase("src", "packages/ui",),
+        join("packages/ui", "src",),
+      );
+      assertEquals(resolveWithBase("dist", ".",), "dist",);
+      assertEquals(resolveWithBase(undefined, "packages/ui",), undefined,);
     });
 
     it("não deve modificar caminhos já absolutos", () => {
       const absPath = "/absolute/path";
-      assertEquals(resolveWithBase(absPath, "packages/ui"), absPath);
+      assertEquals(resolveWithBase(absPath, "packages/ui",), absPath,);
     });
   });
 
   describe("cleanTarget", () => {
     it("deve limpar arquivos correspondentes ao glob respeitando excludes", async () => {
-      const tempDir = await Deno.makeTempDir({ prefix: "buildit_test_clean_" });
+      const tempDir = await Deno.makeTempDir({
+        prefix: "buildit_test_clean_",
+      },);
       try {
-        await Deno.writeTextFile(join(tempDir, "file1.tmp"), "temp 1");
-        await Deno.writeTextFile(join(tempDir, "file2.tmp"), "temp 2");
-        await Deno.writeTextFile(join(tempDir, "keep.tmp"), "keep");
-        await Deno.writeTextFile(join(tempDir, "data.json"), "data");
+        await Deno.writeTextFile(join(tempDir, "file1.tmp",), "temp 1",);
+        await Deno.writeTextFile(join(tempDir, "file2.tmp",), "temp 2",);
+        await Deno.writeTextFile(join(tempDir, "keep.tmp",), "keep",);
+        await Deno.writeTextFile(join(tempDir, "data.json",), "data",);
 
         await cleanTarget(tempDir, {
-          includes: ["*.tmp"],
-          excludes: ["keep.tmp"],
-        });
+          includes: ["*.tmp",],
+          excludes: ["keep.tmp",],
+        },);
 
         // file1.tmp e file2.tmp devem ter sido deletados
         let file1Exists = true;
         try {
-          await Deno.stat(join(tempDir, "file1.tmp"));
+          await Deno.stat(join(tempDir, "file1.tmp",),);
         } catch {
           file1Exists = false;
         }
-        assertEquals(file1Exists, false);
+        assertEquals(file1Exists, false,);
 
         // keep.tmp e data.json devem permanecer
-        const keepStat = await Deno.stat(join(tempDir, "keep.tmp"));
-        assert(keepStat.isFile);
-        const dataStat = await Deno.stat(join(tempDir, "data.json"));
-        assert(dataStat.isFile);
+        const keepStat = await Deno.stat(join(tempDir, "keep.tmp",),);
+        assert(keepStat.isFile,);
+        const dataStat = await Deno.stat(join(tempDir, "data.json",),);
+        assert(dataStat.isFile,);
       } finally {
-        await Deno.remove(tempDir, { recursive: true }).catch(() => {});
+        await Deno.remove(tempDir, { recursive: true, },).catch(() => {},);
       }
     });
 
     it("deve limpar todo o diretório com includes: ['*']", async () => {
-      const tempDir = await Deno.makeTempDir({ prefix: "buildit_test_clean_all_" });
+      const tempDir = await Deno.makeTempDir({
+        prefix: "buildit_test_clean_all_",
+      },);
       try {
-        await Deno.writeTextFile(join(tempDir, "file1.txt"), "hello");
-        await Deno.mkdir(join(tempDir, "sub"));
-        await Deno.writeTextFile(join(tempDir, "sub", "file2.txt"), "world");
+        await Deno.writeTextFile(join(tempDir, "file1.txt",), "hello",);
+        await Deno.mkdir(join(tempDir, "sub",),);
+        await Deno.writeTextFile(join(tempDir, "sub", "file2.txt",), "world",);
 
-        await cleanTarget(tempDir, { includes: ["*"] });
+        await cleanTarget(tempDir, { includes: ["*",], },);
 
         const entries: string[] = [];
-        for await (const entry of Deno.readDir(tempDir)) {
-          entries.push(entry.name);
+        for await (const entry of Deno.readDir(tempDir,)) {
+          entries.push(entry.name,);
         }
-        assertEquals(entries.length, 0);
+        assertEquals(entries.length, 0,);
       } finally {
-        await Deno.remove(tempDir, { recursive: true }).catch(() => {});
+        await Deno.remove(tempDir, { recursive: true, },).catch(() => {},);
       }
     });
   });
 
   describe("copyTargetFiles", () => {
     it("deve preservar árvore relativa ao basedir quando basedir for especificado", async () => {
-      const tempSrc = await Deno.makeTempDir({ prefix: "buildit_test_src_" });
-      const tempDist = await Deno.makeTempDir({ prefix: "buildit_test_dist_" });
+      const tempSrc = await Deno.makeTempDir({ prefix: "buildit_test_src_", },);
+      const tempDist = await Deno.makeTempDir({
+        prefix: "buildit_test_dist_",
+      },);
 
       try {
-        await Deno.mkdir(join(tempSrc, "icons"), { recursive: true });
-        await Deno.writeTextFile(join(tempSrc, "icons", "icon.png"), "image");
-        await Deno.writeTextFile(join(tempSrc, "manifest.json"), JSON.stringify({ name: "App" }));
+        await Deno.mkdir(join(tempSrc, "icons",), { recursive: true, },);
+        await Deno.writeTextFile(join(tempSrc, "icons", "icon.png",), "image",);
+        await Deno.writeTextFile(
+          join(tempSrc, "manifest.json",),
+          JSON.stringify({ name: "App", },),
+        );
 
         await copyTargetFiles(
-          [{ basedir: tempSrc }],
+          [{ basedir: tempSrc, },],
           tempDist,
           "1.2.3",
         );
 
         // Verifica integridade da árvore preservada
-        const copiedIcon = await Deno.readTextFile(join(tempDist, "icons", "icon.png"));
-        assertEquals(copiedIcon, "image");
+        const copiedIcon = await Deno.readTextFile(
+          join(tempDist, "icons", "icon.png",),
+        );
+        assertEquals(copiedIcon, "image",);
 
         // Verifica injeção da versão no manifest.json
-        const copiedManifest = JSON.parse(await Deno.readTextFile(join(tempDist, "manifest.json")));
-        assertEquals(copiedManifest.version, "1.2.3");
+        const copiedManifest = JSON.parse(
+          await Deno.readTextFile(join(tempDist, "manifest.json",),),
+        );
+        assertEquals(copiedManifest.version, "1.2.3",);
       } finally {
-        await Deno.remove(tempSrc, { recursive: true }).catch(() => {});
-        await Deno.remove(tempDist, { recursive: true }).catch(() => {});
+        await Deno.remove(tempSrc, { recursive: true, },).catch(() => {},);
+        await Deno.remove(tempDist, { recursive: true, },).catch(() => {},);
       }
     });
 
     it("deve copiar arquivos diretamente na raiz do distdir quando basedir não for informado", async () => {
-      const tempRoot = await Deno.makeTempDir({ prefix: "buildit_test_root_" });
-      const tempDist = await Deno.makeTempDir({ prefix: "buildit_test_dist2_" });
+      const tempRoot = await Deno.makeTempDir({
+        prefix: "buildit_test_root_",
+      },);
+      const tempDist = await Deno.makeTempDir({
+        prefix: "buildit_test_dist2_",
+      },);
 
       try {
-        await Deno.mkdir(join(tempRoot, "sub1", "sub2"), { recursive: true });
-        await Deno.writeTextFile(join(tempRoot, "sub1", "sub2", "style.css"), "body{}");
+        await Deno.mkdir(join(tempRoot, "sub1", "sub2",), {
+          recursive: true,
+        },);
+        await Deno.writeTextFile(
+          join(tempRoot, "sub1", "sub2", "style.css",),
+          "body{}",
+        );
 
         await copyTargetFiles(
-          [{ includes: ["sub1/sub2/*.css"] }],
+          [{ includes: ["sub1/sub2/*.css",], },],
           tempDist,
           "1.0.0",
           tempRoot,
         );
 
         // Quando basedir não é informado, arquivo é colocado diretamente no distdir
-        const fileContent = await Deno.readTextFile(join(tempDist, "style.css"));
-        assertEquals(fileContent, "body{}");
+        const fileContent = await Deno.readTextFile(
+          join(tempDist, "style.css",),
+        );
+        assertEquals(fileContent, "body{}",);
       } finally {
-        await Deno.remove(tempRoot, { recursive: true }).catch(() => {});
-        await Deno.remove(tempDist, { recursive: true }).catch(() => {});
+        await Deno.remove(tempRoot, { recursive: true, },).catch(() => {},);
+        await Deno.remove(tempDist, { recursive: true, },).catch(() => {},);
       }
     });
   });
@@ -7226,36 +8068,334 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
 ## Arquivo: `packages/utils/tests/tools/targets.test.ts`
 
 ```ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { resolverOrdemTargets } from "../../src/tools/targets.ts";
+import { assertEquals, } from "@std/assert";
+import { describe, it, } from "@std/testing/bdd";
+import { resolverOrdemTargets, } from "../../src/tools/targets.ts";
 
 describe("resolverOrdemTargets", () => {
   const config = {
-    first: { default: true },
-    second: { default: true },
-    third: { default: false },
-    fourth: { default: true },
+    first: { default: true, },
+    second: { default: true, },
+    third: { default: false, },
+    fourth: { default: true, },
   };
 
   it("deve retornar todos os alvos com default !== false na ordem exata da configuração", () => {
-    const ordenados = resolverOrdemTargets(config);
-    assertEquals(ordenados, ["first", "second", "fourth"]);
+    const ordenados = resolverOrdemTargets(config,);
+    assertEquals(ordenados, ["first", "second", "fourth",],);
   });
 
   it("deve preservar a ordem da configuração mesmo se os alvos forem passados fora de ordem", () => {
-    const ordenados = resolverOrdemTargets(config, ["fourth", "first", "third"]);
-    assertEquals(ordenados, ["first", "third", "fourth"]);
+    const ordenados = resolverOrdemTargets(config, [
+      "fourth",
+      "first",
+      "third",
+    ],);
+    assertEquals(ordenados, ["first", "third", "fourth",],);
   });
 
   it("deve suportar alvos solicitados em maiúsculas ou minúsculas", () => {
-    const ordenados = resolverOrdemTargets(config, ["FOURTH", "First"]);
-    assertEquals(ordenados, ["first", "fourth"]);
+    const ordenados = resolverOrdemTargets(config, ["FOURTH", "First",],);
+    assertEquals(ordenados, ["first", "fourth",],);
   });
 
   it("deve ignorar alvos solicitados inexistentes mantendo os válidos ordenados", () => {
-    const ordenados = resolverOrdemTargets(config, ["inexistente", "second", "first"]);
-    assertEquals(ordenados, ["first", "second"]);
+    const ordenados = resolverOrdemTargets(config, [
+      "inexistente",
+      "second",
+      "first",
+    ],);
+    assertEquals(ordenados, ["first", "second",],);
+  });
+});
+
+```
+
+---
+
+## Arquivo: `packages/utils/tests/version/lib-version.test.ts`
+
+```ts
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, assertNotEquals, } from "@std/assert";
+import {
+  extractRawVersion,
+  findDenoFile,
+  sanitizeVersion,
+} from "../../src/tools/version.ts";
+
+describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
+  describe("sanitizeVersion", () => {
+    it("mantém versões semver puras inalteradas", () => {
+      assertEquals(sanitizeVersion("1.2.3",), "1.2.3",);
+      assertEquals(sanitizeVersion("0.3.14",), "0.3.14",);
+      assertEquals(sanitizeVersion("10.20.30",), "10.20.30",);
+    });
+
+    it("remove prefixo 'v'", () => {
+      assertEquals(sanitizeVersion("v1.2.3",), "1.2.3",);
+      assertEquals(sanitizeVersion("v0.3.14",), "0.3.14",);
+    });
+
+    it("remove sufixo de hash (#hash)", () => {
+      assertEquals(sanitizeVersion("0.3.14#muesu7z0",), "0.3.14",);
+      assertEquals(sanitizeVersion("v1.2.3#abc1234",), "1.2.3",);
+    });
+
+    it("remove tags de pré-lançamento (-alpha, -beta.1)", () => {
+      assertEquals(sanitizeVersion("1.2.3-alpha",), "1.2.3",);
+      assertEquals(sanitizeVersion("2.0.0-rc.1",), "2.0.0",);
+    });
+
+    it("remove metadados de build (+build.123)", () => {
+      assertEquals(sanitizeVersion("1.2.3+20130313144700",), "1.2.3",);
+      assertEquals(sanitizeVersion("1.2.3-beta+exp.sha.5114f85",), "1.2.3",);
+    });
+
+    it("preenche componentes ausentes com 0", () => {
+      assertEquals(sanitizeVersion("1.2",), "1.2.0",);
+      assertEquals(sanitizeVersion("5",), "5.0.0",);
+      assertEquals(sanitizeVersion("",), "0.0.0",);
+    });
+
+    it("descarta componentes além do patch (ex: 1.2.3.4.5)", () => {
+      assertEquals(sanitizeVersion("1.2.3.4.5",), "1.2.3",);
+    });
+
+    it("retorna 0.0.0 para strings não numéricas inválidas", () => {
+      assertEquals(sanitizeVersion("invalid",), "0.0.0",);
+      assertEquals(sanitizeVersion("v",), "0.0.0",);
+      assertEquals(sanitizeVersion("###",), "0.0.0",);
+    });
+  });
+
+  describe("extractRawVersion", () => {
+    it("extrai a versão ancorada em 'version'", () => {
+      const jsonc =
+        `{\n  "name": "meu-pacote",\n  "version": "0.3.14#abc1234",\n  "license": "MIT"\n}`;
+      assertEquals(extractRawVersion(jsonc,), "0.3.14#abc1234",);
+    });
+
+    it("ignora espaços e tabulações ao redor de 'version'", () => {
+      const jsonc = `{\n\t"version" \t : \t "1.0.0" \t,\n}`;
+      assertEquals(extractRawVersion(jsonc,), "1.0.0",);
+    });
+
+    it("retorna null se não houver version", () => {
+      const jsonc = `{\n  "name": "sem-versao"\n}`;
+      assertEquals(extractRawVersion(jsonc,), null,);
+    });
+  });
+
+  describe("findDenoFile", () => {
+    it("localiza deno.jsonc no diretório do workspace", () => {
+      const found = findDenoFile(".",);
+      assertNotEquals(found, null,);
+      assertEquals(found?.endsWith("deno.jsonc",), true,);
+    });
+
+    it("sobe a árvore de diretórios a partir de subpastas", () => {
+      const found = findDenoFile("packages/utils/src",);
+      assertNotEquals(found, null,);
+    });
+
+    it("retorna null para caminhos inexistentes fora do projeto", () => {
+      const found = findDenoFile("/tmp/non-existent-dir-for-test-999",);
+      assertEquals(found, null,);
+    });
+  });
+});
+
+```
+
+---
+
+## Arquivo: `packages/utils/tests/version/sanitize.test.ts`
+
+```ts
+import { describe, it, } from "@std/testing/bdd";
+import { assert, assertEquals, assertRejects, } from "@std/assert";
+import { sanitizeVersionFile, } from "../../src/version/sanitize/engine.ts";
+import { sanitizeVersionCli, } from "../../src/version/sanitize/cli.ts";
+import { join, } from "@std/path";
+
+describe("sanitize-version - Motor e CLI", () => {
+  describe("sanitizeVersionFile", () => {
+    it("não altera arquivo que já possui versão semver válida", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(filePath, '{\n  "version": "1.2.3"\n}',);
+
+      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      assertEquals(res.rawVersion, "1.2.3",);
+      assertEquals(res.sanitizedVersion, "1.2.3",);
+      assertEquals(res.updated, false,);
+
+      const content = await Deno.readTextFile(filePath,);
+      assertEquals(content, '{\n  "version": "1.2.3"\n}',);
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("sanitiza versão com hash no arquivo", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        filePath,
+        '{\n  "name": "teste",\n  "version": "0.3.14#muesu7z0",\n  "license": "MIT"\n}',
+      );
+
+      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      assertEquals(res.rawVersion, "0.3.14#muesu7z0",);
+      assertEquals(res.sanitizedVersion, "0.3.14",);
+      assertEquals(res.updated, true,);
+
+      const updated = await Deno.readTextFile(filePath,);
+      assert(updated.includes('"version": "0.3.14"',),);
+      assert(!updated.includes("#muesu7z0",),);
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("injeta version: 0.0.0 quando o campo version estiver ausente", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(filePath, '{\n  "name": "sem-versao"\n}',);
+
+      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      assertEquals(res.rawVersion, "0.0.0",);
+      assertEquals(res.sanitizedVersion, "0.0.0",);
+      assertEquals(res.updated, false,);
+
+      const updated = await Deno.readTextFile(filePath,);
+      assert(updated.includes('"version": "0.0.0"',),);
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("falha quando arquivo explícito não existe", async () => {
+      await assertRejects(
+        () =>
+          sanitizeVersionFile({
+            filePath: "/caminho/ficticio/deno.jsonc",
+            silencioso: true,
+          },),
+        Error,
+        "não encontrado",
+      );
+    });
+  });
+
+  describe("sanitizeVersionCli", () => {
+    it("instancia o comando Cliffy com definições corretas", () => {
+      const cmd = sanitizeVersionCli();
+      assertEquals(cmd.getName(), "sanitize-version",);
+    });
+  });
+});
+
+```
+
+---
+
+## Arquivo: `packages/utils/tests/version/tag.test.ts`
+
+```ts
+import { describe, it, } from "@std/testing/bdd";
+import { assert, assertEquals, assertRejects, } from "@std/assert";
+import { tagVersionEngine, } from "../../src/version/tag/engine.ts";
+import { tagVersionCli, } from "../../src/version/tag/cli.ts";
+import { join, } from "@std/path";
+
+describe("tag-version - Motor e CLI", () => {
+  describe("tagVersionEngine", () => {
+    it("deriva a tag vMAJOR.MINOR corretamente em modo dryRun", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        filePath,
+        '{\n  "version": "0.3.14#abc1234"\n}',
+      );
+
+      const res = await tagVersionEngine({
+        file: filePath,
+        dryRun: true,
+        silencioso: true,
+      },);
+
+      assertEquals(res.tagName, "v0.3",);
+      assertEquals(res.rawVersion, "0.3.14#abc1234",);
+      assertEquals(res.sanitizedVersion, "0.3.14",);
+      assertEquals(res.message, "Versão v0.3",);
+      assertEquals(res.committed, false,);
+      assertEquals(res.tagged, false,);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("respeita mensagem de commit personalizada", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(filePath, '{\n  "version": "1.2.9"\n}',);
+
+      const res = await tagVersionEngine({
+        file: filePath,
+        message: "Release 1.2 oficial",
+        dryRun: true,
+        silencioso: true,
+      },);
+
+      assertEquals(res.tagName, "v1.2",);
+      assertEquals(res.message, "Release 1.2 oficial",);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("executa sanitização em disco quando sanitize é true", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        filePath,
+        '{\n  "version": "0.3.14#muesu7z0"\n}',
+      );
+
+      const res = await tagVersionEngine({
+        file: filePath,
+        sanitize: true,
+        dryRun: true,
+        silencioso: true,
+      },);
+
+      assertEquals(res.tagName, "v0.3",);
+      const diskContent = await Deno.readTextFile(filePath,);
+      assert(diskContent.includes('"version": "0.3.14"',),);
+      assert(!diskContent.includes("#muesu7z0",),);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("rejeita quando campo version está ausente", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const filePath = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(filePath, '{\n  "name": "sem-versao"\n}',);
+
+      await assertRejects(
+        () =>
+          tagVersionEngine({
+            file: filePath,
+            dryRun: true,
+            silencioso: true,
+          },),
+        Error,
+        "ausente",
+      );
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+  });
+
+  describe("tagVersionCli", () => {
+    it("instancia o comando Cliffy com definições corretas", () => {
+      const cmd = tagVersionCli();
+      assertEquals(cmd.getName(), "tag-version",);
+    });
   });
 });
 
@@ -7286,7 +8426,7 @@ describe("watch/config", () => {
     const config = await carregarConfigWatch("watch.jsonc", ".",);
     assert(config.targets.ui !== undefined,);
     assertEquals(config.targets.ui.format, "esm",);
-    assertEquals(config.targets.ui.entryPoints, ["main.tsx"],);
+    assertEquals(config.targets.ui.entryPoints, ["main.tsx",],);
   });
 });
 
@@ -7297,8 +8437,8 @@ describe("watch/config", () => {
 ## Arquivo: `packages/utils/tests/watch/lock.test.ts`
 
 ```ts
-import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
+import { assertEquals, assertRejects, } from "@std/assert";
+import { describe, it, } from "@std/testing/bdd";
 import {
   acquireWatchLock,
   isProcessRunning,
@@ -7307,29 +8447,31 @@ import {
 
 describe("Watch Lock Mechanism", () => {
   it("isProcessRunning deve identificar o processo atual como ativo", () => {
-    assertEquals(isProcessRunning(Deno.pid), true);
+    assertEquals(isProcessRunning(Deno.pid,), true,);
   });
 
   it("isProcessRunning deve retornar false para PIDs inválidos ou inativos", () => {
-    assertEquals(isProcessRunning(-1), false);
-    assertEquals(isProcessRunning(0), false);
+    assertEquals(isProcessRunning(-1,), false,);
+    assertEquals(isProcessRunning(0,), false,);
     // PID 9999999 improvável de existir
-    assertEquals(isProcessRunning(9999999), false);
+    assertEquals(isProcessRunning(9999999,), false,);
   });
 
   it("acquireWatchLock deve adquirir o lock e liberá-lo corretamente", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const lockPath = `${tempDir}/.buildit-watch.lock`;
-      const release = await acquireWatchLock(tempDir, "ui", lockPath);
+      const release = await acquireWatchLock(tempDir, "ui", lockPath,);
 
       // Lock deve existir no disco
-      const stat = await Deno.stat(lockPath);
-      assertEquals(stat.isFile, true);
+      const stat = await Deno.stat(lockPath,);
+      assertEquals(stat.isFile, true,);
 
-      const content = JSON.parse(await Deno.readTextFile(lockPath)) as WatchLockData;
-      assertEquals(content.pid, Deno.pid);
-      assertEquals(content.target, "ui");
+      const content = JSON.parse(
+        await Deno.readTextFile(lockPath,),
+      ) as WatchLockData;
+      assertEquals(content.pid, Deno.pid,);
+      assertEquals(content.target, "ui",);
 
       // Libera o lock
       await release();
@@ -7337,13 +8479,13 @@ describe("Watch Lock Mechanism", () => {
       // Lock deve ter sido removido
       let exists = true;
       try {
-        await Deno.stat(lockPath);
+        await Deno.stat(lockPath,);
       } catch {
         exists = false;
       }
-      assertEquals(exists, false);
+      assertEquals(exists, false,);
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
@@ -7351,12 +8493,12 @@ describe("Watch Lock Mechanism", () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const lockPath = `${tempDir}/.buildit-watch.lock`;
-      const release = await acquireWatchLock(tempDir, "ui", lockPath);
+      const release = await acquireWatchLock(tempDir, "ui", lockPath,);
 
       try {
         await assertRejects(
           async () => {
-            await acquireWatchLock(tempDir, "sw", lockPath);
+            await acquireWatchLock(tempDir, "sw", lockPath,);
           },
           Error,
           "Já existe uma instância do watch em execução",
@@ -7365,7 +8507,7 @@ describe("Watch Lock Mechanism", () => {
         await release();
       }
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
@@ -7379,18 +8521,20 @@ describe("Watch Lock Mechanism", () => {
         startedAt: "2026-01-01T00:00:00.000Z",
         baseDir: tempDir,
       };
-      await Deno.writeTextFile(lockPath, JSON.stringify(orphanLock));
+      await Deno.writeTextFile(lockPath, JSON.stringify(orphanLock,),);
 
       // Deve substituir o lock órfão com sucesso
-      const release = await acquireWatchLock(tempDir, "novo", lockPath);
+      const release = await acquireWatchLock(tempDir, "novo", lockPath,);
 
-      const content = JSON.parse(await Deno.readTextFile(lockPath)) as WatchLockData;
-      assertEquals(content.pid, Deno.pid);
-      assertEquals(content.target, "novo");
+      const content = JSON.parse(
+        await Deno.readTextFile(lockPath,),
+      ) as WatchLockData;
+      assertEquals(content.pid, Deno.pid,);
+      assertEquals(content.target, "novo",);
 
       await release();
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 });
@@ -7402,17 +8546,23 @@ describe("Watch Lock Mechanism", () => {
 ## Arquivo: `packages/utils/tests/watch/watch.test.ts`
 
 ```ts
-import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { carregarConfigWatch, CONFIGURACOES_PADRAO_WATCH } from "../../src/watch/config.ts";
-import { watchEngine } from "../../src/watch/engine.ts";
-import { watchCli } from "../../src/watch/cli.ts";
-import type { WatchGlobalConfig } from "../../src/tools/interfaces.ts";
+import { assertEquals, assertRejects, } from "@std/assert";
+import { describe, it, } from "@std/testing/bdd";
+import {
+  carregarConfigWatch,
+  CONFIGURACOES_PADRAO_WATCH,
+} from "../../src/watch/config.ts";
+import { watchEngine, } from "../../src/watch/engine.ts";
+import { watchCli, } from "../../src/watch/cli.ts";
+import type { WatchGlobalConfig, } from "../../src/tools/interfaces.ts";
 
 describe("carregarConfigWatch", () => {
   it("deve retornar configuração padrão quando arquivo não for encontrado", async () => {
-    const result = await carregarConfigWatch("arquivo_inexistente.jsonc", "/tmp");
-    assertEquals(result.targets, CONFIGURACOES_PADRAO_WATCH);
+    const result = await carregarConfigWatch(
+      "arquivo_inexistente.jsonc",
+      "/tmp",
+    );
+    assertEquals(result.targets, CONFIGURACOES_PADRAO_WATCH,);
   });
 
   it("deve carregar configuração de watch válida de um arquivo temporário", async () => {
@@ -7421,21 +8571,21 @@ describe("carregarConfigWatch", () => {
       const configContent = JSON.stringify({
         targets: {
           app: {
-            entryPoints: ["src/index.ts"],
+            entryPoints: ["src/index.ts",],
             distdir: "dist",
             format: "esm",
             sourcemap: "inline",
           },
         },
-      });
+      },);
       const configPath = `${tempDir}/watch.jsonc`;
-      await Deno.writeTextFile(configPath, configContent);
+      await Deno.writeTextFile(configPath, configContent,);
 
-      const result = await carregarConfigWatch(configPath, tempDir);
-      assertEquals(result.targets.app.entryPoints, ["src/index.ts"]);
-      assertEquals(result.targets.app.format, "esm");
+      const result = await carregarConfigWatch(configPath, tempDir,);
+      assertEquals(result.targets.app.entryPoints, ["src/index.ts",],);
+      assertEquals(result.targets.app.format, "esm",);
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 });
@@ -7445,7 +8595,7 @@ describe("watchCli Validação de Argumentos (Cliffy)", () => {
     const cli = watchCli().throwErrors();
     await assertRejects(
       async () => {
-        await cli.parse(["ui", "sw"]);
+        await cli.parse(["ui", "sw",],);
       },
       Error,
       "Too many arguments: sw",
@@ -7457,14 +8607,20 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
   it("deve aceitar target como string única", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -7476,13 +8632,13 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
         silencioso: true,
-      });
+      },);
 
-      assertEquals(handles.length, 1);
-      assertEquals(handles[0].target, "first");
+      assertEquals(handles.length, 1,);
+      assertEquals(handles[0].target, "first",);
       await handles[0].close();
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
@@ -7492,7 +8648,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -7506,34 +8662,43 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
             baseDir: tempDir,
             lockFile: `${tempDir}/.watch.lock`,
             silencioso: true,
-          });
+          },);
         },
         Error,
         "Alvo 'inexistente' não encontrado",
       );
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
   it("deve selecionar apenas o primeiro alvo quando nenhum literal é fornecido e há múltiplos default: true", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/src/other.ts`, "console.log('other');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/src/other.ts`,
+        "console.log('other');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
         second: {
           default: true,
-          entryPoints: ["other.ts"],
+          entryPoints: ["other.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -7544,29 +8709,35 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
         silencioso: true,
-      });
+      },);
 
-      assertEquals(handles.length, 1);
-      assertEquals(handles[0].target, "first");
+      assertEquals(handles.length, 1,);
+      assertEquals(handles[0].target, "first",);
 
       // Encerra e limpa o lock
       await handles[0].close();
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
   it("deve impedir concorrência entre chamadas simultâneas via Lock", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -7579,7 +8750,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: lockPath,
         silencioso: true,
-      });
+      },);
 
       try {
         await assertRejects(
@@ -7590,7 +8761,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
               baseDir: tempDir,
               lockFile: lockPath,
               silencioso: true,
-            });
+            },);
           },
           Error,
           "Já existe uma instância do watch em execução",
@@ -7599,7 +8770,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         await handles[0].close();
       }
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 });

@@ -48,7 +48,7 @@
     {
     "type": "deno",
     "command": "run",
-    "args": ["--allow-env","--allow-read", "--allow-write", "--allow-run","--allow-net", "denobuild.ts"],
+    "args": ["--allow-env","--allow-read", "--allow-write","--allow-net", "denobuild.ts"],
     "problemMatcher": ["$deno"],
     "label": "Deno: DenoBuild",
     "group": {
