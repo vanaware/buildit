@@ -11,13 +11,15 @@ describe("watch/config", () => {
   it("carrega configurações padrão caso o arquivo de config não exista", async () => {
     const config = await carregarConfigWatch("inexistente.jsonc",);
     assertEquals(config.targets, CONFIGURACOES_WATCH_PADRAO,);
-    assert(config.targets.ui !== undefined,);
+    const ui = config.targets["ui"];
+    assert(ui !== undefined,);
   });
 
   it("carrega configurações a partir do watch.jsonc real do projeto", async () => {
     const config = await carregarConfigWatch("watch.jsonc", ".",);
-    assert(config.targets.ui !== undefined,);
-    assertEquals(config.targets.ui.format, "esm",);
-    assertEquals(config.targets.ui.entryPoints, ["main.tsx",],);
+    const ui = config.targets["ui"];
+    assert(ui !== undefined,);
+    assertEquals(ui.format, "esm",);
+    assertEquals(ui.entryPoints, ["main.tsx",],);
   });
 });

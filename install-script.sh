@@ -65,7 +65,7 @@ if [ -n "$DENO_VERSION" ]; then
       echo "📥 Instalando Deno $DENO_VERSION (unattended)..."
     fi
     (curl -fsSL https://deno.land/install.sh || curl -fsSL https://github.com/denoland/deno_install/raw/master/install.sh) \
-      | sh -s -- -y -f "v$DENO_VERSION"
+      | sh -s -- -y "v$DENO_VERSION"
   fi
 else
   if [ -z "$INSTALLED_VERSION" ]; then

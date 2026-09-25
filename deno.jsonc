@@ -1,5 +1,5 @@
 {
-  "version": "0.3.18#mug856ww",
+  "version": "0.3.19#mugtcmlj",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",
@@ -35,7 +35,7 @@
     "test": "deno test --no-check --unstable-bundle -P",
     "lint": "deno lint",
     "fmt": "deno fmt",
-    "check": "deno task --recursive check && deno check build.ts denobuild.ts esbuild.ts export.ts sanitize-version.ts tag-version.ts watch.ts tests/**/*test.ts",
+    "check": "deno task --recursive check && deno check denobuild.ts esbuild.ts export.ts sanitize-version.ts tag-version.ts watch.ts tests/**/*test.ts",
     "fmt:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
     "lint:doc": "deno task --recursive lint:doc",
