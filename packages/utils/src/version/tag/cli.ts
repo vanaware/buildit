@@ -12,17 +12,7 @@ import { tagVersionEngine, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-// deno-lint-ignore no-explicit-any
-export function tagVersionCli(): Command<
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
-> {
+export function tagVersionCli(): Command {
   return new Command()
     .name("tag-version",)
     .description(

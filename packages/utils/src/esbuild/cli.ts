@@ -13,8 +13,7 @@ import { parseArgs, } from "../tools/cli-flags.ts";
 /**
  * Executa o CLI do orquestrador de build baseado em esbuild.
  */
-// deno-lint-ignore no-explicit-any
-export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
+export function esBuildCli(): Command {
   return new Command()
     .name("esbuild",)
     .description("BuildIt esbuild Orchestrator",)

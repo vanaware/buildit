@@ -12,17 +12,7 @@ import { sanitizeVersionFile, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-// deno-lint-ignore no-explicit-any
-export function sanitizeVersionCli(): Command<
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
-> {
+export function sanitizeVersionCli(): Command {
   return new Command()
     .name("sanitize-version",)
     .description(

@@ -53,7 +53,10 @@ export const AppDashboard = () => {
               Predefinições Rápidas
             </p>
             <div class="row wrap gap">
-              <button class="chip primary" onClick={() => applyPreset("prod",)}>
+              <button
+                type="button"
+                class="chip primary"
+                onClick={() => applyPreset("prod",)}>
                 <i>
                   rocket_launch
                 </i>
@@ -62,6 +65,7 @@ export const AppDashboard = () => {
                 </span>
               </button>
               <button
+                type="button"
                 class="chip secondary"
                 onClick={() => applyPreset("dev",)}>
                 <i>
@@ -72,6 +76,7 @@ export const AppDashboard = () => {
                 </span>
               </button>
               <button
+                type="button"
                 class="chip tertiary"
                 onClick={() => applyPreset("export",)}>
                 <i>
@@ -131,6 +136,7 @@ export const AppDashboard = () => {
             <div class="space">
             </div>
             <button
+              type="button"
               class="extend extra primary large"
               onClick={runSimulator}
               disabled={isSimulating.value}>

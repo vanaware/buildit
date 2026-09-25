@@ -12,8 +12,7 @@ import { findDenoConfig, } from "../tools/paths.ts";
 /**
  * Cria a instância do comando CLI para o modo watch.
  */
-// deno-lint-ignore no-explicit-any
-export function watchCli(): Command<any, any, any, any, any, any, any, any> {
+export function watchCli(): Command {
   return new Command()
     .name("watch",)
     .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
