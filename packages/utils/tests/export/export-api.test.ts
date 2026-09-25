@@ -45,7 +45,7 @@ describe("exportEngine programmatic API", () => {
     assertEquals(resultados.length, 1,);
     assertEquals(resultados[0]?.modo, "testMode",);
     assertEquals(resultados[0]?.arquivos, 1,);
-    assertEquals(resultados[0]?.bytes > 0, true,);
+    assertEquals((resultados[0]?.bytes ?? 0) > 0, true,);
 
     const snapshotConteudo = await Deno.readTextFile(
       join(tempDir, "snapshots", "test-out.md",),

@@ -16,10 +16,7 @@ import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 function makeConfig(overrides: Partial<ExportConfig> = {},): ExportConfig {
   return {
     arquivoSaida: "snapshot.md",
-    extensoesPermitidas: EXTENSOES_PADRAO,
-    pastaBase: "./",
-    subpastasPermitidas: [],
-    arquivosRaizPermitidos: [],
+    includes: ["**/*",],
     incluiVersao: false,
     instrucaoCustomizada: "Teste",
     ...overrides,
@@ -154,8 +151,7 @@ describe("deveIncluirArquivo", () => {
   describe("proteção anti-loop", () => {
     it("bloqueia qualquer arquivo dentro de exports/", () => {
       const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["exports",],
+        includes: ["**/*",],
       },);
       assertEquals(deveIncluirArquivo("exports/server.md", config,), false,);
       assertEquals(deveIncluirArquivo("exports/sub/file.ts", config,), false,);
@@ -163,9 +159,7 @@ describe("deveIncluirArquivo", () => {
 
     it("bloqueia mesmo com extensão válida", () => {
       const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["exports",],
-        extensoesPermitidas: [".md", ".ts",],
+        includes: ["**/*.{md,ts}",],
       },);
       assertEquals(deveIncluirArquivo("exports/qualquer.ts", config,), false,);
     });

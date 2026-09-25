@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects, } from "@std/assert";
+import { assert, assertEquals, assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import {
   carregarConfigWatch,
@@ -34,8 +34,10 @@ describe("carregarConfigWatch", () => {
       await Deno.writeTextFile(configPath, configContent,);
 
       const result = await carregarConfigWatch(configPath, tempDir,);
-      assertEquals(result.targets.app.entryPoints, ["src/index.ts",],);
-      assertEquals(result.targets.app.format, "esm",);
+      const app = result.targets["app"];
+      assert(app !== undefined,);
+      assertEquals(app.entryPoints, ["src/index.ts",],);
+      assertEquals(app.format, "esm",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -87,8 +89,8 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       },);
 
       assertEquals(handles.length, 1,);
-      assertEquals(handles[0].target, "first",);
-      await handles[0].close();
+      assertEquals(handles[0]?.target, "first",);
+      await handles[0]?.close();
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -164,10 +166,10 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       },);
 
       assertEquals(handles.length, 1,);
-      assertEquals(handles[0].target, "first",);
+      assertEquals(handles[0]?.target, "first",);
 
       // Encerra e limpa o lock
-      await handles[0].close();
+      await handles[0]?.close();
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -219,7 +221,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
           "Já existe uma instância do watch em execução",
         );
       } finally {
-        await handles[0].close();
+        await handles[0]?.close();
       }
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);

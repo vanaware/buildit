@@ -13,7 +13,7 @@ import { parseArgs, } from "../tools/cli-flags.ts";
 /**
  * Executa o CLI do orquestrador de build baseado em esbuild.
  */
-export function esBuildCli(): Command {
+export function esBuildCli() {
   return new Command()
     .name("esbuild",)
     .description("BuildIt esbuild Orchestrator",)

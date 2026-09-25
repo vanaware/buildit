@@ -76,37 +76,6 @@ export async function carregarConfigEsbuild(
       result.targets = parsed.targets;
       return result;
     }
-
-    // Caso 2: Objeto possui a chave em português "alvos"
-    if (parsed.alvos && typeof parsed.alvos === "object") {
-      result.targets = parsed.alvos;
-      return result;
-    }
-
-    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed,).filter(
-      (k,) =>
-        !k.startsWith("$",) &&
-        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
-    );
-
-    if (filteredKeys.length > 0) {
-      const resultado: GlobalTargetConfig = {};
-      let hasValidTargets = false;
-
-      for (const key of filteredKeys) {
-        const val = (parsed as Record<string, unknown>)[key];
-        if (val && typeof val === "object") {
-          resultado[key] = val as GlobalTargetConfig[string];
-          hasValidTargets = true;
-        }
-      }
-
-      if (hasValidTargets) {
-        result.targets = resultado;
-        return result;
-      }
-    }
   }
 
   return result;

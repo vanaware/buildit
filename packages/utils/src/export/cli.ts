@@ -13,7 +13,7 @@ import { Command, } from "@cliffy/command";
 /**
  * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.
  */
-export function exportCli(): Command {
+export function exportCli() {
   return new Command()
     .name("export",)
     .description("BuildIt Context Exporter",)

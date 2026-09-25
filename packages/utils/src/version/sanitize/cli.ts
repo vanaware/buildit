@@ -12,7 +12,7 @@ import { sanitizeVersionFile, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-export function sanitizeVersionCli(): Command {
+export function sanitizeVersionCli() {
   return new Command()
     .name("sanitize-version",)
     .description(

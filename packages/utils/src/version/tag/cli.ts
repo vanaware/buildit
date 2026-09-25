@@ -12,7 +12,7 @@ import { tagVersionEngine, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-export function tagVersionCli(): Command {
+export function tagVersionCli() {
   return new Command()
     .name("tag-version",)
     .description(
