@@ -4,55 +4,47 @@
  */
 
 import { describe, it, } from "@std/testing/bdd";
-import { assertEquals, assert, } from "@std/assert";
-import {
-  parseVersion,
-  formatVersion,
-} from "../../src/tools/version.ts";
-import {
-  isSafePath,
-  resolveOutputPaths,
-} from "../../src/tools/paths.ts";
-import {
-  CONFIGURACOES_PADRAO,
-} from "../../src/esbuild/mod.ts";
+import { assert, assertEquals, } from "@std/assert";
+import { formatVersion, parseVersion, } from "../../src/tools/version.ts";
+import { isSafePath, resolveOutputPaths, } from "../../src/tools/paths.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/esbuild/mod.ts";
 
 describe("esbuild - versioning", () => {
   it("deve parsear versão semântica com hash", () => {
-    const v = parseVersion("1.2.3#hash");
-    assertEquals(v.major, 1);
-    assertEquals(v.minor, 2);
-    assertEquals(v.patch, 3);
+    const v = parseVersion("1.2.3#hash",);
+    assertEquals(v.major, 1,);
+    assertEquals(v.minor, 2,);
+    assertEquals(v.patch, 3,);
   });
 
   it("deve formatar versão corretamente", () => {
-    const v = formatVersion(0, 3, 8, "test");
-    assertEquals(v, "0.3.8#test");
+    const v = formatVersion(0, 3, 8, "test",);
+    assertEquals(v, "0.3.8#test",);
   });
 });
 
 describe("esbuild - paths", () => {
   it("deve validar caminhos seguros", () => {
-    assert(isSafePath("dist/output.js"));
-    assert(!isSafePath("../secret.js"));
-    assert(!isSafePath("/etc/passwd"));
+    assert(isSafePath("dist/output.js",),);
+    assert(!isSafePath("../secret.js",),);
+    assert(!isSafePath("/etc/passwd",),);
   });
 
   it("deve resolver caminhos de saída corretamente", () => {
     const config = {
       outfile: "bundle.js",
       distdir: "dist",
-      entryPoints: ["main.ts"]
+      entryPoints: ["main.ts",],
     };
-    const resolved = resolveOutputPaths(config);
-    assertEquals(resolved.outfile, "dist/bundle.js");
+    const resolved = resolveOutputPaths(config,);
+    assertEquals(resolved.outfile, "dist/bundle.js",);
   });
 });
 
 describe("esbuild - config", () => {
   it("deve ter configurações padrão válidas", () => {
-    assert(CONFIGURACOES_PADRAO.ui !== undefined);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser");
+    assert(CONFIGURACOES_PADRAO.ui !== undefined,);
+    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true,);
+    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser",);
   });
 });

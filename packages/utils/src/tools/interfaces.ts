@@ -421,4 +421,3 @@ export interface TagVersionResult {
   /** Se a tag foi criada e publicada. */
   tagged: boolean;
 }
-

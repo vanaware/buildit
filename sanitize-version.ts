@@ -6,9 +6,9 @@
  * Normaliza o campo "version" para o formato estrito semver (MAJOR.MINOR.PATCH).
  */
 
-import { sanitizeVersionCli } from "./packages/utils/src/version/sanitize/cli.ts";
+import { sanitizeVersionCli, } from "./packages/utils/src/version/sanitize/cli.ts";
 
 if (import.meta.main) {
   const cli = sanitizeVersionCli();
-  await cli.parse(Deno.args);
+  await cli.parse(Deno.args,);
 }

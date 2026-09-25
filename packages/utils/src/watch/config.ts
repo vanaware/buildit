@@ -3,7 +3,7 @@
  * @description Carregamento e validação de configurações para o modo de desenvolvimento contínuo (Watch).
  */
 
-import { loadConfig } from "../tools/jsonc.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
 import type {
   WatchConfigFile,
   WatchConfigResult,
@@ -18,16 +18,16 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
-    entryPoints: ["main.tsx"],
+    entryPoints: ["main.tsx",],
     platform: "browser",
     format: "esm",
     bundle: true,
     minify: false,
     sourcemap: "inline",
-    conditions: ["browser"],
+    conditions: ["browser",],
     jsx: "automatic",
     jsxImportSource: "preact",
     write: true,
@@ -58,19 +58,25 @@ export async function carregarConfigWatch(
   );
 
   if (!parsed) {
-    console.warn("⚠️ Arquivo de configuração watch não encontrado. Usando padrões.");
-    return { targets: CONFIGURACOES_PADRAO_WATCH };
+    console.warn(
+      "⚠️ Arquivo de configuração watch não encontrado. Usando padrões.",
+    );
+    return { targets: CONFIGURACOES_PADRAO_WATCH, };
   }
 
   let targets: WatchGlobalConfig = {};
 
-  if ("targets" in parsed && parsed.targets && typeof parsed.targets === "object") {
+  if (
+    "targets" in parsed && parsed.targets && typeof parsed.targets === "object"
+  ) {
     targets = parsed.targets as WatchGlobalConfig;
-  } else if ("alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object") {
+  } else if (
+    "alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object"
+  ) {
     targets = parsed.alvos as WatchGlobalConfig;
   } else {
     // Procura por chaves que parecem definições de target (possuem entryPoints)
-    for (const [key, value] of Object.entries(parsed)) {
+    for (const [key, value,] of Object.entries(parsed,)) {
       if (
         key !== "$schema" &&
         key !== "version" &&
@@ -83,9 +89,9 @@ export async function carregarConfigWatch(
     }
   }
 
-  if (Object.keys(targets).length === 0) {
+  if (Object.keys(targets,).length === 0) {
     targets = CONFIGURACOES_PADRAO_WATCH;
   }
 
-  return { targets };
+  return { targets, };
 }

@@ -119,18 +119,30 @@ describe("mapearExtensao", () => {
 
 describe("correspondeGlobs", () => {
   it("deve corresponder com wildcards simples", () => {
-    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts"]), true);
-    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts"]), false);
+    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts",],), true,);
+    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts",],), false,);
   });
 
   it("deve corresponder com globstar recursivo", () => {
-    assertEquals(correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**"]), true);
+    assertEquals(
+      correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**",],),
+      true,
+    );
   });
 
   it("deve corresponder com brace expansion", () => {
-    assertEquals(correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}"]), true);
-    assertEquals(correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}"]), true);
-    assertEquals(correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}"]), false);
+    assertEquals(
+      correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}",],),
+      true,
+    );
+    assertEquals(
+      correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}",],),
+      true,
+    );
+    assertEquals(
+      correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}",],),
+      false,
+    );
   });
 });
 
@@ -163,11 +175,11 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo que casa com includes e não casa com excludes", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["src/**/*.{ts,tsx}"],
-        excludes: ["**/*.test.ts"],
+        includes: ["src/**/*.{ts,tsx}",],
+        excludes: ["**/*.test.ts",],
       };
-      assertEquals(deveIncluirArquivo("src/app.tsx", config), true);
-      assertEquals(deveIncluirArquivo("src/app.test.ts", config), false);
+      assertEquals(deveIncluirArquivo("src/app.tsx", config,), true,);
+      assertEquals(deveIncluirArquivo("src/app.test.ts", config,), false,);
     });
   });
 
@@ -175,14 +187,14 @@ describe("deveIncluirArquivo", () => {
     it("permite caminho adicional com extensão válida", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}"],
+        includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/deploy.yml", config),
+        deveIncluirArquivo(".github/workflows/deploy.yml", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo(".github/workflows/ci.yaml", config),
+        deveIncluirArquivo(".github/workflows/ci.yaml", config,),
         true,
       );
     });
@@ -190,10 +202,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia caminho com extensão que não casa com glob", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: [".github/workflows/*.yml"],
+        includes: [".github/workflows/*.yml",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/segredo.png", config),
+        deveIncluirArquivo(".github/workflows/segredo.png", config,),
         false,
       );
     });
@@ -201,9 +213,9 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo exato no caminho adicional", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["README.md"],
+        includes: ["README.md",],
       };
-      assertEquals(deveIncluirArquivo("README.md", config), true);
+      assertEquals(deveIncluirArquivo("README.md", config,), true,);
     });
   });
 
@@ -211,14 +223,14 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivo dentro de subpasta permitida", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/{src,docs}/**/*.{ts,md}"],
+        includes: ["monorepo/server/{src,docs}/**/*.{ts,md}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/src/main.ts", config),
+        deveIncluirArquivo("monorepo/server/src/main.ts", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config),
+        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config,),
         true,
       );
     });
@@ -226,10 +238,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivo fora das pastas incluídas", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/src/**/*"],
+        includes: ["monorepo/server/src/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/ui/src/app.tsx", config),
+        deveIncluirArquivo("monorepo/ui/src/app.tsx", config,),
         false,
       );
     });
@@ -237,11 +249,11 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivo em subpasta excluída", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/**/*"],
-        excludes: ["monorepo/server/dist/**/*"],
+        includes: ["monorepo/server/**/*",],
+        excludes: ["monorepo/server/dist/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/dist/bundle.js", config),
+        deveIncluirArquivo("monorepo/server/dist/bundle.js", config,),
         false,
       );
     });
@@ -251,14 +263,14 @@ describe("deveIncluirArquivo", () => {
     it("permite arquivos raiz explicitamente configurados", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/{deno.json,deploy.sh}"],
+        includes: ["monorepo/server/{deno.json,deploy.sh}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deno.json", config),
+        deveIncluirArquivo("monorepo/server/deno.json", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deploy.sh", config),
+        deveIncluirArquivo("monorepo/server/deploy.sh", config,),
         true,
       );
     });
@@ -266,10 +278,10 @@ describe("deveIncluirArquivo", () => {
     it("bloqueia arquivos raiz não configurados", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["monorepo/server/deno.json"],
+        includes: ["monorepo/server/deno.json",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/package.json", config),
+        deveIncluirArquivo("monorepo/server/package.json", config,),
         false,
       );
     });
@@ -279,18 +291,18 @@ describe("deveIncluirArquivo", () => {
     it("captura raiz e subpasta docs", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["readme.md", "docs/**/*.md"],
+        includes: ["readme.md", "docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("readme.md", config), true);
-      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config), true);
+      assertEquals(deveIncluirArquivo("readme.md", config,), true,);
+      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
     });
 
     it("bloqueia código fonte fora de docs", () => {
       const config: ExportConfig = {
         arquivoSaida: "snapshot.md",
-        includes: ["docs/**/*.md"],
+        includes: ["docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("src/main.ts", config), false);
+      assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
     });
   });
 });
@@ -352,7 +364,9 @@ describe("gerarCabecalho", () => {
     const resultado = gerarCabecalho(config, "ui", "1.0.0",);
     assertStringIncludes(resultado, customCabecalho,);
     assertEquals(
-      resultado.includes("Cada arquivo começa com um título indicando seu caminho relativo exato",),
+      resultado.includes(
+        "Cada arquivo começa com um título indicando seu caminho relativo exato",
+      ),
       false,
     );
   });

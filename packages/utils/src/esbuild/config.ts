@@ -4,7 +4,7 @@
  * e fallback para configurações padrão do projeto BuildIt.
  */
 
-import { loadConfig } from "../tools/jsonc.ts";
+import { loadConfig, } from "../tools/jsonc.ts";
 import type {
   EsbuildConfigFile,
   EsbuildConfigResult,
@@ -20,19 +20,19 @@ export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
     clean: {
-      includes: ["*"],
+      includes: ["*",],
     },
-    entryPoints: ["main.tsx"],
+    entryPoints: ["main.tsx",],
     platform: "browser",
     format: "esm",
     bundle: true,
     minify: false,
     sourcemap: "linked",
-    conditions: ["browser"],
+    conditions: ["browser",],
     jsx: "automatic",
     jsxImportSource: "preact",
     metafile: true,
@@ -64,7 +64,7 @@ export async function carregarConfigEsbuild(
   );
 
   const result: EsbuildConfigResult = {
-    targets: { ...CONFIGURACOES_PADRAO },
+    targets: { ...CONFIGURACOES_PADRAO, },
   };
 
   if (parsed) {
@@ -84,10 +84,10 @@ export async function carregarConfigEsbuild(
     }
 
     // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed).filter(
-      (k) =>
-        !k.startsWith("$") &&
-        !["version", "versionPaths", "forcepackagesversion"].includes(k),
+    const filteredKeys = Object.keys(parsed,).filter(
+      (k,) =>
+        !k.startsWith("$",) &&
+        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
     );
 
     if (filteredKeys.length > 0) {

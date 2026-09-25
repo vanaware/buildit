@@ -15,7 +15,16 @@ import { parseArgs, } from "../tools/cli-flags.ts";
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
  */
 // deno-lint-ignore no-explicit-any
-export function denoBuildCli(): Command<any, any, any, any, any, any, any, any> {
+export function denoBuildCli(): Command<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+> {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
@@ -49,7 +58,7 @@ export function denoBuildCli(): Command<any, any, any, any, any, any, any, any> 
 
       const { targets, globalNoVersion, } = parseArgs(
         args,
-        { noversion: Boolean(options.noversion,) },
+        { noversion: Boolean(options.noversion,), },
       );
 
       console.log(

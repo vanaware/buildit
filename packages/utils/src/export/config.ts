@@ -108,13 +108,14 @@ export async function carregarConfigExport(
       const modos = (parsed as ExportConfigFile).modos;
 
       if (rootProjeto !== undefined || rootCabecalho !== undefined) {
-        for (const [modoKey, modoConfig] of Object.entries(modos)) {
+        for (const [modoKey, modoConfig,] of Object.entries(modos,)) {
           modos[modoKey] = {
             ...(rootProjeto !== undefined && modoConfig.projeto === undefined
-              ? { projeto: rootProjeto }
+              ? { projeto: rootProjeto, }
               : {}),
-            ...(rootCabecalho !== undefined && modoConfig.cabecalho === undefined
-              ? { cabecalho: rootCabecalho }
+            ...(rootCabecalho !== undefined &&
+                modoConfig.cabecalho === undefined
+              ? { cabecalho: rootCabecalho, }
               : {}),
             ...modoConfig,
           };
@@ -123,7 +124,9 @@ export async function carregarConfigExport(
 
       return modos;
     }
-    console.warn("⚠️ Arquivo de configuração de exportação inválido: chave 'modos' não encontrada.");
+    console.warn(
+      "⚠️ Arquivo de configuração de exportação inválido: chave 'modos' não encontrada.",
+    );
     return {};
   }
 

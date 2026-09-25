@@ -1,9 +1,6 @@
 import { dirname, isAbsolute, join, } from "@std/path";
 
-import type {
-  DenoBundleTargetConfig,
-  TargetConfig,
-} from "./interfaces.ts";
+import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
 
 // ============================================================================
 // 🎯 VALIDAÇÃO DE CONFIGURAÇÃO DO ALVO (fail-fast com mensagens claras)

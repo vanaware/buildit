@@ -80,7 +80,12 @@ export async function processBundleTarget(
   }
 
   // 2. Copiar arquivos estáticos
-  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
+  await copyStaticFiles(
+    resolvedConfig,
+    appVersion,
+    baseDir,
+    resolvedConfig.distdir,
+  );
 
   // 3. Preparar defines
   const defines: Record<string, string> = {
@@ -146,7 +151,7 @@ export async function processBundleTarget(
   }
 
   for (const outputFile of outputFiles) {
-    await ensureDirForFile(outputFile.path);
+    await ensureDirForFile(outputFile.path,);
 
     let content = outputFile.text();
     if (hasDefines) {

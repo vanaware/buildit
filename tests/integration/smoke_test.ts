@@ -21,7 +21,9 @@ describe("smoke", () => {
   });
 
   it("deve ser possível carregar o módulo build/esbuild", async () => {
-    const esbuildMod = await import(join(ROOT, "packages/utils/src/esbuild/mod.ts",));
+    const esbuildMod = await import(
+      join(ROOT, "packages/utils/src/esbuild/mod.ts",)
+    );
     assert(
       typeof esbuildMod === "object",
       "packages/utils/src/esbuild/mod.ts deve ser carregável",

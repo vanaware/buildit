@@ -21,11 +21,11 @@ export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",
     copyFiles: [
-      { basedir: "packages/ui/public" },
-      { basedir: "packages/ui/src", includes: ["index.html"] },
+      { basedir: "packages/ui/public", },
+      { basedir: "packages/ui/src", includes: ["index.html",], },
     ],
     clean: {
-      includes: ["*"],
+      includes: ["*",],
     },
     entryPoints: ["main.tsx",],
     platform: "browser",

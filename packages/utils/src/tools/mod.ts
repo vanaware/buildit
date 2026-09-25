@@ -1,4 +1,4 @@
-export { loadConfig } from "./jsonc.ts";
+export { loadConfig, } from "./jsonc.ts";
 
 // ⚙️ Gerenciamento de Versão
 export {
@@ -18,9 +18,9 @@ export {
 } from "./version.ts";
 
 // 🛠️ Utilitários de CLI e Validação
-export { parseArgs } from "./cli-flags.ts";
-export { validateTargetConfig } from "./validate.ts";
-export { resolverOrdemTargets } from "./targets.ts";
+export { parseArgs, } from "./cli-flags.ts";
+export { validateTargetConfig, } from "./validate.ts";
+export { resolverOrdemTargets, } from "./targets.ts";
 export {
   cleanTarget,
   copyStaticFiles,
@@ -31,9 +31,7 @@ export {
   resolveOutputPaths,
 } from "./paths.ts";
 
-export {
-  EXTENSOES_PADRAO,
-} from "./interfaces.ts";
+export { EXTENSOES_PADRAO, } from "./interfaces.ts";
 
 export type {
   DenoBuildOptions,

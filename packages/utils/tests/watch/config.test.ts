@@ -18,6 +18,6 @@ describe("watch/config", () => {
     const config = await carregarConfigWatch("watch.jsonc", ".",);
     assert(config.targets.ui !== undefined,);
     assertEquals(config.targets.ui.format, "esm",);
-    assertEquals(config.targets.ui.entryPoints, ["main.tsx"],);
+    assertEquals(config.targets.ui.entryPoints, ["main.tsx",],);
   });
 });

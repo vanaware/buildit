@@ -20,7 +20,7 @@ export const simLogs = signal<string[]>([
   "💡 Ready to orchestrate builds and context exports.",
 ],);
 
-export const totalLogsCount = computed(() => simLogs.value.length,);
+export const totalLogsCount = computed(() => simLogs.value.length);
 
 export const addLog = (msg: string,) => {
   const timestamp = new Date().toLocaleTimeString();
@@ -34,14 +34,18 @@ export const applyPreset = (preset: "prod" | "dev" | "export",) => {
     minifyEnabled.value = true;
     sourcemapEnabled.value = true;
     cleanDistEnabled.value = true;
-    addLog("⚡ Predefinição 'Produção' aplicada (esbuild, minify, sourcemap, clean).",);
+    addLog(
+      "⚡ Predefinição 'Produção' aplicada (esbuild, minify, sourcemap, clean).",
+    );
   } else if (preset === "dev") {
     selectedTool.value = "esbuild";
     targetName.value = "ui";
     minifyEnabled.value = false;
     sourcemapEnabled.value = true;
     cleanDistEnabled.value = false;
-    addLog("🛠️ Predefinição 'Dev Rápido' aplicada (esbuild, unminified, sourcemap).",);
+    addLog(
+      "🛠️ Predefinição 'Dev Rápido' aplicada (esbuild, unminified, sourcemap).",
+    );
   } else {
     selectedTool.value = "export";
     targetName.value = "ui";
@@ -75,7 +79,9 @@ export const runSimulator = async () => {
   addLog(`--- Iniciando execução de ${tool} para o alvo: ${target} ---`,);
 
   if (cleanDistEnabled.value) {
-    addLog(`🧹 Limpando diretório de distribuição em packages/server/build/dist...`,);
+    addLog(
+      `🧹 Limpando diretório de distribuição em packages/server/build/dist...`,
+    );
   }
 
   await new Promise((r,) => setTimeout(r, 400,));
@@ -85,17 +91,27 @@ export const runSimulator = async () => {
       `🔨 Compilando via esbuild com @deno/esbuild-plugin (minify: ${minifyEnabled.value}, sourcemap: ${sourcemapEnabled.value})...`,
     );
     await new Promise((r,) => setTimeout(r, 350,));
-    addLog(`📄 Copiando assets estáticos e injetando versão em manifest.json...`,);
+    addLog(
+      `📄 Copiando assets estáticos e injetando versão em manifest.json...`,
+    );
     await new Promise((r,) => setTimeout(r, 300,));
-    addLog(`✅ Alvo [${target}] gerado com sucesso: dist/${target === "ui" ? "main.js" : target + ".js"}`,);
+    addLog(
+      `✅ Alvo [${target}] gerado com sucesso: dist/${
+        target === "ui" ? "main.js" : target + ".js"
+      }`,
+    );
   } else if (tool === "denobuild") {
     addLog(`📦 Empacotando com Deno.bundle API nativo (--unstable-bundle)...`,);
     await new Promise((r,) => setTimeout(r, 450,));
     addLog(`✅ Bundle autônomo gerado sem dependências de bundlers externos!`,);
   } else {
-    addLog(`🔍 Varrendo workspace e filtrando arquivos por extensões permitidas...`,);
+    addLog(
+      `🔍 Varrendo workspace e filtrando arquivos por extensões permitidas...`,
+    );
     await new Promise((r,) => setTimeout(r, 350,));
-    addLog(`📝 Gerando snapshot em markdown formatado para contexto de IA: snapshots/${target}.md`,);
+    addLog(
+      `📝 Gerando snapshot em markdown formatado para contexto de IA: snapshots/${target}.md`,
+    );
   }
 
   addLog(`🎉 Pipeline finalizada com êxito! (Build #${bundleSimCount.value})`,);

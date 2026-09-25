@@ -1,5 +1,12 @@
 import { copy, emptyDir, ensureDir, expandGlob, walk, } from "@std/fs";
-import { basename, dirname, globToRegExp, isAbsolute, join, relative, } from "@std/path";
+import {
+  basename,
+  dirname,
+  globToRegExp,
+  isAbsolute,
+  join,
+  relative,
+} from "@std/path";
 
 import type {
   CleanConfig,
@@ -141,10 +148,10 @@ export function resolveEntryPoints(
  * Garante que o diretório pai de um arquivo existe.
  * @param filePath Caminho do arquivo
  */
-export async function ensureDirForFile(filePath: string): Promise<void> {
-  const dir = dirname(filePath);
+export async function ensureDirForFile(filePath: string,): Promise<void> {
+  const dir = dirname(filePath,);
   if (dir && dir !== ".") {
-    await ensureDir(dir);
+    await ensureDir(dir,);
   }
 }
 
@@ -206,7 +213,9 @@ export async function cleanTarget(
   for (const padrao of includes) {
     // Proteção direta contra caminhos com traversal ou absolutos no padrão
     if (!isSafePath(padrao,)) {
-      console.warn(`   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,);
+      console.warn(
+        `   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,
+      );
       continue;
     }
 
@@ -221,8 +230,12 @@ export async function cleanTarget(
         const rel = relative(distDir, entry.path,).replace(/\\/g, "/",);
 
         // 🔒 Regra 0: Proteção estrita contra path traversal / nível acima ao distdir
-        if (rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === ".") {
-          console.warn(`   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,);
+        if (
+          rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === "."
+        ) {
+          console.warn(
+            `   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,
+          );
           continue;
         }
 
@@ -239,7 +252,10 @@ export async function cleanTarget(
         }
       }
     } catch (err) {
-      console.warn(`   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`, err,);
+      console.warn(
+        `   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`,
+        err,
+      );
     }
   }
 }
@@ -316,7 +332,8 @@ export async function copyTargetFiles(
   await ensureDir(distDir,);
 
   for (const item of copyFiles) {
-    const hasItemBase = typeof item.basedir === "string" && item.basedir.trim().length > 0;
+    const hasItemBase = typeof item.basedir === "string" &&
+      item.basedir.trim().length > 0;
     // 0. Será feito join deste basedir com o "basedir geral"
     const effectiveBaseDir = hasItemBase
       ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(item.basedir!,)
@@ -336,11 +353,15 @@ export async function copyTargetFiles(
       try {
         const stat = await Deno.stat(effectiveBaseDir,);
         if (!stat.isDirectory) {
-          console.warn(`⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,);
+          console.warn(
+            `⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,
+          );
           continue;
         }
       } catch {
-        console.warn(`⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,);
+        console.warn(
+          `⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,
+        );
         continue;
       }
 
@@ -354,7 +375,10 @@ export async function copyTargetFiles(
             },)
           ) {
             if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(
+                /\\/g,
+                "/",
+              );
 
               if (item.excludes && item.excludes.length > 0) {
                 if (correspondeGlobs(relPath, item.excludes,)) {
@@ -368,7 +392,9 @@ export async function copyTargetFiles(
 
               const fileName = basename(entry.path,).toLowerCase();
               if (fileName === "index.html") {
-                console.log(`📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,);
+                console.log(
+                  `📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,
+                );
               }
               if (fileName === "manifest.json") {
                 try {
@@ -379,7 +405,9 @@ export async function copyTargetFiles(
                     destPath,
                     JSON.stringify(manifestObj, null, 2,),
                   );
-                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                  console.log(
+                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                  );
                 } catch {
                   // manifest não é JSON válido
                 }
@@ -387,14 +415,21 @@ export async function copyTargetFiles(
             }
           }
         } catch (err) {
-          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+          console.warn(
+            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            err,
+          );
         }
       }
-      console.log(`📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,);
+      console.log(
+        `📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,
+      );
     } else {
       // 3. se basedir inexistente, includes e excludes são relativos ao "basedir geral"
       // e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
-      const patterns = item.includes && item.includes.length > 0 ? item.includes : [];
+      const patterns = item.includes && item.includes.length > 0
+        ? item.includes
+        : [];
       for (const padrao of patterns) {
         try {
           for await (
@@ -405,7 +440,10 @@ export async function copyTargetFiles(
             },)
           ) {
             if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(/\\/g, "/",);
+              const relPath = relative(effectiveBaseDir, entry.path,).replace(
+                /\\/g,
+                "/",
+              );
               if (item.excludes && item.excludes.length > 0) {
                 if (correspondeGlobs(relPath, item.excludes,)) {
                   continue;
@@ -429,7 +467,9 @@ export async function copyTargetFiles(
                     destPath,
                     JSON.stringify(manifestObj, null, 2,),
                   );
-                  console.log(`📱 Versão v${appVersion} injetada em manifest.json`,);
+                  console.log(
+                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                  );
                 } catch {
                   // manifest não é JSON válido
                 }
@@ -437,7 +477,10 @@ export async function copyTargetFiles(
             }
           }
         } catch (err) {
-          console.warn(`⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`, err,);
+          console.warn(
+            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            err,
+          );
         }
       }
     }
@@ -457,11 +500,13 @@ export async function copyStaticFiles(
   generalBaseDir: string = ".",
   distDir?: string,
 ): Promise<void> {
-  const effectiveDistDir = distDir ?? (config.distdir
-    ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(config.distdir,)
-      ? join(generalBaseDir, config.distdir,)
-      : config.distdir)
-    : undefined);
+  const effectiveDistDir = distDir ??
+    (config.distdir
+      ? (generalBaseDir && generalBaseDir !== "." &&
+          !isAbsolute(config.distdir,)
+        ? join(generalBaseDir, config.distdir,)
+        : config.distdir)
+      : undefined);
 
   if (!effectiveDistDir) {
     if (config.copyFiles || config.publicdir || config.indexHtml) {
@@ -474,7 +519,12 @@ export async function copyStaticFiles(
 
   // 1. Caso use o novo sistema: copyFiles
   if (config.copyFiles && config.copyFiles.length > 0) {
-    await copyTargetFiles(config.copyFiles, effectiveDistDir, appVersion, generalBaseDir,);
+    await copyTargetFiles(
+      config.copyFiles,
+      effectiveDistDir,
+      appVersion,
+      generalBaseDir,
+    );
     return;
   }
 
@@ -484,11 +534,19 @@ export async function copyStaticFiles(
     legacyCopyFiles.push({ basedir: config.publicdir, },);
   }
   if (config.indexHtml && config.srcdir) {
-    legacyCopyFiles.push({ basedir: config.srcdir, includes: ["index.html",], },);
+    legacyCopyFiles.push({
+      basedir: config.srcdir,
+      includes: ["index.html",],
+    },);
   }
 
   if (legacyCopyFiles.length > 0) {
-    await copyTargetFiles(legacyCopyFiles, effectiveDistDir, appVersion, generalBaseDir,);
+    await copyTargetFiles(
+      legacyCopyFiles,
+      effectiveDistDir,
+      appVersion,
+      generalBaseDir,
+    );
   }
 }
 

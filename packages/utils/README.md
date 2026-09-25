@@ -3,6 +3,7 @@
 Build orchestration, continuous development watcher, bundling, and AI context export utilities for Deno and Web projects.
 
 `buildit` provides 4 modular engines for modern web development:
+
 1. ⚡ **esbuild Engine**: Production-ready bundling with `@deno/esbuild-plugin` and asset pipelines.
 2. 👀 **Watch Engine**: Real-time continuous development rebuilder based on `esbuild.context`.
 3. 📦 **Deno.bundle Engine**: Native runtime bundling with zero external binary dependencies.
@@ -20,6 +21,7 @@ deno add jsr:@vanaware/buildit
 `buildit` includes CLI runners for all four utilities. You can execute them directly via `deno run` or via JSR:
 
 ### ⚡ esbuild CLI (Production Bundling)
+
 ```bash
 # Run all default targets defined in esbuild.jsonc
 deno run -A jsr:@vanaware/buildit/esbuild/cli
@@ -29,6 +31,7 @@ deno run -A jsr:@vanaware/buildit/esbuild/cli ui --noversion
 ```
 
 ### 👀 Watch CLI (Continuous Development)
+
 ```bash
 # Start watching targets defined in watch.jsonc
 deno run -A jsr:@vanaware/buildit/watch/cli
@@ -38,12 +41,14 @@ deno run -A jsr:@vanaware/buildit/watch/cli ui
 ```
 
 ### 📦 Deno.bundle CLI (Native Packaging)
+
 ```bash
 # Run with default denobuild.jsonc
 deno run --unstable-bundle -A jsr:@vanaware/buildit/denobuild/cli ui
 ```
 
 ### 📝 Export CLI (AI Context Snapshots)
+
 ```bash
 # Export all default snapshots defined in export.jsonc
 deno run -A jsr:@vanaware/buildit/export/cli
@@ -53,6 +58,7 @@ deno run -A jsr:@vanaware/buildit/export/cli ui docs
 ```
 
 ### 🧼 Versioning CLI
+
 ```bash
 # Sanitize deno.jsonc version to strict MAJOR.MINOR.PATCH
 deno run -A jsr:@vanaware/buildit/sanitize-version/cli
@@ -68,6 +74,7 @@ deno run -A jsr:@vanaware/buildit/tag-version/cli
 All configuration files support official JSON Schemas for instant validation, autocomplete, and inline documentation in VSCode, Cursor, Zed, and Neovim.
 
 The schemas are distributed inside the package under the `schema/` directory:
+
 - `schema/esbuild.json` (for `esbuild.jsonc`)
 - `schema/watch.json` (for `watch.jsonc`)
 - `schema/denobuild.json` (for `denobuild.jsonc`)
@@ -96,63 +103,63 @@ Add the `$schema` property pointing to the local schema or URL:
 ## Programmatic API
 
 ```ts
-import { esBuild } from "jsr:@vanaware/buildit/esbuild";
-import { watchEngine } from "jsr:@vanaware/buildit/watch";
-import { exportEngine } from "jsr:@vanaware/buildit/export";
+import { esBuild, } from "jsr:@vanaware/buildit/esbuild";
+import { watchEngine, } from "jsr:@vanaware/buildit/watch";
+import { exportEngine, } from "jsr:@vanaware/buildit/export";
 
 // 1. Run esbuild compilation
 await esBuild({
   config: {
     ui: {
-      entryPoints: ["packages/ui/src/main.tsx"],
+      entryPoints: ["packages/ui/src/main.tsx",],
       distdir: "dist",
     },
   },
   noversion: true,
-});
+},);
 
 // 2. Start continuous watch mode
 const handles = await watchEngine({
   config: {
     ui: {
-      entryPoints: ["packages/ui/src/main.tsx"],
+      entryPoints: ["packages/ui/src/main.tsx",],
       distdir: "dist",
       sourcemap: "inline",
     },
   },
-});
+},);
 
 // 3. Generate AI context snapshot
 await exportEngine({
   config: {
     ui: {
       arquivoSaida: "snapshots/ui.md",
-      includes: ["packages/ui/{src,public}/**/*.{ts,tsx,html,css}"],
-      excludes: ["**/*.test.ts"],
+      includes: ["packages/ui/{src,public}/**/*.{ts,tsx,html,css}",],
+      excludes: ["**/*.test.ts",],
       incluiVersao: true,
       instrucaoCustomizada: "Contexto UI",
     },
   },
-});
+},);
 ```
 
 ## API Exports Overview
 
-| Export Path | Description |
-| :--- | :--- |
-| `.` | Root entrypoint with shared utilities, version sync, and target resolution helpers. |
-| `./esbuild` | esbuild bundling engine, static asset copier, and manifest stampers. |
-| `./esbuild/cli` | CLI runner for production esbuild pipelines. |
-| `./watch` | Continuous development watch engine with `esbuild.context`. |
-| `./watch/cli` | CLI runner for continuous watch and live rebuilds. |
-| `./denobuild` | Native `Deno.bundle` packaging engine. |
-| `./denobuild/cli` | CLI runner for native `Deno.bundle`. |
-| `./export` | LLM context generator, path scanner, and Markdown formatter. |
-| `./export/cli` | CLI runner for AI context exports. |
-| `./sanitize-version` | Utility for version normalization. |
-| `./sanitize-version/cli` | CLI runner for version sanitization. |
-| `./tag-version` | Automated Git tag and release engine. |
-| `./tag-version/cli` | CLI runner for automated tagging. |
+| Export Path              | Description                                                                         |
+| :----------------------- | :---------------------------------------------------------------------------------- |
+| `.`                      | Root entrypoint with shared utilities, version sync, and target resolution helpers. |
+| `./esbuild`              | esbuild bundling engine, static asset copier, and manifest stampers.                |
+| `./esbuild/cli`          | CLI runner for production esbuild pipelines.                                        |
+| `./watch`                | Continuous development watch engine with `esbuild.context`.                         |
+| `./watch/cli`            | CLI runner for continuous watch and live rebuilds.                                  |
+| `./denobuild`            | Native `Deno.bundle` packaging engine.                                              |
+| `./denobuild/cli`        | CLI runner for native `Deno.bundle`.                                                |
+| `./export`               | LLM context generator, path scanner, and Markdown formatter.                        |
+| `./export/cli`           | CLI runner for AI context exports.                                                  |
+| `./sanitize-version`     | Utility for version normalization.                                                  |
+| `./sanitize-version/cli` | CLI runner for version sanitization.                                                |
+| `./tag-version`          | Automated Git tag and release engine.                                               |
+| `./tag-version/cli`      | CLI runner for automated tagging.                                                   |
 
 ## License
 

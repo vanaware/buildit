@@ -3,7 +3,7 @@
  * @description Mecanismo de controle de concorrência e Lock para evitar instâncias simultâneas do modo Watch.
  */
 
-import { join } from "@std/path";
+import { join, } from "@std/path";
 
 /** Estrutura armazenada no arquivo de lock do Watch */
 export interface WatchLockData {
@@ -23,14 +23,14 @@ export interface WatchLockData {
  * @param pid ID do processo a verificar
  * @returns `true` se o processo estiver ativo, `false` caso contrário
  */
-export function isProcessRunning(pid: number): boolean {
+export function isProcessRunning(pid: number,): boolean {
   if (pid <= 0) return false;
   if (pid === Deno.pid) return true;
 
   try {
     if (Deno.build.os === "linux") {
       try {
-        Deno.statSync(`/proc/${pid}`);
+        Deno.statSync(`/proc/${pid}`,);
         return true;
       } catch {
         return false;
@@ -38,10 +38,10 @@ export function isProcessRunning(pid: number): boolean {
     }
 
     const cmd = new Deno.Command("kill", {
-      args: ["-0", String(pid)],
+      args: ["-0", String(pid,),],
       stdout: "null",
       stderr: "null",
-    });
+    },);
     const res = cmd.outputSync();
     return res.success;
   } catch {
@@ -63,22 +63,22 @@ export async function acquireWatchLock(
   target: string,
   customLockPath?: string,
 ): Promise<() => Promise<void>> {
-  const lockPath = customLockPath ?? join(baseDir, ".buildit-watch.lock");
+  const lockPath = customLockPath ?? join(baseDir, ".buildit-watch.lock",);
 
   // 1. Verificar se já existe um arquivo de lock
   try {
-    const existingContent = await Deno.readTextFile(lockPath);
-    const existingLock = JSON.parse(existingContent) as WatchLockData;
+    const existingContent = await Deno.readTextFile(lockPath,);
+    const existingLock = JSON.parse(existingContent,) as WatchLockData;
 
     if (existingLock && typeof existingLock.pid === "number") {
-      if (isProcessRunning(existingLock.pid)) {
+      if (isProcessRunning(existingLock.pid,)) {
         throw new Error(
           `❌ Já existe uma instância do watch em execução (PID: ${existingLock.pid}, Alvo: "${existingLock.target}", Iniciada em: ${existingLock.startedAt}). Encerre o processo anterior para evitar conflitos.`,
         );
       } else {
         // O processo anterior morreu sem limpar o lock (órfão)
         try {
-          await Deno.remove(lockPath);
+          await Deno.remove(lockPath,);
         } catch {
           // Ignora erro se outro processo já removeu
         }
@@ -87,7 +87,7 @@ export async function acquireWatchLock(
   } catch (err) {
     if (
       err instanceof Error &&
-      err.message.startsWith("❌ Já existe uma instância do watch")
+      err.message.startsWith("❌ Já existe uma instância do watch",)
     ) {
       throw err;
     }
@@ -102,7 +102,7 @@ export async function acquireWatchLock(
     baseDir,
   };
 
-  await Deno.writeTextFile(lockPath, JSON.stringify(lockData, null, 2));
+  await Deno.writeTextFile(lockPath, JSON.stringify(lockData, null, 2,),);
 
   // 3. Prepara a liberação segura do lock
   let released = false;
@@ -110,10 +110,10 @@ export async function acquireWatchLock(
     if (released) return;
     released = true;
     try {
-      const currentContent = await Deno.readTextFile(lockPath);
-      const currentLock = JSON.parse(currentContent) as WatchLockData;
+      const currentContent = await Deno.readTextFile(lockPath,);
+      const currentLock = JSON.parse(currentContent,) as WatchLockData;
       if (currentLock.pid === Deno.pid) {
-        await Deno.remove(lockPath);
+        await Deno.remove(lockPath,);
       }
     } catch {
       // Ignora erros caso o arquivo já tenha sido removido
@@ -123,17 +123,17 @@ export async function acquireWatchLock(
   // Garante liberação na saída do processo
   const unloadHandler = () => {
     try {
-      const currentContent = Deno.readTextFileSync(lockPath);
-      const currentLock = JSON.parse(currentContent) as WatchLockData;
+      const currentContent = Deno.readTextFileSync(lockPath,);
+      const currentLock = JSON.parse(currentContent,) as WatchLockData;
       if (currentLock.pid === Deno.pid) {
-        Deno.removeSync(lockPath);
+        Deno.removeSync(lockPath,);
       }
     } catch {
       // Ignora erros
     }
   };
 
-  globalThis.addEventListener("unload", unloadHandler, { once: true });
+  globalThis.addEventListener("unload", unloadHandler, { once: true, },);
 
   return release;
 }

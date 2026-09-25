@@ -1,14 +1,20 @@
-import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { carregarConfigWatch, CONFIGURACOES_PADRAO_WATCH } from "../../src/watch/config.ts";
-import { watchEngine } from "../../src/watch/engine.ts";
-import { watchCli } from "../../src/watch/cli.ts";
-import type { WatchGlobalConfig } from "../../src/tools/interfaces.ts";
+import { assertEquals, assertRejects, } from "@std/assert";
+import { describe, it, } from "@std/testing/bdd";
+import {
+  carregarConfigWatch,
+  CONFIGURACOES_PADRAO_WATCH,
+} from "../../src/watch/config.ts";
+import { watchEngine, } from "../../src/watch/engine.ts";
+import { watchCli, } from "../../src/watch/cli.ts";
+import type { WatchGlobalConfig, } from "../../src/tools/interfaces.ts";
 
 describe("carregarConfigWatch", () => {
   it("deve retornar configuração padrão quando arquivo não for encontrado", async () => {
-    const result = await carregarConfigWatch("arquivo_inexistente.jsonc", "/tmp");
-    assertEquals(result.targets, CONFIGURACOES_PADRAO_WATCH);
+    const result = await carregarConfigWatch(
+      "arquivo_inexistente.jsonc",
+      "/tmp",
+    );
+    assertEquals(result.targets, CONFIGURACOES_PADRAO_WATCH,);
   });
 
   it("deve carregar configuração de watch válida de um arquivo temporário", async () => {
@@ -17,21 +23,21 @@ describe("carregarConfigWatch", () => {
       const configContent = JSON.stringify({
         targets: {
           app: {
-            entryPoints: ["src/index.ts"],
+            entryPoints: ["src/index.ts",],
             distdir: "dist",
             format: "esm",
             sourcemap: "inline",
           },
         },
-      });
+      },);
       const configPath = `${tempDir}/watch.jsonc`;
-      await Deno.writeTextFile(configPath, configContent);
+      await Deno.writeTextFile(configPath, configContent,);
 
-      const result = await carregarConfigWatch(configPath, tempDir);
-      assertEquals(result.targets.app.entryPoints, ["src/index.ts"]);
-      assertEquals(result.targets.app.format, "esm");
+      const result = await carregarConfigWatch(configPath, tempDir,);
+      assertEquals(result.targets.app.entryPoints, ["src/index.ts",],);
+      assertEquals(result.targets.app.format, "esm",);
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 });
@@ -41,7 +47,7 @@ describe("watchCli Validação de Argumentos (Cliffy)", () => {
     const cli = watchCli().throwErrors();
     await assertRejects(
       async () => {
-        await cli.parse(["ui", "sw"]);
+        await cli.parse(["ui", "sw",],);
       },
       Error,
       "Too many arguments: sw",
@@ -53,14 +59,20 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
   it("deve aceitar target como string única", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -72,13 +84,13 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
         silencioso: true,
-      });
+      },);
 
-      assertEquals(handles.length, 1);
-      assertEquals(handles[0].target, "first");
+      assertEquals(handles.length, 1,);
+      assertEquals(handles[0].target, "first",);
       await handles[0].close();
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
@@ -88,7 +100,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -102,34 +114,43 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
             baseDir: tempDir,
             lockFile: `${tempDir}/.watch.lock`,
             silencioso: true,
-          });
+          },);
         },
         Error,
         "Alvo 'inexistente' não encontrado",
       );
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
   it("deve selecionar apenas o primeiro alvo quando nenhum literal é fornecido e há múltiplos default: true", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/src/other.ts`, "console.log('other');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/src/other.ts`,
+        "console.log('other');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
         second: {
           default: true,
-          entryPoints: ["other.ts"],
+          entryPoints: ["other.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -140,29 +161,35 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
         silencioso: true,
-      });
+      },);
 
-      assertEquals(handles.length, 1);
-      assertEquals(handles[0].target, "first");
+      assertEquals(handles.length, 1,);
+      assertEquals(handles[0].target, "first",);
 
       // Encerra e limpa o lock
       await handles[0].close();
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
   it("deve impedir concorrência entre chamadas simultâneas via Lock", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      await Deno.mkdir(`${tempDir}/src`, { recursive: true });
-      await Deno.writeTextFile(`${tempDir}/src/main.ts`, "console.log('main');");
-      await Deno.writeTextFile(`${tempDir}/deno.jsonc`, JSON.stringify({ version: "0.1.0" }));
+      await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
+      await Deno.writeTextFile(
+        `${tempDir}/src/main.ts`,
+        "console.log('main');",
+      );
+      await Deno.writeTextFile(
+        `${tempDir}/deno.jsonc`,
+        JSON.stringify({ version: "0.1.0", },),
+      );
 
       const config: WatchGlobalConfig = {
         first: {
           default: true,
-          entryPoints: ["main.ts"],
+          entryPoints: ["main.ts",],
           srcdir: `${tempDir}/src`,
           distdir: `${tempDir}/dist`,
         },
@@ -175,7 +202,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         baseDir: tempDir,
         lockFile: lockPath,
         silencioso: true,
-      });
+      },);
 
       try {
         await assertRejects(
@@ -186,7 +213,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
               baseDir: tempDir,
               lockFile: lockPath,
               silencioso: true,
-            });
+            },);
           },
           Error,
           "Já existe uma instância do watch em execução",
@@ -195,7 +222,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         await handles[0].close();
       }
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 });

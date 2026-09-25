@@ -6,12 +6,8 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
-import {
-  CONFIGURACOES_PADRAO,
-} from "../../src/export/mod.ts";
-import {
-  deveIncluirArquivo,
-} from "../../src/export/formatter.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/export/mod.ts";
+import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
 import {
   coletarArquivosParaExportacao,
   parseArgs,
@@ -36,7 +32,7 @@ describe("deveIncluirArquivo", () => {
         "packages/server/{src,docs}/**/*.{ts,md}",
         ".github/workflows/**/*.{yaml,yml}",
       ],
-      excludes: ["**/*.test.ts"],
+      excludes: ["**/*.test.ts",],
     };
 
     assertEquals(
@@ -56,8 +52,8 @@ describe("deveIncluirArquivo", () => {
   it("deve BLOQUEAR caminhos contemplados pelo padrão excludes", () => {
     const config: ExportConfig = {
       arquivoSaida: "snapshots/custom.md",
-      includes: ["packages/server/src/**/*.{ts,tsx}"],
-      excludes: ["**/*.test.ts", "**/dist/**"],
+      includes: ["packages/server/src/**/*.{ts,tsx}",],
+      excludes: ["**/*.test.ts", "**/dist/**",],
     };
 
     assertEquals(
@@ -77,7 +73,7 @@ describe("deveIncluirArquivo", () => {
   it("deve BLOQUEAR arquivos fora dos padrões includes", () => {
     const config: ExportConfig = {
       arquivoSaida: "snapshots/custom.md",
-      includes: ["packages/server/src/**/*.{ts,tsx}"],
+      includes: ["packages/server/src/**/*.{ts,tsx}",],
     };
 
     assertEquals(
@@ -94,15 +90,18 @@ describe("deveIncluirArquivo", () => {
 describe("coletarArquivosParaExportacao (expandGlob)", () => {
   it("deve coletar arquivos usando brace expansion e respeitar excludes de forma ordenada", async () => {
     const tempDir = await Deno.makeTempDir();
-    const srcDir = join(tempDir, "src");
-    const testDir = join(tempDir, "tests");
-    await Deno.mkdir(srcDir, { recursive: true });
-    await Deno.mkdir(testDir, { recursive: true });
+    const srcDir = join(tempDir, "src",);
+    const testDir = join(tempDir, "tests",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
+    await Deno.mkdir(testDir, { recursive: true, },);
 
-    await Deno.writeTextFile(join(srcDir, "index.ts"), "console.log(1);");
-    await Deno.writeTextFile(join(srcDir, "app.tsx"), "export default () => {};");
-    await Deno.writeTextFile(join(srcDir, "helper.test.ts"), "test");
-    await Deno.writeTextFile(join(testDir, "suite.test.ts"), "test");
+    await Deno.writeTextFile(join(srcDir, "index.ts",), "console.log(1);",);
+    await Deno.writeTextFile(
+      join(srcDir, "app.tsx",),
+      "export default () => {};",
+    );
+    await Deno.writeTextFile(join(srcDir, "helper.test.ts",), "test",);
+    await Deno.writeTextFile(join(testDir, "suite.test.ts",), "test",);
 
     const config: ExportConfig = {
       arquivoSaida: "snapshots/out.md",
@@ -114,14 +113,14 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
       ],
     };
 
-    const arquivos = await coletarArquivosParaExportacao(config, tempDir);
+    const arquivos = await coletarArquivosParaExportacao(config, tempDir,);
 
     assertEquals(arquivos, [
       "src/app.tsx",
       "src/index.ts",
-    ]);
+    ],);
 
-    await Deno.remove(tempDir, { recursive: true });
+    await Deno.remove(tempDir, { recursive: true, },);
   });
 });
 

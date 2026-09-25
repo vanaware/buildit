@@ -48,7 +48,7 @@ export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
 
       const { targets, globalNoVersion, } = parseArgs(
         args,
-        { noversion: Boolean(options.noversion,) },
+        { noversion: Boolean(options.noversion,), },
       );
 
       const DENO_JSONC_PATH = options.denoConfig as string || "deno.jsonc";

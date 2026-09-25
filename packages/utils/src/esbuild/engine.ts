@@ -168,7 +168,12 @@ export async function processTarget(
     }
   }
 
-  await copyStaticFiles(resolvedConfig, appVersion, baseDir, resolvedConfig.distdir,);
+  await copyStaticFiles(
+    resolvedConfig,
+    appVersion,
+    baseDir,
+    resolvedConfig.distdir,
+  );
 
   const esbuildOptions = await buildEsbuildOptions(
     targetName,
@@ -187,7 +192,10 @@ export async function processTarget(
 
     // 🔥 CORREÇÃO: Só salva metafile se distdir existe
     if (resolvedConfig.metafile && result.metafile && resolvedConfig.distdir) {
-      const metafilePath = join(resolvedConfig.distdir, `${targetName}-metafile.json`,);
+      const metafilePath = join(
+        resolvedConfig.distdir,
+        `${targetName}-metafile.json`,
+      );
       await Deno.writeTextFile(
         metafilePath,
         JSON.stringify(result.metafile, null, 2,),

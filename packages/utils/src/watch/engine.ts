@@ -3,9 +3,9 @@
  * @description Motor de desenvolvimento contínuo (Watch) utilizando esbuild context e @deno/esbuild-plugin.
  */
 
-import { join } from "@std/path";
+import { join, } from "@std/path";
 import * as esbuild from "esbuild";
-import { denoPlugin } from "@deno/esbuild-plugin";
+import { denoPlugin, } from "@deno/esbuild-plugin";
 import type {
   WatchHandle,
   WatchOptions,
@@ -19,9 +19,9 @@ import {
   resolveOutputPaths,
   resolveWithBase,
 } from "../tools/paths.ts";
-import { readProjectVersion } from "../tools/version.ts";
-import { validateTargetConfig } from "../tools/validate.ts";
-import { acquireWatchLock } from "./lock.ts";
+import { readProjectVersion, } from "../tools/version.ts";
+import { validateTargetConfig, } from "../tools/validate.ts";
+import { acquireWatchLock, } from "./lock.ts";
 
 /**
  * Constrói as opções do esbuild específicas para monitoramento contínuo.
@@ -30,17 +30,17 @@ export async function buildWatchEsbuildOptions(
   targetName: string,
   config: WatchTargetConfig,
   appVersion: string,
-  listAssetsFn?: (distDir: string) => Promise<string[]>,
+  listAssetsFn?: (distDir: string,) => Promise<string[]>,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
   const finalDefine: Record<string, string> = {
     ...config.define,
-    __APP_VERSION__: JSON.stringify(`v${appVersion}`),
+    __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
   };
 
   if (targetName === "sw" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir);
-    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets);
+    const assets = await listAssetsFn(config.distdir,);
+    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
   }
 
   const resolvedEntryPoints = resolveEntryPoints(
@@ -48,7 +48,7 @@ export async function buildWatchEsbuildOptions(
     config.entryPoints,
   );
 
-  const { outfile, outdir } = resolveOutputPaths(config);
+  const { outfile, outdir, } = resolveOutputPaths(config,);
 
   // deno-lint-ignore no-explicit-any
   const options: any = {
@@ -95,10 +95,10 @@ export async function buildWatchEsbuildOptions(
   if (config.banner !== undefined) {
     const banner: { js?: string; css?: string } = {};
     if (config.banner.js !== undefined) {
-      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion);
+      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (config.banner.css !== undefined) {
-      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion);
+      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (banner.js !== undefined || banner.css !== undefined) {
       options.banner = banner;
@@ -108,10 +108,10 @@ export async function buildWatchEsbuildOptions(
   if (config.footer !== undefined) {
     const footer: { js?: string; css?: string } = {};
     if (config.footer.js !== undefined) {
-      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion);
+      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (config.footer.css !== undefined) {
-      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion);
+      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion,);
     }
     if (footer.js !== undefined || footer.css !== undefined) {
       options.footer = footer;
@@ -134,22 +134,22 @@ export async function watchEngine(
 ): Promise<WatchHandle[]> {
   const configs = opcoes.config;
   const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc");
-  const version = await readProjectVersion(denoJsoncPath, baseDir);
+  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const version = await readProjectVersion(denoJsoncPath, baseDir,);
 
   // 1. Resolução do alvo: se fornecido utiliza opcoes.target, senão executa o primeiro default
   let targetName: string;
-  const configKeys = Object.keys(configs);
+  const configKeys = Object.keys(configs,);
   const requested = opcoes.target;
 
   if (requested) {
     const matchingKey = configKeys.find(
-      (k) => k.toLowerCase() === requested.toLowerCase(),
+      (k,) => k.toLowerCase() === requested.toLowerCase(),
     );
     if (!matchingKey || !configs[matchingKey]) {
       throw new Error(
         `❌ Alvo '${requested}' não encontrado na configuração de watch. Alvos disponíveis: ${
-          configKeys.join(", ")
+          configKeys.join(", ",)
         }.`,
       );
     }
@@ -157,13 +157,13 @@ export async function watchEngine(
   } else {
     // Se não for passado nenhum literal, busca o primeiro com default !== false
     const defaultTargets = configKeys.filter(
-      (k) => configs[k]?.default !== false,
+      (k,) => configs[k]?.default !== false,
     );
 
     const firstDefault = defaultTargets[0];
     if (!firstDefault) {
       if (!opcoes.silencioso) {
-        console.warn("⚠️ Nenhum alvo configurado para watch.");
+        console.warn("⚠️ Nenhum alvo configurado para watch.",);
       }
       return [];
     }
@@ -178,12 +178,12 @@ export async function watchEngine(
 
   const resolvedConfig: WatchTargetConfig = {
     ...targetConfig,
-    srcdir: resolveWithBase(targetConfig.srcdir, baseDir),
-    distdir: resolveWithBase(targetConfig.distdir, baseDir),
-    publicdir: resolveWithBase(targetConfig.publicdir, baseDir),
+    srcdir: resolveWithBase(targetConfig.srcdir, baseDir,),
+    distdir: resolveWithBase(targetConfig.distdir, baseDir,),
+    publicdir: resolveWithBase(targetConfig.publicdir, baseDir,),
   };
 
-  validateTargetConfig(targetName, resolvedConfig);
+  validateTargetConfig(targetName, resolvedConfig,);
 
   // 3. Bloqueio de concorrência: adquire o lock para o watch
   const releaseLock = await acquireWatchLock(
@@ -194,14 +194,19 @@ export async function watchEngine(
 
   try {
     if (!opcoes.silencioso) {
-      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`);
+      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`,);
     }
 
     if (resolvedConfig.clean && resolvedConfig.distdir) {
-      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean);
+      await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     }
 
-    await copyStaticFiles(resolvedConfig, version, baseDir, resolvedConfig.distdir);
+    await copyStaticFiles(
+      resolvedConfig,
+      version,
+      baseDir,
+      resolvedConfig.distdir,
+    );
 
     const esbuildOptions = await buildWatchEsbuildOptions(
       targetName,
@@ -212,17 +217,19 @@ export async function watchEngine(
 
     esbuildOptions.plugins = [
       ...(esbuildOptions.plugins || []),
-      denoPlugin({ configPath: denoJsoncPath }),
+      denoPlugin({ configPath: denoJsoncPath, },),
     ];
 
-    const ctx = await esbuild.context(esbuildOptions);
+    const ctx = await esbuild.context(esbuildOptions,);
     await ctx.watch();
 
     if (!opcoes.silencioso) {
-      console.log(`✅ [${targetName}] Monitorando alterações em tempo real...`);
+      console.log(
+        `✅ [${targetName}] Monitorando alterações em tempo real...`,
+      );
       const resolvedOutfile = esbuildOptions.outfile ||
         (resolvedConfig.distdir ? `${resolvedConfig.distdir}/` : "disco");
-      console.log(`📦 Saída: ${resolvedOutfile}`);
+      console.log(`📦 Saída: ${resolvedOutfile}`,);
     }
 
     const handle: WatchHandle = {
@@ -236,7 +243,7 @@ export async function watchEngine(
       },
     };
 
-    return [handle];
+    return [handle,];
   } catch (error) {
     await releaseLock();
     throw error;

@@ -179,7 +179,21 @@
         "loader": {
           "type": "object",
           "additionalProperties": {
-            "enum": ["js", "jsx", "ts", "tsx", "css", "json", "text", "base64", "dataurl", "file", "binary", "empty", "copy"]
+            "enum": [
+              "js",
+              "jsx",
+              "ts",
+              "tsx",
+              "css",
+              "json",
+              "text",
+              "base64",
+              "dataurl",
+              "file",
+              "binary",
+              "empty",
+              "copy"
+            ]
           },
           "description": "Mapeamento de loaders por extensão."
         },

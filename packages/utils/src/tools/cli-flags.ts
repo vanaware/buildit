@@ -18,15 +18,19 @@ import {
  */
 export function parseArgs(
   args: string[],
-  optionsOrConfig?: { noversion?: boolean } | GlobalTargetConfig | DenoBundleGlobalConfig,
+  optionsOrConfig?:
+    | { noversion?: boolean }
+    | GlobalTargetConfig
+    | DenoBundleGlobalConfig,
 ): ParsedArgs {
   const lowerArgs = args.map((a,) => a.toLowerCase());
   const hasNoVersionInArgs = lowerArgs.includes("noversion",);
   const hasNoVersionInOptions = Boolean(
-    optionsOrConfig && "noversion" in optionsOrConfig && (optionsOrConfig as { noversion?: boolean }).noversion,
+    optionsOrConfig && "noversion" in optionsOrConfig &&
+      (optionsOrConfig as { noversion?: boolean }).noversion,
   );
   const globalNoVersion = hasNoVersionInArgs || hasNoVersionInOptions;
-  const rawTargets = args.filter((arg,) => arg.toLowerCase() !== "noversion",);
+  const rawTargets = args.filter((arg,) => arg.toLowerCase() !== "noversion");
 
   // Se optionsOrConfig for uma configuração de alvos (retrocompatibilidade com testes existentes):
   if (
@@ -37,7 +41,8 @@ export function parseArgs(
     const configKeys = Object.keys(optionsOrConfig,);
     if (rawTargets.length === 0) {
       const defaultTargets = configKeys.filter((t,) => {
-        const cfg = (optionsOrConfig as Record<string, { default?: boolean }>)[t];
+        const cfg =
+          (optionsOrConfig as Record<string, { default?: boolean }>)[t];
         return cfg?.default !== false;
       },);
       return { targets: defaultTargets, globalNoVersion, };

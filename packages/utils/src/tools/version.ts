@@ -10,19 +10,19 @@ import { APP_VERSION as FALLBACK_VERSION, } from "../version.ts";
 
 import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
 
-import { loadConfig } from "./jsonc.ts";
+import { loadConfig, } from "./jsonc.ts";
 
 /**
  * Obtém a versão atual do arquivo de configuração deno.jsonc.
  * @param denoJsoncPath Caminho para o deno.jsonc
  * @returns Versão atual
  */
-export async function currentVersion(denoJsoncPath: string): Promise<string> {
-  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath);
+export async function currentVersion(denoJsoncPath: string,): Promise<string> {
+  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath,);
   if (!parsed?.version) {
-    throw new Error("❌ Versão não encontrada no deno.jsonc");
+    throw new Error("❌ Versão não encontrada no deno.jsonc",);
   }
-  console.log(`📌 Versão Atual: v${parsed.version}`);
+  console.log(`📌 Versão Atual: v${parsed.version}`,);
   return parsed.version;
 }
 
@@ -34,17 +34,17 @@ async function syncWorkspaceDir(
   newVersion: string,
   wsRelPath: string,
 ): Promise<void> {
-  for (const fileName of ["deno.jsonc", "deno.json"]) {
-    const configPath = join(wsPath, fileName);
+  for (const fileName of ["deno.jsonc", "deno.json",]) {
+    const configPath = join(wsPath, fileName,);
     try {
-      const content = await Deno.readTextFile(configPath);
-      const updated = replaceVersionInContent(content, newVersion);
-      await Deno.writeTextFile(configPath, updated);
-      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName)}`);
+      const content = await Deno.readTextFile(configPath,);
+      const updated = replaceVersionInContent(content, newVersion,);
+      await Deno.writeTextFile(configPath, updated,);
+      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName,)}`,);
       return; // Sucesso, para de procurar neste workspace
     } catch (err) {
       if (!(err instanceof Deno.errors.NotFound)) {
-        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err);
+        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err,);
       }
     }
   }
@@ -67,7 +67,7 @@ export async function incrementVersion(
     denoJsonPath: denoJsoncPath,
     buildHash,
     forcepackagesversion: true,
-  });
+  },);
 }
 
 /**
@@ -325,7 +325,9 @@ export async function updateProjectVersion(
  */
 export function findDenoFile(startDir: string = ".",): string | null {
   try {
-    let current = isAbsolute(startDir,) ? startDir : Deno.realPathSync(startDir,);
+    let current = isAbsolute(startDir,)
+      ? startDir
+      : Deno.realPathSync(startDir,);
     while (current && current !== "/") {
       const jsonc = join(current, "deno.jsonc",);
       try {
@@ -402,4 +404,3 @@ export function sanitizeVersion(raw: string,): string {
 
   return `${ma}.${mi}.${pa}`;
 }
-

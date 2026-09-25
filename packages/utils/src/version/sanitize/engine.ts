@@ -35,61 +35,70 @@ export async function sanitizeVersionFile(
 
   if (targetPath) {
     try {
-      const stat = await Deno.stat(targetPath);
+      const stat = await Deno.stat(targetPath,);
       if (!stat.isFile) {
-        throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`);
+        throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
       }
     } catch {
-      throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`);
+      throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
     }
   } else {
-    const found = findDenoFile(baseDir);
+    const found = findDenoFile(baseDir,);
     if (!found) {
-      throw new Error(`❌ Erro: Nenhum deno.json[c] encontrado a partir de ${baseDir}`);
+      throw new Error(
+        `❌ Erro: Nenhum deno.json[c] encontrado a partir de ${baseDir}`,
+      );
     }
     targetPath = found;
   }
 
   if (!options.silencioso) {
-    console.log(`🔍 Buscando versão em: ${targetPath}`);
+    console.log(`🔍 Buscando versão em: ${targetPath}`,);
   }
 
-  let content = await Deno.readTextFile(targetPath);
-  let rawVersion = extractRawVersion(content);
+  let content = await Deno.readTextFile(targetPath,);
+  let rawVersion = extractRawVersion(content,);
 
   if (rawVersion === null) {
     if (!options.silencioso) {
-      console.log(`⚠️  Nenhum campo 'version' encontrado. Inserindo "0.0.0"...`);
+      console.log(
+        `⚠️  Nenhum campo 'version' encontrado. Inserindo "0.0.0"...`,
+      );
     }
-    const braceIndex = content.indexOf("{");
+    const braceIndex = content.indexOf("{",);
     if (braceIndex === -1) {
-      throw new Error(`❌ Arquivo ${targetPath} não contém JSON/JSONC válido.`);
+      throw new Error(
+        `❌ Arquivo ${targetPath} não contém JSON/JSONC válido.`,
+      );
     }
-    content = content.slice(0, braceIndex + 1) + '\n  "version": "0.0.0",' + content.slice(braceIndex + 1);
+    content = content.slice(0, braceIndex + 1,) + '\n  "version": "0.0.0",' +
+      content.slice(braceIndex + 1,);
     rawVersion = "0.0.0";
-    await Deno.writeTextFile(targetPath, content);
+    await Deno.writeTextFile(targetPath, content,);
   }
 
   if (!options.silencioso) {
-    console.log(`📌 Versão original: ${rawVersion}`);
+    console.log(`📌 Versão original: ${rawVersion}`,);
   }
 
-  const sanitizedVersion = sanitizeVersion(rawVersion);
+  const sanitizedVersion = sanitizeVersion(rawVersion,);
   if (!options.silencioso) {
-    console.log(`✅ Versão sanitizada: ${sanitizedVersion}`);
+    console.log(`✅ Versão sanitizada: ${sanitizedVersion}`,);
   }
 
   let updated = false;
   if (rawVersion !== sanitizedVersion) {
-    const updatedContent = replaceVersionInContent(content, sanitizedVersion);
-    await Deno.writeTextFile(targetPath, updatedContent);
+    const updatedContent = replaceVersionInContent(content, sanitizedVersion,);
+    await Deno.writeTextFile(targetPath, updatedContent,);
     updated = true;
     if (!options.silencioso) {
-      console.log(`📝 Arquivo atualizado: ${rawVersion} → ${sanitizedVersion}`);
+      console.log(
+        `📝 Arquivo atualizado: ${rawVersion} → ${sanitizedVersion}`,
+      );
     }
   } else {
     if (!options.silencioso) {
-      console.log(`✨ Já estava no formato semver correto.`);
+      console.log(`✨ Já estava no formato semver correto.`,);
     }
   }
 

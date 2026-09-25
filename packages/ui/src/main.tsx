@@ -7,15 +7,20 @@ const App = () => {
     <div>
       <Header />
       <main class="responsive">
-        <div class="space"></div>
+        <div class="space">
+        </div>
         <AppDashboard />
 
-        <div class="large-space"></div>
+        <div class="large-space">
+        </div>
         <footer class="responsive center-align">
-          <div class="divider"></div>
-          <div class="space"></div>
+          <div class="divider">
+          </div>
+          <div class="space">
+          </div>
           <p class="small-text secondary-text no-margin">
-            BuildIt &bull; Deno &amp; Web Toolkit &bull; Construído com Preact, Signals e BeerCSS
+            BuildIt &bull; Deno &amp; Web Toolkit &bull; Construído com Preact,
+            Signals e BeerCSS
           </p>
         </footer>
       </main>
@@ -24,4 +29,3 @@ const App = () => {
 };
 
 render(<App />, document.getElementById("app",)!,);
-

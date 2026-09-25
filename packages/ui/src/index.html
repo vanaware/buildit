@@ -5,9 +5,11 @@
     <meta name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BuildIt</title>
-    <meta name="description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
+    <meta name="description"
+      content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
     <meta property="og:title" content="BuildIt">
-    <meta property="og:description" content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
+    <meta property="og:description"
+      content="Build orchestration, bundling and AI context export utilities for Deno & Web projects.">
 
     <!-- Web App Manifest -->
     <link rel="manifest" href="./manifest.json">
@@ -26,29 +28,33 @@
       src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
   </head>
   <body class="dark">
-    <a id="iframe-warning" class="banner yellow-container row middle center-align padding" target="_blank" rel="noopener" style="display: none; position: relative; z-index: 1000; border-radius: 8px; margin: 24px 8px 8px 8px; padding-top: 12px; padding-bottom: 12px; min-height: 56px; box-sizing: border-box; overflow: visible;">
+    <a id="iframe-warning"
+      class="banner yellow-container row middle center-align padding"
+      target="_blank" rel="noopener"
+      style="display: none; position: relative; z-index: 1000; border-radius: 8px; margin: 24px 8px 8px 8px; padding-top: 12px; padding-bottom: 12px; min-height: 56px; box-sizing: border-box; overflow: visible;">
       <i style="vertical-align: middle;">info</i>
-      <div class="max center-align" style="padding: 0 8px; line-height: 1.4; white-space: nowrap;">
+      <div class="max center-align"
+        style="padding: 0 8px; line-height: 1.4; white-space: nowrap;">
         <span>Clique para nova aba.</span>
       </div>
       <i style="vertical-align: middle;">open_in_new</i>
     </a>
 
     <script>
-    (function() {
+    (function () {
       try {
         if (window.self !== window.top) {
           document.addEventListener("DOMContentLoaded", () => {
-            const banner = document.getElementById("iframe-warning");
+            const banner = document.getElementById("iframe-warning",);
             if (banner) {
               banner.href = window.location.href;
               banner.style.display = "flex";
             }
-          });
+          },);
         }
       } catch (e) {
         // Fallback for cross-origin errors if top is blocked
-        console.warn("Iframe detection error:", e);
+        console.warn("Iframe detection error:", e,);
       }
     })();
     </script>
