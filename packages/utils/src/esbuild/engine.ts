@@ -212,10 +212,19 @@ export async function processTarget(
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
   } catch (error) {
-    if (error instanceof TypeError && (error as unknown as { message?: string }).message?.includes("unref")) {
-      console.error(`❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`);
-      console.error(`💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`);
-      console.error(`👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`);
+    if (
+      error instanceof TypeError &&
+      (error as unknown as { message?: string }).message?.includes("unref",)
+    ) {
+      console.error(
+        `❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`,
+      );
+      console.error(
+        `💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`,
+      );
+      console.error(
+        `👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`,
+      );
     } else {
       console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
     }
