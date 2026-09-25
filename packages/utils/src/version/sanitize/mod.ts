@@ -4,4 +4,3 @@
  */
 
 export { sanitizeVersionFile, } from "./engine.ts";
-export { sanitizeVersionCli, } from "./cli.ts";
