@@ -73,41 +73,10 @@ export async function carregarConfigDenoBuild(
     result.versionPaths = parsed.versionPaths;
     result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso 1: Objeto possui a chave "targets"
+    // Caso Único: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
       result.targets = parsed.targets;
       return result;
-    }
-
-    // Caso 2: Objeto possui a chave em português "alvos"
-    if (parsed.alvos && typeof parsed.alvos === "object") {
-      result.targets = parsed.alvos;
-      return result;
-    }
-
-    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed,).filter(
-      (k,) =>
-        !k.startsWith("$",) &&
-        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
-    );
-
-    if (filteredKeys.length > 0) {
-      const resultado: DenoBundleGlobalConfig = {};
-      let hasValidTargets = false;
-
-      for (const key of filteredKeys) {
-        const val = (parsed as Record<string, unknown>)[key];
-        if (val && typeof val === "object") {
-          resultado[key] = val as DenoBundleGlobalConfig[string];
-          hasValidTargets = true;
-        }
-      }
-
-      if (hasValidTargets) {
-        result.targets = resultado;
-        return result;
-      }
     }
   }
 

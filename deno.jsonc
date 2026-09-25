@@ -1,5 +1,5 @@
 {
-  "version": "0.3.17#mug7ep74",
+  "version": "0.3.14",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",

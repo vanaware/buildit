@@ -71,7 +71,7 @@ export async function carregarConfigEsbuild(
     result.versionPaths = parsed.versionPaths;
     result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso 1: Objeto possui a chave "targets"
+    // Caso Único: Objeto possui a chave "targets"
     if (parsed.targets && typeof parsed.targets === "object") {
       result.targets = parsed.targets;
       return result;

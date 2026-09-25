@@ -95,31 +95,40 @@ export async function esBuild(
 
   const resultados: EsbuildResult[] = [];
 
-  for (const targetName of targetsParaExecutar) {
-    const targetConfig = configs[targetName];
-    if (!targetConfig) {
-      console.warn(
-        `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+  try {
+    for (const targetName of targetsParaExecutar) {
+      const targetConfig = configs[targetName];
+      if (!targetConfig) {
+        console.warn(
+          `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+        );
+        continue;
+      }
+
+      const startTime = performance.now();
+      await processTarget(
+        targetName,
+        targetConfig,
+        finalVersion,
+        (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
+        listAssetsForCache,
+        baseDir,
       );
-      continue;
+      const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+
+      resultados.push({
+        target: targetName,
+        success: true,
+        durationMs,
+      },);
     }
-
-    const startTime = performance.now();
-    await processTarget(
-      targetName,
-      targetConfig,
-      finalVersion,
-      (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
-      listAssetsForCache,
-      baseDir,
-    );
-    const durationMs = Number((performance.now() - startTime).toFixed(0,),);
-
-    resultados.push({
-      target: targetName,
-      success: true,
-      durationMs,
-    },);
+  } finally {
+    // ✨ GARANTIA DE ENCERRAMENTO: No Deno, o processo do esbuild (npm) precisa ser parado explicitamente
+    try {
+      await esbuild.stop();
+    } catch {
+      // Ignora erros no stop()
+    }
   }
 
   return resultados;
@@ -203,7 +212,13 @@ export async function processTarget(
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
   } catch (error) {
-    console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
+    if (error instanceof TypeError && (error as unknown as { message?: string }).message?.includes("unref")) {
+      console.error(`❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`);
+      console.error(`💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`);
+      console.error(`👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`);
+    } else {
+      console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
+    }
     throw error;
   }
 }

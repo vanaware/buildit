@@ -188,7 +188,6 @@ export interface WatchConfigFile {
   $schema?: string;
   version?: string;
   targets?: WatchGlobalConfig;
-  alvos?: WatchGlobalConfig;
   [key: string]: unknown;
 }
 
@@ -262,7 +261,6 @@ export interface DenoBuildConfigFile {
   $schema?: string;
   version?: string;
   targets?: DenoBundleGlobalConfig;
-  alvos?: DenoBundleGlobalConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
@@ -350,7 +348,6 @@ export interface EsbuildConfigFile {
   $schema?: string;
   version?: string;
   targets?: GlobalTargetConfig;
-  alvos?: GlobalTargetConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
