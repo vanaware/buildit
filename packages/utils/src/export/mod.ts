@@ -18,7 +18,8 @@
  */
 
 export { exportEngine, } from "./engine.ts";
-export { CONFIGURACOES_PADRAO, } from "./config.ts";
+
+export { CONFIGURACOES_PADRAO as exportExample, } from "./config.ts";
 
 export type {
   ExportConfig,

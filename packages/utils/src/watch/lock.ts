@@ -6,16 +6,7 @@
 import { join, } from "@std/path";
 
 /** Estrutura armazenada no arquivo de lock do Watch */
-export interface WatchLockData {
-  /** PID do processo Deno ativo */
-  pid: number;
-  /** Nome do alvo em monitoramento */
-  target: string;
-  /** Timestamp ISO do início do processo */
-  startedAt: string;
-  /** Diretório base de execução */
-  baseDir?: string;
-}
+import { WatchLockData, } from "../tools/interfaces.ts";
 
 /**
  * Verifica se um processo com o PID fornecido ainda está em execução no sistema operacional.

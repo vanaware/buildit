@@ -418,3 +418,14 @@ export interface TagVersionResult {
   /** Se a tag foi criada e publicada. */
   tagged: boolean;
 }
+
+export interface WatchLockData {
+  /** PID do processo Deno ativo */
+  pid: number;
+  /** Nome do alvo em monitoramento */
+  target: string;
+  /** Timestamp ISO do início do processo */
+  startedAt: string;
+  /** Diretório base de execução */
+  baseDir?: string;
+}

@@ -7,7 +7,7 @@ import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
 import { formatVersion, parseVersion, } from "../../src/tools/version.ts";
 import { isSafePath, resolveOutputPaths, } from "../../src/tools/paths.ts";
-import { CONFIGURACOES_PADRAO, } from "../../src/esbuild/mod.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/esbuild/config.ts";
 
 describe("esbuild - versioning", () => {
   it("deve parsear versão semântica com hash", () => {

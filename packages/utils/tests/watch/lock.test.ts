@@ -1,11 +1,8 @@
 import { assertEquals, assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
-import {
-  acquireWatchLock,
-  isProcessRunning,
-  type WatchLockData,
-} from "../../src/watch/lock.ts";
+import { acquireWatchLock, isProcessRunning, } from "../../src/watch/lock.ts";
 
+import type { WatchLockData, } from "../../src/tools/interfaces.ts";
 describe("Watch Lock Mechanism", () => {
   it("isProcessRunning deve identificar o processo atual como ativo", () => {
     assertEquals(isProcessRunning(Deno.pid,), true,);

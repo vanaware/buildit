@@ -4,4 +4,4 @@ declare const __APP_VERSION__: string;
 /** Current library/application version. */
 export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   ? __APP_VERSION__
-  : "0.3.20#muh8iezh";
+  : "1.0.3#h3";

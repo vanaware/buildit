@@ -9,7 +9,7 @@ import {
   applyDefines,
   buildBundleOptions,
 } from "../../src/denobuild/bundle.ts";
-import { CONFIGURACOES_PADRAO, } from "../../src/denobuild/mod.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/denobuild/config.ts";
 
 describe("denobuild - applyDefines", () => {
   it("deve substituir identificadores simples", () => {

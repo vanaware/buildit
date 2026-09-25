@@ -6,7 +6,7 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
-import { CONFIGURACOES_PADRAO, } from "../../src/export/mod.ts";
+import { CONFIGURACOES_PADRAO, } from "../../src/export/config.ts";
 import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
 import {
   coletarArquivosParaExportacao,
