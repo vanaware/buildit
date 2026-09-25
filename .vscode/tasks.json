@@ -59,7 +59,7 @@
     {
     "type": "deno",
     "command": "run",
-    "args": ["--allow-env","--allow-read", "--allow-write", "--allow-run", "export.ts"],
+    "args": ["--allow-env","--allow-read", "--allow-write", "export.ts"],
     "problemMatcher": ["$deno"],
     "label": "Deno: Export"
     }

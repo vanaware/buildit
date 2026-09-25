@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-25T00:31:55.841Z
+Gerado automaticamente em: 2026-09-25T17:27:51.139Z
 
 ---
 
@@ -223,17 +223,7 @@ import { parseArgs, } from "../tools/cli-flags.ts";
 /**
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
  */
-// deno-lint-ignore no-explicit-any
-export function denoBuildCli(): Command<
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
-> {
+export function denoBuildCli() {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
@@ -713,8 +703,7 @@ import { parseArgs, } from "../tools/cli-flags.ts";
 /**
  * Executa o CLI do orquestrador de build baseado em esbuild.
  */
-// deno-lint-ignore no-explicit-any
-export function esBuildCli(): Command<any, any, any, any, any, any, any, any> {
+export function esBuildCli() {
   return new Command()
     .name("esbuild",)
     .description("BuildIt esbuild Orchestrator",)
@@ -872,37 +861,6 @@ export async function carregarConfigEsbuild(
     if (parsed.targets && typeof parsed.targets === "object") {
       result.targets = parsed.targets;
       return result;
-    }
-
-    // Caso 2: Objeto possui a chave em português "alvos"
-    if (parsed.alvos && typeof parsed.alvos === "object") {
-      result.targets = parsed.alvos;
-      return result;
-    }
-
-    // Caso 3: Objeto define alvos diretamente na raiz excluindo metadados
-    const filteredKeys = Object.keys(parsed,).filter(
-      (k,) =>
-        !k.startsWith("$",) &&
-        !["version", "versionPaths", "forcepackagesversion",].includes(k,),
-    );
-
-    if (filteredKeys.length > 0) {
-      const resultado: GlobalTargetConfig = {};
-      let hasValidTargets = false;
-
-      for (const key of filteredKeys) {
-        const val = (parsed as Record<string, unknown>)[key];
-        if (val && typeof val === "object") {
-          resultado[key] = val as GlobalTargetConfig[string];
-          hasValidTargets = true;
-        }
-      }
-
-      if (hasValidTargets) {
-        result.targets = resultado;
-        return result;
-      }
     }
   }
 
@@ -1130,10 +1088,19 @@ export async function processTarget(
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
   } catch (error) {
-    if (error instanceof TypeError && (error as unknown as { message?: string }).message?.includes("unref")) {
-      console.error(`❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`);
-      console.error(`💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`);
-      console.error(`👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`);
+    if (
+      error instanceof TypeError &&
+      (error as unknown as { message?: string }).message?.includes("unref",)
+    ) {
+      console.error(
+        `❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`,
+      );
+      console.error(
+        `💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`,
+      );
+      console.error(
+        `👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`,
+      );
     } else {
       console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
     }
@@ -1306,8 +1273,7 @@ import { Command, } from "@cliffy/command";
 /**
  * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.
  */
-// deno-lint-ignore no-explicit-any
-export function exportCli(): Command<any, any, any, any, any, any, any, any> {
+export function exportCli() {
   return new Command()
     .name("export",)
     .description("BuildIt Context Exporter",)
@@ -2051,11 +2017,6 @@ export type {
  */
 
 export * from "./tools/mod.ts";
-export {
-  sanitizeVersionCli,
-  sanitizeVersionFile,
-} from "./version/sanitize/mod.ts";
-export { tagVersionCli, tagVersionEngine, } from "./version/tag/mod.ts";
 
 export { APP_VERSION as version, } from "./version.ts";
 
@@ -2611,82 +2572,7 @@ export async function loadConfig<T,>(
 ## Arquivo: `packages/utils/src/tools/mod.ts`
 
 ```ts
-export { loadConfig, } from "./jsonc.ts";
-
-// ⚙️ Gerenciamento de Versão
-export {
-  currentVersion,
-  extractRawVersion,
-  extractVersionFromContent,
-  findDenoFile,
-  formatVersion,
-  incrementVersion,
-  parseVersion,
-  readProjectVersion,
-  replaceVersionInContent,
-  sanitizeVersion,
-  syncVersion,
-  updateProjectVersion,
-  writeVersionFile,
-} from "./version.ts";
-
-// 🛠️ Utilitários de CLI e Validação
-export { parseArgs, } from "./cli-flags.ts";
-export { validateTargetConfig, } from "./validate.ts";
-export { resolverOrdemTargets, } from "./targets.ts";
-export {
-  cleanTarget,
-  copyStaticFiles,
-  ensureDirForFile,
-  isSafePath,
-  listAssetsForCache,
-  resolveEntryPoints,
-  resolveOutputPaths,
-} from "./paths.ts";
-
 export { EXTENSOES_PADRAO, } from "./interfaces.ts";
-
-export type {
-  DenoBuildOptions,
-  DenoBuildResult,
-  DenoBundleFormat,
-  DenoBundleGlobalConfig,
-  DenoBundlePackageHandling,
-  DenoBundlePlatform,
-  DenoBundleSourceMap,
-  DenoBundleTargetConfig,
-  EsbuildCharset,
-  EsbuildDrop,
-  EsbuildFormat,
-  EsbuildGlobalConfig,
-  EsbuildJsx,
-  EsbuildLegalComments,
-  EsbuildLoader,
-  EsbuildLogLevel,
-  EsbuildOptions,
-  EsbuildPlatform,
-  EsbuildResult,
-  EsbuildSourcemap,
-  EsbuildTargetConfig,
-  ExportConfig,
-  ExportOptions,
-  ExportResult,
-  GlobalTargetConfig,
-  ParsedArgs,
-  ParsedVersion,
-  SanitizeVersionOptions,
-  SanitizeVersionResult,
-  TagVersionOptions,
-  TagVersionResult,
-  TargetConfig,
-  VersionUpdateOptions,
-  WatchConfigFile,
-  WatchConfigResult,
-  WatchGlobalConfig,
-  WatchHandle,
-  WatchOptions,
-  WatchTargetConfig,
-} from "./interfaces.ts";
 
 ```
 
@@ -3825,7 +3711,7 @@ declare const __APP_VERSION__: string;
 /** Current library/application version. */
 export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
   ? __APP_VERSION__
-  : "0.3.18#mug856ww";
+  : "1.0.3#h3";
 
 ```
 
@@ -3848,17 +3734,7 @@ import { sanitizeVersionFile, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-// deno-lint-ignore no-explicit-any
-export function sanitizeVersionCli(): Command<
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
-> {
+export function sanitizeVersionCli() {
   return new Command()
     .name("sanitize-version",)
     .description(
@@ -4020,7 +3896,6 @@ export async function sanitizeVersionFile(
  */
 
 export { sanitizeVersionFile, } from "./engine.ts";
-export { sanitizeVersionCli, } from "./cli.ts";
 
 ```
 
@@ -4043,17 +3918,7 @@ import { tagVersionEngine, } from "./engine.ts";
  *
  * @returns Instância do comando Cliffy configurado
  */
-// deno-lint-ignore no-explicit-any
-export function tagVersionCli(): Command<
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any,
-  any
-> {
+export function tagVersionCli() {
   return new Command()
     .name("tag-version",)
     .description(
@@ -4362,7 +4227,6 @@ export async function tagVersionEngine(
  */
 
 export { tagVersionEngine, } from "./engine.ts";
-export { tagVersionCli, } from "./cli.ts";
 
 ```
 
@@ -4385,8 +4249,7 @@ import { findDenoConfig, } from "../tools/paths.ts";
 /**
  * Cria a instância do comando CLI para o modo watch.
  */
-// deno-lint-ignore no-explicit-any
-export function watchCli(): Command<any, any, any, any, any, any, any, any> {
+export function watchCli() {
   return new Command()
     .name("watch",)
     .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
@@ -4509,6 +4372,10 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
   },
 };
 
+/** Alias retrocompatível para configurações padrão de watch */
+export const CONFIGURACOES_WATCH_PADRAO: Record<string, WatchTargetConfig> =
+  CONFIGURACOES_PADRAO_WATCH;
+
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
  *
@@ -4539,23 +4406,6 @@ export async function carregarConfigWatch(
     "targets" in parsed && parsed.targets && typeof parsed.targets === "object"
   ) {
     targets = parsed.targets as WatchGlobalConfig;
-  } else if (
-    "alvos" in parsed && parsed.alvos && typeof parsed.alvos === "object"
-  ) {
-    targets = parsed.alvos as WatchGlobalConfig;
-  } else {
-    // Procura por chaves que parecem definições de target (possuem entryPoints)
-    for (const [key, value,] of Object.entries(parsed,)) {
-      if (
-        key !== "$schema" &&
-        key !== "version" &&
-        value &&
-        typeof value === "object" &&
-        "entryPoints" in value
-      ) {
-        targets[key] = value as WatchTargetConfig;
-      }
-    }
   }
 
   if (Object.keys(targets,).length === 0) {
@@ -7088,7 +6938,7 @@ describe("exportEngine programmatic API", () => {
     assertEquals(resultados.length, 1,);
     assertEquals(resultados[0]?.modo, "testMode",);
     assertEquals(resultados[0]?.arquivos, 1,);
-    assertEquals(resultados[0]?.bytes > 0, true,);
+    assertEquals((resultados[0]?.bytes ?? 0) > 0, true,);
 
     const snapshotConteudo = await Deno.readTextFile(
       join(tempDir, "snapshots", "test-out.md",),
@@ -7320,10 +7170,7 @@ import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 function makeConfig(overrides: Partial<ExportConfig> = {},): ExportConfig {
   return {
     arquivoSaida: "snapshot.md",
-    extensoesPermitidas: EXTENSOES_PADRAO,
-    pastaBase: "./",
-    subpastasPermitidas: [],
-    arquivosRaizPermitidos: [],
+    includes: ["**/*",],
     incluiVersao: false,
     instrucaoCustomizada: "Teste",
     ...overrides,
@@ -7458,8 +7305,7 @@ describe("deveIncluirArquivo", () => {
   describe("proteção anti-loop", () => {
     it("bloqueia qualquer arquivo dentro de exports/", () => {
       const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["exports",],
+        includes: ["**/*",],
       },);
       assertEquals(deveIncluirArquivo("exports/server.md", config,), false,);
       assertEquals(deveIncluirArquivo("exports/sub/file.ts", config,), false,);
@@ -7467,9 +7313,7 @@ describe("deveIncluirArquivo", () => {
 
     it("bloqueia mesmo com extensão válida", () => {
       const config = makeConfig({
-        pastaBase: "./",
-        subpastasPermitidas: ["exports",],
-        extensoesPermitidas: [".md", ".ts",],
+        includes: ["**/*.{md,ts}",],
       },);
       assertEquals(deveIncluirArquivo("exports/qualquer.ts", config,), false,);
     });
@@ -8419,14 +8263,16 @@ describe("watch/config", () => {
   it("carrega configurações padrão caso o arquivo de config não exista", async () => {
     const config = await carregarConfigWatch("inexistente.jsonc",);
     assertEquals(config.targets, CONFIGURACOES_WATCH_PADRAO,);
-    assert(config.targets.ui !== undefined,);
+    const ui = config.targets["ui"];
+    assert(ui !== undefined,);
   });
 
   it("carrega configurações a partir do watch.jsonc real do projeto", async () => {
     const config = await carregarConfigWatch("watch.jsonc", ".",);
-    assert(config.targets.ui !== undefined,);
-    assertEquals(config.targets.ui.format, "esm",);
-    assertEquals(config.targets.ui.entryPoints, ["main.tsx",],);
+    const ui = config.targets["ui"];
+    assert(ui !== undefined,);
+    assertEquals(ui.format, "esm",);
+    assertEquals(ui.entryPoints, ["main.tsx",],);
   });
 });
 
@@ -8546,7 +8392,7 @@ describe("Watch Lock Mechanism", () => {
 ## Arquivo: `packages/utils/tests/watch/watch.test.ts`
 
 ```ts
-import { assertEquals, assertRejects, } from "@std/assert";
+import { assert, assertEquals, assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import {
   carregarConfigWatch,
@@ -8582,8 +8428,10 @@ describe("carregarConfigWatch", () => {
       await Deno.writeTextFile(configPath, configContent,);
 
       const result = await carregarConfigWatch(configPath, tempDir,);
-      assertEquals(result.targets.app.entryPoints, ["src/index.ts",],);
-      assertEquals(result.targets.app.format, "esm",);
+      const app = result.targets["app"];
+      assert(app !== undefined,);
+      assertEquals(app.entryPoints, ["src/index.ts",],);
+      assertEquals(app.format, "esm",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -8635,8 +8483,8 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       },);
 
       assertEquals(handles.length, 1,);
-      assertEquals(handles[0].target, "first",);
-      await handles[0].close();
+      assertEquals(handles[0]?.target, "first",);
+      await handles[0]?.close();
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -8712,10 +8560,10 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
       },);
 
       assertEquals(handles.length, 1,);
-      assertEquals(handles[0].target, "first",);
+      assertEquals(handles[0]?.target, "first",);
 
       // Encerra e limpa o lock
-      await handles[0].close();
+      await handles[0]?.close();
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -8767,7 +8615,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
           "Já existe uma instância do watch em execução",
         );
       } finally {
-        await handles[0].close();
+        await handles[0]?.close();
       }
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);

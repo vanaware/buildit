@@ -5,9 +5,9 @@
 
 ---
 
-# Contexto Exportado do Projeto BuildIt [v0.3.18#mug856ww] - Modo: UI
+# Contexto Exportado do Projeto BuildIt [v0.3.19#mugtcmlj] - Modo: UI
 
-Gerado automaticamente em: 2026-09-25T00:31:55.799Z
+Gerado automaticamente em: 2026-09-25T17:27:51.101Z
 
 ---
 
@@ -143,7 +143,10 @@ export const AppDashboard = () => {
               Predefinições Rápidas
             </p>
             <div class="row wrap gap">
-              <button class="chip primary" onClick={() => applyPreset("prod",)}>
+              <button
+                type="button"
+                class="chip primary"
+                onClick={() => applyPreset("prod",)}>
                 <i>
                   rocket_launch
                 </i>
@@ -152,6 +155,7 @@ export const AppDashboard = () => {
                 </span>
               </button>
               <button
+                type="button"
                 class="chip secondary"
                 onClick={() => applyPreset("dev",)}>
                 <i>
@@ -162,6 +166,7 @@ export const AppDashboard = () => {
                 </span>
               </button>
               <button
+                type="button"
                 class="chip tertiary"
                 onClick={() => applyPreset("export",)}>
                 <i>
@@ -221,6 +226,7 @@ export const AppDashboard = () => {
             <div class="space">
             </div>
             <button
+              type="button"
               class="extend extra primary large"
               onClick={runSimulator}
               disabled={isSimulating.value}>
