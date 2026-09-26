@@ -12,9 +12,9 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Configuração padrão para o motor Deno.bundle no projeto BuildIt.
+ * Exemplo de configuração para o motor Deno.bundle no projeto BuildIt.
  */
-export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
+export const DENOBUILD_CONFIG_EXAMPLE: DenoBundleGlobalConfig = {
   ui: {
     mode: "build",
     default: true,
@@ -43,17 +43,11 @@ export const CONFIGURACOES_PADRAO: DenoBundleGlobalConfig = {
  * Carrega as configurações de alvos para o motor Deno.bundle a partir de um arquivo JSONC externo
  * (ex: `denobuild.jsonc` ou `denobuild.json`).
  *
- * Se o arquivo não for encontrado ou não contiver alvos válidos, retorna o objeto padrão `CONFIGURACOES_PADRAO`.
+ * Se o arquivo não for encontrado, a execução é interrompida com uma mensagem de exemplo.
  *
  * @param caminhoConfig Caminho opcional do arquivo de configuração
  * @param baseDir Diretório base para resolução de arquivos relativos
  * @returns Configuração carregada com alvos e opções globais
- *
- * @example
- * ```typescript
- * const config = await carregarConfigDenoBuild("denobuild.jsonc");
- * console.log(Object.keys(config.targets)); // ["ui"]
- * ```
  */
 export async function carregarConfigDenoBuild(
   caminhoConfig?: string,
@@ -65,19 +59,33 @@ export async function carregarConfigDenoBuild(
     baseDir,
   );
 
+  if (!parsed) {
+    throw new Error(`❌ Arquivo de configuração "denobuild.jsonc" não encontrado na raiz do projeto.
+O BuildIt agora exige uma declaração explícita de alvos.
+
+Exemplo de arquivo "denobuild.jsonc" mínimo:
+{
+  "targets": {
+    "app": {
+      "srcdir": "src",
+      "distdir": "dist",
+      "entryPoints": ["main.tsx"]
+    }
+  }
+}`);
+  }
+
   const result: DenoBuildConfigResult = {
-    targets: { ...CONFIGURACOES_PADRAO, },
+    targets: {},
   };
 
-  if (parsed) {
-    result.versionPaths = parsed.versionPaths;
-    result.forcepackagesversion = parsed.forcepackagesversion;
+  result.versionPaths = parsed.versionPaths;
+  result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso Único: Objeto possui a chave "targets"
-    if (parsed.targets && typeof parsed.targets === "object") {
-      result.targets = parsed.targets;
-      return result;
-    }
+  if (parsed.targets && typeof parsed.targets === "object") {
+    result.targets = parsed.targets;
+  } else {
+    throw new Error(`❌ Chave "targets" não encontrada no arquivo de configuração denobuild.`);
   }
 
   return result;

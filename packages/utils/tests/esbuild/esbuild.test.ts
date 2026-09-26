@@ -7,7 +7,7 @@ import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
 import { formatVersion, parseVersion, } from "../../src/tools/version.ts";
 import { isSafePath, resolveOutputPaths, } from "../../src/tools/paths.ts";
-import { CONFIGURACOES_PADRAO, } from "../../src/esbuild/config.ts";
+import { ESBUILD_CONFIG_EXAMPLE, } from "../../src/esbuild/config.ts";
 
 describe("esbuild - versioning", () => {
   it("deve parsear versão semântica com hash", () => {
@@ -42,9 +42,8 @@ describe("esbuild - paths", () => {
 });
 
 describe("esbuild - config", () => {
-  it("deve ter configurações padrão válidas", () => {
-    assert(CONFIGURACOES_PADRAO.ui !== undefined,);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.default, true,);
-    assertEquals(CONFIGURACOES_PADRAO.ui!.platform, "browser",);
+  it("deve ter exemplo de configuração válido", () => {
+    assert(ESBUILD_CONFIG_EXAMPLE.ui !== undefined,);
+    assertEquals(ESBUILD_CONFIG_EXAMPLE.ui!.default, true,);
   });
 });

@@ -33,7 +33,12 @@ export async function readProjectVersion(
     return parsed.version;
   }
 
-  return FALLBACK_VERSION;
+  throw new Error(`❌ Campo "version" obrigatório não encontrado no deno.jsonc.
+Exemplo de configuração necessária:
+{
+  "name": "@buildit/app",
+  "version": "1.0.0"
+}`);
 }
 
 /**
@@ -61,9 +66,9 @@ async function syncWorkspaceDir(
 }
 
 /**
- * Caminhos padrão onde o arquivo version.ts é sincronizado.
+ * Exemplo de caminhos onde o arquivo version.ts pode ser sincronizado.
  */
-export const DEFAULT_VERSION_PATHS: string[] = [
+export const VERSION_PATHS_EXAMPLE: string[] = [
   "packages/utils/src/version.ts",
 ];
 
@@ -186,15 +191,11 @@ export async function syncVersion(
   const denoJsonPath = options.denoJsonPath ??
     join(baseDir, "deno.jsonc",);
   const forcePackages = options.forcepackagesversion ?? false;
-  const versionPaths = options.versionPaths ?? DEFAULT_VERSION_PATHS;
+  const versionPaths = options.versionPaths ?? [];
 
   let finalVersion = options.currentVersion;
   if (!finalVersion) {
-    try {
-      finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
-    } catch {
-      finalVersion = FALLBACK_VERSION;
-    }
+    finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
   }
 
   // Sincroniza workspaces se solicitado
@@ -214,6 +215,13 @@ export async function syncVersion(
     } catch (err) {
       console.warn(`⚠️ Falha ao sincronizar workspaces:`, err,);
     }
+  }
+
+  if (versionPaths.length === 0 && !forcePackages) {
+    console.warn(
+      `⚠️ Nenhum caminho de versão (versionPaths) foi especificado para sincronização.`,
+    );
+    console.log(`Exemplo de uso: syncVersion({ versionPaths: ["src/version.ts"] })`,);
   }
 
   // Atualiza os arquivos version.ts nos caminhos especificados

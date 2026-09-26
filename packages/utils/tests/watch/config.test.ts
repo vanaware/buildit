@@ -1,18 +1,19 @@
 /// <reference lib="deno.ns" />
 
+import { assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
 import {
   carregarConfigWatch,
-  CONFIGURACOES_WATCH_PADRAO,
 } from "../../src/watch/config.ts";
 
 describe("watch/config", () => {
-  it("carrega configurações padrão caso o arquivo de config não exista", async () => {
-    const config = await carregarConfigWatch("inexistente.jsonc",);
-    assertEquals(config.targets, CONFIGURACOES_WATCH_PADRAO,);
-    const ui = config.targets["ui"];
-    assert(ui !== undefined,);
+  it("lança erro caso o arquivo de config não exista", async () => {
+    await assertRejects(
+      () => carregarConfigWatch("inexistente.jsonc",),
+      Error,
+      'Arquivo de configuração "watch.jsonc" não encontrado',
+    );
   });
 
   it("carrega configurações a partir do watch.jsonc real do projeto", async () => {

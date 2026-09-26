@@ -1,20 +1,24 @@
 import { assert, assertEquals, assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
+import { join, } from "@std/path";
 import {
   carregarConfigWatch,
-  CONFIGURACOES_PADRAO_WATCH,
+  WATCH_CONFIG_EXAMPLE,
 } from "../../src/watch/config.ts";
 import { watchEngine, } from "../../src/watch/engine.ts";
 import { watchCli, } from "../../src/watch/cli.ts";
 import type { WatchGlobalConfig, } from "../../src/tools/interfaces.ts";
 
 describe("carregarConfigWatch", () => {
-  it("deve retornar configuração padrão quando arquivo não for encontrado", async () => {
-    const result = await carregarConfigWatch(
-      "arquivo_inexistente.jsonc",
-      "/tmp",
+  it("deve retornar erro quando arquivo não for encontrado", async () => {
+    await assertRejects(
+      () => carregarConfigWatch(
+        "arquivo_inexistente.jsonc",
+        "/tmp",
+      ),
+      Error,
+      "não encontrado",
     );
-    assertEquals(result.targets, CONFIGURACOES_PADRAO_WATCH,);
   });
 
   it("deve carregar configuração de watch válida de um arquivo temporário", async () => {
@@ -99,6 +103,10 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
   it("deve rejeitar se o alvo solicitado não existir", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
+      await Deno.writeTextFile(
+        join(tempDir, "deno.jsonc",),
+        JSON.stringify({ version: "1.0.0", },),
+      );
       const config: WatchGlobalConfig = {
         first: {
           default: true,

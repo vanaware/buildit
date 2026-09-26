@@ -27,10 +27,18 @@ describe("denoBuild programmatic API", () => {
       },
     };
 
+    // Adiciona deno.jsonc para evitar erro de versão obrigatória
+    const denoJsonc = join(tempDir, "deno.jsonc",);
+    await Deno.writeTextFile(
+      denoJsonc,
+      JSON.stringify({ version: "1.0.0", },),
+    );
+
     const results = await denoBuild({
       config,
       targets: ["app",],
       baseDir: tempDir,
+      denoJsoncPath: denoJsonc,
       noversion: true,
       silencioso: true,
     },);

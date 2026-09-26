@@ -152,3 +152,6 @@ Explicação:
 - [x] Melhoria na documentação técnica: detalhamento da injeção automática de `__GENERATED_ASSETS__` para o alvo `sw` (Service Worker) em `api.md` e documentos de topologia.
 - [x] Limpeza completa de códigos e campos legados em todo o workspace (removidos `publicdir`, `indexHtml`, suporte a `.` em limpeza e funções redundantes de versão).
 - [x] Unificação e robustez do motor de extração e substituição de versão em `version.ts` com suporte a diversos formatos de indentação.
+- [x] Transformação de fallbacks silenciosos em exemplos obrigatórios: remoção de configurações padrão embutidas nos motores (`esbuild`, `denobuild`, `watch`, `export`) em favor de erros amigáveis com exemplos de configuração.
+- [x] Renomeação de constantes globais de configuração para sufixo `_EXAMPLE` e obrigatoriedade do campo `version` no `deno.jsonc`.
+- [x] Atualização completa da suíte de testes (48 testes) para garantir compatibilidade com o novo comportamento fail-fast e inclusão de arquivos de configuração em mocks temporários.

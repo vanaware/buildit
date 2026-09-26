@@ -1,7 +1,7 @@
 /// <reference lib="deno.ns" />
 
 import { describe, it, } from "@std/testing/bdd";
-import { assertEquals, assertStringIncludes, assertThrows, } from "@std/assert";
+import { assertEquals, assertStringIncludes, assertThrows, assertRejects, } from "@std/assert";
 import {
   extractVersion,
   formatVersion,
@@ -145,19 +145,25 @@ describe("readProjectVersion (integração)", () => {
       await cleanup();
     }
   });
-  it("usa fallback quando arquivo não existe", async () => {
-    const version = await readProjectVersion("/caminho/que/nao/existe/deno.jsonc",);
-    assertEquals(typeof version === "string", true,);
+  it("lança erro quando arquivo não existe", async () => {
+    await assertRejects(
+      () => readProjectVersion("/caminho/que/nao/existe/deno.jsonc",),
+      Error,
+      'obrigatório não encontrado',
+    );
   });
-  it("usa fallback quando versão não está no arquivo", async () => {
+  it("lança erro quando versão não está no arquivo", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.0.0", {
       version: undefined,
     },);
     try {
       // Reescreve sem version
       await Deno.writeTextFile(path, `{ "name": "buildit" }`,);
-      const version = await readProjectVersion(path,);
-      assertEquals(typeof version === "string", true,);
+      await assertRejects(
+        () => readProjectVersion(path,),
+        Error,
+        'obrigatório não encontrado',
+      );
     } finally {
       await cleanup();
     }

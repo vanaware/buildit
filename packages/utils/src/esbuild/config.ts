@@ -12,9 +12,9 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Configuração padrão para o motor esbuild no projeto BuildIt.
+ * Exemplo de configuração para o motor esbuild no projeto BuildIt.
  */
-export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
+export const ESBUILD_CONFIG_EXAMPLE: GlobalTargetConfig = {
   ui: {
     default: true,
     srcdir: "packages/ui/src",
@@ -47,7 +47,7 @@ export const CONFIGURACOES_PADRAO: GlobalTargetConfig = {
  * Carrega as configurações de alvos para o motor esbuild a partir de um arquivo JSONC externo
  * (ex: `esbuild.jsonc` ou `esbuild.json`).
  *
- * Se o arquivo não for encontrado ou não contiver alvos válidos, retorna o objeto padrão `CONFIGURACOES_PADRAO`.
+ * Se o arquivo não for encontrado, a execução é interrompida com uma mensagem de exemplo.
  *
  * @param caminhoConfig Caminho opcional do arquivo de configuração
  * @param baseDir Diretório base para resolução de arquivos relativos
@@ -63,19 +63,33 @@ export async function carregarConfigEsbuild(
     baseDir,
   );
 
+  if (!parsed) {
+    throw new Error(`❌ Arquivo de configuração "esbuild.jsonc" não encontrado na raiz do projeto.
+O BuildIt agora exige uma declaração explícita de alvos.
+
+Exemplo de arquivo "esbuild.jsonc" mínimo:
+{
+  "targets": {
+    "app": {
+      "srcdir": "src",
+      "distdir": "dist",
+      "entryPoints": ["main.tsx"]
+    }
+  }
+}`);
+  }
+
   const result: EsbuildConfigResult = {
-    targets: { ...CONFIGURACOES_PADRAO, },
+    targets: {},
   };
 
-  if (parsed) {
-    result.versionPaths = parsed.versionPaths;
-    result.forcepackagesversion = parsed.forcepackagesversion;
+  result.versionPaths = parsed.versionPaths;
+  result.forcepackagesversion = parsed.forcepackagesversion;
 
-    // Caso Único: Objeto possui a chave "targets"
-    if (parsed.targets && typeof parsed.targets === "object") {
-      result.targets = parsed.targets;
-      return result;
-    }
+  if (parsed.targets && typeof parsed.targets === "object") {
+    result.targets = parsed.targets;
+  } else {
+    throw new Error(`❌ Chave "targets" não encontrada no arquivo de configuração esbuild.`);
   }
 
   return result;

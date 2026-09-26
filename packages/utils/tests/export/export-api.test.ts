@@ -74,6 +74,13 @@ describe("exportEngine programmatic API", () => {
       'console.log("direct config");',
     );
 
+    // Adiciona deno.jsonc para evitar erro de versão obrigatória
+    const denoJsonc = join(tempDir, "deno.jsonc",);
+    await Deno.writeTextFile(
+      denoJsonc,
+      JSON.stringify({ version: "1.0.0", },),
+    );
+
     const resultados = await exportEngine({
       config: {
         direto: {
@@ -85,6 +92,7 @@ describe("exportEngine programmatic API", () => {
       },
       modos: ["direto",],
       baseDir: tempDir,
+      denoJsoncPath: denoJsonc,
       silencioso: true,
     },);
 

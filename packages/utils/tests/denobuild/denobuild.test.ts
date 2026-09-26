@@ -10,7 +10,7 @@ import {
   applyDefines,
   buildBundleOptions,
 } from "../../src/denobuild/bundle.ts";
-import { CONFIGURACOES_PADRAO, } from "../../src/denobuild/config.ts";
+import { DENOBUILD_CONFIG_EXAMPLE, } from "../../src/denobuild/config.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 
 describe("denobuild - applyDefines", () => {
@@ -43,7 +43,7 @@ describe("denobuild - buildBundleOptions", () => {
     },);
     try {
       const config = {
-        ...CONFIGURACOES_PADRAO.ui!,
+        ...DENOBUILD_CONFIG_EXAMPLE.ui!,
         srcdir: join(dir, "src",),
       };
       const options = buildBundleOptions(config,);

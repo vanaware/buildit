@@ -1,2 +1,2 @@
-export { EXTENSOES_PADRAO as defaultExtensions } from "./interfaces.ts";
-export { DEFAULT_VERSION_PATHS as versionPathsExample } from "./version.ts"
+export { EXTENSIONS_EXAMPLE as defaultExtensions } from "./interfaces.ts";
+export { VERSION_PATHS_EXAMPLE as versionPathsExample } from "./version.ts";

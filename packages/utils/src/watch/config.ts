@@ -11,8 +11,8 @@ import type {
   WatchTargetConfig,
 } from "../tools/interfaces.ts";
 
-/** Configurações padrão para o modo watch caso nenhum arquivo exista */
-export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
+/** Exemplo de configurações para o modo watch */
+export const WATCH_CONFIG_EXAMPLE: WatchGlobalConfig = {
   ui: {
     default: true,
     srcdir: "packages/ui/src",
@@ -36,10 +36,6 @@ export const CONFIGURACOES_PADRAO_WATCH: WatchGlobalConfig = {
   },
 };
 
-/** Alias retrocompatível para configurações padrão de watch */
-export const CONFIGURACOES_WATCH_PADRAO: Record<string, WatchTargetConfig> =
-  CONFIGURACOES_PADRAO_WATCH;
-
 /**
  * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
  *
@@ -58,10 +54,19 @@ export async function carregarConfigWatch(
   );
 
   if (!parsed) {
-    console.warn(
-      "⚠️ Arquivo de configuração watch não encontrado. Usando padrões.",
-    );
-    return { targets: CONFIGURACOES_PADRAO_WATCH, };
+    throw new Error(`❌ Arquivo de configuração "watch.jsonc" não encontrado na raiz do projeto.
+O BuildIt agora exige uma declaração explícita de alvos para o modo watch.
+
+Exemplo de arquivo "watch.jsonc" mínimo:
+{
+  "targets": {
+    "app": {
+      "srcdir": "src",
+      "distdir": "dist",
+      "entryPoints": ["main.tsx"]
+    }
+  }
+}`);
   }
 
   let targets: WatchGlobalConfig = {};
@@ -70,10 +75,13 @@ export async function carregarConfigWatch(
     "targets" in parsed && parsed.targets && typeof parsed.targets === "object"
   ) {
     targets = parsed.targets as WatchGlobalConfig;
+  } else if (!("targets" in parsed) && Object.keys(parsed,).length > 0) {
+    // Tenta tratar o objeto raiz como os alvos
+    targets = parsed as WatchGlobalConfig;
   }
 
   if (Object.keys(targets,).length === 0) {
-    targets = CONFIGURACOES_PADRAO_WATCH;
+    throw new Error(`❌ Nenhuma configuração de alvos encontrada no arquivo de configuração watch.`);
   }
 
   return { targets, };

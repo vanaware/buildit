@@ -1,7 +1,7 @@
 /**
- * Extensões de arquivo padrão que são comumente incluídas em snapshots.
+ * Exemplo de extensões de arquivo que podem ser incluídas em snapshots.
  */
-export const EXTENSOES_PADRAO: string[] = [
+export const EXTENSIONS_EXAMPLE: string[] = [
   ".tsx",
   ".jsx",
   ".js",
