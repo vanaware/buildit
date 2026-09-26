@@ -11,7 +11,12 @@
  * import { exportEngine } from "jsr:@vanaware/buildit";
  *
  * const resultados = await exportEngine({
- *   caminhoConfig: "export.jsonc",
+ *   config: {
+ *     ui: {
+ *       arquivoSaida: "snapshots/ui.md",
+ *       includes: ["src/**\/*"],
+ *     },
+ *   },
  *   modos: ["ui", "docs"],
  * });
  * ```

@@ -10,7 +10,12 @@
  * import { denoBuild } from "jsr:@vanaware/buildit";
  *
  * const resultados = await denoBuild({
- *   caminhoConfig: "denobuild.jsonc",
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
  *   targets: ["ui"],
  *   noversion: true,
  * });
