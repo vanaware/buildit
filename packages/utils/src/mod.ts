@@ -10,13 +10,36 @@
  * import { esBuild, watchEngine, denoBuild, exportEngine } from "jsr:@vanaware/buildit";
  *
  * // Executar compilação de produção com esbuild
- * await esBuild({ noversion: true });
+ * await esBuild({
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
+ *   noversion: true,
+ * });
  *
  * // Iniciar watch contínuo com esbuild.context e trava anti-concorrência
- * const handles = await watchEngine({ targets: ["ui"] });
+ * const handles = await watchEngine({
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
+ *   target: "ui",
+ * });
  *
  * // Gerar snapshot de contexto para LLMs
- * await exportEngine({ modos: ["ui", "docs"] });
+ * await exportEngine({
+ *   config: {
+ *     ui: {
+ *       arquivoSaida: "snapshots/ui.md",
+ *       includes: ["src/**/*"],
+ *     },
+ *   },
+ * });
  * ```
  */
 

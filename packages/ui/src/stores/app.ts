@@ -346,8 +346,17 @@ await esBuild({
   watch: `import { watchEngine } from "jsr:@vanaware/buildit";
 
 const handles = await watchEngine({
-  targets: ["ui"],
-  configPath: "watch.jsonc",
+  config: {
+    ui: {
+      entryPoints: ["packages/ui/src/main.tsx"],
+      distdir: "packages/server/build/dist",
+      sourcemap: "inline",
+      copyFiles: [
+        { basedir: "packages/ui/public" }
+      ],
+    },
+  },
+  target: "ui",
 });
 
 console.log("Servidor watch em execução. Pressione Ctrl+C para encerrar.");`,
@@ -355,8 +364,13 @@ console.log("Servidor watch em execução. Pressione Ctrl+C para encerrar.");`,
   export: `import { exportEngine } from "jsr:@vanaware/buildit";
 
 await exportEngine({
-  modos: ["ui", "docs"],
-  configPath: "export.jsonc",
+  config: {
+    ui: {
+      arquivoSaida: "snapshots/ui.md",
+      includes: ["packages/ui/src/**/*"],
+    },
+  },
+  modos: ["ui"],
 });`,
 };
 

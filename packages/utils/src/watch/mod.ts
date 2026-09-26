@@ -7,8 +7,13 @@
  * import { watchEngine } from "jsr:@vanaware/buildit";
  *
  * const handles = await watchEngine({
- *   configPath: "watch.jsonc",
- *   targets: ["ui"],
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
+ *   target: "ui",
  * });
  * ```
  */
