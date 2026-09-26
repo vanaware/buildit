@@ -6,9 +6,9 @@ import {
   currentVersion,
   extractVersionFromContent,
   formatVersion,
-  incrementVersion,
   parseVersion,
   replaceVersionInContent,
+  updateProjectVersion,
 } from "../../src/tools/version.ts";
 import { withTempDenoJsonc, } from "../helpers/fixtures.ts";
 
@@ -174,16 +174,16 @@ describe("currentVersion (integração)", () => {
   });
 });
 
-describe("incrementVersion (integração)", () => {
+describe("updateProjectVersion (integração)", () => {
   it("incrementa patch e atualiza arquivo", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.2.3",);
     try {
-      const newVersion = await incrementVersion(
-        "1.2.3",
-        path,
-        "testhash",
-        [],
-      );
+      const newVersion = await updateProjectVersion({
+        currentVersion: "1.2.3",
+        denoJsonPath: path,
+        buildHash: "testhash",
+        versionPaths: [],
+      },);
       assertEquals(newVersion, "1.2.4#testhash",);
       const content = await Deno.readTextFile(path,);
       assertStringIncludes(content, `"version": "1.2.4#testhash"`,);
@@ -197,7 +197,12 @@ describe("incrementVersion (integração)", () => {
       imports: { preact: "https://esm.sh/preact", },
     },);
     try {
-      await incrementVersion("0.0.1", path, "x", [],);
+      await updateProjectVersion({
+        currentVersion: "0.0.1",
+        denoJsonPath: path,
+        buildHash: "x",
+        versionPaths: [],
+      },);
       const content = await Deno.readTextFile(path,);
       assertStringIncludes(content, `"name": "@buildit/app"`,);
       assertStringIncludes(content, `"preact"`,);
@@ -208,11 +213,26 @@ describe("incrementVersion (integração)", () => {
   it("incrementa múltiplas vezes", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.0.0",);
     try {
-      const v1 = await incrementVersion("1.0.0", path, "h1", [],);
+      const v1 = await updateProjectVersion({
+        currentVersion: "1.0.0",
+        denoJsonPath: path,
+        buildHash: "h1",
+        versionPaths: [],
+      },);
       assertEquals(v1, "1.0.1#h1",);
-      const v2 = await incrementVersion(v1, path, "h2", [],);
+      const v2 = await updateProjectVersion({
+        currentVersion: v1,
+        denoJsonPath: path,
+        buildHash: "h2",
+        versionPaths: [],
+      },);
       assertEquals(v2, "1.0.2#h2",);
-      const v3 = await incrementVersion(v2, path, "h3", [],);
+      const v3 = await updateProjectVersion({
+        currentVersion: v2,
+        denoJsonPath: path,
+        buildHash: "h3",
+        versionPaths: [],
+      },);
       assertEquals(v3, "1.0.3#h3",);
     } finally {
       await cleanup();

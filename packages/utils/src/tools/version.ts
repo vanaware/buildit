@@ -51,31 +51,6 @@ async function syncWorkspaceDir(
 }
 
 /**
- * Incrementa a versão patch e sincroniza workspaces e arquivos de versão.
- * @param version Versão atual
- * @param denoJsoncPath Caminho para o deno.jsonc raiz
- * @param buildHash Hash opcional do build
- * @param versionPaths Caminhos opcionais de version.ts para atualizar
- * @returns Nova versão incrementada
- */
-export async function incrementVersion(
-  version: string,
-  denoJsoncPath: string,
-  buildHash?: string,
-  versionPaths?: string[],
-): Promise<string> {
-  const baseDir = dirname(denoJsoncPath,);
-  return await updateProjectVersion({
-    currentVersion: version,
-    denoJsonPath: denoJsoncPath,
-    baseDir,
-    buildHash,
-    versionPaths,
-    forcepackagesversion: true,
-  },);
-}
-
-/**
  * Caminhos padrão onde o arquivo version.ts é sincronizado.
  */
 export const DEFAULT_VERSION_PATHS: string[] = [
