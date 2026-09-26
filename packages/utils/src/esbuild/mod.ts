@@ -3,7 +3,7 @@
 // ============================================================================
 export { esBuild, } from "./engine.ts";
 
-export { CONFIGURACOES_PADRAO as esbuildExample, } from "./config.ts";
+export { ESBUILD_CONFIG_EXAMPLE as esbuildExample, } from "./config.ts";
 
 export type {
   EsbuildGlobalConfig,

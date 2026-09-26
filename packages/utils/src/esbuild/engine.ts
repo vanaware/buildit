@@ -150,7 +150,6 @@ export async function processTarget(
     ...config,
     srcdir: resolveWithBase(config.srcdir, baseDir,),
     distdir: resolveWithBase(config.distdir, baseDir,),
-    publicdir: resolveWithBase(config.publicdir, baseDir,),
   };
 
   // 🔥 VALIDAÇÃO FAIL-FAST: Verifica configuração ANTES de qualquer operação

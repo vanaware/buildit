@@ -59,7 +59,6 @@ export async function processBundleTarget(
     ...config,
     srcdir: resolveWithBase(config.srcdir, baseDir,),
     distdir: resolveWithBase(config.distdir, baseDir,),
-    publicdir: resolveWithBase(config.publicdir, baseDir,),
   };
 
   validateTargetConfig(targetName, resolvedConfig,);

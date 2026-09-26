@@ -5,7 +5,7 @@
 
 export { watchEngine, } from "./engine.ts";
 
-export { CONFIGURACOES_PADRAO_WATCH as watchExample, } from "./config.ts";
+export { WATCH_CONFIG_EXAMPLE as watchExample, } from "./config.ts";
 
 export type {
   WatchHandle,

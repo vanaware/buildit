@@ -180,7 +180,6 @@ export async function watchEngine(
     ...targetConfig,
     srcdir: resolveWithBase(targetConfig.srcdir, baseDir,),
     distdir: resolveWithBase(targetConfig.distdir, baseDir,),
-    publicdir: resolveWithBase(targetConfig.publicdir, baseDir,),
   };
 
   validateTargetConfig(targetName, resolvedConfig,);

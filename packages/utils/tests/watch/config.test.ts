@@ -3,9 +3,7 @@
 import { assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
-import {
-  carregarConfigWatch,
-} from "../../src/watch/config.ts";
+import { carregarConfigWatch, } from "../../src/watch/config.ts";
 
 describe("watch/config", () => {
   it("lança erro caso o arquivo de config não exista", async () => {

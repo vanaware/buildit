@@ -9,7 +9,6 @@ import {
   mapearExtensao,
   normalizarCaminho,
 } from "../../src/export/formatter.ts";
-import { EXTENSOES_PADRAO, } from "../../src/tools/interfaces.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
 // Helper para criar config customizada em testes

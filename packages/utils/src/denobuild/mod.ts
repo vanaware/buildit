@@ -19,7 +19,7 @@
 
 export { denoBuild, } from "./engine.ts";
 
-export { CONFIGURACOES_PADRAO as denobuildExample, } from "./config.ts";
+export { DENOBUILD_CONFIG_EXAMPLE as denobuildExample, } from "./config.ts";
 
 export type {
   DenoBuildOptions,

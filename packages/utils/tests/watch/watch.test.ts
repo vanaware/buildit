@@ -12,10 +12,11 @@ import type { WatchGlobalConfig, } from "../../src/tools/interfaces.ts";
 describe("carregarConfigWatch", () => {
   it("deve retornar erro quando arquivo não for encontrado", async () => {
     await assertRejects(
-      () => carregarConfigWatch(
-        "arquivo_inexistente.jsonc",
-        "/tmp",
-      ),
+      () =>
+        carregarConfigWatch(
+          "arquivo_inexistente.jsonc",
+          "/tmp",
+        ),
       Error,
       "não encontrado",
     );

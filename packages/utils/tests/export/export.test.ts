@@ -124,20 +124,20 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
   });
 });
 
-  describe("parseArgs", () => {
-    it("deve retornar todos os modos com default !== false quando sem argumentos", () => {
-      const modos = parseArgs([], EXPORT_CONFIG_EXAMPLE,);
-      assertEquals(modos.includes("ui",), true,);
-      assertEquals(modos.includes("docs",), false,); // docs tem default: false
-    });
-
-    it("deve retornar apenas o modo solicitado via CLI", () => {
-      const modos = parseArgs(["docs",], EXPORT_CONFIG_EXAMPLE,);
-      assertEquals(modos, ["docs",],);
-    });
-
-    it("deve ignorar argumentos desconhecidos", () => {
-      const modos = parseArgs(["desconhecido", "ui",], EXPORT_CONFIG_EXAMPLE,);
-      assertEquals(modos, ["ui",],);
-    });
+describe("parseArgs", () => {
+  it("deve retornar todos os modos com default !== false quando sem argumentos", () => {
+    const modos = parseArgs([], EXPORT_CONFIG_EXAMPLE,);
+    assertEquals(modos.includes("ui",), true,);
+    assertEquals(modos.includes("docs",), false,); // docs tem default: false
   });
+
+  it("deve retornar apenas o modo solicitado via CLI", () => {
+    const modos = parseArgs(["docs",], EXPORT_CONFIG_EXAMPLE,);
+    assertEquals(modos, ["docs",],);
+  });
+
+  it("deve ignorar argumentos desconhecidos", () => {
+    const modos = parseArgs(["desconhecido", "ui",], EXPORT_CONFIG_EXAMPLE,);
+    assertEquals(modos, ["ui",],);
+  });
+});

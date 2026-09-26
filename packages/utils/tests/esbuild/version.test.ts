@@ -1,7 +1,12 @@
 /// <reference lib="deno.ns" />
 
 import { describe, it, } from "@std/testing/bdd";
-import { assertEquals, assertStringIncludes, assertThrows, assertRejects, } from "@std/assert";
+import {
+  assertEquals,
+  assertRejects,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import {
   extractVersion,
   formatVersion,
@@ -149,7 +154,7 @@ describe("readProjectVersion (integração)", () => {
     await assertRejects(
       () => readProjectVersion("/caminho/que/nao/existe/deno.jsonc",),
       Error,
-      'obrigatório não encontrado',
+      "obrigatório não encontrado",
     );
   });
   it("lança erro quando versão não está no arquivo", async () => {
@@ -162,7 +167,7 @@ describe("readProjectVersion (integração)", () => {
       await assertRejects(
         () => readProjectVersion(path,),
         Error,
-        'obrigatório não encontrado',
+        "obrigatório não encontrado",
       );
     } finally {
       await cleanup();
