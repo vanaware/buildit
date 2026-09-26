@@ -40,9 +40,8 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `default` | `boolean` | `true` | Se `true`, roda automaticamente quando nenhum alvo específico é passado na CLI. |
 | `srcdir` | `string` | `"."` | Diretório base dos fontes do alvo (relativo à raiz de execução). |
 | `distdir` | `string` | `"."` | Diretório de destino final onde os artefatos compilados são gravados. |
-| `publicdir` | `string` | `undefined` | Diretório de ativos estáticos copiados recursivamente para `distdir`. |
-| `indexHtml` | `boolean` | `false` | Se `true`, busca o `index.html` em `srcdir` e copia para `distdir`. |
-| `clean` | `string[]` | `[]` | Lista de caminhos para limpar antes do build (relativos a `distdir`). Use `["."]` para esvaziar todo o diretório. |
+| `clean` | `CleanConfig \| string[]` | `[]` | Regras de limpeza pré-build. Use `["*"]` para esvaziar todo o diretório. |
+| `copyFiles` | `CopyFileConfig[]` | `[]` | Lista de regras para cópia de arquivos estáticos para o `distdir`. |
 
 #### ⚙️ Opções do Compilador esbuild
 
@@ -93,8 +92,10 @@ O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. 
       "default": true,
       "srcdir": "packages/ui/src",
       "distdir": "packages/server/build/dist",
-      "publicdir": "packages/ui/public",
-      "indexHtml": true,
+      "copyFiles": [
+        { "basedir": "packages/ui/public" },
+        { "basedir": "packages/ui/src", "includes": ["index.html"] }
+      ],
       "entryPoints": ["main.tsx"],
       "platform": "browser",
       "format": "esm",
@@ -126,9 +127,8 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | :--- | :--- | :--- |
 | `srcdir` | `string` | Diretório raiz do código-fonte. |
 | `distdir` | `string` | Diretório de destino dos arquivos compilados. |
-| `publicdir` | `string` | Diretório estático copiado para `distdir`. |
-| `indexHtml` | `boolean` | Copia `index.html` de `srcdir` para `distdir`. |
-| `clean` | `string[]` | Diretórios a limpar antes do build. |
+| `clean` | `CleanConfig \| string[]` | Regras de limpeza pré-build. |
+| `copyFiles` | `CopyFileConfig[]` | Regras para cópia de arquivos estáticos. |
 | `entryPoints` | `string[]` | Arquivos TypeScript/JavaScript de entrada. |
 | `format` | `"esm" \| "cjs" \| "iife"` | Formato do bundle. |
 | `platform` | `"browser" \| "deno"` | Plataforma alvo. |

@@ -9,7 +9,7 @@ Welcome to the BuildIt project! This file (`AGENTS.md`) is automatically injecte
 - **JSR Publication**: The repository publishes the core library to JSR:
   - `@vanaware/buildit` (in `packages/utils/`): A suite of utilities for build orchestration, bundling, and AI context export.
   - Publishing is automated via GitHub Actions in `.github/workflows/jsr-publish.yml`. All published packages MUST strictly follow the guidelines in `docs/publish-jsr-rules.md` (complete JSDoc, valid `deno doc --lint`, descriptive README with executable examples).
-- **Bundling**: We use Deno's native (and unstable) bundler via the `esbuild.ts` script or esbuild (`deno task esbuild`). This script parses typescript and generates the final output exclusively in the `packages/server/build/dist/` directory.
+- **Bundling**: We primarily use `esbuild` for production bundling via the `esbuild.ts` orchestrator (`deno task esbuild`). We also support Deno's native (unstable) bundler via `denobuild.ts`. The final output is generated exclusively in the `packages/server/build/dist/` directory.
 
 ## 2. Framework & State Management
 - **Preact**: Use Preact (not React). The configuration in `packages/ui/deno.jsonc` maps `jsx` to `preact`.

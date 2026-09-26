@@ -493,6 +493,16 @@ export async function copyTargetFiles(
  * @param appVersion Versão da aplicação para injeção no manifest
  * @param generalBaseDir Diretório base geral da execução (padrão ".")
  * @param distDir Diretório de saída opcional já resolvido
+ *
+ * @example
+ * ```typescript
+ * await copyStaticFiles({
+ *   copyFiles: [
+ *     { basedir: "public", includes: ["**\/*"] },
+ *     { basedir: "src", includes: ["index.html"] }
+ *   ]
+ * }, "1.0.0", ".", "dist");
+ * ```
  */
 export async function copyStaticFiles(
   config: TargetConfig | DenoBundleTargetConfig | WatchTargetConfig,

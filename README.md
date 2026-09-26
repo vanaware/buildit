@@ -19,7 +19,7 @@ BuildIt consolidates four specialized developer tools, all driven by declarative
 ### 1. ⚡ `esbuild` Pipeline (`esbuild.ts` & `esbuild.jsonc`)
 - **Lightning-Fast Production Bundling:** Uses esbuild with `@deno/esbuild-plugin` to resolve remote imports, NPM specifiers, and JSR packages.
 - **Declarative Targets:** Define multiple build targets in `esbuild.jsonc` (e.g., `ui`, `server`, `standalone`).
-- **Automated Asset Management:** Cleans distribution directories, copies static files from `public/`, and automatically injects semantic release versions and hash timestamps into `manifest.json` and generated scripts.
+- **Automated Asset Management:** Cleans distribution directories and copies static files via `copyFiles` (including automatic version injection into `manifest.json`).
 
 ### 2. 👀 `watch` Engine (`watch.ts` & `watch.jsonc`)
 - **Real-Time Continuous Development:** Powered by `esbuild.context` for sub-millisecond incremental rebuilds during development.
@@ -83,15 +83,15 @@ import { exportEngine } from "jsr:@vanaware/buildit/export";
 |---|---|
 | `@vanaware/buildit` | Root module re-exporting core utilities and shared interfaces |
 | `@vanaware/buildit/esbuild` | esbuild production bundling engine and configuration loaders |
-| `@vanaware/buildit/esbuild/cli` | Command-line runner for the esbuild pipeline |
+| `@vanaware/buildit/cli/esbuild` | Command-line runner for the esbuild pipeline |
 | `@vanaware/buildit/watch` | Continuous development watch engine with `esbuild.context` |
-| `@vanaware/buildit/watch/cli` | Command-line runner for continuous watch and live rebuilds |
+| `@vanaware/buildit/cli/watch` | Command-line runner for continuous watch and live rebuilds |
 | `@vanaware/buildit/denobuild` | Native `Deno.bundle` engine and options resolver |
-| `@vanaware/buildit/denobuild/cli` | Command-line runner for denobuild |
+| `@vanaware/buildit/cli/denobuild` | Command-line runner for denobuild |
 | `@vanaware/buildit/export` | Core walker, markdown formatter, and snapshot engine |
-| `@vanaware/buildit/export/cli` | Command-line runner for AI context exports |
-| `@vanaware/buildit/sanitize-version` | Utility for strict SemVer normalization |
-| `@vanaware/buildit/tag-version` | Automated Git tag and release orchestrator |
+| `@vanaware/buildit/cli/export` | Command-line runner for AI context exports |
+| `@vanaware/buildit/cli/sanitize-version` | Utility for strict SemVer normalization |
+| `@vanaware/buildit/cli/tag-version` | Automated Git tag and release orchestrator |
 
 ---
 

@@ -21,51 +21,51 @@ deno add jsr:@vanaware/buildit
 `buildit` includes CLI runners for all four utilities. You can execute them directly via `deno run` or via JSR:
 
 ### ⚡ esbuild CLI (Production Bundling)
-
-```bash
-# Run all default targets defined in esbuild.jsonc
-deno run -A jsr:@vanaware/buildit/esbuild/cli
-
-# Run specific targets and skip version bump
-deno run -A jsr:@vanaware/buildit/esbuild/cli ui --noversion
-```
-
-### 👀 Watch CLI (Continuous Development)
-
-```bash
-# Start watching targets defined in watch.jsonc
-deno run -A jsr:@vanaware/buildit/watch/cli
-
-# Watch a specific target
-deno run -A jsr:@vanaware/buildit/watch/cli ui
-```
-
-### 📦 Deno.bundle CLI (Native Packaging)
-
-```bash
-# Run with default denobuild.jsonc
-deno run --unstable-bundle -A jsr:@vanaware/buildit/denobuild/cli ui
-```
-
-### 📝 Export CLI (AI Context Snapshots)
-
-```bash
-# Export all default snapshots defined in export.jsonc
-deno run -A jsr:@vanaware/buildit/export/cli
-
-# Export specific snapshots
-deno run -A jsr:@vanaware/buildit/export/cli ui docs
-```
-
-### 🧼 Versioning CLI
-
-```bash
-# Sanitize deno.jsonc version to strict MAJOR.MINOR.PATCH
-deno run -A jsr:@vanaware/buildit/sanitize-version/cli
-
-# Create and push a new git tag based on current version
-deno run -A jsr:@vanaware/buildit/tag-version/cli
-```
+ 
+ ```bash
+ # Run all default targets defined in esbuild.jsonc
+ deno run -A jsr:@vanaware/buildit/cli/esbuild
+ 
+ # Run specific targets and skip version bump
+ deno run -A jsr:@vanaware/buildit/cli/esbuild ui --noversion
+ ```
+ 
+ ### 👀 Watch CLI (Continuous Development)
+ 
+ ```bash
+ # Start watching targets defined in watch.jsonc
+ deno run -A jsr:@vanaware/buildit/cli/watch
+ 
+ # Watch a specific target
+ deno run -A jsr:@vanaware/buildit/cli/watch ui
+ ```
+ 
+ ### 📦 Deno.bundle CLI (Native Packaging)
+ 
+ ```bash
+ # Run with default denobuild.jsonc
+ deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui
+ ```
+ 
+ ### 📝 Export CLI (AI Context Snapshots)
+ 
+ ```bash
+ # Export all default snapshots defined in export.jsonc
+ deno run -A jsr:@vanaware/buildit/cli/export
+ 
+ # Export specific snapshots
+ deno run -A jsr:@vanaware/buildit/cli/export ui docs
+ ```
+ 
+ ### 🧼 Versioning CLI
+ 
+ ```bash
+ # Sanitize deno.jsonc version to strict MAJOR.MINOR.PATCH
+ deno run -A jsr:@vanaware/buildit/cli/sanitize-version
+ 
+ # Create and push a new git tag based on current version
+ deno run -A jsr:@vanaware/buildit/cli/tag-version
+ ```
 
 ---
 
@@ -111,23 +111,30 @@ import { exportEngine, } from "jsr:@vanaware/buildit/export";
 await esBuild({
   config: {
     ui: {
-      entryPoints: ["packages/ui/src/main.tsx",],
+      entryPoints: ["packages/ui/src/main.tsx"],
       distdir: "dist",
+      clean: ["*"],
+      copyFiles: [
+        { basedir: "packages/ui/public" }
+      ]
     },
   },
   noversion: true,
-},);
+});
 
 // 2. Start continuous watch mode
 const handles = await watchEngine({
   config: {
     ui: {
-      entryPoints: ["packages/ui/src/main.tsx",],
+      entryPoints: ["packages/ui/src/main.tsx"],
       distdir: "dist",
       sourcemap: "inline",
+      copyFiles: [
+        { basedir: "packages/ui/public" }
+      ]
     },
   },
-},);
+});
 
 // 3. Generate AI context snapshot
 await exportEngine({
@@ -149,17 +156,15 @@ await exportEngine({
 | :----------------------- | :---------------------------------------------------------------------------------- |
 | `.`                      | Root entrypoint with shared utilities, version sync, and target resolution helpers. |
 | `./esbuild`              | esbuild bundling engine, static asset copier, and manifest stampers.                |
-| `./esbuild/cli`          | CLI runner for production esbuild pipelines.                                        |
+| `./cli/esbuild`          | CLI runner for production esbuild pipelines.                                        |
 | `./watch`                | Continuous development watch engine with `esbuild.context`.                         |
-| `./watch/cli`            | CLI runner for continuous watch and live rebuilds.                                  |
+| `./cli/watch`            | CLI runner for continuous watch and live rebuilds.                                  |
 | `./denobuild`            | Native `Deno.bundle` packaging engine.                                              |
-| `./denobuild/cli`        | CLI runner for native `Deno.bundle`.                                                |
+| `./cli/denobuild`        | CLI runner for native `Deno.bundle`.                                                |
 | `./export`               | LLM context generator, path scanner, and Markdown formatter.                        |
-| `./export/cli`           | CLI runner for AI context exports.                                                  |
-| `./sanitize-version`     | Utility for version normalization.                                                  |
-| `./sanitize-version/cli` | CLI runner for version sanitization.                                                |
-| `./tag-version`          | Automated Git tag and release engine.                                               |
-| `./tag-version/cli`      | CLI runner for automated tagging.                                                   |
+| `./cli/export`           | CLI runner for AI context exports.                                                  |
+| `./cli/sanitize-version` | CLI runner for version sanitization.                                                |
+| `./cli/tag-version`      | CLI runner for automated tagging.                                                   |
 
 ## License
 

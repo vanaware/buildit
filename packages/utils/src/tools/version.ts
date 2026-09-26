@@ -183,6 +183,14 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
  *
  * @param options Opções de sincronização
  * @returns Versão sincronizada
+ *
+ * @example
+ * ```typescript
+ * await syncVersion({
+ *   versionPaths: ["src/version.ts"],
+ *   forcepackagesversion: true
+ * });
+ * ```
  */
 export async function syncVersion(
   options: VersionUpdateOptions = {},
@@ -245,6 +253,14 @@ export async function syncVersion(
  *
  * @param options Opções de atualização
  * @returns Versão final aplicada
+ *
+ * @example
+ * ```typescript
+ * const newVersion = await updateProjectVersion({
+ *   noversion: false,
+ *   buildHash: "abc1234"
+ * });
+ * ```
  */
 export async function updateProjectVersion(
   options: VersionUpdateOptions = {},

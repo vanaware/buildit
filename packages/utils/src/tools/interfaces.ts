@@ -70,33 +70,60 @@ export type EsbuildLoader =
 
 /** Configuração de um conjunto de arquivos estáticos a serem copiados. */
 export interface CopyFileConfig {
+  /**
+   * Diretório base opcional. Se informado, os caminhos em includes e excludes
+   * são relativos a este diretório e a estrutura de pastas é preservada no destino.
+   * Se não informado, os arquivos são copiados diretamente para o distdir raiz.
+   */
   basedir?: string;
+  /** Padrões glob de inclusão (ex: ["**\/*.html", "assets\/**\/*"]). */
   includes?: string[];
+  /** Padrões glob de exclusão. */
   excludes?: string[];
 }
 
 /** Configuração de limpeza prévia de arquivos e pastas no diretório de saída. */
 export interface CleanConfig {
+  /** Padrões glob de arquivos/pastas para remover. Use ["*"] para limpar tudo. */
   includes?: string[];
+  /** Padrões glob para preservar durante a limpeza. */
   excludes?: string[];
 }
 
 /** Configuração de um alvo de build (esbuild). */
 export interface TargetConfig {
+  /** Diretório base dos fontes (padrão: "."). */
   srcdir?: string;
+  /** Diretório de saída final (padrão: "."). */
   distdir?: string;
+  /**
+   * Regras de limpeza pré-build.
+   * Pode ser um objeto { includes, excludes } ou um array simples de globs.
+   */
   clean?: CleanConfig | string[];
+  /** Lista de conjuntos de regras para cópia de arquivos estáticos. */
   copyFiles?: CopyFileConfig[];
+  /** Se deve ser executado automaticamente quando nenhum alvo é passado via CLI. */
   default?: boolean;
+  /** Arquivos de entrada relativos ao srcdir. */
   entryPoints: string[];
+  /** Plataforma alvo (browser, node ou neutral). */
   platform?: EsbuildPlatform;
+  /** Formato de saída (esm, iife ou cjs). */
   format?: EsbuildFormat;
+  /** Se deve agrupar dependências em um único arquivo. */
   bundle?: boolean;
+  /** Se deve minificar o código. */
   minify?: boolean;
+  /** Estratégia de sourcemap. */
   sourcemap?: EsbuildSourcemap;
+  /** Transformação JSX (automatic, transform ou preserve). */
   jsx?: EsbuildJsx;
+  /** Pacote runtime para JSX automático (ex: "preact"). */
   jsxImportSource?: string;
+  /** Condições de resolução de exports. */
   conditions?: string[];
+  /** Injeção de constantes globais (ex: { "DEBUG": "true" }). */
   define?: Record<string, string>;
   drop?: EsbuildDrop[];
   external?: string[];

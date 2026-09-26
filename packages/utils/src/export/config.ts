@@ -1,7 +1,6 @@
 /**
  * @module @vanaware/buildit/export/config
- * @description Carregamento de configurações externas a partir de `export.jsonc`
- * e fallback para configurações padrão do projeto BuildIt.
+ * @description Carregamento de configurações externas a partir de `export.jsonc`.
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";

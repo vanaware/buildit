@@ -1,7 +1,6 @@
 /**
  * @module @vanaware/buildit/denobuild/config
- * @description Carregamento de configurações externas a partir de `denobuild.jsonc`
- * e fallback para configurações padrão do projeto BuildIt.
+ * @description Carregamento de configurações externas a partir de `denobuild.jsonc`.
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";

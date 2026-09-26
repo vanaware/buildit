@@ -155,3 +155,8 @@ Explicação:
 - [x] Transformação de fallbacks silenciosos em exemplos obrigatórios: remoção de configurações padrão embutidas nos motores (`esbuild`, `denobuild`, `watch`, `export`) em favor de erros amigáveis com exemplos de configuração.
 - [x] Renomeação de constantes globais de configuração para sufixo `_EXAMPLE` e obrigatoriedade do campo `version` no `deno.jsonc`.
 - [x] Atualização completa da suíte de testes (48 testes) para garantir compatibilidade com o novo comportamento fail-fast e inclusão de arquivos de configuração em mocks temporários.
+- [x] Revisão e refinamento total da documentação:
+  - `README.md` (raiz) e `packages/utils/README.md` atualizados com os novos caminhos de exportação JSR (`@vanaware/buildit/cli/*`).
+  - `docs/api.md` atualizado: remoção de campos legados (`publicdir`, `indexHtml`) e inclusão de `copyFiles`.
+  - JSDoc polido em todo o código fonte, incluindo exemplos práticos para as novas interfaces e motores.
+  - `AGENTS.md` sincronizado com a arquitetura moderna de bundling e assets.
