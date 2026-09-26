@@ -60,14 +60,30 @@
     </script>
 
     <div id="app">
-      <main class="responsive center-align">
-        <div class="space"></div>
-        <h5>Carregando aplicação...</h5>
+      <main class="responsive center-align" style="margin-top: 25vh;">
         <progress class="circle"></progress>
+        <p class="secondary-text margin-top-small">Carregando interface...</p>
       </main>
     </div>
 
     <!-- Arquivo gerado pelo esbuild -->
-    <script type="module" src="./main.js?v=3"></script>
+    <script type="module" src="./main.js"></script>
+    <script>
+      // Fallback para caso o script falhe ao carregar
+      window.addEventListener("error", (e) => {
+        const app = document.getElementById("app");
+        if (app && app.querySelector("progress")) {
+          app.innerHTML = `
+            <main class="responsive center-align padding" style="margin-top: 20vh;">
+              <i class="error-text extra">error</i>
+              <h5 class="bold error-text">Falha ao carregar o script principal</h5>
+              <p class="small-text secondary-text font-monospace">${e.message || "Erro de rede ao baixar main.js"}</p>
+              <button class="button primary margin-top" onclick="window.location.reload(true)">Recarregar</button>
+            </main>
+          `;
+        }
+      });
+    </script>
   </body>
 </html>
+

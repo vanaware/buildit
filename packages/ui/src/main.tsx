@@ -28,4 +28,18 @@ const App = () => {
   );
 };
 
-render(<App />, document.getElementById("app",)!,);
+const container = document.getElementById("app",);
+if (container) {
+  container.innerHTML = "";
+  try {
+    render(<App />, container,);
+  } catch (err) {
+    console.error("Erro ao renderizar App:", err,);
+    container.innerHTML = `
+      <div class="padding center-align surface-error-container round margin">
+        <h5 class="bold error-text">Erro ao inicializar a interface</h5>
+        <p class="small-text font-monospace">${err instanceof Error ? err.message : String(err,)}</p>
+      </div>
+    `;
+  }
+}

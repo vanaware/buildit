@@ -7,10 +7,6 @@
       "type": "string",
       "description": "URL do JSON Schema do exportador."
     },
-    "version": {
-      "type": "string",
-      "description": "Versão semântica da configuração."
-    },
     "projeto": {
       "type": "string",
       "description": "Nome global do projeto exibido no cabeçalho do contexto exportado (padrão: BuildIt)."

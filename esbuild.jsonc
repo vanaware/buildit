@@ -1,6 +1,5 @@
 {
   "$schema": "./packages/utils/schema/esbuild.json",
-  "version": "0.0.1",
   "versionPaths": [
     "packages/utils/src/version.ts",
     "packages/ui/src/version.ts"

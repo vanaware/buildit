@@ -11,7 +11,7 @@ export const Header = () => {
   ];
 
   return (
-    <header class="surface-container-low border bottom no-margin">
+    <header class="surface-container-low border bottom small-padding">
       <nav class="responsive">
         <div class="circle primary-container middle center-align">
           <i class="primary-text">
@@ -19,17 +19,17 @@ export const Header = () => {
           </i>
         </div>
         <div class="max">
-          <div class="row middle no-space">
+          <div class="row middle wrap">
             <h5 class="no-margin bold">
               BuildIt
             </h5>
-            <span class="chip small primary-container margin-left">
+            <span class="chip small primary-container">
               v{APP_VERSION}
             </span>
-            <span class="chip small tertiary-container margin-left none s-inline-block">
+            <span class="chip small tertiary-container m l">
               Deno 2.x
             </span>
-            <span class="chip small secondary-container margin-left none m-inline-block">
+            <span class="chip small secondary-container l">
               JSR
             </span>
           </div>

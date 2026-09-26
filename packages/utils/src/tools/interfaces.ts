@@ -209,7 +209,6 @@ export interface WatchGlobalConfig {
 
 export interface WatchConfigFile {
   $schema?: string;
-  version?: string;
   targets?: WatchGlobalConfig;
   [key: string]: unknown;
 }
@@ -280,7 +279,6 @@ export interface DenoBundleTargetConfig {
 
 export interface DenoBuildConfigFile {
   $schema?: string;
-  version?: string;
   targets?: DenoBundleGlobalConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
@@ -319,8 +317,6 @@ export interface DenoBuildOptions {
 export interface ExportConfigFile {
   /** Schema JSON opcional. */
   $schema?: string;
-  /** Versão do arquivo de configuração. */
-  version?: string;
   /** Nome global do projeto (padrão: "BuildIt"). */
   projeto?: string;
   /** Bloco global de cabeçalho customizado para IA. */
@@ -367,7 +363,6 @@ export interface VersionUpdateOptions {
 
 export interface EsbuildConfigFile {
   $schema?: string;
-  version?: string;
   targets?: GlobalTargetConfig;
   versionPaths?: string[];
   forcepackagesversion?: boolean;

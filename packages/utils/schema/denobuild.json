@@ -8,10 +8,6 @@
       "type": "string",
       "description": "URL do JSON Schema para validação e autocomplete no editor."
     },
-    "version": {
-      "type": "string",
-      "description": "Versão semântica do projeto."
-    },
     "versionPaths": {
       "type": "array",
       "items": { "type": "string" },

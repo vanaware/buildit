@@ -228,7 +228,6 @@ export const CLI_COMMANDS: CliCommandItem[] = [
 export const CONFIG_SNIPPETS: Record<string, string> = {
   "esbuild.jsonc": `{
   "$schema": "jsr:@vanaware/buildit/schema/esbuild.json",
-  "version": "1.0.0",
   "versionPaths": [
     "src/version.ts"
   ],
@@ -259,7 +258,6 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
 
   "watch.jsonc": `{
   "$schema": "jsr:@vanaware/buildit/schema/watch.json",
-  "version": "1.0.0",
   "targets": {
     "ui": {
       "default": true,
@@ -310,7 +308,6 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
 
   "denobuild.jsonc": `{
   "$schema": "jsr:@vanaware/buildit/schema/denobuild.json",
-  "version": "1.0.0",
   "targets": {
     "app": {
       "mode": "build",
@@ -326,6 +323,7 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
   }
 }`,
 };
+
 
 export const API_CODE_SNIPPETS = {
   esbuild: `import { esBuild } from "jsr:@vanaware/buildit/esbuild";

@@ -161,3 +161,4 @@ Explicação:
   - JSDoc polido em todo o código fonte, incluindo exemplos práticos para as novas interfaces e motores.
   - `AGENTS.md` sincronizado com a arquitetura moderna de bundling e assets.
 - [x] Simplificação radical da UI: remoção de tentativa de simulação ou execução de esbuild no navegador. Nova interface limpa baseada em Preact + BeerCSS + `@preact/signals` focada exclusivamente em documentação interativa, catálogo de ferramentas, referência CLI com cópia direta, visualizador de configurações (.jsonc) e exemplos de API Deno.
+- [x] Remoção do campo `version` redundante dos schemas JSON (`esbuild.json`, `watch.json`, `denobuild.json`, `export.json`) e das interfaces TypeScript correspondentes (`EsbuildConfigFile`, `WatchConfigFile`, `DenoBuildConfigFile`, `ExportConfigFile`), centralizando a versão do projeto unicamente no `deno.jsonc` raiz.

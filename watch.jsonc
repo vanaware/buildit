@@ -1,6 +1,5 @@
 {
   "$schema": "./packages/utils/schema/watch.json",
-  "version": "0.0.1",
   "targets": {
     "ui": {
       "default": true,

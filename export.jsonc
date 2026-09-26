@@ -1,6 +1,5 @@
 {
   "$schema": "./packages/utils/schema/export.json",
-  "version": "0.0.1",
   "projeto": "BuildIt",
   "modos": {
     "ui": {
