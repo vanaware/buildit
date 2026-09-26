@@ -77,7 +77,8 @@ describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
     });
 
     it("sobe a árvore de diretórios a partir de subpastas", () => {
-      const found = findDenoFile("packages/utils/src",);
+      const startDir = import.meta.dirname ?? ".";
+      const found = findDenoFile(startDir,);
       assertNotEquals(found, null,);
     });
 
