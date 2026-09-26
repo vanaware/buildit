@@ -1,10 +1,10 @@
 {
   "$schema": "./packages/utils/schema/esbuild.json",
-  "version": "0.3.7",
+  "version": "0.0.1",
   "versionPaths": [
-    "packages/utils/src/version.ts",
-    "packages/ui/src/version.ts"
+    "packages/utils/src/version.ts"
   ],
+  "forcepackagesversion": true,
   "targets": {
     "ui": {
       "default": true,

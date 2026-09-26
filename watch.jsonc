@@ -1,6 +1,6 @@
 {
   "$schema": "./packages/utils/schema/watch.json",
-  "version": "0.3.7",
+  "version": "0.0.1",
   "targets": {
     "ui": {
       "default": true,
@@ -32,7 +32,7 @@
       "jsxImportSource": "preact",
       "write": true,
       "legalComments": "eof",
-      "outfile": "app.js",
+      "outfile": "main.js",
       "banner": {
         "js": "/*!\n * BuildIt v__APP_VERSION__ [DEV WATCH]\n * (c) 2026 Vanaware - MIT License\n */\n"
       }

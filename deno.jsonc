@@ -1,5 +1,5 @@
 {
-  "version": "0.3.24#muif0a9s",
+  "version": "0.3.30#muippegu",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",

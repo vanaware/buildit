@@ -2,6 +2,7 @@ import { serveDir, } from "@std/http/file-server";
 import { fromFileUrl, } from "@std/path";
 
 const rawPort = Deno.env.get("PORT",);
+console.log(`Env PORT: ${rawPort}`,);
 const port = rawPort ? Number(rawPort,) : 3000;
 
 const fsRoot = (() => {
