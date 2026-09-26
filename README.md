@@ -71,24 +71,22 @@ For complete API and configuration details, see the **[API and Configuration Ref
 ### Installation & Imports
 
 ```ts
-import { esBuild } from "jsr:@vanaware/buildit/esbuild";
-import { watchEngine } from "jsr:@vanaware/buildit/watch";
-import { denoBuild } from "jsr:@vanaware/buildit/denobuild";
-import { exportEngine } from "jsr:@vanaware/buildit/export";
+import {
+  denoBuild,
+  esBuild,
+  exportEngine,
+  watchEngine,
+} from "jsr:@vanaware/buildit";
 ```
 
 ### JSR Export Map
 
 | Specifier | Description |
 |---|---|
-| `@vanaware/buildit` | Root module re-exporting core utilities and shared interfaces |
-| `@vanaware/buildit/esbuild` | esbuild production bundling engine and configuration loaders |
+| `@vanaware/buildit` | Unified root module exporting all programmatic engines (`esBuild`, `watchEngine`, `denoBuild`, `exportEngine`, `sanitizeVersionEngine`, `tagVersionEngine`) and shared interfaces |
 | `@vanaware/buildit/cli/esbuild` | Command-line runner for the esbuild pipeline |
-| `@vanaware/buildit/watch` | Continuous development watch engine with `esbuild.context` |
 | `@vanaware/buildit/cli/watch` | Command-line runner for continuous watch and live rebuilds |
-| `@vanaware/buildit/denobuild` | Native `Deno.bundle` engine and options resolver |
 | `@vanaware/buildit/cli/denobuild` | Command-line runner for denobuild |
-| `@vanaware/buildit/export` | Core walker, markdown formatter, and snapshot engine |
 | `@vanaware/buildit/cli/export` | Command-line runner for AI context exports |
 | `@vanaware/buildit/cli/sanitize-version` | Utility for strict SemVer normalization |
 | `@vanaware/buildit/cli/tag-version` | Automated Git tag and release orchestrator |

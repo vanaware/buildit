@@ -24,18 +24,18 @@ export const AppDashboard = () => {
       {activeTab.value === "overview" && (
         <section class="space-y">
           <article class="border padding surface-container-low round">
-            <div class="row middle gap wrap">
-              <div class="circle large primary-container center-align middle">
+            <div class="row wrap">
+              <div class="circle large primary-container center-align">
                 <i class="primary-text extra">construction</i>
               </div>
-              <div class="max">
+              <div class="max wrap" style="min-width: 0; min-inline-size: 0;">
                 <h4 class="no-margin bold">BuildIt</h4>
-                <p class="secondary-text no-margin">
+                <p class="secondary-text no-margin wrap" style="overflow-wrap: anywhere; word-break: normal;">
                   Suite de utilitários em TypeScript para orquestração de compilação, bundling de alta
                   performance e exportação de contexto para Inteligência Artificial em ecossistemas Deno.
                 </p>
               </div>
-              <div class="row gap">
+              <div class="row wrap">
                 <a
                   class="button primary"
                   onClick={() => activeTab.value = "cli"}
@@ -67,7 +67,7 @@ export const AppDashboard = () => {
                     selectedTool.value = tool.id;
                     activeTab.value = "tools";
                   }}>
-                  <div class="row middle space">
+                  <div class="row space">
                     <i class={`${tool.colorClass} circle surface-variant`}>
                       {tool.icon}
                     </i>
@@ -75,11 +75,11 @@ export const AppDashboard = () => {
                   </div>
                   <div class="space"></div>
                   <h6 class="bold no-margin">{tool.name}</h6>
-                  <p class="small-text secondary-text max" style="flex: 1;">
+                  <p class="small-text secondary-text max wrap" style="flex: 1; overflow-wrap: anywhere;">
                     {tool.summary}
                   </p>
                   <div class="divider"></div>
-                  <div class="row middle space no-space">
+                  <div class="row space no-space">
                     <span class="small-text tertiary-text font-monospace">
                       {tool.configFile}
                     </span>
@@ -96,33 +96,33 @@ export const AppDashboard = () => {
             <h6 class="bold">Filosofia Deno &amp; Zero Bloat</h6>
             <div class="grid">
               <div class="s12 m4">
-                <div class="row middle gap">
+                <div class="row">
                   <i>speed</i>
                   <div>
                     <div class="bold">Sem node_modules</div>
-                    <div class="small-text secondary-text">
+                    <div class="small-text secondary-text wrap">
                       Dependências resolvidas via URLs, specifiers <code>npm:</code> e <code>jsr:</code>.
                     </div>
                   </div>
                 </div>
               </div>
               <div class="s12 m4">
-                <div class="row middle gap">
+                <div class="row">
                   <i>security</i>
                   <div>
                     <div class="bold">Fail-Fast &amp; Explícito</div>
-                    <div class="small-text secondary-text">
+                    <div class="small-text secondary-text wrap">
                       Erros didáticos com exemplos de configuração em vez de fallbacks silenciosos.
                     </div>
                   </div>
                 </div>
               </div>
               <div class="s12 m4">
-                <div class="row middle gap">
+                <div class="row">
                   <i>lock</i>
                   <div>
                     <div class="bold">Anti-Concorrência</div>
-                    <div class="small-text secondary-text">
+                    <div class="small-text secondary-text wrap">
                       Mecanismo de Lock em disco (PID) para evitar rebuilds concorrentes.
                     </div>
                   </div>
@@ -154,8 +154,8 @@ export const AppDashboard = () => {
           <div class="space"></div>
 
           <article class="border padding">
-            <div class="row middle space wrap">
-              <div class="row middle gap">
+            <div class="row space wrap">
+              <div class="row gap">
                 <i class={`${currentTool.colorClass} circle large surface-variant`}>
                   {currentTool.icon}
                 </i>
@@ -164,7 +164,7 @@ export const AppDashboard = () => {
                   <span class="chip small secondary-container">{currentTool.badge}</span>
                 </div>
               </div>
-              <div class="row middle gap">
+              <div class="row gap">
                 <span class="small-text secondary-text">Configuração:</span>
                 <button
                   type="button"
@@ -180,16 +180,16 @@ export const AppDashboard = () => {
             </div>
 
             <div class="space"></div>
-            <p class="secondary-text" style="font-size: 1.05rem; line-height: 1.5;">
+            <p class="secondary-text wrap" style="font-size: 1.05rem; line-height: 1.5; overflow-wrap: anywhere;">
               {currentTool.description}
             </p>
 
             <div class="divider margin"></div>
 
             <h6 class="bold">Comando CLI Canônico</h6>
-            <div class="field border middle padding surface-container-highest round row">
+            <div class="field border padding surface-container-highest round row">
               <i class="primary-text">terminal</i>
-              <code class="max font-monospace margin-left" style="user-select: all;">
+              <code class="max font-monospace margin-left" style="user-select: all; overflow-wrap: anywhere;">
                 {currentTool.cliCommand}
               </code>
               <button
@@ -207,7 +207,7 @@ export const AppDashboard = () => {
             <div class="grid">
               {currentTool.features.map((feat, idx) => (
                 <div key={idx} class="s12 m6">
-                  <div class="row middle gap no-margin padding-bottom">
+                  <div class="row gap no-margin padding-bottom">
                     <i class="green-text">check_circle</i>
                     <span class="small-text">{feat}</span>
                   </div>
@@ -223,7 +223,7 @@ export const AppDashboard = () => {
       {/* ================================================================== */}
       {activeTab.value === "cli" && (
         <section>
-          <div class="row middle space wrap gap">
+          <div class="row space wrap gap">
             <div>
               <h5 class="bold no-margin">Referência de Comandos CLI</h5>
               <div class="small-text secondary-text">
@@ -246,8 +246,8 @@ export const AppDashboard = () => {
           <div class="space-y">
             {filteredCliCommands.value.map((item) => (
               <article key={item.id} class="border padding surface-container-low round">
-                <div class="row middle space wrap">
-                  <div class="row middle gap">
+                <div class="row space wrap">
+                  <div class="row gap">
                     <span class="chip small outline">{item.tag}</span>
                     <h6 class="bold no-margin">{item.title}</h6>
                   </div>
@@ -260,13 +260,13 @@ export const AppDashboard = () => {
                   </button>
                 </div>
 
-                <p class="small-text secondary-text margin-top-small no-margin-bottom">
+                <p class="small-text secondary-text margin-top-small no-margin-bottom wrap" style="overflow-wrap: anywhere;">
                   {item.description}
                 </p>
 
-                <div class="field border padding surface-container-highest round margin-top-small row middle">
+                <div class="field border padding surface-container-highest round margin-top-small row">
                   <i class="primary-text">terminal</i>
-                  <code class="max font-monospace margin-left small-text" style="user-select: all;">
+                  <code class="max font-monospace margin-left small-text" style="user-select: all; overflow-wrap: anywhere;">
                     {item.command}
                   </code>
                 </div>
@@ -287,14 +287,14 @@ export const AppDashboard = () => {
       {/* ================================================================== */}
       {activeTab.value === "configs" && (
         <section>
-          <div class="row middle space wrap gap">
+          <div class="row space wrap gap">
             <div>
               <h5 class="bold no-margin">Arquivos de Configuração (.jsonc)</h5>
               <div class="small-text secondary-text">
                 O BuildIt utiliza JSON com comentários (JSONC) para uma declaração tipada e legível.
               </div>
             </div>
-            <div class="row gap">
+            <div class="row gap wrap">
               {Object.keys(CONFIG_SNIPPETS).map((name) => (
                 <button
                   key={name}
@@ -311,8 +311,8 @@ export const AppDashboard = () => {
           <div class="space"></div>
 
           <article class="border padding surface-container-low round">
-            <div class="row middle space padding-bottom">
-              <div class="row middle gap">
+            <div class="row space padding-bottom wrap">
+              <div class="row gap">
                 <i class="primary-text">description</i>
                 <span class="bold font-monospace">{selectedConfig.value}</span>
               </div>
@@ -327,9 +327,9 @@ export const AppDashboard = () => {
             </div>
 
             <pre
-              class="border padding surface-container-highest round overflow-auto font-monospace small-text"
-              style="line-height: 1.5; max-height: 480px;">
-              <code>{CONFIG_SNIPPETS[selectedConfig.value]}</code>
+              class="border padding surface-container-highest round scroll font-monospace small-text"
+              style="line-height: 1.5; max-height: 480px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+              <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{CONFIG_SNIPPETS[selectedConfig.value]}</code>
             </pre>
           </article>
         </section>
@@ -352,8 +352,8 @@ export const AppDashboard = () => {
           <div class="grid">
             <div class="s12 l6">
               <article class="border padding surface-container-low round fill">
-                <div class="row middle space padding-bottom">
-                  <div class="row middle gap">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
                     <i class="primary-text">bolt</i>
                     <span class="bold">Motor esbuild (esBuild)</span>
                   </div>
@@ -366,17 +366,17 @@ export const AppDashboard = () => {
                   </button>
                 </div>
                 <pre
-                  class="border padding surface-container-highest round overflow-auto font-monospace small-text"
-                  style="line-height: 1.4;">
-                  <code>{API_CODE_SNIPPETS.esbuild}</code>
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.esbuild}</code>
                 </pre>
               </article>
             </div>
 
             <div class="s12 l6">
               <article class="border padding surface-container-low round fill">
-                <div class="row middle space padding-bottom">
-                  <div class="row middle gap">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
                     <i class="tertiary-text">visibility</i>
                     <span class="bold">Motor Watch (watchEngine)</span>
                   </div>
@@ -389,17 +389,17 @@ export const AppDashboard = () => {
                   </button>
                 </div>
                 <pre
-                  class="border padding surface-container-highest round overflow-auto font-monospace small-text"
-                  style="line-height: 1.4;">
-                  <code>{API_CODE_SNIPPETS.watch}</code>
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.watch}</code>
                 </pre>
               </article>
             </div>
 
             <div class="s12">
               <article class="border padding surface-container-low round">
-                <div class="row middle space padding-bottom">
-                  <div class="row middle gap">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
                     <i class="primary-text">smart_toy</i>
                     <span class="bold">Motor de Exportação IA (exportEngine)</span>
                   </div>
@@ -412,9 +412,9 @@ export const AppDashboard = () => {
                   </button>
                 </div>
                 <pre
-                  class="border padding surface-container-highest round overflow-auto font-monospace small-text"
-                  style="line-height: 1.4;">
-                  <code>{API_CODE_SNIPPETS.export}</code>
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.export}</code>
                 </pre>
               </article>
             </div>

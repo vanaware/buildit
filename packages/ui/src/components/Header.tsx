@@ -11,15 +11,15 @@ export const Header = () => {
   ];
 
   return (
-    <header class="surface-container-low border bottom small-padding">
+    <header class="surface-container-low border bottom">
       <nav class="responsive">
-        <div class="circle primary-container middle center-align">
+        <div class="circle primary-container center-align">
           <i class="primary-text">
             build
           </i>
         </div>
-        <div class="max">
-          <div class="row middle wrap">
+        <div class="max wrap" style="min-width: 0; min-inline-size: 0;">
+          <div class="row wrap">
             <h5 class="no-margin bold">
               BuildIt
             </h5>
@@ -33,7 +33,7 @@ export const Header = () => {
               JSR
             </span>
           </div>
-          <div class="small-text secondary-text">
+          <div class="small-text secondary-text wrap" style="overflow-wrap: anywhere; word-break: normal;">
             Orquestrador de Compilação &amp; Exportador de Contexto IA
           </div>
         </div>
@@ -52,7 +52,7 @@ export const Header = () => {
       </nav>
 
       {/* Abas de navegação responsivas */}
-      <nav class="tabs scroll">
+      <nav class="tabs left-align responsive scroll">
         {tabs.map((tab) => (
           <a
             key={tab.key}

@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { exportEngine } from "@vanaware/buildit/export";
+ * import { exportEngine } from "jsr:@vanaware/buildit";
  *
  * const resultados = await exportEngine({
  *   caminhoConfig: "export.jsonc",

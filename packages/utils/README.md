@@ -87,7 +87,6 @@ Add the `$schema` property pointing to the local schema or URL:
 ```jsonc
 {
   "$schema": "./packages/utils/schema/esbuild.json",
-  "version": "1.0.0",
   "targets": {
     "ui": {
       "entryPoints": ["main.tsx"],
@@ -103,9 +102,12 @@ Add the `$schema` property pointing to the local schema or URL:
 ## Programmatic API
 
 ```ts
-import { esBuild, } from "jsr:@vanaware/buildit/esbuild";
-import { watchEngine, } from "jsr:@vanaware/buildit/watch";
-import { exportEngine, } from "jsr:@vanaware/buildit/export";
+import {
+  denoBuild,
+  esBuild,
+  exportEngine,
+  watchEngine,
+} from "jsr:@vanaware/buildit";
 
 // 1. Run esbuild compilation
 await esBuild({

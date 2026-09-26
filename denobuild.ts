@@ -4,7 +4,7 @@
 /**
  * @file build.ts
  * @description CLI do orquestrador de build baseado em Deno.bundle (denobuild).
- * Delega a execução para a biblioteca @vanaware/buildit/denobuild
+ * Delega a execução para a biblioteca @vanaware/buildit
  * e carrega as configurações declarativas de denobuild.jsonc.
  */
 

@@ -255,10 +255,12 @@ O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
 A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
 
 ```typescript
-import { esBuild } from "@vanaware/buildit/esbuild";
-import { watchEngine } from "@vanaware/buildit/watch";
-import { denoBuild } from "@vanaware/buildit/denobuild";
-import { exportEngine } from "@vanaware/buildit/export";
+import {
+  denoBuild,
+  esBuild,
+  exportEngine,
+  watchEngine,
+} from "jsr:@vanaware/buildit";
 
 // Compilação com esbuild
 await esBuild({

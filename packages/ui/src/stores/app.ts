@@ -326,7 +326,7 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
 
 
 export const API_CODE_SNIPPETS = {
-  esbuild: `import { esBuild } from "jsr:@vanaware/buildit/esbuild";
+  esbuild: `import { esBuild } from "jsr:@vanaware/buildit";
 
 await esBuild({
   config: {
@@ -343,7 +343,7 @@ await esBuild({
   noversion: true,
 });`,
 
-  watch: `import { watchEngine } from "jsr:@vanaware/buildit/watch";
+  watch: `import { watchEngine } from "jsr:@vanaware/buildit";
 
 const handles = await watchEngine({
   targets: ["ui"],
@@ -352,7 +352,7 @@ const handles = await watchEngine({
 
 console.log("Servidor watch em execução. Pressione Ctrl+C para encerrar.");`,
 
-  export: `import { exportEngine } from "jsr:@vanaware/buildit/export";
+  export: `import { exportEngine } from "jsr:@vanaware/buildit";
 
 await exportEngine({
   modos: ["ui", "docs"],

@@ -1,3 +1,17 @@
+/**
+ * @module @vanaware/buildit/esbuild
+ * @description Orquestrador de compilação e empacotamento com esbuild nativo e `@deno/esbuild-plugin`.
+ *
+ * @example
+ * ```typescript
+ * import { esBuild } from "jsr:@vanaware/buildit";
+ *
+ * await esBuild({
+ *   noversion: true,
+ * });
+ * ```
+ */
+
 // ============================================================================
 // 📦 RE-EXPORTS DE MÓDULOS ESPECÍFICOS
 // ============================================================================
