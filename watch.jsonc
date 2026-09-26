@@ -35,8 +35,7 @@
       "outfile": "main.js",
       "banner": {
         "js": "/*!\n * BuildIt v__APP_VERSION__ [DEV WATCH]\n * (c) 2026 Vanaware - MIT License\n */\n"
-      },
-      "external": ["pnpapi"]
+      }
     }
   }
 }

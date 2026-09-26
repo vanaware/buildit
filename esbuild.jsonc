@@ -2,7 +2,8 @@
   "$schema": "./packages/utils/schema/esbuild.json",
   "version": "0.0.1",
   "versionPaths": [
-    "packages/utils/src/version.ts"
+    "packages/utils/src/version.ts",
+    "packages/ui/src/version.ts"
   ],
   "forcepackagesversion": true,
   "targets": {
@@ -49,8 +50,7 @@
       "splitting": false,
       "banner": {
         "js": "/*!\n * BuildIt v__APP_VERSION__\n * (c) 2026 Vanaware - MIT License\n */\n"
-      },
-      "external": ["pnpapi"]
+      }
     }
   }
 }

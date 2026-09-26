@@ -160,3 +160,4 @@ Explicação:
   - `docs/api.md` atualizado: remoção de campos legados (`publicdir`, `indexHtml`) e inclusão de `copyFiles`.
   - JSDoc polido em todo o código fonte, incluindo exemplos práticos para as novas interfaces e motores.
   - `AGENTS.md` sincronizado com a arquitetura moderna de bundling e assets.
+- [x] Simplificação radical da UI: remoção de tentativa de simulação ou execução de esbuild no navegador. Nova interface limpa baseada em Preact + BeerCSS + `@preact/signals` focada exclusivamente em documentação interativa, catálogo de ferramentas, referência CLI com cópia direta, visualizador de configurações (.jsonc) e exemplos de API Deno.
