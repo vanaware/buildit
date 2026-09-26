@@ -5,11 +5,17 @@ const rawPort = Deno.env.get("PORT",);
 const port = rawPort ? Number(rawPort,) : 3000;
 
 const fsRoot = (() => {
+  const distUrl = fromFileUrl(new URL("../build/dist", import.meta.url,),);
   try {
-    Deno.statSync("./build/dist",);
-    return "./build/dist";
+    Deno.statSync(distUrl,);
+    return distUrl;
   } catch {
-    return fromFileUrl(new URL("../build/dist", import.meta.url,),);
+    try {
+      Deno.statSync("./build/dist",);
+      return "./build/dist";
+    } catch {
+      return "./packages/server/build/dist";
+    }
   }
 })();
 

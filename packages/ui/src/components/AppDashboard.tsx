@@ -1,4 +1,4 @@
-import { version as APP_VERSION, } from "@vanaware/buildit";
+import { APP_VERSION, } from "../version.ts";
 import {
   applyPreset,
   cleanDistEnabled,

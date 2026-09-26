@@ -1,5 +1,5 @@
 {
-  "version": "0.3.20#muh8iezh",
+  "version": "0.3.22#muhj3ism",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",
@@ -31,10 +31,10 @@
     "test": "deno test --no-check --unstable-bundle -P",
     "lint": "deno lint",
     "fmt": "deno fmt",
-    "check": "deno task --recursive check && deno check denobuild.ts esbuild.ts export.ts sanitize-version.ts tag-version.ts watch.ts tests/**/*test.ts",
+    "check": "deno task --cwd packages/utils check && deno task --cwd packages/ui check && deno task --cwd packages/server check && deno check denobuild.ts esbuild.ts export.ts sanitize-version.ts tag-version.ts watch.ts",
     "fmt:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
-    "lint:doc": "deno task --recursive lint:doc",
+    "lint:doc": "deno task --cwd packages/utils lint:doc",
     "tests": "deno task check && deno task lint && deno task fmt:check && deno task test",
     "dev": "deno task --cwd packages/server dev",
     "start": "deno task --cwd packages/server start",

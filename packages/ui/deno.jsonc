@@ -34,5 +34,6 @@
     "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
     "tests": "deno task check && deno task test"
   },
-  "exclude": ["public/"]
+  "exclude": ["public/"],
+  "exports": "./src/main.tsx"
 }
