@@ -54,14 +54,6 @@
           "type": "string",
           "description": "Diretório de destino final onde os artefatos compilados são gravados."
         },
-        "publicdir": {
-          "type": "string",
-          "description": "Diretório de ativos estáticos copiados recursivamente para distdir."
-        },
-        "indexHtml": {
-          "type": "boolean",
-          "description": "Se true, busca o index.html em srcdir e copia para distdir (legado)."
-        },
         "copyFiles": {
           "type": "array",
           "description": "Conjuntos de regras de cópia de arquivos estáticos para o distdir.",
@@ -105,7 +97,7 @@
             {
               "type": "array",
               "items": { "type": "string" },
-              "description": "Lista de caminhos para limpar antes do build (relativos a distdir, use '.' ou '*' para limpar todo o distdir)."
+              "description": "Lista de caminhos para limpar antes do build (relativos a distdir, use '*' para limpar todo o distdir)."
             }
           ],
           "description": "Regras de limpeza prévia no diretório de saída."

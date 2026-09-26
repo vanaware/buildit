@@ -54,14 +54,6 @@
           "type": "string",
           "description": "Diretório de saída final dos arquivos empacotados."
         },
-        "publicdir": {
-          "type": "string",
-          "description": "Diretório de ativos estáticos a copiar para distdir."
-        },
-        "indexHtml": {
-          "type": "boolean",
-          "description": "Se true, copia o index.html de srcdir para distdir (legado)."
-        },
         "copyFiles": {
           "type": "array",
           "description": "Conjuntos de regras de cópia de arquivos estáticos para o distdir.",

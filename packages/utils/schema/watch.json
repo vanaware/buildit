@@ -45,14 +45,6 @@
           "type": "string",
           "description": "Diretório de destino onde as saídas observadas são salvas."
         },
-        "publicdir": {
-          "type": "string",
-          "description": "Diretório de ativos estáticos copiados na inicialização."
-        },
-        "indexHtml": {
-          "type": "boolean",
-          "description": "Se true, busca o index.html em srcdir e copia para distdir (legado)."
-        },
         "copyFiles": {
           "type": "array",
           "description": "Conjuntos de regras de cópia de arquivos estáticos para o distdir.",

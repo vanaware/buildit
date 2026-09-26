@@ -7,22 +7,10 @@ import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 
 describe("validateTargetConfig", () => {
   describe("distdir obrigatório", () => {
-    it("lança erro quando publicdir existe mas distdir não", () => {
+    it("lança erro quando copyFiles existe mas distdir não", () => {
       const config: TargetConfig = {
         srcdir: "src",
-        publicdir: "public",
-        entryPoints: ["app.tsx",],
-      };
-      assertThrows(
-        () => validateTargetConfig("ui", config,),
-        Error,
-        "'distdir'",
-      );
-    });
-    it("lança erro quando indexHtml é true mas distdir não", () => {
-      const config: TargetConfig = {
-        srcdir: "src",
-        indexHtml: true,
+        copyFiles: [{ basedir: "public", },],
         entryPoints: ["app.tsx",],
       };
       assertThrows(
@@ -65,16 +53,14 @@ describe("validateTargetConfig", () => {
     it("lista todos os motivos quando múltiplas condições falham", () => {
       const config: TargetConfig = {
         srcdir: "src",
-        publicdir: "public",
-        indexHtml: true,
+        copyFiles: [{ basedir: "public", },],
         entryPoints: ["app.tsx",],
       };
       try {
         validateTargetConfig("ui", config,);
       } catch (e) {
         const msg = (e as Error).message;
-        assertStringIncludes(msg, "'publicdir' está configurado",);
-        assertStringIncludes(msg, "'indexHtml' é true",);
+        assertStringIncludes(msg, "'copyFiles' está configurado",);
         assertStringIncludes(msg, "'outfile' não está configurado",);
       }
     });

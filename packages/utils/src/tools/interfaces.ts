@@ -83,10 +83,8 @@ export interface CleanConfig {
 
 /** Configuração de um alvo de build (esbuild). */
 export interface TargetConfig {
-  publicdir?: string;
   srcdir?: string;
   distdir?: string;
-  indexHtml?: boolean;
   clean?: CleanConfig | string[];
   copyFiles?: CopyFileConfig[];
   default?: boolean;
@@ -146,10 +144,8 @@ export interface EsbuildOptions {
 }
 
 export interface WatchTargetConfig {
-  publicdir?: string;
   srcdir?: string;
   distdir?: string;
-  indexHtml?: boolean;
   clean?: CleanConfig | string[];
   copyFiles?: CopyFileConfig[];
   default?: boolean;
@@ -237,8 +233,6 @@ export type DenoBundlePackageHandling = "bundle" | "external";
 export interface DenoBundleTargetConfig {
   srcdir?: string;
   distdir?: string;
-  publicdir?: string;
-  indexHtml?: boolean;
   clean?: CleanConfig | string[];
   copyFiles?: CopyFileConfig[];
   default?: boolean;

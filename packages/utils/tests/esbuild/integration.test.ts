@@ -28,9 +28,11 @@ describe("processTarget (integração)", () => {
       const config: TargetConfig = {
         srcdir: srcDir,
         distdir: distDir,
-        publicdir: publicDir,
-        indexHtml: true,
-        clean: [".",],
+        copyFiles: [
+          { basedir: publicDir, },
+          { basedir: srcDir, includes: ["index.html",], },
+        ],
+        clean: ["*",],
         entryPoints: ["dummy.ts",],
       };
       // Mock esbuild.build

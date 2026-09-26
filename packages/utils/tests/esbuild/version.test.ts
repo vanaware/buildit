@@ -3,10 +3,10 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, assertThrows, } from "@std/assert";
 import {
-  currentVersion,
-  extractVersionFromContent,
+  extractVersion,
   formatVersion,
   parseVersion,
+  readProjectVersion,
   replaceVersionInContent,
   updateProjectVersion,
 } from "../../src/tools/version.ts";
@@ -79,10 +79,10 @@ describe("formatVersion", () => {
   });
 });
 
-describe("extractVersionFromContent", () => {
+describe("extractVersion", () => {
   it("extrai versão de JSON simples", () => {
     assertEquals(
-      extractVersionFromContent(`{ "version": "1.2.3" }`,),
+      extractVersion(`{ "version": "1.2.3" }`,),
       "1.2.3",
     );
   });
@@ -92,26 +92,26 @@ describe("extractVersionFromContent", () => {
       "name": "buildit",
       "version": "2.0.0", /* inline */
     }`;
-    assertEquals(extractVersionFromContent(content,), "2.0.0",);
+    assertEquals(extractVersion(content,), "2.0.0",);
   });
   it("extrai versão com hash", () => {
     assertEquals(
-      extractVersionFromContent(`{ "version": "1.2.3-abc123" }`,),
+      extractVersion(`{ "version": "1.2.3-abc123" }`,),
       "1.2.3-abc123",
     );
   });
   it("retorna null quando não há versão", () => {
     assertEquals(
-      extractVersionFromContent(`{ "name": "buildit" }`,),
+      extractVersion(`{ "name": "buildit" }`,),
       null,
     );
   });
   it("retorna null para string vazia", () => {
-    assertEquals(extractVersionFromContent("",), null,);
+    assertEquals(extractVersion("",), null,);
   });
-  it("ignora campos 'version' dentro de strings", () => {
+  it("ignora campos 'version' não ancorados corretamente", () => {
     const content = `{ "name": "tem version: 1.0.0 no nome" }`;
-    assertEquals(extractVersionFromContent(content,), null,);
+    assertEquals(extractVersion(content,), null,);
   });
 });
 
@@ -135,39 +135,29 @@ describe("replaceVersionInContent", () => {
   });
 });
 
-describe("currentVersion (integração)", () => {
+describe("readProjectVersion (integração)", () => {
   it("lê versão de arquivo existente", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.2.3-abc",);
     try {
-      const version = await currentVersion(path,);
+      const version = await readProjectVersion(path,);
       assertEquals(version, "1.2.3-abc",);
     } finally {
       await cleanup();
     }
   });
-  it("lança erro quando arquivo não existe", async () => {
-    let threw = false;
-    try {
-      await currentVersion("/caminho/que/nao/existe/deno.jsonc",);
-    } catch {
-      threw = true;
-    }
-    assertEquals(threw, true,);
+  it("usa fallback quando arquivo não existe", async () => {
+    const version = await readProjectVersion("/caminho/que/nao/existe/deno.jsonc",);
+    assertEquals(typeof version === "string", true,);
   });
-  it("lança erro quando versão não está no arquivo", async () => {
+  it("usa fallback quando versão não está no arquivo", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.0.0", {
       version: undefined,
     },);
     try {
       // Reescreve sem version
       await Deno.writeTextFile(path, `{ "name": "buildit" }`,);
-      let errorMessage = "";
-      try {
-        await currentVersion(path,);
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      assertStringIncludes(errorMessage, "Versão não encontrada",);
+      const version = await readProjectVersion(path,);
+      assertEquals(typeof version === "string", true,);
     } finally {
       await cleanup();
     }

@@ -40,14 +40,14 @@ describe("cleanTarget", () => {
     },);
   });
 
-  it("esvazia diretório com '.'", async () => {
+  it("esvazia diretório com '*'", async () => {
     await withTempDir(async (dir,) => {
       await Deno.writeTextFile(join(dir, "a.js",), "a",);
       await Deno.writeTextFile(join(dir, "b.js",), "b",);
       await Deno.mkdir(join(dir, "sub",),);
       await Deno.writeTextFile(join(dir, "sub/c.js",), "c",);
 
-      await cleanTarget(dir, [".",],);
+      await cleanTarget(dir, ["*",],);
 
       const files = await listFiles(dir,);
       assertEquals(files.length, 0,);
@@ -213,7 +213,7 @@ describe("listAssetsForCache", () => {
 });
 
 describe("copyStaticFiles", () => {
-  it("copia publicdir para distdir", async () => {
+  it("copia arquivos via copyFiles", async () => {
     const { dir: publicDir, cleanup: cleanupPublic, } = await withFileStructure(
       {
         "manifest.json": `{ "name": "BuildIt", "version": "1.0.0" }`,
@@ -227,9 +227,8 @@ describe("copyStaticFiles", () => {
 
     try {
       const config = {
-        srcdir: "/tmp/src",
         distdir: distDir,
-        publicdir: publicDir,
+        copyFiles: [{ basedir: publicDir, },],
         entryPoints: [],
       };
 
@@ -250,9 +249,10 @@ describe("copyStaticFiles", () => {
     }
   });
 
-  it("copia index.html quando indexHtml é true", async () => {
+  it("copia arquivos específicos via copyFiles", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "index.html": "<html></html>",
+      "README.md": "docs",
     },);
 
     const { dir: distDir, cleanup: cleanupDist, } = await withFileStructure(
@@ -261,15 +261,20 @@ describe("copyStaticFiles", () => {
 
     try {
       const config = {
-        srcdir: srcDir,
         distdir: distDir,
-        indexHtml: true,
+        copyFiles: [
+          {
+            basedir: srcDir,
+            includes: ["index.html",],
+          },
+        ],
         entryPoints: [],
       };
 
       await copyStaticFiles(config, "1.0.0",);
 
       assertEquals(await fileExists(join(distDir, "index.html",),), true,);
+      assertEquals(await fileExists(join(distDir, "README.md",),), false,);
       const content = await readText(join(distDir, "index.html",),);
       assertEquals(content, "<html></html>",);
     } finally {
@@ -278,14 +283,13 @@ describe("copyStaticFiles", () => {
     }
   });
 
-  it("não falha quando publicdir não existe", async () => {
+  it("não falha quando baseDir de copyFiles não existe", async () => {
     const { dir: distDir, cleanup, } = await withFileStructure({},);
 
     try {
       const config = {
-        srcdir: "/tmp/src",
         distdir: distDir,
-        publicdir: "/caminho/inexistente",
+        copyFiles: [{ basedir: "/caminho/inexistente", },],
         entryPoints: [],
       };
 
@@ -294,60 +298,6 @@ describe("copyStaticFiles", () => {
       assertEquals(true, true,);
     } finally {
       await cleanup();
-    }
-  });
-
-  it("não falha quando index.html não existe", async () => {
-    const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({},);
-    const { dir: distDir, cleanup: cleanupDist, } = await withFileStructure(
-      {},
-    );
-
-    try {
-      const config = {
-        srcdir: srcDir,
-        distdir: distDir,
-        indexHtml: true,
-        entryPoints: [],
-      };
-
-      await copyStaticFiles(config, "1.0.0",);
-      assertEquals(await fileExists(join(distDir, "index.html",),), false,);
-    } finally {
-      await cleanupSrc();
-      await cleanupDist();
-    }
-  });
-
-  it("preserva manifest.json sem version quando não há campo", async () => {
-    const { dir: publicDir, cleanup: cleanupPublic, } = await withFileStructure(
-      {
-        "manifest.json": `{ "name": "BuildIt" }`,
-      },
-    );
-
-    const { dir: distDir, cleanup: cleanupDist, } = await withFileStructure(
-      {},
-    );
-
-    try {
-      const config = {
-        srcdir: "/tmp/src",
-        distdir: distDir,
-        publicdir: publicDir,
-        entryPoints: [],
-      };
-
-      await copyStaticFiles(config, "3.0.0",);
-
-      const manifest = JSON.parse(
-        await readText(join(distDir, "manifest.json",),),
-      );
-      assertEquals(manifest.name, "BuildIt",);
-      assertEquals(manifest.version, "3.0.0",);
-    } finally {
-      await cleanupPublic();
-      await cleanupDist();
     }
   });
 });

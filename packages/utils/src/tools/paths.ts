@@ -184,7 +184,7 @@ export async function cleanTarget(
 
   // Normaliza CleanConfig
   const config: CleanConfig = Array.isArray(cleanConfig,)
-    ? { includes: cleanConfig.map((p,) => p === "." ? "*" : p), }
+    ? { includes: cleanConfig, }
     : cleanConfig;
 
   if (!config || !config.includes || config.includes.length === 0) return;
@@ -488,7 +488,7 @@ export async function copyTargetFiles(
 }
 
 /**
- * Copia arquivos estáticos para o distdir (novo suporte a copyFiles e retrocompatibilidade com publicdir/indexHtml).
+ * Copia arquivos estáticos para o distdir usando a configuração copyFiles.
  * @param config Configuração do alvo
  * @param appVersion Versão da aplicação para injeção no manifest
  * @param generalBaseDir Diretório base geral da execução (padrão ".")
@@ -509,7 +509,7 @@ export async function copyStaticFiles(
       : undefined);
 
   if (!effectiveDistDir) {
-    if (config.copyFiles || config.publicdir || config.indexHtml) {
+    if (config.copyFiles) {
       console.warn(
         `⚠️ Arquivos estáticos configurados mas 'distdir' ausente. Pulando cópia.`,
       );
@@ -517,32 +517,10 @@ export async function copyStaticFiles(
     return;
   }
 
-  // 1. Caso use o novo sistema: copyFiles
+  // Caso use o sistema de copyFiles
   if (config.copyFiles && config.copyFiles.length > 0) {
     await copyTargetFiles(
       config.copyFiles,
-      effectiveDistDir,
-      appVersion,
-      generalBaseDir,
-    );
-    return;
-  }
-
-  // 2. Fallback retrocompatível para publicdir e indexHtml
-  const legacyCopyFiles: CopyFileConfig[] = [];
-  if (config.publicdir) {
-    legacyCopyFiles.push({ basedir: config.publicdir, },);
-  }
-  if (config.indexHtml && config.srcdir) {
-    legacyCopyFiles.push({
-      basedir: config.srcdir,
-      includes: ["index.html",],
-    },);
-  }
-
-  if (legacyCopyFiles.length > 0) {
-    await copyTargetFiles(
-      legacyCopyFiles,
       effectiveDistDir,
       appVersion,
       generalBaseDir,

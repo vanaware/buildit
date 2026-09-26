@@ -10,8 +10,8 @@ import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
  * Lança erro com mensagem didática indicando exatamente qual condição falhou.
  *
  * Regras de obrigatoriedade:
- * - 'distdir' é obrigatório quando 'publicdir' está configurado, 'indexHtml' é true, ou 'outfile' não está configurado
- * - 'srcdir' é obrigatório quando 'indexHtml' é true ou quando 'entryPoints' contém paths relativos
+ * - 'distdir' é obrigatório quando 'copyFiles' está configurado ou 'outfile' não está configurado
+ * - 'srcdir' é obrigatório quando 'entryPoints' contém paths relativos
  */
 export function validateTargetConfig(
   targetName: string,
@@ -20,26 +20,14 @@ export function validateTargetConfig(
   const reasons: string[] = [];
 
   // Validação de distdir
-  if (config.publicdir && !config.distdir) {
+  if (config.copyFiles && config.copyFiles.length > 0 && !config.distdir) {
     reasons.push(
-      "'publicdir' está configurado (necessário 'distdir' para copiar arquivos estáticos)",
-    );
-  }
-  if (config.indexHtml === true && !config.distdir) {
-    reasons.push(
-      "'indexHtml' é true (necessário 'distdir' para copiar o HTML)",
+      "'copyFiles' está configurado (necessário 'distdir' para copiar arquivos estáticos)",
     );
   }
   if (!config.outfile && !config.distdir) {
     reasons.push(
       "'outfile' não está configurado (necessário 'distdir' para usar como 'outdir')",
-    );
-  }
-
-  // Validação de srcdir
-  if (config.indexHtml === true && !config.srcdir) {
-    reasons.push(
-      "'indexHtml' é true (necessário 'srcdir' para copiar o HTML)",
     );
   }
 

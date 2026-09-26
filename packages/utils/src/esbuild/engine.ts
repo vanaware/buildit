@@ -32,21 +32,15 @@ import { validateTargetConfig, } from "../tools/validate.ts";
 // 🔢 FUNÇÕES DE VERSÃO (re-exportadas de config/version.ts)
 // ============================================================================
 import {
-  extractVersionFromContent,
+  extractVersion,
   formatVersion,
   parseVersion,
   replaceVersionInContent,
+  updateProjectVersion,
 } from "../tools/version.ts";
-
-/**
- * @module @vanaware/buildit/esbuild/engine
- * @description Mecanismo programático para execução de builds com esbuild e @deno/esbuild-plugin.
- */
-
+import { resolverOrdemTargets, } from "../tools/targets.ts";
 import * as esbuild from "esbuild";
 import { denoPlugin, } from "@deno/esbuild-plugin";
-import { updateProjectVersion, } from "../tools/version.ts";
-import { resolverOrdemTargets, } from "../tools/targets.ts";
 
 /**
  * Injeta o Deno Plugin nas opções do esbuild.

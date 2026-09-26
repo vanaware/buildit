@@ -20,7 +20,7 @@ A biblioteca está consolidada no pacote `packages/utils` contendo **seis** ferr
 - **`esbuild` (`packages/utils/src/esbuild/`)**:
   - `config.ts`: Carregamento do `esbuild.jsonc` com suporte a alvos declarativos, mesclagem de opções e caminhos customizados.
   - `bundle.ts`: Integração com `esbuild` e `@deno/esbuild-plugin`, resolução de imports remotos/NPM/JSR, injeção de `__APP_VERSION__`, flags de `define`, `drop`, `minify`, `sourcemap` e `metafile`.
-  - `engine.ts`: Orquestrador com limpeza pré-build de diretórios (`clean`), cópia recursiva de estáticos (`publicdir`), injeção dinâmica de versão no `manifest.json` e cópia de `index.html`.
+  - `engine.ts`: Orquestrador com limpeza pré-build de diretórios (`clean`) e cópia flexível de arquivos estáticos (`copyFiles`) com injeção de versão no `manifest.json`.
   - `cli.ts` & `esbuild.ts`: Runner CLI com Cliffy e relatório de telemetria visual.
   - Testes BDD dedicados em `packages/utils/tests/esbuild/`.
   - Documentação topológica em `docs/topology-esbuild.md`.
@@ -99,8 +99,8 @@ antes de executar os próximos passos, faremos os seguintes ajustes:
 **TODO LIST**    
 - [x] utilitário export não precisa ter falback para o legado, pode manter apenas o novo sistema por glob e brace expansion
 - [x] utilitário denobuild e esbuild o parseArgs deverá ser reformulado, a parte que detecta noversion fica dentro do cli e é enviada para o engine já resolvido , mas a parte que determina a correta ordem de execução fica dentro de engine para garantir que a ordem seja sempre executada independente de a lista de alvos vier via cli ou direto pelo engine. o resolverOrdemTargets já faz isso ? *(Sim, delegado para `resolverOrdemTargets` dentro de `engine.ts` em `esbuild` e `denobuild`)*
-- [x] baseDir deveria ser passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas listados em srcdir, distdir, publicdir, clean *(Implementado via `resolveWithBase` e propagação do `baseDir`)*
-- [x] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos, index.html e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude, da seguinte forma abaixo:
+- [x] baseDir é passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas listados em srcdir, distdir, copyFiles, clean *(Implementado via `resolveWithBase` e propagação do `baseDir`)*
+- [x] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude (removido suporte legado a `publicdir` e `indexHtml` em favor do sistema `copyFiles`).
 copyFiles : [{
   basedir? : string
   includes? : string[] => aceita globs e brace expansion
@@ -150,4 +150,5 @@ Explicação:
 - [x] Verificação e atualização dos GitHub Actions workflows (`jsr-publish.yml` e `gh-pages.yml`) para compatibilidade com Deno 2.x e o novo sistema de versionamento TypeScript
 - [x] Modernização do utilitário `export`: remoção total da retrocompatibilidade com chaves legadas, mantendo exclusivamente o sistema baseado em `modos`, `includes` e `excludes` via globs.
 - [x] Melhoria na documentação técnica: detalhamento da injeção automática de `__GENERATED_ASSETS__` para o alvo `sw` (Service Worker) em `api.md` e documentos de topologia.
-- [x] Criação de documentação específica sobre o impacto do `baseDir` na resolução de caminhos (`docs/impacto-basedir.md`)
+- [x] Limpeza completa de códigos e campos legados em todo o workspace (removidos `publicdir`, `indexHtml`, suporte a `.` em limpeza e funções redundantes de versão).
+- [x] Unificação e robustez do motor de extração e substituição de versão em `version.ts` com suporte a diversos formatos de indentação.

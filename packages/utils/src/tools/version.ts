@@ -13,17 +13,27 @@ import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
 import { loadConfig, } from "./jsonc.ts";
 
 /**
- * Obtém a versão atual do arquivo de configuração deno.jsonc.
- * @param denoJsoncPath Caminho para o deno.jsonc
- * @returns Versão atual
+ * Lê a versão semântica do projeto a partir do arquivo deno.jsonc ou deno.json raiz.
+ *
+ * @param denoJsonPath Caminho opcional para o arquivo de configuração
+ * @param baseDir Diretório base caso denoJsonPath não seja absoluto
+ * @returns Versão lida do projeto
  */
-export async function currentVersion(denoJsoncPath: string,): Promise<string> {
-  const parsed = await loadConfig<{ version?: string }>("deno", denoJsoncPath,);
-  if (!parsed?.version) {
-    throw new Error("❌ Versão não encontrada no deno.jsonc",);
+export async function readProjectVersion(
+  denoJsonPath?: string,
+  baseDir: string = ".",
+): Promise<string> {
+  const parsed = await loadConfig<{ version?: string }>(
+    "deno",
+    denoJsonPath,
+    baseDir,
+  );
+
+  if (parsed?.version) {
+    return parsed.version;
   }
-  console.log(`📌 Versão Atual: v${parsed.version}`,);
-  return parsed.version;
+
+  return FALLBACK_VERSION;
 }
 
 /**
@@ -108,10 +118,13 @@ export function formatVersion(
 
 /**
  * Extrai a string de versão de um conteúdo textual (ex: deno.jsonc ou deno.json).
+ *
+ * @param content Conteúdo textual do arquivo JSON/JSONC
+ * @returns Versão encontrada ou null
  */
-export function extractVersionFromContent(content: string,): string | null {
-  const match = content.match(/"version"\s*:\s*"([^"]+)"/,);
-  return match && match[1] ? match[1] : null;
+export function extractVersion(content: string,): string | null {
+  const match = content.match(/"version"\s*:\s*"([^"]*)"/,);
+  return match && match[1] !== undefined ? match[1] : null;
 }
 
 /**
@@ -122,33 +135,9 @@ export function replaceVersionInContent(
   newVersion: string,
 ): string {
   return content.replace(
-    /"version"\s*:\s*"[^"]+"/,
+    /"version"\s*:\s*"[^"]*"/,
     `"version": "${newVersion}"`,
   );
-}
-
-/**
- * Lê a versão semântica do projeto a partir do arquivo deno.jsonc ou deno.json raiz.
- *
- * @param denoJsonPath Caminho opcional para o arquivo de configuração
- * @param baseDir Diretório base caso denoJsonPath não seja absoluto
- * @returns Versão lida do projeto
- */
-export async function readProjectVersion(
-  denoJsonPath?: string,
-  baseDir: string = ".",
-): Promise<string> {
-  const parsed = await loadConfig<{ version?: string }>(
-    "deno",
-    denoJsonPath,
-    baseDir,
-  );
-
-  if (parsed?.version) {
-    return parsed.version;
-  }
-
-  return FALLBACK_VERSION;
 }
 
 /**
@@ -297,12 +286,6 @@ export async function updateProjectVersion(
  *
  * @param startDir Diretório inicial para busca (padrão: ".")
  * @returns Caminho do arquivo encontrado ou null caso não encontre
- *
- * @example
- * ```typescript
- * const file = findDenoFile();
- * console.log(file); // ".../deno.jsonc"
- * ```
  */
 export function findDenoFile(startDir: string = ".",): string | null {
   try {
@@ -335,23 +318,6 @@ export function findDenoFile(startDir: string = ".",): string | null {
 }
 
 /**
- * Extrai o valor bruto do campo "version" a partir do conteúdo textual de um arquivo deno.json[c].
- * Equivalente TypeScript para a função `extract_raw_version` de `lib-version.sh`.
- *
- * @param content Conteúdo textual do arquivo JSON/JSONC
- * @returns Versão bruta encontrada ou null
- *
- * @example
- * ```typescript
- * const raw = extractRawVersion('{\n  "version": "0.3.14#abc1234"\n}'); // "0.3.14#abc1234"
- * ```
- */
-export function extractRawVersion(content: string,): string | null {
-  const match = content.match(/^[ \t]*"version"\s*:\s*"([^"]*)"/m,);
-  return match && match[1] !== undefined ? match[1] : null;
-}
-
-/**
  * Normaliza qualquer string de versão para o formato semver canônico estrito "MAJOR.MINOR.PATCH".
  * Remove prefixos como "v", metadados de build (+build), identificadores de pre-release (-alpha)
  * e sufixos de commit hash (#hash), garantindo exatamente 3 componentes numéricos.
@@ -359,13 +325,6 @@ export function extractRawVersion(content: string,): string | null {
  *
  * @param raw Versão original bruta (ex: "v1.2.3-beta+exp.sha.5114f85", "0.3.14#muesu7z0")
  * @returns Versão semver sanitizada (ex: "1.2.3", "0.3.14")
- *
- * @example
- * ```typescript
- * sanitizeVersion("v0.3.14#abc"); // "0.3.14"
- * sanitizeVersion("1.2"); // "1.2.0"
- * sanitizeVersion("invalid"); // "0.0.0"
- * ```
  */
 export function sanitizeVersion(raw: string,): string {
   if (!raw) return "0.0.0";

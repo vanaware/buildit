@@ -4,7 +4,7 @@
  */
 
 import {
-  extractRawVersion,
+  extractVersion,
   findDenoFile,
   replaceVersionInContent,
   sanitizeVersion,
@@ -57,7 +57,7 @@ export async function sanitizeVersionFile(
   }
 
   let content = await Deno.readTextFile(targetPath,);
-  let rawVersion = extractRawVersion(content,);
+  let rawVersion = extractVersion(content,);
 
   if (rawVersion === null) {
     if (!options.silencioso) {
