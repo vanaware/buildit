@@ -32,10 +32,6 @@ import { validateTargetConfig, } from "../tools/validate.ts";
 // 🔢 FUNÇÕES DE VERSÃO (re-exportadas de config/version.ts)
 // ============================================================================
 import {
-  extractVersion,
-  formatVersion,
-  parseVersion,
-  replaceVersionInContent,
   updateProjectVersion,
 } from "../tools/version.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";

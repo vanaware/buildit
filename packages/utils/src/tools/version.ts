@@ -43,7 +43,7 @@ Exemplo de configuração necessária:
 /**
  * Sincroniza a versão em um diretório de workspace (deno.jsonc ou deno.json).
  */
-async function syncWorkspaceDir(
+export async function syncWorkspaceDir(
   wsPath: string,
   newVersion: string,
   wsRelPath: string,
@@ -222,7 +222,7 @@ export async function ensureVersionFiles(
   baseDir: string = ".",
   defineVersionString: string = "__APP_VERSION__",
 ): Promise<string[]> {
-  const processed: string[] = [];
+  const processed: string[] = []; 
 
   for (const vPath of versionPaths) {
     const targetPath = isAbsolute(vPath,) ? vPath : join(baseDir, vPath,);
