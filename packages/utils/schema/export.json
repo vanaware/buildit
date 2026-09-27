@@ -55,10 +55,6 @@
             "type": "string",
             "description": "Nome do projeto específico deste modo (sobrescreve o global)."
           },
-          "defineVersionString": {
-            "type": "string",
-            "description": "Identificador customizado da constante de versão específico deste modo (sobrescreve o global)."
-          },
           "default": {
             "type": "boolean",
             "description": "Se o modo deve ser executado por padrão."

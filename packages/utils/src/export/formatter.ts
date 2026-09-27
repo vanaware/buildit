@@ -165,11 +165,9 @@ export function gerarCabecalho(
   defineVersionString: string = "__APP_VERSION__",
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
-  const targetDefine = config.defineVersionString ?? defineVersionString;
+  const targetDefine = defineVersionString || "__APP_VERSION__";
 
-  let instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
-  instrucao = instrucao
-    .replaceAll("__APP_VERSION__", versaoApp,)
+  const instrucao = (config.instrucaoCustomizada ?? "Contexto do projeto.")
     .replaceAll(targetDefine, versaoApp,);
 
   const projeto = config.projeto ?? "BuildIt";
@@ -177,9 +175,7 @@ export function gerarCabecalho(
   const padraoCabecalho =
     `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
 
-  let cabecalho = (config.cabecalho ?? padraoCabecalho).trim();
-  cabecalho = cabecalho
-    .replaceAll("__APP_VERSION__", versaoApp,)
+  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim()
     .replaceAll(targetDefine, versaoApp,);
 
   return `> **INSTRUÇÃO PARA A IA:** 

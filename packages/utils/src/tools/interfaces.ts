@@ -264,8 +264,6 @@ export interface ExportConfig {
   cabecalho?: string;
   /** Nome do projeto exibido no cabeçalho (padrão: "BuildIt"). */
   projeto?: string;
-  /** Identificador customizado da constante para substituição da versão (padrão: "__APP_VERSION__"). */
-  defineVersionString?: string;
   /** Se o modo deve ser executado por padrão quando nenhum modo for especificado. */
   default?: boolean;
 }

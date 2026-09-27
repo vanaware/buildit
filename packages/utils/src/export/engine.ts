@@ -139,7 +139,7 @@ export async function exportarModo(
   const versaoApp = opcoes?.versaoApp ??
     await readProjectVersion(opcoes?.denoJsoncPath, baseDir,);
   const silencioso = opcoes?.silencioso ?? false;
-  const defineVersionString = opcoes?.defineVersionString ?? config.defineVersionString ?? "__APP_VERSION__";
+  const defineVersionString = opcoes?.defineVersionString ?? "__APP_VERSION__";
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
 
   if (!silencioso) {

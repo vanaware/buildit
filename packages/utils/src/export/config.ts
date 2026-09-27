@@ -4,7 +4,7 @@
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
-import type { ExportConfig, ExportConfigFile, } from "../tools/interfaces.ts";
+import type { ExportConfig, ExportConfigFile, ExportConfigResult, } from "../tools/interfaces.ts";
 
 /**
  * Exemplo com as configurações dos modos de exportação do BuildIt.
@@ -47,12 +47,12 @@ export const EXPORT_CONFIG_EXAMPLE: Record<string, ExportConfig> = {
  *
  * @param caminhoConfig Caminho opcional para o arquivo de configuração
  * @param baseDir Diretório base para resolução do arquivo relativo
- * @returns Dicionário mapeando o nome de cada modo para sua respectiva `ExportConfig`
+ * @returns Configurações de exportação carregadas com modos e opções globais
  */
 export async function carregarConfigExport(
   caminhoConfig?: string,
   baseDir: string = ".",
-): Promise<Record<string, ExportConfig>> {
+): Promise<ExportConfigResult> {
   const parsed = await loadConfig<ExportConfigFile>(
     "export",
     caminhoConfig,
@@ -83,11 +83,7 @@ Exemplo de arquivo "export.jsonc" mínimo:
     const rootDefineVersionString = (parsed as ExportConfigFile).defineVersionString;
     const modos = (parsed as ExportConfigFile).modos;
 
-    if (
-      rootProjeto !== undefined ||
-      rootCabecalho !== undefined ||
-      rootDefineVersionString !== undefined
-    ) {
+    if (rootProjeto !== undefined || rootCabecalho !== undefined) {
       for (const [modoKey, modoConfig,] of Object.entries(modos,)) {
         modos[modoKey] = {
           ...(rootProjeto !== undefined && modoConfig.projeto === undefined
@@ -97,16 +93,17 @@ Exemplo de arquivo "export.jsonc" mínimo:
               modoConfig.cabecalho === undefined
             ? { cabecalho: rootCabecalho, }
             : {}),
-          ...(rootDefineVersionString !== undefined &&
-              modoConfig.defineVersionString === undefined
-            ? { defineVersionString: rootDefineVersionString, }
-            : {}),
           ...modoConfig,
         };
       }
     }
 
-    return modos;
+    return {
+      modos,
+      projeto: rootProjeto,
+      cabecalho: rootCabecalho,
+      defineVersionString: rootDefineVersionString,
+    };
   }
 
   throw new Error(`❌ Chave "modos" não encontrada no arquivo de configuração export.`);

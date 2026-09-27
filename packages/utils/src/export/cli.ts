@@ -34,7 +34,7 @@ export function exportCli() {
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
       const baseDir = (options.baseDir as string) || ".";
-      const configs = await carregarConfigExport(
+      const configResult = await carregarConfigExport(
         options.appConfig as string,
         baseDir,
       );
@@ -43,9 +43,10 @@ export function exportCli() {
       console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
       try {
         await exportEngine({
-          config: configs,
+          config: configResult.modos,
           modos,
           baseDir,
+          defineVersionString: configResult.defineVersionString,
           versaoApp: await readProjectVersion(
             options.denoConfig as string,
             baseDir,

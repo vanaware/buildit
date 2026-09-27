@@ -127,11 +127,11 @@ describe("exportEngine programmatic API", () => {
         versionTest: {
           arquivoSaida: "version-out.md",
           includes: ["src/**/*.ts",],
-          defineVersionString: "MY_CUSTOM_VER",
-          instrucaoCustomizada: "Versão da app: MY_CUSTOM_VER e padrão __APP_VERSION__",
+          instrucaoCustomizada: "Versão da app: MY_CUSTOM_VER",
           cabecalho: "Cabeçalho com MY_CUSTOM_VER",
         },
       },
+      defineVersionString: "MY_CUSTOM_VER",
       modos: ["versionTest",],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
@@ -140,7 +140,7 @@ describe("exportEngine programmatic API", () => {
 
     assertEquals(resultados.length, 1,);
     const snapshot = await Deno.readTextFile(join(tempDir, "version-out.md",),);
-    assertEquals(snapshot.includes("Versão da app: 2.5.0 e padrão 2.5.0",), true,);
+    assertEquals(snapshot.includes("Versão da app: 2.5.0",), true,);
     assertEquals(snapshot.includes("Cabeçalho com 2.5.0",), true,);
 
     await Deno.remove(tempDir, { recursive: true, },);

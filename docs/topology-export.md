@@ -118,7 +118,7 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 | Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
 |---|---|---|---|---|
 | `exportCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
-| `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<Record<string, ExportConfig>>` | Leitura do sistema de arquivos (`export.jsonc`) |
+| `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | Leitura do sistema de arquivos (`export.jsonc`) |
 | `exportEngine()` | `exportCli` / API | `opcoes: ExportOptions` | `Promise<ExportResult[]>` | Orquestração de exportação |
 | `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
 | `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
