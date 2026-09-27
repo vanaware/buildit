@@ -145,28 +145,37 @@ export function replaceVersionInContent(
   );
 }
 
-/** Template padrão para arquivos version.ts gerados */
-export const VERSION_FILE_TEMPLATE = `// Automatically generated file during build
-declare const __APP_VERSION__: string;
+/**
+ * Gera o template padrão para arquivos version.ts com a constante customizada.
+ */
+export function getVersionFileTemplate(defineVersionString: string = "__APP_VERSION__",): string {
+  return `// Automatically generated file during build
+declare const ${defineVersionString}: string;
 
 /** Current library/application version. */
-export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
-  ? __APP_VERSION__
-  : "__APP_VERSION__";
+export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
+  ? ${defineVersionString}
+  : "${defineVersionString}";
 `;
+}
+
+/** Template padrão para arquivos version.ts gerados */
+export const VERSION_FILE_TEMPLATE = getVersionFileTemplate("__APP_VERSION__",);
 
 /**
  * Garante a existência do arquivo version.ts no caminho ou diretório especificado.
  * Se o arquivo já existir, NÃO o sobrescreve a cada execução.
- * Se o arquivo não existir, cria o arquivo com o template usando a palavra-chave __APP_VERSION__.
+ * Se o arquivo não existir, cria o arquivo com o template usando a palavra-chave defineVersionString.
  *
  * @param targetPathOrDir Caminho do arquivo ou diretório
  * @param baseDir Diretório base opcional (padrão: ".")
+ * @param defineVersionString Identificador customizado da constante (padrão: "__APP_VERSION__")
  * @returns true se o arquivo foi criado, false se já existia
  */
 export async function ensureVersionFile(
   targetPathOrDir: string,
   baseDir: string = ".",
+  defineVersionString: string = "__APP_VERSION__",
 ): Promise<boolean> {
   const resolvedPath = isAbsolute(targetPathOrDir,)
     ? targetPathOrDir
@@ -196,7 +205,7 @@ export async function ensureVersionFile(
     }
   }
 
-  await Deno.writeTextFile(filePath, VERSION_FILE_TEMPLATE,);
+  await Deno.writeTextFile(filePath, getVersionFileTemplate(defineVersionString,),);
   return true;
 }
 
@@ -206,11 +215,13 @@ export async function ensureVersionFile(
  *
  * @param versionPaths Lista de caminhos de arquivos version.ts
  * @param baseDir Diretório base opcional (padrão: ".")
+ * @param defineVersionString Identificador customizado da constante (padrão: "__APP_VERSION__")
  * @returns Lista de caminhos processados
  */
 export async function ensureVersionFiles(
   versionPaths: string[] = [],
   baseDir: string = ".",
+  defineVersionString: string = "__APP_VERSION__",
 ): Promise<string[]> {
   const processed: string[] = [];
 
@@ -221,9 +232,9 @@ export async function ensureVersionFiles(
       : join(targetPath, "version.ts",);
 
     try {
-      const created = await ensureVersionFile(filePath, baseDir,);
+      const created = await ensureVersionFile(filePath, baseDir, defineVersionString,);
       if (created) {
-        console.log(`📝 Arquivo de versão criado com template __APP_VERSION__: ${filePath}`,);
+        console.log(`📝 Arquivo de versão criado com template ${defineVersionString}: ${filePath}`,);
       } else {
         console.log(`ℹ️ Arquivo de versão existente mantido: ${filePath}`,);
       }
@@ -270,6 +281,7 @@ export async function syncVersion(
     join(baseDir, "deno.jsonc",);
   const forcePackages = options.forcepackagesversion ?? false;
   const versionPaths = options.versionPaths ?? [];
+  const defineVersionString = options.defineVersionString ?? "__APP_VERSION__";
 
   let finalVersion = options.currentVersion;
   if (!finalVersion) {
@@ -297,7 +309,7 @@ export async function syncVersion(
 
   // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam
   if (versionPaths.length > 0) {
-    await ensureVersionFiles(versionPaths, baseDir,);
+    await ensureVersionFiles(versionPaths, baseDir, defineVersionString,);
   } else if (!forcePackages) {
     console.warn(
       `⚠️ Nenhum caminho de versão (versionPaths) foi especificado para sincronização.`,

@@ -65,6 +65,7 @@ export function denoBuildCli() {
           noversion: globalNoVersion,
           versionPaths: loaded.versionPaths,
           forcepackagesversion: loaded.forcepackagesversion,
+          defineVersionString: loaded.defineVersionString,
           denoJsoncPath: options.denoConfig as string,
         },);
 

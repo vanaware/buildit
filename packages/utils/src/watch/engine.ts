@@ -19,7 +19,7 @@ import {
   resolveOutputPaths,
   resolveWithBase,
 } from "../tools/paths.ts";
-import { readProjectVersion, } from "../tools/version.ts";
+import { ensureVersionFiles, readProjectVersion, } from "../tools/version.ts";
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { acquireWatchLock, } from "./lock.ts";
 
@@ -27,20 +27,27 @@ import { acquireWatchLock, } from "./lock.ts";
  * Constrói as opções do esbuild específicas para monitoramento contínuo.
  */
 export async function buildWatchEsbuildOptions(
-  targetName: string,
+  _targetName: string,
   config: WatchTargetConfig,
   appVersion: string,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
+  const defineVersionKey = config.defineVersionString || "__APP_VERSION__";
   const finalDefine: Record<string, string> = {
     ...config.define,
-    __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
+    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
   };
 
-  if (targetName === "sw" && listAssetsFn && config.distdir) {
+  if (
+    config.defineAssetsString &&
+    config.defineAssetsString.trim() !== "" &&
+    listAssetsFn &&
+    config.distdir
+  ) {
     const assets = await listAssetsFn(config.distdir,);
-    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
+    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
+    console.log(`📋 ${assets.length} assets listados para define '${config.defineAssetsString}'`,);
   }
 
   const resolvedEntryPoints = resolveEntryPoints(
@@ -95,10 +102,14 @@ export async function buildWatchEsbuildOptions(
   if (config.banner !== undefined) {
     const banner: { js?: string; css?: string } = {};
     if (config.banner.js !== undefined) {
-      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion,);
+      banner.js = config.banner.js
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (config.banner.css !== undefined) {
-      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion,);
+      banner.css = config.banner.css
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (banner.js !== undefined || banner.css !== undefined) {
       options.banner = banner;
@@ -108,10 +119,14 @@ export async function buildWatchEsbuildOptions(
   if (config.footer !== undefined) {
     const footer: { js?: string; css?: string } = {};
     if (config.footer.js !== undefined) {
-      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion,);
+      footer.js = config.footer.js
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (config.footer.css !== undefined) {
-      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion,);
+      footer.css = config.footer.css
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (footer.js !== undefined || footer.css !== undefined) {
       options.footer = footer;
@@ -128,6 +143,21 @@ export async function buildWatchEsbuildOptions(
  *
  * @param opcoes Opções de execução do watch
  * @returns Lista contendo o handle de controle para encerramento gracioso
+ *
+ * @example
+ * ```typescript
+ * import { watchEngine } from "jsr:@vanaware/buildit";
+ *
+ * const handles = await watchEngine({
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["packages/ui/src/main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
+ *   target: "ui",
+ * });
+ * ```
  */
 export async function watchEngine(
   opcoes: WatchOptions,
@@ -136,6 +166,14 @@ export async function watchEngine(
   const baseDir = opcoes.baseDir ?? ".";
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
   const version = await readProjectVersion(denoJsoncPath, baseDir,);
+
+  if (opcoes.versionPaths && opcoes.versionPaths.length > 0) {
+    await ensureVersionFiles(
+      opcoes.versionPaths,
+      baseDir,
+      opcoes.defineVersionString ?? "__APP_VERSION__",
+    );
+  }
 
   // 1. Resolução do alvo: se fornecido utiliza opcoes.target, senão executa o primeiro default
   let targetName: string;

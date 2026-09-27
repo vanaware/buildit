@@ -84,6 +84,7 @@ Exemplo de arquivo "esbuild.jsonc" mínimo:
 
   result.versionPaths = parsed.versionPaths;
   result.forcepackagesversion = parsed.forcepackagesversion;
+  result.defineVersionString = parsed.defineVersionString;
 
   if (parsed.targets && typeof parsed.targets === "object") {
     result.targets = parsed.targets;

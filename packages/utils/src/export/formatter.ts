@@ -163,13 +163,16 @@ export function gerarCabecalho(
   versaoApp: string,
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
-  const instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
+  const instrucao = (config.instrucaoCustomizada ?? "Contexto do projeto.")
+    .replaceAll("__APP_VERSION__", versaoApp,);
+
   const projeto = config.projeto ?? "BuildIt";
 
   const padraoCabecalho =
     `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
 
-  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim();
+  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim()
+    .replaceAll("__APP_VERSION__", versaoApp,);
 
   return `> **INSTRUÇÃO PARA A IA:** 
 > ${instrucao}

@@ -71,10 +71,17 @@ Exemplo de arquivo "watch.jsonc" mínimo:
 
   let targets: WatchGlobalConfig = {};
 
+  let defineVersionString: string | undefined;
+  let versionPaths: string[] | undefined;
+  let forcepackagesversion: boolean | undefined;
+
   if (
     "targets" in parsed && parsed.targets && typeof parsed.targets === "object"
   ) {
     targets = parsed.targets as WatchGlobalConfig;
+    defineVersionString = (parsed as WatchConfigFile).defineVersionString;
+    versionPaths = (parsed as WatchConfigFile).versionPaths;
+    forcepackagesversion = (parsed as WatchConfigFile).forcepackagesversion;
   } else if (!("targets" in parsed) && Object.keys(parsed,).length > 0) {
     // Tenta tratar o objeto raiz como os alvos
     targets = parsed as WatchGlobalConfig;
@@ -84,5 +91,10 @@ Exemplo de arquivo "watch.jsonc" mínimo:
     throw new Error(`❌ Nenhuma configuração de alvos encontrada no arquivo de configuração watch.`);
   }
 
-  return { targets, };
+  return {
+    targets,
+    defineVersionString,
+    versionPaths,
+    forcepackagesversion,
+  };
 }

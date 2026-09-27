@@ -2,6 +2,7 @@ import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
 import {
+  applyDefines,
   cleanTarget,
   copyStaticFiles,
   copyTargetFiles,
@@ -171,6 +172,30 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
         await Deno.remove(tempRoot, { recursive: true, },).catch(() => {},);
         await Deno.remove(tempDist, { recursive: true, },).catch(() => {},);
       }
+    });
+  });
+
+  describe("applyDefines", () => {
+    it("deve substituir identificadores definidos corretamente", () => {
+      const code = "const v = __APP_VERSION__; const assets = __GENERATED_ASSETS__;";
+      const result = applyDefines(code, {
+        "__APP_VERSION__": '"1.0.0"',
+        "__GENERATED_ASSETS__": '["index.html", "app.js"]',
+      },);
+
+      assertEquals(
+        result,
+        'const v = "1.0.0"; const assets = ["index.html", "app.js"];',
+      );
+    });
+
+    it("deve suportar chaves customizadas de define", () => {
+      const code = "const ver = MY_CUSTOM_VERSION;";
+      const result = applyDefines(code, {
+        "MY_CUSTOM_VERSION": '"2.5.0"',
+      },);
+
+      assertEquals(result, 'const ver = "2.5.0";',);
     });
   });
 });

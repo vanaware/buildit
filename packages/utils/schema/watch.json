@@ -8,6 +8,20 @@
       "type": "string",
       "description": "URL do JSON Schema para autocomplete e validação no editor."
     },
+    "defineVersionString": {
+      "type": "string",
+      "description": "Identificador da constante para injeção da versão da aplicação (padrão: '__APP_VERSION__').",
+      "default": "__APP_VERSION__"
+    },
+    "versionPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lista de arquivos ou diretórios onde o arquivo version.ts sincronizado será gravado."
+    },
+    "forcepackagesversion": {
+      "type": "boolean",
+      "description": "Se true, sincroniza a nova versão para todos os pacotes do workspace (deno.json / deno.jsonc)."
+    },
     "targets": {
       "type": "object",
       "description": "Dicionário de alvos a monitorar continuamente.",
@@ -140,6 +154,14 @@
           "type": "object",
           "additionalProperties": { "type": "string" },
           "description": "Mapa de constantes globais em tempo de compilação."
+        },
+        "defineAssetsString": {
+          "type": "string",
+          "description": "Identificador da constante para injeção da lista de assets gerados (ex: '__GENERATED_ASSETS__'). Se omitido ou vazio, não injeta."
+        },
+        "defineVersionString": {
+          "type": "string",
+          "description": "Identificador customizado da constante para injeção da versão da aplicação (padrão: '__APP_VERSION__')."
         },
         "drop": {
           "type": "array",

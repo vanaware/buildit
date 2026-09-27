@@ -338,6 +338,8 @@ await esBuild({
       minify: true,
       clean: ["*"],
       copyFiles: [{ basedir: "public" }],
+      defineAssetsString: "__GENERATED_ASSETS__",
+      defineVersionString: "__APP_VERSION__",
     },
   },
   noversion: true,

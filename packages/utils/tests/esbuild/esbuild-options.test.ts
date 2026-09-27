@@ -229,53 +229,39 @@ describe("buildEsbuildOptions", () => {
       }
     });
   });
-  describe("lógica especial para SW", () => {
-    it("injeta __GENERATED_ASSETS__ quando targetName é 'sw'", async () => {
+  describe("lógica de defineVersionString e defineAssetsString", () => {
+    it("injeta define customizado de versão quando defineVersionString é informado", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
       try {
-        const config = makeConfig(dir,);
-        const mockListFn = () =>
-          Promise.resolve(["./app.js", "./index.html",],);
-        const options = await buildEsbuildOptions(
-          "sw",
-          config,
-          "1.0.0",
-          mockListFn,
-        );
-        const assets = JSON.parse(options.define.__GENERATED_ASSETS__,);
-        assertEquals(assets, ["./app.js", "./index.html",],);
-      } finally {
-        await cleanup();
-      }
-    });
-    it("não injeta __GENERATED_ASSETS__ para outros alvos", async () => {
-      const { dir, cleanup, } = await withFileStructure({
-        "src/main.tsx": "",
-      },);
-      try {
-        const config = makeConfig(dir,);
-        const mockListFn = () => Promise.resolve(["./app.js",],);
+        const config = makeConfig(dir, {
+          defineVersionString: "CUSTOM_APP_VERSION",
+        },);
         const options = await buildEsbuildOptions(
           "ui",
           config,
           "1.0.0",
-          mockListFn,
         );
-        assertEquals(options.define.__GENERATED_ASSETS__, undefined,);
+        assertEquals(options.define.CUSTOM_APP_VERSION, '"v1.0.0"',);
+        assertEquals(options.define.__APP_VERSION__, undefined,);
       } finally {
         await cleanup();
       }
     });
-    it("não injeta __GENERATED_ASSETS__ se listFn não fornecida", async () => {
+
+    it("injeta __APP_VERSION__ por padrão quando defineVersionString não é informado", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
       try {
         const config = makeConfig(dir,);
-        const options = await buildEsbuildOptions("sw", config, "1.0.0",);
-        assertEquals(options.define.__GENERATED_ASSETS__, undefined,);
+        const options = await buildEsbuildOptions(
+          "ui",
+          config,
+          "1.0.0",
+        );
+        assertEquals(options.define.__APP_VERSION__, '"v1.0.0"',);
       } finally {
         await cleanup();
       }

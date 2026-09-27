@@ -24,7 +24,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | Campo | Tipo | Obrigatório | Descrição |
 | :--- | :--- | :--- | :--- |
 | `$schema` | `string` | Não | Caminho relativo ou URL do JSON Schema para autocomplete e validação. |
-| `version` | `string` | Não | Versão semântica da configuração do projeto. |
+| `defineVersionString` | `string` | Não | Identificador customizado da constante para injeção da versão da aplicação (padrão: `"__APP_VERSION__"`). |
 | `versionPaths` | `string[]` | Não | Caminhos onde o arquivo `version.ts` sincronizado é gerado. |
 | `forcepackagesversion` | `boolean` | Não | Se `true`, sincroniza a nova versão para todos os pacotes do workspace. |
 | `targets` / `alvos` | `Record<string, TargetConfig>` | Sim | Dicionário de alvos de compilação em lote. |
@@ -56,7 +56,9 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | Modo de transformação de JSX/TSX. |
 | `jsxImportSource` | `string` | `undefined` | Pacote para runtime automático do JSX (ex: `"preact"`, `"react"`). |
 | `conditions` | `string[]` | `[]` | Condições personalizadas de resolução de export do `package.json`. |
-| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. `__APP_VERSION__` é injetado automaticamente. |
+| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. |
+| `defineAssetsString` | `string` | `undefined` | Se configurado (ex: `"__GENERATED_ASSETS__"`), varre todo o `distdir` (incluindo arquivos estáticos copiados) e injeta a lista de assets gerados via `define` nativo do esbuild. |
+| `defineVersionString` | `string` | `"__APP_VERSION__"` | Identificador customizado da versão para este alvo (utilizado em `defines`, `banners` e `footers`). |
 | `drop` | `("console" \| "debugger")[]` | `[]` | Instruções a serem eliminadas do código compilado (ex: `["debugger"]`). |
 | `external` | `string[]` | `[]` | Módulos a não empacotar, mantendo como imports externos em runtime. |
 | `metafile` | `boolean` | `false` | Se gera arquivo de metadados em formato JSON para análise de bundles. |
@@ -71,7 +73,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
 | `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
 | `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `"sw" \| string` | `"esnext"` | Ambientes alvos de compatibilidade. Se o nome do alvo (chave no config) for `"sw"`, o motor injeta automaticamente a constante `__GENERATED_ASSETS__` (lista de caminhos de arquivos no `distdir`) para facilitar a configuração de cache do Service Worker. |
+| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade do JavaScript (ex: `["chrome58", "firefox57"]`). |
 | `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
 | `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
 
@@ -138,8 +140,10 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | `inlineImports` | `boolean` | Se inclui o código de imports externos no arquivo gerado. |
 | `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
 | `define` | `Record<string, string>` | Injeção de constantes globais. |
+| `defineAssetsString` | `string` | Se configurado (ex: `"__GENERATED_ASSETS__"`), injeta a lista de assets presentes no `distdir`. |
+| `defineVersionString` | `string` | Identificador customizado da versão para este alvo (padrão: `"__APP_VERSION__"`). |
 | `outfile` | `string` | Nome explícito do arquivo gerado. |
-| `target` | `"sw" \| string` | Se o nome do alvo (chave) for `"sw"`, o motor injeta `__GENERATED_ASSETS__` (lista de arquivos no `distdir`) para cache do Service Worker. |
+| `targets` | `Record<string, DenoBundleTargetConfig>` | Dicionário de alvos de compilação. |
 
 ---
 
@@ -174,7 +178,7 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
 
 - **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
 - **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
-- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão.
+- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da palavra-chave `__APP_VERSION__` em `instrucaoCustomizada` e `cabecalho`.
 
 ---
 

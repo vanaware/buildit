@@ -19,7 +19,9 @@ BuildIt consolidates four specialized developer tools, all driven by declarative
 ### 1. ⚡ `esbuild` Pipeline (`esbuild.ts` & `esbuild.jsonc`)
 - **Lightning-Fast Production Bundling:** Uses esbuild with `@deno/esbuild-plugin` to resolve remote imports, NPM specifiers, and JSR packages.
 - **Declarative Targets:** Define multiple build targets in `esbuild.jsonc` (e.g., `ui`, `server`, `standalone`).
-- **Automated Asset Management:** Cleans distribution directories and copies static files via `copyFiles` (including automatic version injection into `manifest.json`).
+- **Automated Asset Management:** Cleans distribution directories and copies static files via `copyFiles`.
+- **Intelligent Versioning:** Automatically synchronizes project version across `version.ts` files (using `__APP_VERSION__` keyword) and injects it into `manifest.json`.
+- **Dynamic Asset Injection:** Generates a JSON array of all files in the `distdir` (including static assets) and injects it via `define` (useful for Service Worker pre-caching).
 
 ### 2. 👀 `watch` Engine (`watch.ts` & `watch.jsonc`)
 - **Real-Time Continuous Development:** Powered by `esbuild.context` for sub-millisecond incremental rebuilds during development.
@@ -31,7 +33,7 @@ BuildIt consolidates four specialized developer tools, all driven by declarative
 - **Compile-Time Defines:** Injects dynamic compile-time constants and environment flags directly into the output code.
 
 ### 4. 📝 `export` Context Exporter (`export.ts` & `export.jsonc`)
-- **AI-Ready Snapshots:** Consolidates source code into structured Markdown documents optimized for LLMs (such as Gemini, Claude, and GPT).
+- **AI-Ready Snapshots:** Consolidates source code into structured Markdown documents optimized for LLMs (such as Gemini, Claude, and GPT). Supports `__APP_VERSION__` replacement in headers and instructions.
 - **Intelligent Filtering:** Enforces allowed extensions, subdirectories, root files, and ignore patterns.
 - **Anti-Loop Protection:** Prevents infinite directory traversals, symlink traps, and output file self-inclusion.
 - **Read-Only Version Mode:** Enriches Markdown headers with project version information without mutating or bumping version numbers.

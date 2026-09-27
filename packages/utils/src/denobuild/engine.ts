@@ -87,15 +87,21 @@ export async function processBundleTarget(
   );
 
   // 3. Preparar defines
+  const defineVersionKey = resolvedConfig.defineVersionString || "__APP_VERSION__";
   const defines: Record<string, string> = {
     ...resolvedConfig.define,
-    __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
+    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
   };
 
-  if (targetName === "sw" && listAssetsFn && resolvedConfig.distdir) {
+  if (
+    resolvedConfig.defineAssetsString &&
+    resolvedConfig.defineAssetsString.trim() !== "" &&
+    listAssetsFn &&
+    resolvedConfig.distdir
+  ) {
     const assets = await listAssetsFn(resolvedConfig.distdir,);
-    defines["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listados para cache do SW`,);
+    defines[resolvedConfig.defineAssetsString] = JSON.stringify(assets,);
+    console.log(`📋 ${assets.length} assets listados para define '${resolvedConfig.defineAssetsString}'`,);
   }
 
   // 4. Executar bundle
@@ -186,13 +192,13 @@ export async function processBundleTarget(
  *
  * @example
  * ```typescript
- * // Passando configuração diretamente em memória:
  * const resultados = await denoBuild({
- *   ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src", ... }
+ *   config: {
+ *     ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src" }
+ *   },
+ *   targets: ["ui"],
+ *   noversion: true
  * });
- *
- * // Ou usando opções completas:
- * const resultados = await denoBuild({ targets: ["ui"], noversion: true });
  * ```
  */
 export async function denoBuild(
@@ -221,6 +227,7 @@ export async function denoBuild(
     noversion: opcoes.noversion ?? false,
     versionPaths: opcoes.versionPaths,
     forcepackagesversion: opcoes.forcepackagesversion,
+    defineVersionString: opcoes.defineVersionString,
   },);
 
   const resultados: DenoBuildResult[] = [];
@@ -234,7 +241,7 @@ export async function denoBuild(
       continue;
     }
 
-    const listFn = targetName === "sw" ? listAssetsForCache : undefined;
+    const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;
     const res = await processBundleTarget(
       targetName,
       targetConfig,

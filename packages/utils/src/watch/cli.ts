@@ -47,6 +47,8 @@ export function watchCli() {
           config: configs,
           target: target || undefined,
           baseDir,
+          versionPaths: loaded.versionPaths,
+          defineVersionString: loaded.defineVersionString,
           denoJsoncPath: denoConfigPath,
           silencioso: false,
         },);

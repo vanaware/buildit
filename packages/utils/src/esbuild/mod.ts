@@ -7,6 +7,12 @@
  * import { esBuild } from "jsr:@vanaware/buildit";
  *
  * await esBuild({
+ *   config: {
+ *     app: {
+ *       entryPoints: ["main.ts"],
+ *       distdir: "dist",
+ *     },
+ *   },
  *   noversion: true,
  * });
  * ```

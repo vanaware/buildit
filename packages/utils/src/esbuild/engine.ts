@@ -1,4 +1,4 @@
-import { copy, emptyDir, ensureDir, walk, } from "@std/fs";
+import { copy, emptyDir, ensureDir, } from "@std/fs";
 import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
 
@@ -63,6 +63,21 @@ export const buildWithDenoPlugin = (
  *
  * @param opcoes Opções completas de execução (incluindo configuração já parseada)
  * @returns Lista de resultados obtidos por alvo
+ *
+ * @example
+ * ```typescript
+ * import { esBuild } from "jsr:@vanaware/buildit";
+ *
+ * await esBuild({
+ *   config: {
+ *     ui: {
+ *       entryPoints: ["packages/ui/src/main.tsx"],
+ *       distdir: "dist",
+ *     },
+ *   },
+ *   noversion: true,
+ * });
+ * ```
  */
 export async function esBuild(
   opcoes: EsbuildOptions,
@@ -78,6 +93,7 @@ export async function esBuild(
     noversion: opcoes.noversion ?? false,
     versionPaths: opcoes.versionPaths,
     forcepackagesversion: opcoes.forcepackagesversion,
+    defineVersionString: opcoes.defineVersionString,
   },);
 
   // Garante estritamente que a ordem de execução siga a declaração na configuração
@@ -237,22 +253,26 @@ export async function processTarget(
  * @returns Opções do esbuild
  */
 export async function buildEsbuildOptions(
-  targetName: string,
+  _targetName: string,
   config: TargetConfig,
   appVersion: string,
-  listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  _listAssetsFn?: (distDir: string,) => Promise<string[]>,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
+  const defineVersionKey = config.defineVersionString || "__APP_VERSION__";
   const finalDefine: Record<string, string> = {
     ...config.define,
-    __APP_VERSION__: JSON.stringify(`v${appVersion}`,),
+    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
   };
 
-  // 🔥 CORREÇÃO: Só lista assets se distdir existe
-  if (targetName === "sw" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir,);
-    finalDefine["__GENERATED_ASSETS__"] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listados para cache do SW`,);
+  // 🔥 INJEÇÃO DE ASSETS DEFINES: Padrão esbuild (calculado ANTES do build)
+  if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && config.distdir) {
+    const assets = _listAssetsFn
+      ? await _listAssetsFn(config.distdir,)
+      : await listAssetsForCache(config.distdir,);
+
+    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
+    console.log(`📋 ${assets.length} assets listados para define '${config.defineAssetsString}'`,);
   }
 
   // 🔥 RESOLUÇÃO DE ENTRYPOINTS (srcdir opcional)
@@ -316,28 +336,36 @@ export async function buildEsbuildOptions(
     }
   }
 
-  // 🔥 CORREÇÃO: Construção segura de banner
+  // 🔥 CORREÇÃO: Construção segura de banner com defineVersionKey
   if (config.banner !== undefined) {
     const banner: { js?: string; css?: string } = {};
     if (config.banner.js !== undefined) {
-      banner.js = config.banner.js.replace(/__APP_VERSION__/g, appVersion,);
+      banner.js = config.banner.js
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (config.banner.css !== undefined) {
-      banner.css = config.banner.css.replace(/__APP_VERSION__/g, appVersion,);
+      banner.css = config.banner.css
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (banner.js !== undefined || banner.css !== undefined) {
       options.banner = banner;
     }
   }
 
-  // 🔥 CORREÇÃO: Construção segura de footer
+  // 🔥 CORREÇÃO: Construção segura de footer com defineVersionKey
   if (config.footer !== undefined) {
     const footer: { js?: string; css?: string } = {};
     if (config.footer.js !== undefined) {
-      footer.js = config.footer.js.replace(/__APP_VERSION__/g, appVersion,);
+      footer.js = config.footer.js
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (config.footer.css !== undefined) {
-      footer.css = config.footer.css.replace(/__APP_VERSION__/g, appVersion,);
+      footer.css = config.footer.css
+        .replaceAll("__APP_VERSION__", appVersion,)
+        .replaceAll(defineVersionKey, appVersion,);
     }
     if (footer.js !== undefined || footer.css !== undefined) {
       options.footer = footer;

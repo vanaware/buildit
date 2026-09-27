@@ -8,6 +8,11 @@
       "type": "string",
       "description": "URL do JSON Schema para validação e autocomplete no editor."
     },
+    "defineVersionString": {
+      "type": "string",
+      "description": "Identificador da constante para injeção da versão da aplicação (padrão: '__APP_VERSION__').",
+      "default": "__APP_VERSION__"
+    },
     "versionPaths": {
       "type": "array",
       "items": { "type": "string" },
@@ -141,6 +146,14 @@
           "type": "object",
           "additionalProperties": { "type": "string" },
           "description": "Mapeamento de constantes substituídas em memória (ex: define: { \"__DEBUG__\": \"false\" })."
+        },
+        "defineAssetsString": {
+          "type": "string",
+          "description": "Identificador da constante para injeção da lista de assets gerados (ex: '__GENERATED_ASSETS__'). Se omitido ou vazio, não injeta."
+        },
+        "defineVersionString": {
+          "type": "string",
+          "description": "Identificador customizado da constante para injeção da versão da aplicação (padrão: '__APP_VERSION__')."
         },
         "outfile": {
           "type": "string",

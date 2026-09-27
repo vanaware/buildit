@@ -64,6 +64,7 @@ export function esBuildCli() {
           noversion: globalNoVersion,
           versionPaths: loaded.versionPaths,
           forcepackagesversion: loaded.forcepackagesversion,
+          defineVersionString: loaded.defineVersionString,
           denoJsoncPath: DENO_JSONC_PATH,
           baseDir,
           silencioso: false,

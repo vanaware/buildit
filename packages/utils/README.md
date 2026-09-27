@@ -4,10 +4,10 @@ Build orchestration, continuous development watcher, bundling, and AI context ex
 
 `buildit` provides 4 modular engines for modern web development:
 
-1. ⚡ **esbuild Engine**: Production-ready bundling with `@deno/esbuild-plugin` and asset pipelines.
-2. 👀 **Watch Engine**: Real-time continuous development rebuilder based on `esbuild.context`.
-3. 📦 **Deno.bundle Engine**: Native runtime bundling with zero external binary dependencies.
-4. 📝 **AI Context Exporter**: Intelligent snapshot generator structuring codebase context into Markdown for LLMs.
+1. ⚡ **esbuild Engine**: Production-ready bundling with `@deno/esbuild-plugin`, asset pipelines, and intelligent version synchronization.
+2. 👀 **Watch Engine**: Real-time continuous development rebuilder with exclusive process locking.
+3. 📦 **Deno.bundle Engine**: Native runtime bundling with support for dynamic asset injection (`defineAssetsString`).
+4. 📝 **AI Context Exporter**: Intelligent snapshot generator with streaming O(1) writing and version-aware headers.
 5. 🧼 **Version Automation**: Utilities for SemVer sanitization and automated Git tagging.
 
 ## Installation

@@ -185,34 +185,41 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("lida com SW injetando assets via listFn", async () => {
+  it("lida com defineAssetsString injetando assets no arquivo final pós-build", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "sw.ts": "// sw",
     },);
     const { dir: distDir, cleanup: cleanupDist, } = await withFileStructure({
       "app.js": "code",
       "index.html": "html",
-      "service-worker.js": "sw",
+      "service-worker.js": "const cache = __GENERATED_ASSETS__;",
     },);
     try {
       const config: TargetConfig = {
         srcdir: srcDir,
         distdir: distDir,
         entryPoints: ["sw.ts",],
+        outfile: "service-worker.js",
+        defineAssetsString: "__GENERATED_ASSETS__",
       };
       let capturedDefine: Record<string, string> = {};
       const mockBuild = (options: Record<string, unknown>,) => {
         capturedDefine = options.define as Record<string, string>;
-        return Promise.resolve({ metafile: null, errors: [], warnings: [], },);
+        // Simula o comportamento do esbuild: substitui defines e escreve o arquivo
+        const finalContent = 'const cache = ' + capturedDefine["__GENERATED_ASSETS__"] + ';';
+        return Deno.writeTextFile(join(distDir, "service-worker.js",), finalContent,)
+          .then(() => ({ metafile: null, errors: [], warnings: [], }));
       };
       const mockListFn = () => Promise.resolve(["./app.js", "./index.html",],);
       await processTarget("sw", config, "1.0.0", mockBuild, mockListFn,);
-      // 🔥 CORREÇÃO: Tratamento explícito de undefined (noUncheckedIndexedAccess)
-      const generatedAssets = capturedDefine["__GENERATED_ASSETS__"]!;
-      const appVersion = capturedDefine["__APP_VERSION__"]!;
-      const assets = JSON.parse(generatedAssets,);
-      assertEquals(assets, ["./app.js", "./index.html",],);
-      assertStringIncludes(appVersion, "v1.0.0",);
+      
+      assertEquals(capturedDefine["__GENERATED_ASSETS__"], JSON.stringify(["./app.js", "./index.html",],),);
+
+      const swContent = await Deno.readTextFile(join(distDir, "service-worker.js",),);
+      assertEquals(
+        swContent,
+        'const cache = ["./app.js","./index.html"];',
+      );
     } finally {
       await cleanupSrc();
       await cleanupDist();

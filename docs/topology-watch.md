@@ -42,7 +42,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
-       │       ├──► listAssetsForCache(targetConfig.distdir) [se target === "sw"]
+       │       ├──► listAssetsForCache(targetConfig.distdir) [se defineAssetsString configurado]
        │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
        │       └──► resolveOutputPaths(config)
        │
@@ -107,7 +107,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
   2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
      - Define `__APP_VERSION__`.
-     - Coleta assets para cache se `targetName === "sw"`.
+     - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
      - Resolve entry points e saídas com sourcemap `inline` padrão.
   4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
   5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.

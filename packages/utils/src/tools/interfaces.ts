@@ -125,6 +125,10 @@ export interface TargetConfig {
   conditions?: string[];
   /** Injeção de constantes globais (ex: { "DEBUG": "true" }). */
   define?: Record<string, string>;
+  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  defineAssetsString?: string;
+  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
+  defineVersionString?: string;
   drop?: EsbuildDrop[];
   external?: string[];
   metafile?: boolean;
@@ -165,6 +169,7 @@ export interface EsbuildOptions {
   noversion?: boolean;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
+  defineVersionString?: string;
   baseDir?: string;
   denoJsoncPath?: string;
   silencioso?: boolean;
@@ -186,6 +191,10 @@ export interface WatchTargetConfig {
   jsxImportSource?: string;
   conditions?: string[];
   define?: Record<string, string>;
+  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  defineAssetsString?: string;
+  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
+  defineVersionString?: string;
   drop?: EsbuildDrop[];
   external?: string[];
   write?: boolean;
@@ -210,16 +219,24 @@ export interface WatchGlobalConfig {
 export interface WatchConfigFile {
   $schema?: string;
   targets?: WatchGlobalConfig;
+  defineVersionString?: string;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
   [key: string]: unknown;
 }
 
 export interface WatchConfigResult {
   targets: WatchGlobalConfig;
+  defineVersionString?: string;
+  versionPaths?: string[];
+  forcepackagesversion?: boolean;
 }
 
 export interface WatchOptions {
   config: WatchGlobalConfig;
   target?: string;
+  versionPaths?: string[];
+  defineVersionString?: string;
   baseDir?: string;
   lockFile?: string;
   denoJsoncPath?: string;
@@ -274,12 +291,17 @@ export interface DenoBundleTargetConfig {
   packages?: DenoBundlePackageHandling;
   external?: string[];
   define?: Record<string, string>;
+  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  defineAssetsString?: string;
+  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
+  defineVersionString?: string;
   outfile?: string;
 }
 
 export interface DenoBuildConfigFile {
   $schema?: string;
   targets?: DenoBundleGlobalConfig;
+  defineVersionString?: string;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
@@ -294,6 +316,7 @@ export interface DenoBuildResult {
 
 export interface DenoBuildConfigResult {
   targets: DenoBundleGlobalConfig;
+  defineVersionString?: string;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
 }
@@ -308,6 +331,7 @@ export interface DenoBuildOptions {
   noversion?: boolean;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
+  defineVersionString?: string;
   baseDir?: string;
   denoJsoncPath?: string;
   silencioso?: boolean;
@@ -323,6 +347,12 @@ export interface ExportConfigFile {
   cabecalho?: string;
   /** Dicionário de modos de exportação. */
   modos: Record<string, ExportConfig>;
+}
+
+export interface ExportConfigResult {
+  modos: Record<string, ExportConfig>;
+  projeto?: string;
+  cabecalho?: string;
 }
 
 export interface ExportResult {
@@ -358,12 +388,14 @@ export interface VersionUpdateOptions {
   noversion?: boolean;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
+  defineVersionString?: string;
   buildHash?: string;
 }
 
 export interface EsbuildConfigFile {
   $schema?: string;
   targets?: GlobalTargetConfig;
+  defineVersionString?: string;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
   [key: string]: unknown;
@@ -371,6 +403,7 @@ export interface EsbuildConfigFile {
 
 export interface EsbuildConfigResult {
   targets: GlobalTargetConfig;
+  defineVersionString?: string;
   versionPaths?: string[];
   forcepackagesversion?: boolean;
 }

@@ -163,5 +163,18 @@ describe("version utils", () => {
 
       await Deno.remove(tempDir, { recursive: true, },);
     });
+
+    it("deve respeitar defineVersionString customizado ao criar version.ts", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const targetPath = join(tempDir, "version.ts",);
+
+      await ensureVersionFile(targetPath, tempDir, "__CUSTOM_VERSION__",);
+      const content = await Deno.readTextFile(targetPath,);
+
+      assertEquals(content.includes("__CUSTOM_VERSION__",), true,);
+      assertEquals(content.includes("__APP_VERSION__",), false,);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
   });
 });
