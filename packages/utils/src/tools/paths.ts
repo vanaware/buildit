@@ -282,7 +282,9 @@ export async function listAssetsForCache(
   const exclude = new Set([
     ...excludeFiles,
     "service-worker.js",
-    "service-worker.tmp.js",
+    "serviceworker.js",
+    "serviceWorker.js",
+    "sw.js",
   ],);
   for await (const entry of walk(distDir, { includeDirs: false, },)) {
     if (

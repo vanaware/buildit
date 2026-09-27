@@ -6,7 +6,6 @@
 
 import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
-import { APP_VERSION as FALLBACK_VERSION, } from "../version.ts";
 
 import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
 
@@ -155,7 +154,7 @@ declare const ${defineVersionString}: string;
 /** Current library/application version. */
 export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
-  : "${defineVersionString}";
+  : "";
 `;
 }
 

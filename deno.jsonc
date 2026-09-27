@@ -39,7 +39,6 @@
     "dev": "deno task --cwd packages/server dev",
     "start": "deno task --cwd packages/server start",
     "export": "deno run --allow-read --allow-write ./export.ts",
-    "build": "deno run -A ./esbuild.ts",
     "esbuild": "deno run -A ./esbuild.ts",
     "denobuild": "deno run --unstable-bundle -A ./denobuild.ts",
     "watch": "deno run -A ./watch.ts",

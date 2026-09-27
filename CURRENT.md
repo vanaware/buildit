@@ -168,3 +168,26 @@ Explicação:
   - Verifica previamente se o arquivo já existe no disco (`Deno.stat`) e **NÃO** o sobrescreve a cada execução caso já exista.
   - Caso o arquivo não exista, cria o arquivo com o template padrão contendo a palavra-chave `__APP_VERSION__`.
   - O número real da versão é injetado dinamicamente no bundle final através do conjunto de `define` (`esbuild`, `watch`) ou em tempo de execução pré-gravação (`applyDefines` no `denobuild`), mantendo os arquivos fontes de versão desacoplados e imutáveis durante os builds.
+
+**TODO LIST 5 (Testes Reais)**
+- [ ] a opção "mode": "build" ou watch não são mais necessários e devem ser excluidos do schema e tipagem de config de alvos em denobuild e esbuild
+- [ ] a opção defineVersionString deve ser configurada para toda a configuração de denobuild e esbuild e não no nível de alvos, ajustar schema e tipagem de config
+- [ ] qual a diferença entre listAssetsFn e listAssetsForCache, por que alguns engines usam:
+
+const assets = _listAssetsFn
+      ? await _listAssetsFn(config.distdir,)
+      : await listAssetsForCache(config.distdir,);
+
+e outros usam simplesmente:
+const assets = await listAssetsFn(resolvedConfig.distdir,);
+
+investigar porque esta diferente e se não tem como usar a mesma solução para os engines, parece que a solução de denobuild esta mais correta pois usa:
+
+const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;
+    const res = await processBundleTarget(
+      targetName,
+      targetConfig,
+      finalVersion,
+      listFn,
+      baseDir,
+    );
