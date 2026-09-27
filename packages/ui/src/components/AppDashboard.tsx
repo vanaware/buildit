@@ -59,7 +59,7 @@ export const AppDashboard = () => {
           <h5 class="bold">Pilares da Biblioteca</h5>
           <div class="grid">
             {TOOLS.map((tool) => (
-              <div key={tool.id} class="s12 m6 l4">
+              <div key={tool.id} class="s12">
                 <article
                   class="border padding fill wave"
                   style="cursor: pointer; height: 100%; display: flex; flex-direction: column;"
@@ -95,7 +95,7 @@ export const AppDashboard = () => {
           <article class="border padding surface-container-highest">
             <h6 class="bold">Filosofia Deno &amp; Zero Bloat</h6>
             <div class="grid">
-              <div class="s12 m4">
+              <div class="s12">
                 <div class="row">
                   <i>speed</i>
                   <div>
@@ -106,7 +106,7 @@ export const AppDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div class="s12 m4">
+              <div class="s12">
                 <div class="row">
                   <i>security</i>
                   <div>
@@ -117,7 +117,7 @@ export const AppDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div class="s12 m4">
+              <div class="s12">
                 <div class="row">
                   <i>lock</i>
                   <div>
@@ -206,7 +206,7 @@ export const AppDashboard = () => {
             <h6 class="bold">Recursos e Capacidades</h6>
             <div class="grid">
               {currentTool.features.map((feat, idx) => (
-                <div key={idx} class="s12 m6">
+                <div key={idx} class="s12">
                   <div class="row gap no-margin padding-bottom">
                     <i class="green-text">check_circle</i>
                     <span class="small-text">{feat}</span>
@@ -350,7 +350,7 @@ export const AppDashboard = () => {
           <div class="space"></div>
 
           <div class="grid">
-            <div class="s12 l6">
+            <div class="s12">
               <article class="border padding surface-container-low round fill">
                 <div class="row space padding-bottom wrap">
                   <div class="row gap">
@@ -373,7 +373,7 @@ export const AppDashboard = () => {
               </article>
             </div>
 
-            <div class="s12 l6">
+            <div class="s12">
               <article class="border padding surface-container-low round fill">
                 <div class="row space padding-bottom wrap">
                   <div class="row gap">
