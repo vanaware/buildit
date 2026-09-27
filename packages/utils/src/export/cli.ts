@@ -7,7 +7,6 @@ import { exportEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
 import { carregarConfigExport, } from "./config.ts";
-
 import { Command, } from "@cliffy/command";
 
 /**

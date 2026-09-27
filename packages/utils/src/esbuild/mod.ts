@@ -23,7 +23,10 @@
 // ============================================================================
 export { esBuild, } from "./engine.ts";
 
-export { ESBUILD_CONFIG_EXAMPLE as esbuildExample, } from "./config.ts";
+export { 
+  ESBUILD_CONFIG_EXAMPLE as esbuildExample,
+  carregarConfigEsbuild
+ } from "./config.ts";
 
 export type {
   EsbuildGlobalConfig,

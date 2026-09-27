@@ -20,7 +20,10 @@
 
 export { watchEngine, } from "./engine.ts";
 
-export { WATCH_CONFIG_EXAMPLE as watchExample, } from "./config.ts";
+export { 
+  WATCH_CONFIG_EXAMPLE as watchExample, 
+  carregarConfigWatch
+} from "./config.ts";
 
 export type {
   WatchHandle,

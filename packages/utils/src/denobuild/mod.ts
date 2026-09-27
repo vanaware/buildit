@@ -24,7 +24,10 @@
 
 export { denoBuild, } from "./engine.ts";
 
-export { DENOBUILD_CONFIG_EXAMPLE as denobuildExample, } from "./config.ts";
+export { 
+  DENOBUILD_CONFIG_EXAMPLE as denobuildExample, 
+  carregarConfigDenoBuild
+} from "./config.ts";
 
 export type {
   DenoBuildOptions,
