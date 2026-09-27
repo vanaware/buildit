@@ -5,9 +5,9 @@
 
 ---
 
-# Contexto Exportado do Projeto BuildIt [v0.3.19#mugtcmlj] - Modo: UI
+# Contexto Exportado do Projeto BuildIt [v0.4.1#mujyk4w4] - Modo: UI
 
-Gerado automaticamente em: 2026-09-25T17:27:51.101Z
+Gerado automaticamente em: 2026-09-27T15:13:12.737Z
 
 ---
 
@@ -41,10 +41,7 @@ Gerado automaticamente em: 2026-09-25T17:27:51.101Z
 
     // Signals — mapeados explicitamente para evitar npm
     "@preact/signals": "https://esm.sh/@preact/signals@2.11.2?deps=preact@10.29.8",
-    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4",
-
-    // Bibliotecas Internas — integrando utilitários de build e contexto
-    "@vanaware/buildit": "../utils/src/mod.ts"
+    "@preact/signals-core": "https://esm.sh/@preact/signals-core@1.14.4"
   },
 
   // 🛠️ Scripts de Automação
@@ -88,301 +85,622 @@ Gerado automaticamente em: 2026-09-25T17:27:51.101Z
 ## Arquivo: `packages/ui/src/components/AppDashboard.tsx`
 
 ```tsx
-import { version as APP_VERSION, } from "@vanaware/buildit";
 import {
-  applyPreset,
-  cleanDistEnabled,
-  isSimulating,
-  minifyEnabled,
-  runSimulator,
+  activeTab,
+  API_CODE_SNIPPETS,
+  CLI_COMMANDS,
+  CONFIG_SNIPPETS,
+  copiedId,
+  copyToClipboard,
+  filteredCliCommands,
+  searchQuery,
+  selectedConfig,
   selectedTool,
-  simLogs,
-  sourcemapEnabled,
-  targetName,
+  TOOLS,
 } from "../stores/app.ts";
+import { APP_VERSION, } from "../version.ts";
 
 export const AppDashboard = () => {
+  const currentTool = TOOLS.find((t,) => t.id === selectedTool.value) ??
+    TOOLS[0]!;
+
   return (
-    <div class="grid padding">
-      {/* Coluna de Controle */}
-      <div class="s12 m4 l3">
-        <article class="border no-padding">
-          <div class="padding primary-container">
-            <h6 class="no-margin">
-              Build Config
-            </h6>
-            <div class="small-text">
-              Orquestrador @vanaware/buildit
+    <div class="padding">
+      {/* ================================================================== */}
+      {/* ABA: VISÃO GERAL (OVERVIEW) */}
+      {/* ================================================================== */}
+      {activeTab.value === "overview" && (
+        <section class="space-y">
+          <article class="border padding surface-container-low round">
+            <div class="row wrap">
+              <div class="circle large primary-container center-align">
+                <i class="primary-text extra">
+                  construction
+                </i>
+              </div>
+              <div class="max wrap" style="min-width: 0; min-inline-size: 0;">
+                <h4 class="no-margin bold">
+                  BuildIt
+                </h4>
+                <p
+                  class="secondary-text no-margin wrap"
+                  style="overflow-wrap: anywhere; word-break: normal;">
+                  Suite de utilitários em TypeScript para orquestração de
+                  compilação, bundling de alta performance e exportação de
+                  contexto para Inteligência Artificial em ecossistemas Deno.
+                </p>
+              </div>
+              <div class="row wrap">
+                <a
+                  class="button primary"
+                  onClick={() => activeTab.value = "cli"}
+                  style="cursor: pointer;">
+                  <i>
+                    terminal
+                  </i>
+                  <span>
+                    Comandos CLI
+                  </span>
+                </a>
+                <a
+                  class="button border"
+                  onClick={() => activeTab.value = "configs"}
+                  style="cursor: pointer;">
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    Configurações
+                  </span>
+                </a>
+              </div>
             </div>
+          </article>
+
+          <div class="space">
           </div>
-          <div class="padding">
-            <p class="bold">
-              Alvo do Build
-            </p>
-            <div class="field border label max">
-              <select
-                value={targetName.value}
-                onInput={(e,) =>
-                  targetName.value = (e.target as HTMLSelectElement).value}>
-                <option value="ui">
-                  Frontend (packages/ui)
-                </option>
-                <option value="server">
-                  Servidor (packages/server)
-                </option>
-                <option value="utils">
-                  Utilitários (packages/utils)
-                </option>
-              </select>
-              <label>
-                Target
-              </label>
-            </div>
 
-            <p class="bold space">
-              Predefinições Rápidas
-            </p>
-            <div class="row wrap gap">
-              <button
-                type="button"
-                class="chip primary"
-                onClick={() => applyPreset("prod",)}>
-                <i>
-                  rocket_launch
-                </i>
-                <span>
-                  Produção
-                </span>
-              </button>
-              <button
-                type="button"
-                class="chip secondary"
-                onClick={() => applyPreset("dev",)}>
-                <i>
-                  handyman
-                </i>
-                <span>
-                  Dev Rápido
-                </span>
-              </button>
-              <button
-                type="button"
-                class="chip tertiary"
-                onClick={() => applyPreset("export",)}>
-                <i>
-                  description
-                </i>
-                <span>
-                  Snapshot IA
-                </span>
-              </button>
-            </div>
+          <h5 class="bold">
+            Pilares da Biblioteca
+          </h5>
+          <div class="grid">
+            {TOOLS.map((tool,) => (
+              <div key={tool.id} class="s12">
+                <article
+                  class="border padding fill wave"
+                  style="cursor: pointer; height: 100%; display: flex; flex-direction: column;"
+                  onClick={() => {
+                    selectedTool.value = tool.id;
+                    activeTab.value = "tools";
+                  }}>
+                  <div class="row space">
+                    <i class={`${tool.colorClass} circle surface-variant`}>
+                      {tool.icon}
+                    </i>
+                    <span class="chip small outline">
+                      {tool.badge}
+                    </span>
+                  </div>
+                  <div class="space">
+                  </div>
+                  <h6 class="bold no-margin">
+                    {tool.name}
+                  </h6>
+                  <p
+                    class="small-text secondary-text max wrap"
+                    style="flex: 1; overflow-wrap: anywhere;">
+                    {tool.summary}
+                  </p>
+                  <div class="divider">
+                  </div>
+                  <div class="row space no-space">
+                    <span class="small-text tertiary-text font-monospace">
+                      {tool.configFile}
+                    </span>
+                    <i class="small-text">
+                      arrow_forward
+                    </i>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
 
-            <div class="divider margin">
-            </div>
+          <div class="space">
+          </div>
 
-            <div class="row middle space">
-              <div class="max">
-                <div class="bold">
-                  Minificar
-                </div>
-                <div class="small-text">
-                  Otimizar bundle final
+          <article class="border padding surface-container-highest">
+            <h6 class="bold">
+              Filosofia Deno &amp; Zero Bloat
+            </h6>
+            <div class="grid">
+              <div class="s12">
+                <div class="row">
+                  <i>
+                    speed
+                  </i>
+                  <div>
+                    <div class="bold">
+                      Sem node_modules
+                    </div>
+                    <div class="small-text secondary-text wrap">
+                      Dependências resolvidas via URLs, specifiers{" "}
+                      <code>
+                        npm:
+                      </code>{" "}
+                      e{" "}
+                      <code>
+                        jsr:
+                      </code>.
+                    </div>
+                  </div>
                 </div>
               </div>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  checked={minifyEnabled.value}
-                  onInput={(e,) =>
-                    minifyEnabled.value =
-                      (e.target as HTMLInputElement).checked} />
-                <span>
-                </span>
-              </label>
-            </div>
-
-            <div class="row middle space margin">
-              <div class="max">
-                <div class="bold">
-                  Source Maps
-                </div>
-                <div class="small-text">
-                  Habilitar depuração
+              <div class="s12">
+                <div class="row">
+                  <i>
+                    security
+                  </i>
+                  <div>
+                    <div class="bold">
+                      Fail-Fast &amp; Explícito
+                    </div>
+                    <div class="small-text secondary-text wrap">
+                      Erros didáticos com exemplos de configuração em vez de
+                      fallbacks silenciosos.
+                    </div>
+                  </div>
                 </div>
               </div>
-              <label class="switch">
-                <input
-                  type="checkbox"
-                  checked={sourcemapEnabled.value}
-                  onInput={(e,) =>
-                    sourcemapEnabled.value =
-                      (e.target as HTMLInputElement).checked} />
+              <div class="s12">
+                <div class="row">
+                  <i>
+                    lock
+                  </i>
+                  <div>
+                    <div class="bold">
+                      Anti-Concorrência
+                    </div>
+                    <div class="small-text secondary-text wrap">
+                      Mecanismo de Lock em disco (PID) para evitar rebuilds
+                      concorrentes.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      )}
+
+      {/* ================================================================== */}
+      {/* ABA: FERRAMENTAS (TOOLS) */}
+      {/* ================================================================== */}
+      {activeTab.value === "tools" && (
+        <section>
+          <div class="row wrap gap margin-bottom">
+            {TOOLS.map((t,) => (
+              <button
+                key={t.id}
+                type="button"
+                class={`chip ${
+                  selectedTool.value === t.id ? "primary" : "outline"
+                }`}
+                onClick={() => selectedTool.value = t.id}>
+                <i>
+                  {t.icon}
+                </i>
                 <span>
+                  {t.name}
                 </span>
-              </label>
+              </button>
+            ))}
+          </div>
+
+          <div class="space">
+          </div>
+
+          <article class="border padding">
+            <div class="row space wrap">
+              <div class="row gap">
+                <i
+                  class={`${currentTool.colorClass} circle large surface-variant`}>
+                  {currentTool.icon}
+                </i>
+                <div>
+                  <h5 class="bold no-margin">
+                    {currentTool.name}
+                  </h5>
+                  <span class="chip small secondary-container">
+                    {currentTool.badge}
+                  </span>
+                </div>
+              </div>
+              <div class="row gap">
+                <span class="small-text secondary-text">
+                  Configuração:
+                </span>
+                <button
+                  type="button"
+                  class="chip small tertiary-container"
+                  onClick={() => {
+                    selectedConfig.value = currentTool.configFile;
+                    activeTab.value = "configs";
+                  }}>
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    {currentTool.configFile}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div class="space">
             </div>
-            <button
-              type="button"
-              class="extend extra primary large"
-              onClick={runSimulator}
-              disabled={isSimulating.value}>
-              {isSimulating.value ?
-                (
-                  <progress class="circle small white-text">
-                  </progress>
-                ) :
-                (
-                  <i>
-                    play_arrow
-                  </i>
-                )}
-              <span>
-                Executar Build
-              </span>
-            </button>
-          </div>
-        </article>
-      </div>
+            <p
+              class="secondary-text wrap"
+              style="font-size: 1.05rem; line-height: 1.5; overflow-wrap: anywhere;">
+              {currentTool.description}
+            </p>
 
-      {/* Coluna do Console / Demo */}
-      <div class="s12 m8 l9">
-        <article class="border no-padding fill height-max">
-          <div class="padding surface-container-highest row middle">
-            <i class="primary-text">
-              terminal
-            </i>
-            <h6 class="max no-margin margin-left">
-              Build Console
+            <div class="divider margin">
+            </div>
+
+            <h6 class="bold">
+              Comando CLI Canônico
             </h6>
-            <div class="chip outline">
-              v{APP_VERSION}
+            <div class="field border padding surface-container-highest round row">
+              <i class="primary-text">
+                terminal
+              </i>
+              <code
+                class="max font-monospace margin-left"
+                style="user-select: all; overflow-wrap: anywhere;">
+                {currentTool.cliCommand}
+              </code>
+              <button
+                type="button"
+                class="chip small primary wave"
+                onClick={() =>
+                  copyToClipboard(
+                    currentTool.cliCommand,
+                    `tool-${currentTool.id}`,
+                  )}>
+                <i>
+                  {copiedId.value === `tool-${currentTool.id}`
+                    ? "check"
+                    : "content_copy"}
+                </i>
+                <span>
+                  {copiedId.value === `tool-${currentTool.id}`
+                    ? "Copiado!"
+                    : "Copiar"}
+                </span>
+              </button>
+            </div>
+
+            <div class="space">
+            </div>
+
+            <h6 class="bold">
+              Recursos e Capacidades
+            </h6>
+            <div class="grid">
+              {currentTool.features.map((feat, idx,) => (
+                <div key={idx} class="s12">
+                  <div class="row gap no-margin padding-bottom">
+                    <i class="green-text">
+                      check_circle
+                    </i>
+                    <span class="small-text">
+                      {feat}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+      )}
+
+      {/* ================================================================== */}
+      {/* ABA: CLI & SCRIPTS */}
+      {/* ================================================================== */}
+      {activeTab.value === "cli" && (
+        <section>
+          <div class="row space wrap gap">
+            <div>
+              <h5 class="bold no-margin">
+                Referência de Comandos CLI
+              </h5>
+              <div class="small-text secondary-text">
+                Todos os utilitários são executáveis diretamente pelo Deno via
+                JSR ou arquivos locais.
+              </div>
+            </div>
+            <div
+              class="field border prefix round small max"
+              style="max-width: 320px;">
+              <i>
+                search
+              </i>
+              <input
+                type="text"
+                placeholder="Filtrar comandos..."
+                value={searchQuery.value}
+                onInput={(e,) =>
+                  searchQuery.value = (e.target as HTMLInputElement).value} />
             </div>
           </div>
 
-          <div
-            class="padding black white-text font-monospace small-text scroll overflow-auto"
-            style="height: 400px; line-height: 1.6;">
-            {simLogs.value.map((log, i,) => (
-              <div
-                key={i}
-                class={log.includes("✅",)
-                  ? "green-text"
-                  : log.includes("❌",)
-                  ? "red-text"
-                  : ""}>
-                {log}
-              </div>
+          <div class="space">
+          </div>
+
+          <div class="space-y">
+            {filteredCliCommands.value.map((item,) => (
+              <article
+                key={item.id}
+                class="border padding surface-container-low round">
+                <div class="row space wrap">
+                  <div class="row gap">
+                    <span class="chip small outline">
+                      {item.tag}
+                    </span>
+                    <h6 class="bold no-margin">
+                      {item.title}
+                    </h6>
+                  </div>
+                  <button
+                    type="button"
+                    class="chip small primary wave"
+                    onClick={() => copyToClipboard(item.command, item.id,)}>
+                    <i>
+                      {copiedId.value === item.id ? "check" : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === item.id
+                        ? "Copiado!"
+                        : "Copiar Comando"}
+                    </span>
+                  </button>
+                </div>
+
+                <p
+                  class="small-text secondary-text margin-top-small no-margin-bottom wrap"
+                  style="overflow-wrap: anywhere;">
+                  {item.description}
+                </p>
+
+                <div class="field border padding surface-container-highest round margin-top-small row">
+                  <i class="primary-text">
+                    terminal
+                  </i>
+                  <code
+                    class="max font-monospace margin-left small-text"
+                    style="user-select: all; overflow-wrap: anywhere;">
+                    {item.command}
+                  </code>
+                </div>
+              </article>
             ))}
-            {isSimulating.value && (
-              <div class="blink row middle gap">
-                <progress class="circle small">
-                </progress>
-                <span>
-                  Processando pipeline...
-                </span>
+
+            {filteredCliCommands.value.length === 0 && (
+              <div class="center-align padding">
+                <p class="secondary-text">
+                  Nenhum comando encontrado para o termo pesquisado.
+                </p>
               </div>
             )}
           </div>
+        </section>
+      )}
 
-          <div class="padding row gap scroll overflow-auto">
-            <div class="chip outline">
-              <i>
-                bolt
-              </i>
-              <span>
-                esbuild (Native)
-              </span>
+      {/* ================================================================== */}
+      {/* ABA: CONFIGURAÇÕES (.JSONC) */}
+      {/* ================================================================== */}
+      {activeTab.value === "configs" && (
+        <section>
+          <div class="row space wrap gap">
+            <div>
+              <h5 class="bold no-margin">
+                Arquivos de Configuração (.jsonc)
+              </h5>
+              <div class="small-text secondary-text">
+                O BuildIt utiliza JSON com comentários (JSONC) para uma
+                declaração tipada e legível.
+              </div>
             </div>
-            <div class="chip outline">
-              <i>
-                package
-              </i>
-              <span>
-                Deno.bundle
-              </span>
-            </div>
-            <div class="chip outline">
-              <i>
-                visibility
-              </i>
-              <span>
-                Watch Engine
-              </span>
-            </div>
-            <div class="chip outline">
-              <i>
-                smart_toy
-              </i>
-              <span>
-                AI Export
-              </span>
-            </div>
-            <div class="chip outline">
-              <i>
-                shield_check
-              </i>
-              <span>
-                SemVer Sanitizer
-              </span>
+            <div class="row gap wrap">
+              {Object.keys(CONFIG_SNIPPETS,).map((name,) => (
+                <button
+                  key={name}
+                  type="button"
+                  class={`chip ${
+                    selectedConfig.value === name ? "primary" : "outline"
+                  }`}
+                  onClick={() => selectedConfig.value = name}>
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    {name}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-        </article>
 
-        <div class="space">
-        </div>
+          <div class="space">
+          </div>
 
-        <div class="row gap">
-          <article class="s12 m6 l4 border padding">
-            <div class="row middle gap">
-              <i class="primary-text circle surface-variant">
-                javascript
-              </i>
-              <div>
-                <div class="bold">
-                  JS/TS Bundling
-                </div>
-                <div class="small-text">
-                  Suporte nativo a JSX/Preact
-                </div>
+          <article class="border padding surface-container-low round">
+            <div class="row space padding-bottom wrap">
+              <div class="row gap">
+                <i class="primary-text">
+                  description
+                </i>
+                <span class="bold font-monospace">
+                  {selectedConfig.value}
+                </span>
               </div>
+              <button
+                type="button"
+                class="chip small outline"
+                onClick={() =>
+                  copyToClipboard(
+                    CONFIG_SNIPPETS[selectedConfig.value] ?? "",
+                    selectedConfig.value,
+                  )}>
+                <i>
+                  {copiedId.value === selectedConfig.value
+                    ? "check"
+                    : "content_copy"}
+                </i>
+                <span>
+                  {copiedId.value === selectedConfig.value
+                    ? "Copiado!"
+                    : "Copiar JSON"}
+                </span>
+              </button>
             </div>
+
+            <pre
+              class="border padding surface-container-highest round scroll font-monospace small-text"
+              style="line-height: 1.5; max-height: 480px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+              <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{CONFIG_SNIPPETS[selectedConfig.value]}</code>
+            </pre>
           </article>
-          <article class="s12 m6 l4 border padding">
-            <div class="row middle gap">
-              <i class="secondary-text circle surface-variant">
-                sync
-              </i>
-              <div>
-                <div class="bold">
-                  Version Sync
-                </div>
-                <div class="small-text">
-                  Sincronização entre pacotes
-                </div>
-              </div>
+        </section>
+      )}
+
+      {/* ================================================================== */}
+      {/* ABA: API DENO (PROGRAMÁTICA) */}
+      {/* ================================================================== */}
+      {activeTab.value === "api" && (
+        <section>
+          <div>
+            <h5 class="bold no-margin">
+              API Programática em TypeScript
+            </h5>
+            <div class="small-text secondary-text">
+              Como importar e orquestrar as ferramentas diretamente em código
+              TypeScript/Deno.
             </div>
-          </article>
-          <article class="s12 m12 l4 border padding">
-            <div class="row middle gap">
-              <i class="tertiary-text circle surface-variant">
-                folder_zip
-              </i>
-              <div>
-                <div class="bold">
-                  Zero External Dep
+          </div>
+
+          <div class="space">
+          </div>
+
+          <div class="grid">
+            <div class="s12">
+              <article class="border padding surface-container-low round fill">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
+                    <i class="primary-text">
+                      bolt
+                    </i>
+                    <span class="bold">
+                      Motor esbuild (esBuild)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="chip small outline"
+                    onClick={() =>
+                      copyToClipboard(
+                        API_CODE_SNIPPETS.esbuild,
+                        "api-esbuild",
+                      )}>
+                    <i>
+                      {copiedId.value === "api-esbuild"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-esbuild" ? "Copiado!" : "Copiar"}
+                    </span>
+                  </button>
                 </div>
-                <div class="small-text">
-                  Executa puro no Deno 2.x
-                </div>
-              </div>
+                <pre
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.esbuild}</code>
+                </pre>
+              </article>
             </div>
-          </article>
-        </div>
-      </div>
+
+            <div class="s12">
+              <article class="border padding surface-container-low round fill">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
+                    <i class="tertiary-text">
+                      visibility
+                    </i>
+                    <span class="bold">
+                      Motor Watch (watchEngine)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="chip small outline"
+                    onClick={() =>
+                      copyToClipboard(API_CODE_SNIPPETS.watch, "api-watch",)}>
+                    <i>
+                      {copiedId.value === "api-watch"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-watch" ? "Copiado!" : "Copiar"}
+                    </span>
+                  </button>
+                </div>
+                <pre
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.watch}</code>
+                </pre>
+              </article>
+            </div>
+
+            <div class="s12">
+              <article class="border padding surface-container-low round">
+                <div class="row space padding-bottom wrap">
+                  <div class="row gap">
+                    <i class="primary-text">
+                      smart_toy
+                    </i>
+                    <span class="bold">
+                      Motor de Exportação IA (exportEngine)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="chip small outline"
+                    onClick={() =>
+                      copyToClipboard(API_CODE_SNIPPETS.export, "api-export",)}>
+                    <i>
+                      {copiedId.value === "api-export"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-export" ? "Copiado!" : "Copiar"}
+                    </span>
+                  </button>
+                </div>
+                <pre
+                  class="border padding surface-container-highest round scroll font-monospace small-text"
+                  style="line-height: 1.4; max-height: 380px; overflow: auto; box-sizing: border-box; width: 100%; max-width: 100%;">
+                  <code style="display: block; overflow-x: auto; max-width: 100%; box-sizing: border-box;">{API_CODE_SNIPPETS.export}</code>
+                </pre>
+              </article>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
@@ -394,48 +712,86 @@ export const AppDashboard = () => {
 ## Arquivo: `packages/ui/src/components/Header.tsx`
 
 ```tsx
-import { activeTab, themeMode, toggleTheme, } from "../stores/app.ts";
-import { version as APP_VERSION, } from "@vanaware/buildit";
+import { activeTab, TabKey, themeMode, toggleTheme, } from "../stores/app.ts";
+import { APP_VERSION, } from "../version.ts";
 
 export const Header = () => {
+  const tabs: { key: TabKey; label: string; icon: string }[] = [
+    { key: "overview", label: "Visão Geral", icon: "dashboard", },
+    { key: "tools", label: "Ferramentas", icon: "construction", },
+    { key: "cli", label: "CLI & Scripts", icon: "terminal", },
+    { key: "configs", label: "Configurações", icon: "tune", },
+    { key: "api", label: "API Deno", icon: "code", },
+  ];
+
   return (
-    <header class="surface-container-low border bottom">
-      <nav class="responsive">
-        <div class="circle primary-container middle center-align">
+    <header
+      class="surface-container-low border bottom responsive max"
+      style="max-width: 100vw; width: 100%; box-sizing: border-box; overflow-x: hidden;">
+      <nav
+        class="responsive wrap"
+        style="max-width: 100%; width: 100%; min-width: 0; box-sizing: border-box;">
+        <div class="circle primary-container center-align">
           <i class="primary-text">
-            construction
+            build
           </i>
         </div>
-        <div class="max">
-          <div class="row middle no-space">
+        <div class="max wrap" style="min-width: 0; min-inline-size: 0;">
+          <div class="row wrap" style="align-items: center; gap: 0.5rem;">
             <h5 class="no-margin bold">
               BuildIt
             </h5>
-            <span class="chip small primary-container margin-left">
+            <span
+              class="chip small primary-container no-margin"
+              style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+              title={`v${APP_VERSION}`}>
               v{APP_VERSION}
             </span>
-            <span class="chip small tertiary-container margin-left none s-inline-block">
+            <span class="chip small tertiary-container m l no-margin">
               Deno 2.x
             </span>
-            <span class="chip small secondary-container margin-left none m-inline-block">
+            <span class="chip small secondary-container l no-margin">
               JSR
             </span>
           </div>
-          <div class="small-text secondary-text">
-            Orquestrador de Compilação &amp; Exportador de Contexto IA para Deno
+          <div
+            class="small-text secondary-text wrap"
+            style="overflow-wrap: anywhere; word-break: normal;">
+            Orquestrador de Compilação &amp; Exportador de Contexto IA
           </div>
         </div>
+
         <button
           type="button"
-          class="circle transparent wave"
+          class="circle transparent wave no-margin"
           onClick={toggleTheme}
           title={themeMode.value === "dark"
-            ? "Ativar tema claro"
-            : "Ativar tema escuro"}>
+            ? "Mudar para tema claro"
+            : "Mudar para tema escuro"}>
           <i>
             {themeMode.value === "dark" ? "light_mode" : "dark_mode"}
           </i>
         </button>
+      </nav>
+
+      {/* Abas de navegação responsivas */}
+      <nav
+        class="tabs left-align responsive scroll"
+        style="max-width: 100%; width: 100%; min-width: 0; box-sizing: border-box;">
+        {tabs.map((tab,) => (
+          <a
+            key={tab.key}
+            class={activeTab.value === tab.key ? "active" : ""}
+            onClick={() => activeTab.value = tab.key}
+            style="cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+            <i>
+              {tab.icon}
+            </i>
+            <span>
+              {tab.label}
+            </span>
+          </a>
+        ))}
       </nav>
     </header>
   );
@@ -479,7 +835,7 @@ export const Header = () => {
   </head>
   <body class="dark">
     <a id="iframe-warning"
-      class="banner yellow-container row middle center-align padding"
+      class="banner yellow-container row center-align padding"
       target="_blank" rel="noopener"
       style="display: none; position: relative; z-index: 1000; border-radius: 8px; margin: 24px 8px 8px 8px; padding-top: 12px; padding-bottom: 12px; min-height: 56px; box-sizing: border-box; overflow: visible;">
       <i style="vertical-align: middle;">info</i>
@@ -510,15 +866,32 @@ export const Header = () => {
     </script>
 
     <div id="app">
-      <main class="responsive center-align">
-        <div class="space"></div>
-        <h5>Carregando aplicação...</h5>
+      <main class="responsive center-align" style="margin-top: 25vh;">
         <progress class="circle"></progress>
+        <p class="secondary-text margin-top-small">Carregando interface...</p>
       </main>
     </div>
 
     <!-- Arquivo gerado pelo esbuild -->
-    <script type="module" src="./main.js?v=3"></script>
+    <script type="module" src="./main.js"></script>
+    <script>
+    // Fallback para caso o script falhe ao carregar
+    window.addEventListener("error", (e,) => {
+      const app = document.getElementById("app",);
+      if (app && app.querySelector("progress",)) {
+        app.innerHTML = `
+          <main class="responsive center-align padding" style="margin-top: 20vh;">
+            <i class="error-text extra">error</i>
+            <h5 class="bold error-text">Falha ao carregar o script principal</h5>
+            <p class="small-text secondary-text font-monospace">${
+          e.message || "Erro de rede ao baixar main.js"
+        }</p>
+            <button class="button primary margin-top" onclick="window.location.reload(true)">Recarregar</button>
+          </main>
+        `;
+      }
+    },);
+    </script>
   </body>
 </html>
 
@@ -559,7 +932,23 @@ const App = () => {
   );
 };
 
-render(<App />, document.getElementById("app",)!,);
+const container = document.getElementById("app",);
+if (container) {
+  container.innerHTML = "";
+  try {
+    render(<App />, container,);
+  } catch (err) {
+    console.error("Erro ao renderizar App:", err,);
+    container.innerHTML = `
+      <div class="padding center-align surface-error-container round margin">
+        <h5 class="bold error-text">Erro ao inicializar a interface</h5>
+        <p class="small-text font-monospace">${
+      err instanceof Error ? err.message : String(err,)
+    }</p>
+      </div>
+    `;
+  }
+}
 
 ```
 
@@ -570,65 +959,42 @@ render(<App />, document.getElementById("app",)!,);
 ```ts
 import { computed, signal, } from "@preact/signals";
 
-export type TabKey = "overview" | "cli" | "interactive" | "snapshots";
-export type ToolKey = "esbuild" | "denobuild" | "export";
+export type TabKey = "overview" | "tools" | "cli" | "configs" | "api";
+export type ToolKey =
+  | "esbuild"
+  | "denobuild"
+  | "watch"
+  | "export"
+  | "versioning";
+
+export interface ToolInfo {
+  id: ToolKey;
+  name: string;
+  badge: string;
+  icon: string;
+  colorClass: string;
+  summary: string;
+  description: string;
+  cliCommand: string;
+  configFile: string;
+  features: string[];
+}
+
+export interface CliCommandItem {
+  id: string;
+  tool: ToolKey;
+  title: string;
+  command: string;
+  description: string;
+  tag: string;
+}
 
 export const activeTab = signal<TabKey>("overview",);
-export const themeMode = signal<"dark" | "light">("dark",);
 export const selectedTool = signal<ToolKey>("esbuild",);
-
-export const targetName = signal<string>("ui",);
-export const minifyEnabled = signal<boolean>(false,);
-export const sourcemapEnabled = signal<boolean>(true,);
-export const cleanDistEnabled = signal<boolean>(true,);
-
-export const bundleSimCount = signal<number>(0,);
-export const isSimulating = signal<boolean>(false,);
-export const simLogs = signal<string[]>([
-  "🚀 BuildIt Workspace Initialized.",
-  "📦 Packages active: server, ui, utils (@vanaware/buildit)",
-  "💡 Ready to orchestrate builds and context exports.",
-],);
-
-export const totalLogsCount = computed(() => simLogs.value.length);
-
-export const addLog = (msg: string,) => {
-  const timestamp = new Date().toLocaleTimeString();
-  simLogs.value = [...simLogs.value, `[${timestamp}] ${msg}`,];
-};
-
-export const applyPreset = (preset: "prod" | "dev" | "export",) => {
-  if (preset === "prod") {
-    selectedTool.value = "esbuild";
-    targetName.value = "ui";
-    minifyEnabled.value = true;
-    sourcemapEnabled.value = true;
-    cleanDistEnabled.value = true;
-    addLog(
-      "⚡ Predefinição 'Produção' aplicada (esbuild, minify, sourcemap, clean).",
-    );
-  } else if (preset === "dev") {
-    selectedTool.value = "esbuild";
-    targetName.value = "ui";
-    minifyEnabled.value = false;
-    sourcemapEnabled.value = true;
-    cleanDistEnabled.value = false;
-    addLog(
-      "🛠️ Predefinição 'Dev Rápido' aplicada (esbuild, unminified, sourcemap).",
-    );
-  } else {
-    selectedTool.value = "export";
-    targetName.value = "ui";
-    minifyEnabled.value = false;
-    sourcemapEnabled.value = false;
-    cleanDistEnabled.value = false;
-    addLog("📝 Predefinição 'Snapshot IA' aplicada (exportador de contexto).",);
-  }
-};
-
-export const clearLogs = () => {
-  simLogs.value = [];
-};
+export const selectedConfig = signal<string>("esbuild.jsonc",);
+export const searchQuery = signal<string>("",);
+export const copiedId = signal<string | null>(null,);
+export const themeMode = signal<"dark" | "light">("dark",);
 
 export const toggleTheme = () => {
   const next = themeMode.value === "dark" ? "light" : "dark";
@@ -638,55 +1004,376 @@ export const toggleTheme = () => {
   }
 };
 
-export const runSimulator = async () => {
-  if (isSimulating.value) return;
-  isSimulating.value = true;
-  bundleSimCount.value += 1;
-
-  const target = targetName.value;
-  const tool = selectedTool.value;
-
-  addLog(`--- Iniciando execução de ${tool} para o alvo: ${target} ---`,);
-
-  if (cleanDistEnabled.value) {
-    addLog(
-      `🧹 Limpando diretório de distribuição em packages/server/build/dist...`,
-    );
+export const copyToClipboard = async (text: string, id: string,) => {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text,);
+    }
+    copiedId.value = id;
+    setTimeout(() => {
+      if (copiedId.value === id) {
+        copiedId.value = null;
+      }
+    }, 2000,);
+  } catch (err) {
+    console.warn("Falha ao copiar para clipboard:", err,);
   }
-
-  await new Promise((r,) => setTimeout(r, 400,));
-
-  if (tool === "esbuild") {
-    addLog(
-      `🔨 Compilando via esbuild com @deno/esbuild-plugin (minify: ${minifyEnabled.value}, sourcemap: ${sourcemapEnabled.value})...`,
-    );
-    await new Promise((r,) => setTimeout(r, 350,));
-    addLog(
-      `📄 Copiando assets estáticos e injetando versão em manifest.json...`,
-    );
-    await new Promise((r,) => setTimeout(r, 300,));
-    addLog(
-      `✅ Alvo [${target}] gerado com sucesso: dist/${
-        target === "ui" ? "main.js" : target + ".js"
-      }`,
-    );
-  } else if (tool === "denobuild") {
-    addLog(`📦 Empacotando com Deno.bundle API nativo (--unstable-bundle)...`,);
-    await new Promise((r,) => setTimeout(r, 450,));
-    addLog(`✅ Bundle autônomo gerado sem dependências de bundlers externos!`,);
-  } else {
-    addLog(
-      `🔍 Varrendo workspace e filtrando arquivos por extensões permitidas...`,
-    );
-    await new Promise((r,) => setTimeout(r, 350,));
-    addLog(
-      `📝 Gerando snapshot em markdown formatado para contexto de IA: snapshots/${target}.md`,
-    );
-  }
-
-  addLog(`🎉 Pipeline finalizada com êxito! (Build #${bundleSimCount.value})`,);
-  isSimulating.value = false;
 };
+
+export const TOOLS: ToolInfo[] = [
+  {
+    id: "esbuild",
+    name: "esbuild Pipeline",
+    badge: "Produção",
+    icon: "bolt",
+    colorClass: "primary-text",
+    summary:
+      "Compilação de alta performance para produção com resolução Deno, JSR e NPM.",
+    description:
+      "Empacota aplicações Preact/JSX, TypeScript e JavaScript com esbuild nativo e @deno/esbuild-plugin. Oferece injeção de versão semântica, cópia seletiva de assets (copyFiles) e limpeza com suporte a globs e excludes.",
+    cliCommand: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
+    configFile: "esbuild.jsonc",
+    features: [
+      "Plugin Deno para resolução transparente de imports remotos (https, jsr, npm)",
+      "Transformação JSX automática com jsxImportSource: preact",
+      "Injeção automática da constante __APP_VERSION__ em código e manifest.json",
+      "Limpeza robusta com clean (includes e excludes)",
+      "Cópia flexível com copyFiles mantendo estruturas baseadas em basedir",
+    ],
+  },
+  {
+    id: "denobuild",
+    name: "Deno.bundle Nativo",
+    badge: "Empacotador Nativo",
+    icon: "package_2",
+    colorClass: "secondary-text",
+    summary: "Geração de bundles autocontidos usando a API nativa Deno.bundle.",
+    description:
+      "Utiliza o compilador nativo do runtime Deno (--unstable-bundle) para gerar saídas limpas sem depender de binários esbuild externos. Ideal para ambientes restritos ou empacotamento puro de bibliotecas.",
+    cliCommand:
+      "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
+    configFile: "denobuild.jsonc",
+    features: [
+      "Integração 100% nativa com o subsistema Deno 2.x",
+      "Geração de código ESM ou IIFE autocontido",
+      "Compatível com o mesmo esquema de alvos (targets) e copyFiles",
+      "Respeita opções de minificação e sourcemap do Deno",
+    ],
+  },
+  {
+    id: "watch",
+    name: "Watch Dev Engine",
+    badge: "Desenvolvimento",
+    icon: "visibility",
+    colorClass: "tertiary-text",
+    summary:
+      "Recompilação incremental ultrarrápida com esbuild.context e lockfile anti-concorrência.",
+    description:
+      "Monitora arquivos em srcdir e dispara rebuilds quase instantâneos. Possui trava de processo (buildit.lock) com verificação de PID ativo para evitar corridas entre servidores e watch concorrentes.",
+    cliCommand: "deno run -A jsr:@vanaware/buildit/cli/watch",
+    configFile: "watch.jsonc",
+    features: [
+      "Recompilação incremental orientada a contexto (esbuild.context)",
+      "Mecanismo de Lockfile anti-concorrência baseado em PID ativo",
+      "Injeção de banners [DEV WATCH] para depuração em desenvolvimento",
+      "Sincronização imediata de arquivos estáticos em cada modificação",
+    ],
+  },
+  {
+    id: "export",
+    name: "AI Context Exporter",
+    badge: "LLM & Snapshots",
+    icon: "smart_toy",
+    colorClass: "primary-text",
+    summary:
+      "Varredura de repositório e consolidação de código em Markdown para prompts e LLMs.",
+    description:
+      "Varre workspaces Deno, filtra arquivos por globs e extensões permitidas, e formata o conteúdo em um snapshot legível e contextualizado para ser usado por agentes de IA e revisões de código.",
+    cliCommand: "deno run -A jsr:@vanaware/buildit/cli/export",
+    configFile: "export.jsonc",
+    features: [
+      "Filtro declarativo de arquivos via includes e excludes",
+      "Instruções contextuais customizadas por modo (ex: UI, Docs, Servidor)",
+      "Proteção automática contra inclusão acidental de snapshots recursivos",
+      "Cabeçalho estruturado com árvore de arquivos, versão e metadados",
+    ],
+  },
+  {
+    id: "versioning",
+    name: "SemVer & Git Tagging",
+    badge: "Release & Tags",
+    icon: "sell",
+    colorClass: "secondary-text",
+    summary:
+      "Sincronização de versões em workspaces e criação automatizada de releases Git.",
+    description:
+      "Padroniza a versão semântica de deno.jsonc (incluindo suporte a hashes e pré-releases), sincroniza múltiplos pacotes do workspace e gera tags de versão Git (vX.Y.Z) de forma determinística.",
+    cliCommand: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
+    configFile: "deno.jsonc",
+    features: [
+      "Sanitização de versões para formato semver rigoroso (MAJOR.MINOR.PATCH)",
+      "Sincronização em cascata para todos os membros do workspace",
+      "Submódulo tag-version para automação de tags e releases no GitHub",
+      "Geração de hash de commit curto para builds intermediários",
+    ],
+  },
+];
+
+export const CLI_COMMANDS: CliCommandItem[] = [
+  {
+    id: "cmd-esbuild-all",
+    tool: "esbuild",
+    title: "Build Geral (Todos os Alvos)",
+    command: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
+    description:
+      "Executa todos os alvos configurados com default: true no esbuild.jsonc.",
+    tag: "esbuild",
+  },
+  {
+    id: "cmd-esbuild-target",
+    tool: "esbuild",
+    title: "Build de Alvo Específico",
+    command: "deno run -A jsr:@vanaware/buildit/cli/esbuild ui --noversion",
+    description: "Compila somente o alvo 'ui' ignorando incremento de versão.",
+    tag: "esbuild",
+  },
+  {
+    id: "cmd-watch",
+    tool: "watch",
+    title: "Iniciar Modo Watch",
+    command: "deno run -A jsr:@vanaware/buildit/cli/watch",
+    description:
+      "Inicia o monitoramento de alterações com recompilação incremental contínua.",
+    tag: "watch",
+  },
+  {
+    id: "cmd-watch-target",
+    tool: "watch",
+    title: "Watch em Alvo Específico",
+    command: "deno run -A jsr:@vanaware/buildit/cli/watch ui",
+    description: "Monitora exclusivamente o alvo 'ui'.",
+    tag: "watch",
+  },
+  {
+    id: "cmd-denobuild",
+    tool: "denobuild",
+    title: "Empacotar com Deno Nativo",
+    command:
+      "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
+    description: "Gera o bundle usando o comando Deno.bundle nativo.",
+    tag: "denobuild",
+  },
+  {
+    id: "cmd-export-all",
+    tool: "export",
+    title: "Exportar Contextos de IA",
+    command: "deno run -A jsr:@vanaware/buildit/cli/export",
+    description:
+      "Gera snapshots de código em formato Markdown conforme export.jsonc.",
+    tag: "export",
+  },
+  {
+    id: "cmd-export-mode",
+    tool: "export",
+    title: "Exportar Modo Específico",
+    command: "deno run -A jsr:@vanaware/buildit/cli/export ui docs",
+    description: "Gera apenas os arquivos de snapshot dos modos informados.",
+    tag: "export",
+  },
+  {
+    id: "cmd-sanitize",
+    tool: "versioning",
+    title: "Sanitizar Versão SemVer",
+    command: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
+    description:
+      "Normaliza o campo 'version' do deno.jsonc para SemVer padrão.",
+    tag: "version",
+  },
+  {
+    id: "cmd-tag",
+    tool: "versioning",
+    title: "Criar Tag Git Semântica",
+    command: "deno run -A jsr:@vanaware/buildit/cli/tag-version",
+    description: "Cria e prepara a tag vX.Y baseada na versão do projeto.",
+    tag: "version",
+  },
+];
+
+export const CONFIG_SNIPPETS: Record<string, string> = {
+  "esbuild.jsonc": `{
+  "$schema": "jsr:@vanaware/buildit/schema/esbuild.json",
+  "versionPaths": [
+    "src/version.ts"
+  ],
+  "targets": {
+    "ui": {
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "clean": {
+        "includes": ["*"],
+        "excludes": ["assets/keep/**"]
+      },
+      "copyFiles": [
+        { "basedir": "packages/ui/public" },
+        { "basedir": "packages/ui/src", "includes": ["index.html"] }
+      ],
+      "entryPoints": ["main.tsx"],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": true,
+      "sourcemap": "linked",
+      "jsx": "automatic",
+      "jsxImportSource": "preact"
+    }
+  }
+}`,
+
+  "watch.jsonc": `{
+  "$schema": "jsr:@vanaware/buildit/schema/watch.json",
+  "targets": {
+    "ui": {
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "copyFiles": [
+        { "basedir": "packages/ui/public" },
+        { "basedir": "packages/ui/src", "includes": ["index.html"] }
+      ],
+      "entryPoints": ["main.tsx"],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": false,
+      "sourcemap": "inline",
+      "jsx": "automatic",
+      "jsxImportSource": "preact",
+      "outfile": "main.js"
+    }
+  }
+}`,
+
+  "export.jsonc": `{
+  "$schema": "jsr:@vanaware/buildit/schema/export.json",
+  "projeto": "MeuProjeto",
+  "modos": {
+    "ui": {
+      "arquivoSaida": "snapshots/ui.md",
+      "includes": [
+        "packages/ui/src/**/*.{tsx,ts,html,css}",
+        "packages/ui/deno.jsonc"
+      ],
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
+      "incluiVersao": true,
+      "instrucaoCustomizada": "Arquivos do frontend Preact da aplicação.",
+      "default": true
+    },
+    "docs": {
+      "arquivoSaida": "snapshots/docs.md",
+      "includes": ["docs/**/*.md", "README.md"],
+      "default": false
+    }
+  }
+}`,
+
+  "denobuild.jsonc": `{
+  "$schema": "jsr:@vanaware/buildit/schema/denobuild.json",
+  "targets": {
+    "app": {
+      "mode": "build",
+      "default": true,
+      "srcdir": "src",
+      "distdir": "dist",
+      "entryPoints": ["main.ts"],
+      "format": "esm",
+      "minify": false,
+      "sourcemap": "linked",
+      "packages": "bundle"
+    }
+  }
+}`,
+};
+
+export const API_CODE_SNIPPETS = {
+  esbuild: `import { esBuild } from "jsr:@vanaware/buildit";
+
+await esBuild({
+  config: {
+    app: {
+      srcdir: "src",
+      distdir: "dist",
+      entryPoints: ["main.tsx"],
+      bundle: true,
+      minify: true,
+      clean: ["*"],
+      copyFiles: [{ basedir: "public" }],
+      defineAssetsString: "__GENERATED_ASSETS__",
+      defineVersionString: "__APP_VERSION__",
+    },
+  },
+  noversion: true,
+});`,
+
+  watch: `import { watchEngine } from "jsr:@vanaware/buildit";
+
+const handles = await watchEngine({
+  config: {
+    ui: {
+      entryPoints: ["packages/ui/src/main.tsx"],
+      distdir: "packages/server/build/dist",
+      sourcemap: "inline",
+      copyFiles: [
+        { basedir: "packages/ui/public" }
+      ],
+    },
+  },
+  target: "ui",
+});
+
+console.log("Servidor watch em execução. Pressione Ctrl+C para encerrar.");`,
+
+  export: `import { exportEngine } from "jsr:@vanaware/buildit";
+
+await exportEngine({
+  config: {
+    ui: {
+      arquivoSaida: "snapshots/ui.md",
+      includes: ["packages/ui/src/**/*"],
+    },
+  },
+  modos: ["ui"],
+});`,
+};
+
+export const filteredCliCommands = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  if (!query) return CLI_COMMANDS;
+  return CLI_COMMANDS.filter((cmd,) =>
+    cmd.title.toLowerCase().includes(query,) ||
+    cmd.command.toLowerCase().includes(query,) ||
+    cmd.description.toLowerCase().includes(query,) ||
+    cmd.tag.toLowerCase().includes(query,)
+  );
+},);
+
+```
+
+---
+
+## Arquivo: `packages/ui/src/version.ts`
+
+```ts
+// Automatically generated file during build
+declare const __APP_VERSION__: string;
+
+/** Current library/application version. */
+export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
+  ? __APP_VERSION__
+  : "";
 
 ```
 
@@ -704,17 +1391,16 @@ import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import {
   activeTab,
-  addLog,
-  applyPreset,
-  cleanDistEnabled,
-  clearLogs,
-  minifyEnabled,
+  CLI_COMMANDS,
+  copiedId,
+  copyToClipboard,
+  filteredCliCommands,
+  searchQuery,
+  selectedConfig,
   selectedTool,
-  simLogs,
-  sourcemapEnabled,
   themeMode,
   toggleTheme,
-  totalLogsCount,
+  TOOLS,
 } from "../src/stores/app.ts";
 
 describe("UI Store - Signals & Actions", () => {
@@ -722,11 +1408,34 @@ describe("UI Store - Signals & Actions", () => {
     activeTab.value = "overview";
     assertEquals(activeTab.value, "overview",);
 
+    activeTab.value = "tools";
+    assertEquals(activeTab.value, "tools",);
+
     activeTab.value = "cli";
     assertEquals(activeTab.value, "cli",);
 
-    activeTab.value = "snapshots";
-    assertEquals(activeTab.value, "snapshots",);
+    activeTab.value = "configs";
+    assertEquals(activeTab.value, "configs",);
+
+    activeTab.value = "api";
+    assertEquals(activeTab.value, "api",);
+  });
+
+  it("deve alternar ferramentas selecionadas reativamente", () => {
+    selectedTool.value = "esbuild";
+    assertEquals(selectedTool.value, "esbuild",);
+
+    selectedTool.value = "watch";
+    assertEquals(selectedTool.value, "watch",);
+
+    selectedTool.value = "export";
+    assertEquals(selectedTool.value, "export",);
+
+    selectedTool.value = "denobuild";
+    assertEquals(selectedTool.value, "denobuild",);
+
+    selectedTool.value = "versioning";
+    assertEquals(selectedTool.value, "versioning",);
   });
 
   it("deve alternar modo de tema claro/escuro", () => {
@@ -737,37 +1446,54 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(themeMode.value, "dark",);
   });
 
-  it("deve aplicar predefinições de build corretamente", () => {
-    applyPreset("prod",);
-    assertEquals(selectedTool.value, "esbuild",);
-    assertEquals(minifyEnabled.value, true,);
-    assertEquals(sourcemapEnabled.value, true,);
-    assertEquals(cleanDistEnabled.value, true,);
+  it("deve filtrar comandos CLI com base no searchQuery computado", () => {
+    searchQuery.value = "";
+    assertEquals(filteredCliCommands.value.length, CLI_COMMANDS.length,);
 
-    applyPreset("dev",);
-    assertEquals(selectedTool.value, "esbuild",);
-    assertEquals(minifyEnabled.value, false,);
-    assertEquals(sourcemapEnabled.value, true,);
-    assertEquals(cleanDistEnabled.value, false,);
+    searchQuery.value = "watch";
+    const watchCmds = filteredCliCommands.value;
+    assertEquals(watchCmds.length > 0, true,);
+    assertEquals(
+      watchCmds.every((c,) =>
+        c.title.toLowerCase().includes("watch",) ||
+        c.command.toLowerCase().includes("watch",) ||
+        c.description.toLowerCase().includes("watch",) ||
+        c.tag.toLowerCase().includes("watch",)
+      ),
+      true,
+    );
 
-    applyPreset("export",);
-    assertEquals(selectedTool.value, "export",);
-    assertEquals(minifyEnabled.value, false,);
-    assertEquals(sourcemapEnabled.value, false,);
-    assertEquals(cleanDistEnabled.value, false,);
+    searchQuery.value = "termo_completamente_inexistente_12345";
+    assertEquals(filteredCliCommands.value.length, 0,);
+
+    searchQuery.value = "";
   });
 
-  it("deve adicionar e limpar logs no console de simulação", () => {
-    clearLogs();
-    assertEquals(simLogs.value.length, 0,);
-    assertEquals(totalLogsCount.value, 0,);
+  it("deve alternar arquivos de configuração selecionados", () => {
+    selectedConfig.value = "esbuild.jsonc";
+    assertEquals(selectedConfig.value, "esbuild.jsonc",);
 
-    addLog("Evento de teste",);
-    assertEquals(totalLogsCount.value, 1,);
-    assertEquals(simLogs.value[0]?.includes("Evento de teste",), true,);
+    selectedConfig.value = "export.jsonc";
+    assertEquals(selectedConfig.value, "export.jsonc",);
+  });
 
-    clearLogs();
-    assertEquals(totalLogsCount.value, 0,);
+  it("deve atualizar copiedId via copyToClipboard", async () => {
+    copiedId.value = null;
+    await copyToClipboard(
+      "deno run -A jsr:@vanaware/buildit/cli/esbuild",
+      "test-cmd",
+    );
+    assertEquals(copiedId.value, "test-cmd",);
+  });
+
+  it("deve conter metadados consistentes de ferramentas", () => {
+    assertEquals(TOOLS.length, 5,);
+    const ids = TOOLS.map((t,) => t.id);
+    assertEquals(ids.includes("esbuild",), true,);
+    assertEquals(ids.includes("denobuild",), true,);
+    assertEquals(ids.includes("watch",), true,);
+    assertEquals(ids.includes("export",), true,);
+    assertEquals(ids.includes("versioning",), true,);
   });
 });
 

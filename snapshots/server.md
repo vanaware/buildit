@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: SERVER
 
-Gerado automaticamente em: 2026-09-25T17:27:51.123Z
+Gerado automaticamente em: 2026-09-27T15:13:12.759Z
 
 ---
 
@@ -130,14 +130,14 @@ jobs:
   },
   "imports": {
     "@std/http": "jsr:@std/http@^1.1.3",
-    "@vanaware/buildit": "../utils/src/mod.ts"
+    "@std/path": "jsr:@std/path@^1.1.6"
   },
   "tasks": {
     "test": "deno test --allow-env --allow-net --allow-read tests/",
-    "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
-    "tests": "deno task check && deno task test",
-    "start": "deno run --allow-read --allow-write --allow-env --allow-net ./src/main.ts",
-    "dev": "deno run --allow-read --allow-write --allow-env --allow-net ./src/main.ts",
+    "check": "deno check src/**/*.ts",
+    "tests": "deno task check",
+    "start": "deno run --allow-read --allow-write --allow-env --allow-net  --env-file ./src/main.ts",
+    "dev": "deno run --allow-read --allow-write --allow-env --allow-net --env-file  --watch ./src/main.ts",
     "clean": "deno clean && rm -rf ./build && mkdir -p ./build/dist"
   },
   "exports": "./src/main.ts",
@@ -154,14 +154,22 @@ jobs:
 import { serveDir, } from "@std/http/file-server";
 import { fromFileUrl, } from "@std/path";
 
-const port = 3000;
+const rawPort = Deno.env.get("PORT",);
+console.log(`Env PORT: ${rawPort}`,);
+const port = rawPort ? Number(rawPort,) : 3000;
 
 const fsRoot = (() => {
+  const distUrl = fromFileUrl(new URL("../build/dist", import.meta.url,),);
   try {
-    Deno.statSync("./build/dist",);
-    return "./build/dist";
+    Deno.statSync(distUrl,);
+    return distUrl;
   } catch {
-    return fromFileUrl(new URL("../build/dist", import.meta.url,),);
+    try {
+      Deno.statSync("./build/dist",);
+      return "./build/dist";
+    } catch {
+      return "./packages/server/build/dist";
+    }
   }
 })();
 

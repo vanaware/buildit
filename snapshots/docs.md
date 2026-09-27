@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: DOCS
 
-Gerado automaticamente em: 2026-09-25T17:27:51.111Z
+Gerado automaticamente em: 2026-09-27T15:13:12.749Z
 
 ---
 
@@ -49,7 +49,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | Campo | Tipo | Obrigatório | Descrição |
 | :--- | :--- | :--- | :--- |
 | `$schema` | `string` | Não | Caminho relativo ou URL do JSON Schema para autocomplete e validação. |
-| `version` | `string` | Não | Versão semântica da configuração do projeto. |
+| `defineVersionString` | `string` | Não | Identificador customizado da constante para injeção da versão da aplicação (padrão: `"__APP_VERSION__"`). |
 | `versionPaths` | `string[]` | Não | Caminhos onde o arquivo `version.ts` sincronizado é gerado. |
 | `forcepackagesversion` | `boolean` | Não | Se `true`, sincroniza a nova versão para todos os pacotes do workspace. |
 | `targets` / `alvos` | `Record<string, TargetConfig>` | Sim | Dicionário de alvos de compilação em lote. |
@@ -65,9 +65,8 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `default` | `boolean` | `true` | Se `true`, roda automaticamente quando nenhum alvo específico é passado na CLI. |
 | `srcdir` | `string` | `"."` | Diretório base dos fontes do alvo (relativo à raiz de execução). |
 | `distdir` | `string` | `"."` | Diretório de destino final onde os artefatos compilados são gravados. |
-| `publicdir` | `string` | `undefined` | Diretório de ativos estáticos copiados recursivamente para `distdir`. |
-| `indexHtml` | `boolean` | `false` | Se `true`, busca o `index.html` em `srcdir` e copia para `distdir`. |
-| `clean` | `string[]` | `[]` | Lista de caminhos para limpar antes do build (relativos a `distdir`). Use `["."]` para esvaziar todo o diretório. |
+| `clean` | `CleanConfig \| string[]` | `[]` | Regras de limpeza pré-build. Use `["*"]` para esvaziar todo o diretório. |
+| `copyFiles` | `CopyFileConfig[]` | `[]` | Lista de regras para cópia de arquivos estáticos para o `distdir`. |
 
 #### ⚙️ Opções do Compilador esbuild
 
@@ -82,7 +81,9 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | Modo de transformação de JSX/TSX. |
 | `jsxImportSource` | `string` | `undefined` | Pacote para runtime automático do JSX (ex: `"preact"`, `"react"`). |
 | `conditions` | `string[]` | `[]` | Condições personalizadas de resolução de export do `package.json`. |
-| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. `__APP_VERSION__` é injetado automaticamente. |
+| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. |
+| `defineAssetsString` | `string` | `undefined` | Se configurado (ex: `"__GENERATED_ASSETS__"`), varre todo o `distdir` (incluindo arquivos estáticos copiados) e injeta a lista de assets gerados via `define` nativo do esbuild. |
+| `defineVersionString` | `string` | `"__APP_VERSION__"` | Identificador customizado da versão para este alvo (utilizado em `defines`, `banners` e `footers`). |
 | `drop` | `("console" \| "debugger")[]` | `[]` | Instruções a serem eliminadas do código compilado (ex: `["debugger"]`). |
 | `external` | `string[]` | `[]` | Módulos a não empacotar, mantendo como imports externos em runtime. |
 | `metafile` | `boolean` | `false` | Se gera arquivo de metadados em formato JSON para análise de bundles. |
@@ -97,7 +98,7 @@ O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizan
 | `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
 | `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
 | `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `"sw" \| string` | `"esnext"` | Ambientes alvos de compatibilidade. Se o nome do alvo (chave no config) for `"sw"`, o motor injeta automaticamente a constante `__GENERATED_ASSETS__` (lista de caminhos de arquivos no `distdir`) para facilitar a configuração de cache do Service Worker. |
+| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade do JavaScript (ex: `["chrome58", "firefox57"]`). |
 | `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
 | `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
 
@@ -118,8 +119,10 @@ O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. 
       "default": true,
       "srcdir": "packages/ui/src",
       "distdir": "packages/server/build/dist",
-      "publicdir": "packages/ui/public",
-      "indexHtml": true,
+      "copyFiles": [
+        { "basedir": "packages/ui/public" },
+        { "basedir": "packages/ui/src", "includes": ["index.html"] }
+      ],
       "entryPoints": ["main.tsx"],
       "platform": "browser",
       "format": "esm",
@@ -151,9 +154,8 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | :--- | :--- | :--- |
 | `srcdir` | `string` | Diretório raiz do código-fonte. |
 | `distdir` | `string` | Diretório de destino dos arquivos compilados. |
-| `publicdir` | `string` | Diretório estático copiado para `distdir`. |
-| `indexHtml` | `boolean` | Copia `index.html` de `srcdir` para `distdir`. |
-| `clean` | `string[]` | Diretórios a limpar antes do build. |
+| `clean` | `CleanConfig \| string[]` | Regras de limpeza pré-build. |
+| `copyFiles` | `CopyFileConfig[]` | Regras para cópia de arquivos estáticos. |
 | `entryPoints` | `string[]` | Arquivos TypeScript/JavaScript de entrada. |
 | `format` | `"esm" \| "cjs" \| "iife"` | Formato do bundle. |
 | `platform` | `"browser" \| "deno"` | Plataforma alvo. |
@@ -163,8 +165,10 @@ O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicaçõ
 | `inlineImports` | `boolean` | Se inclui o código de imports externos no arquivo gerado. |
 | `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
 | `define` | `Record<string, string>` | Injeção de constantes globais. |
+| `defineAssetsString` | `string` | Se configurado (ex: `"__GENERATED_ASSETS__"`), injeta a lista de assets presentes no `distdir`. |
+| `defineVersionString` | `string` | Identificador customizado da versão para este alvo (padrão: `"__APP_VERSION__"`). |
 | `outfile` | `string` | Nome explícito do arquivo gerado. |
-| `target` | `"sw" \| string` | Se o nome do alvo (chave) for `"sw"`, o motor injeta `__GENERATED_ASSETS__` (lista de arquivos no `distdir`) para cache do Service Worker. |
+| `targets` | `Record<string, DenoBundleTargetConfig>` | Dicionário de alvos de compilação. |
 
 ---
 
@@ -199,7 +203,7 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
 
 - **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
 - **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
-- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão.
+- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da constante de versão (`defineVersionString`, padrão: `__APP_VERSION__`) em `instrucaoCustomizada` e `cabecalho`.
 
 ---
 
@@ -280,10 +284,12 @@ O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
 A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
 
 ```typescript
-import { esBuild } from "@vanaware/buildit/esbuild";
-import { watchEngine } from "@vanaware/buildit/watch";
-import { denoBuild } from "@vanaware/buildit/denobuild";
-import { exportEngine } from "@vanaware/buildit/export";
+import {
+  denoBuild,
+  esBuild,
+  exportEngine,
+  watchEngine,
+} from "jsr:@vanaware/buildit";
 
 // Compilação com esbuild
 await esBuild({
@@ -936,7 +942,7 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
                ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
                │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │
-               ├──► listAssetsForCache(config.distdir) [se target === "sw"]
+               ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
                │
                ├──► buildBundleOptions(config) (packages/utils/src/denobuild/bundle.ts)
                │       └──► resolveEntryPoints(config.srcdir, config.entryPoints)
@@ -999,7 +1005,7 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
   3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
   4. Preparação de constantes `defines` em memória:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
-     - `__GENERATED_ASSETS__ = JSON.stringify(assets)` (se `targetName === "sw"`). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` para estratégias de caching offline.
+     - `defineAssetsString = JSON.stringify(assets)` (se configurado). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` (incluindo arquivos estáticos copiados no passo anterior) para estratégias de caching offline.
   5. `buildBundleOptions(config)` (`packages/utils/src/denobuild/bundle.ts`):
      - Monta o objeto de opções esperado pela API instável `Deno.bundle`.
      - Mapeia entry points, target de plataforma (`browser`/`deno`), formato (`esm`/`cjs`/`iife`), sourcemap e minify.
@@ -1091,7 +1097,7 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
                │               └──► Log "index.html copiado" [se index.html detectado]
                │
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
-               │       ├──► listAssetsForCache(config.distdir) [se target === "sw"]
+               │       ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
                │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
                │       └──► resolveOutputPaths(config)
                │
@@ -1163,7 +1169,7 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Detecta `index.html` para log de console.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
      - Monta o dicionário de `define` com `__APP_VERSION__`.
-     - Se `targetName === "sw"`, executa `listAssetsFn(distdir)` e injeta `__GENERATED_ASSETS__`. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída, sendo ideal para automatizar a lista de pré-cache em Service Workers.
+     - Se `config.defineAssetsString` estiver configurado, executa `listAssetsFn(distdir)` e injeta a constante correspondente. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída (incluindo arquivos estáticos copiados no passo anterior), sendo ideal para automatizar a lista de pré-cache em Service Workers.
      - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
      - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
      - Formata `banner` e `footer` com substituição de versão.
@@ -1324,12 +1330,12 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
 | Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
 |---|---|---|---|---|
 | `exportCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
-| `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<Record<string, ExportConfig>>` | Leitura do sistema de arquivos (`export.jsonc`) |
+| `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | Leitura do sistema de arquivos (`export.jsonc`) |
 | `exportEngine()` | `exportCli` / API | `opcoes: ExportOptions` | `Promise<ExportResult[]>` | Orquestração de exportação |
 | `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
 | `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
 | `correspondeGlobs()` | `formatter` / `engine` | `caminho: string`, `padroes: string[]` | `boolean` | Avaliação de regex gerada via `globToRegExp` |
-| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string` | `string` | Formatação de string Markdown em memória |
+| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string`, `defineVersionString?: string` | `string` | Formatação de string Markdown em memória |
 | `formatarArquivoMarkdown()` | `exportarModo` | `caminho: string`, `conteudo: string` | `string` | Formatação com code fence e syntax highlight |
 | `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Escape dinâmico de crases Markdown |
 | `mapearExtensao()` | `formatarArquivoMarkdown` | `extensao: string` | `string` (linguagem de highlight) | Normalização de highlight de sintaxe |
@@ -1541,7 +1547,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
-       │       ├──► listAssetsForCache(targetConfig.distdir) [se target === "sw"]
+       │       ├──► listAssetsForCache(targetConfig.distdir) [se defineAssetsString configurado]
        │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
        │       └──► resolveOutputPaths(config)
        │
@@ -1606,7 +1612,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
   2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
      - Define `__APP_VERSION__`.
-     - Coleta assets para cache se `targetName === "sw"`.
+     - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
      - Resolve entry points e saídas com sourcemap `inline` padrão.
   4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
   5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.

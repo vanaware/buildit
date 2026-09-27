@@ -283,7 +283,10 @@ describe("buildEsbuildOptions", () => {
           "1.0.0",
           mockListFn,
         );
-        assertEquals(options.define.__MOCK_ASSETS__, JSON.stringify(["app.js", "style.css",],),);
+        assertEquals(
+          options.define.__MOCK_ASSETS__,
+          JSON.stringify(["app.js", "style.css",],),
+        );
       } finally {
         await cleanup();
       }
