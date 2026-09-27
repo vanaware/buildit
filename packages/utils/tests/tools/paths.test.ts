@@ -177,7 +177,8 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
 
   describe("applyDefines", () => {
     it("deve substituir identificadores definidos corretamente", () => {
-      const code = "const v = __APP_VERSION__; const assets = __GENERATED_ASSETS__;";
+      const code =
+        "const v = __APP_VERSION__; const assets = __GENERATED_ASSETS__;";
       const result = applyDefines(code, {
         "__APP_VERSION__": '"1.0.0"',
         "__GENERATED_ASSETS__": '["index.html", "app.js"]',

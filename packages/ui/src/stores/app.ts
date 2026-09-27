@@ -1,7 +1,12 @@
 import { computed, signal, } from "@preact/signals";
 
 export type TabKey = "overview" | "tools" | "cli" | "configs" | "api";
-export type ToolKey = "esbuild" | "denobuild" | "watch" | "export" | "versioning";
+export type ToolKey =
+  | "esbuild"
+  | "denobuild"
+  | "watch"
+  | "export"
+  | "versioning";
 
 export interface ToolInfo {
   id: ToolKey;
@@ -63,7 +68,8 @@ export const TOOLS: ToolInfo[] = [
     badge: "Produção",
     icon: "bolt",
     colorClass: "primary-text",
-    summary: "Compilação de alta performance para produção com resolução Deno, JSR e NPM.",
+    summary:
+      "Compilação de alta performance para produção com resolução Deno, JSR e NPM.",
     description:
       "Empacota aplicações Preact/JSX, TypeScript e JavaScript com esbuild nativo e @deno/esbuild-plugin. Oferece injeção de versão semântica, cópia seletiva de assets (copyFiles) e limpeza com suporte a globs e excludes.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
@@ -85,7 +91,8 @@ export const TOOLS: ToolInfo[] = [
     summary: "Geração de bundles autocontidos usando a API nativa Deno.bundle.",
     description:
       "Utiliza o compilador nativo do runtime Deno (--unstable-bundle) para gerar saídas limpas sem depender de binários esbuild externos. Ideal para ambientes restritos ou empacotamento puro de bibliotecas.",
-    cliCommand: "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
+    cliCommand:
+      "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
     configFile: "denobuild.jsonc",
     features: [
       "Integração 100% nativa com o subsistema Deno 2.x",
@@ -100,7 +107,8 @@ export const TOOLS: ToolInfo[] = [
     badge: "Desenvolvimento",
     icon: "visibility",
     colorClass: "tertiary-text",
-    summary: "Recompilação incremental ultrarrápida com esbuild.context e lockfile anti-concorrência.",
+    summary:
+      "Recompilação incremental ultrarrápida com esbuild.context e lockfile anti-concorrência.",
     description:
       "Monitora arquivos em srcdir e dispara rebuilds quase instantâneos. Possui trava de processo (buildit.lock) com verificação de PID ativo para evitar corridas entre servidores e watch concorrentes.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/watch",
@@ -118,7 +126,8 @@ export const TOOLS: ToolInfo[] = [
     badge: "LLM & Snapshots",
     icon: "smart_toy",
     colorClass: "primary-text",
-    summary: "Varredura de repositório e consolidação de código em Markdown para prompts e LLMs.",
+    summary:
+      "Varredura de repositório e consolidação de código em Markdown para prompts e LLMs.",
     description:
       "Varre workspaces Deno, filtra arquivos por globs e extensões permitidas, e formata o conteúdo em um snapshot legível e contextualizado para ser usado por agentes de IA e revisões de código.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/export",
@@ -136,7 +145,8 @@ export const TOOLS: ToolInfo[] = [
     badge: "Release & Tags",
     icon: "sell",
     colorClass: "secondary-text",
-    summary: "Sincronização de versões em workspaces e criação automatizada de releases Git.",
+    summary:
+      "Sincronização de versões em workspaces e criação automatizada de releases Git.",
     description:
       "Padroniza a versão semântica de deno.jsonc (incluindo suporte a hashes e pré-releases), sincroniza múltiplos pacotes do workspace e gera tags de versão Git (vX.Y.Z) de forma determinística.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
@@ -156,7 +166,8 @@ export const CLI_COMMANDS: CliCommandItem[] = [
     tool: "esbuild",
     title: "Build Geral (Todos os Alvos)",
     command: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
-    description: "Executa todos os alvos configurados com default: true no esbuild.jsonc.",
+    description:
+      "Executa todos os alvos configurados com default: true no esbuild.jsonc.",
     tag: "esbuild",
   },
   {
@@ -172,7 +183,8 @@ export const CLI_COMMANDS: CliCommandItem[] = [
     tool: "watch",
     title: "Iniciar Modo Watch",
     command: "deno run -A jsr:@vanaware/buildit/cli/watch",
-    description: "Inicia o monitoramento de alterações com recompilação incremental contínua.",
+    description:
+      "Inicia o monitoramento de alterações com recompilação incremental contínua.",
     tag: "watch",
   },
   {
@@ -187,7 +199,8 @@ export const CLI_COMMANDS: CliCommandItem[] = [
     id: "cmd-denobuild",
     tool: "denobuild",
     title: "Empacotar com Deno Nativo",
-    command: "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
+    command:
+      "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
     description: "Gera o bundle usando o comando Deno.bundle nativo.",
     tag: "denobuild",
   },
@@ -196,7 +209,8 @@ export const CLI_COMMANDS: CliCommandItem[] = [
     tool: "export",
     title: "Exportar Contextos de IA",
     command: "deno run -A jsr:@vanaware/buildit/cli/export",
-    description: "Gera snapshots de código em formato Markdown conforme export.jsonc.",
+    description:
+      "Gera snapshots de código em formato Markdown conforme export.jsonc.",
     tag: "export",
   },
   {
@@ -212,7 +226,8 @@ export const CLI_COMMANDS: CliCommandItem[] = [
     tool: "versioning",
     title: "Sanitizar Versão SemVer",
     command: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
-    description: "Normaliza o campo 'version' do deno.jsonc para SemVer padrão.",
+    description:
+      "Normaliza o campo 'version' do deno.jsonc para SemVer padrão.",
     tag: "version",
   },
   {
@@ -324,7 +339,6 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
 }`,
 };
 
-
 export const API_CODE_SNIPPETS = {
   esbuild: `import { esBuild } from "jsr:@vanaware/buildit";
 
@@ -379,10 +393,10 @@ await exportEngine({
 export const filteredCliCommands = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
   if (!query) return CLI_COMMANDS;
-  return CLI_COMMANDS.filter((cmd) =>
-    cmd.title.toLowerCase().includes(query) ||
-    cmd.command.toLowerCase().includes(query) ||
-    cmd.description.toLowerCase().includes(query) ||
-    cmd.tag.toLowerCase().includes(query)
+  return CLI_COMMANDS.filter((cmd,) =>
+    cmd.title.toLowerCase().includes(query,) ||
+    cmd.command.toLowerCase().includes(query,) ||
+    cmd.description.toLowerCase().includes(query,) ||
+    cmd.tag.toLowerCase().includes(query,)
   );
-});
+},);

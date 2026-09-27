@@ -38,7 +38,9 @@ if (container) {
     container.innerHTML = `
       <div class="padding center-align surface-error-container round margin">
         <h5 class="bold error-text">Erro ao inicializar a interface</h5>
-        <p class="small-text font-monospace">${err instanceof Error ? err.message : String(err,)}</p>
+        <p class="small-text font-monospace">${
+      err instanceof Error ? err.message : String(err,)
+    }</p>
       </div>
     `;
   }

@@ -206,16 +206,25 @@ describe("processTarget (integração)", () => {
       const mockBuild = (options: Record<string, unknown>,) => {
         capturedDefine = options.define as Record<string, string>;
         // Simula o comportamento do esbuild: substitui defines e escreve o arquivo
-        const finalContent = 'const cache = ' + capturedDefine["__GENERATED_ASSETS__"] + ';';
-        return Deno.writeTextFile(join(distDir, "service-worker.js",), finalContent,)
+        const finalContent = "const cache = " +
+          capturedDefine["__GENERATED_ASSETS__"] + ";";
+        return Deno.writeTextFile(
+          join(distDir, "service-worker.js",),
+          finalContent,
+        )
           .then(() => ({ metafile: null, errors: [], warnings: [], }));
       };
       const mockListFn = () => Promise.resolve(["./app.js", "./index.html",],);
       await processTarget("sw", config, "1.0.0", mockBuild, mockListFn,);
-      
-      assertEquals(capturedDefine["__GENERATED_ASSETS__"], JSON.stringify(["./app.js", "./index.html",],),);
 
-      const swContent = await Deno.readTextFile(join(distDir, "service-worker.js",),);
+      assertEquals(
+        capturedDefine["__GENERATED_ASSETS__"],
+        JSON.stringify(["./app.js", "./index.html",],),
+      );
+
+      const swContent = await Deno.readTextFile(
+        join(distDir, "service-worker.js",),
+      );
       assertEquals(
         swContent,
         'const cache = ["./app.js","./index.html"];',

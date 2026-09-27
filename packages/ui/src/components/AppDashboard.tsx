@@ -14,7 +14,8 @@ import {
 import { APP_VERSION, } from "../version.ts";
 
 export const AppDashboard = () => {
-  const currentTool = TOOLS.find((t) => t.id === selectedTool.value) ?? TOOLS[0]!;
+  const currentTool = TOOLS.find((t,) => t.id === selectedTool.value) ??
+    TOOLS[0]!;
 
   return (
     <div class="padding">
@@ -26,13 +27,20 @@ export const AppDashboard = () => {
           <article class="border padding surface-container-low round">
             <div class="row wrap">
               <div class="circle large primary-container center-align">
-                <i class="primary-text extra">construction</i>
+                <i class="primary-text extra">
+                  construction
+                </i>
               </div>
               <div class="max wrap" style="min-width: 0; min-inline-size: 0;">
-                <h4 class="no-margin bold">BuildIt</h4>
-                <p class="secondary-text no-margin wrap" style="overflow-wrap: anywhere; word-break: normal;">
-                  Suite de utilitários em TypeScript para orquestração de compilação, bundling de alta
-                  performance e exportação de contexto para Inteligência Artificial em ecossistemas Deno.
+                <h4 class="no-margin bold">
+                  BuildIt
+                </h4>
+                <p
+                  class="secondary-text no-margin wrap"
+                  style="overflow-wrap: anywhere; word-break: normal;">
+                  Suite de utilitários em TypeScript para orquestração de
+                  compilação, bundling de alta performance e exportação de
+                  contexto para Inteligência Artificial em ecossistemas Deno.
                 </p>
               </div>
               <div class="row wrap">
@@ -40,25 +48,36 @@ export const AppDashboard = () => {
                   class="button primary"
                   onClick={() => activeTab.value = "cli"}
                   style="cursor: pointer;">
-                  <i>terminal</i>
-                  <span>Comandos CLI</span>
+                  <i>
+                    terminal
+                  </i>
+                  <span>
+                    Comandos CLI
+                  </span>
                 </a>
                 <a
                   class="button border"
                   onClick={() => activeTab.value = "configs"}
                   style="cursor: pointer;">
-                  <i>tune</i>
-                  <span>Configurações</span>
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    Configurações
+                  </span>
                 </a>
               </div>
             </div>
           </article>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
-          <h5 class="bold">Pilares da Biblioteca</h5>
+          <h5 class="bold">
+            Pilares da Biblioteca
+          </h5>
           <div class="grid">
-            {TOOLS.map((tool) => (
+            {TOOLS.map((tool,) => (
               <div key={tool.id} class="s12">
                 <article
                   class="border padding fill wave"
@@ -71,59 +90,93 @@ export const AppDashboard = () => {
                     <i class={`${tool.colorClass} circle surface-variant`}>
                       {tool.icon}
                     </i>
-                    <span class="chip small outline">{tool.badge}</span>
+                    <span class="chip small outline">
+                      {tool.badge}
+                    </span>
                   </div>
-                  <div class="space"></div>
-                  <h6 class="bold no-margin">{tool.name}</h6>
-                  <p class="small-text secondary-text max wrap" style="flex: 1; overflow-wrap: anywhere;">
+                  <div class="space">
+                  </div>
+                  <h6 class="bold no-margin">
+                    {tool.name}
+                  </h6>
+                  <p
+                    class="small-text secondary-text max wrap"
+                    style="flex: 1; overflow-wrap: anywhere;">
                     {tool.summary}
                   </p>
-                  <div class="divider"></div>
+                  <div class="divider">
+                  </div>
                   <div class="row space no-space">
                     <span class="small-text tertiary-text font-monospace">
                       {tool.configFile}
                     </span>
-                    <i class="small-text">arrow_forward</i>
+                    <i class="small-text">
+                      arrow_forward
+                    </i>
                   </div>
                 </article>
               </div>
             ))}
           </div>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
           <article class="border padding surface-container-highest">
-            <h6 class="bold">Filosofia Deno &amp; Zero Bloat</h6>
+            <h6 class="bold">
+              Filosofia Deno &amp; Zero Bloat
+            </h6>
             <div class="grid">
               <div class="s12">
                 <div class="row">
-                  <i>speed</i>
+                  <i>
+                    speed
+                  </i>
                   <div>
-                    <div class="bold">Sem node_modules</div>
+                    <div class="bold">
+                      Sem node_modules
+                    </div>
                     <div class="small-text secondary-text wrap">
-                      Dependências resolvidas via URLs, specifiers <code>npm:</code> e <code>jsr:</code>.
+                      Dependências resolvidas via URLs, specifiers{" "}
+                      <code>
+                        npm:
+                      </code>{" "}
+                      e{" "}
+                      <code>
+                        jsr:
+                      </code>.
                     </div>
                   </div>
                 </div>
               </div>
               <div class="s12">
                 <div class="row">
-                  <i>security</i>
+                  <i>
+                    security
+                  </i>
                   <div>
-                    <div class="bold">Fail-Fast &amp; Explícito</div>
+                    <div class="bold">
+                      Fail-Fast &amp; Explícito
+                    </div>
                     <div class="small-text secondary-text wrap">
-                      Erros didáticos com exemplos de configuração em vez de fallbacks silenciosos.
+                      Erros didáticos com exemplos de configuração em vez de
+                      fallbacks silenciosos.
                     </div>
                   </div>
                 </div>
               </div>
               <div class="s12">
                 <div class="row">
-                  <i>lock</i>
+                  <i>
+                    lock
+                  </i>
                   <div>
-                    <div class="bold">Anti-Concorrência</div>
+                    <div class="bold">
+                      Anti-Concorrência
+                    </div>
                     <div class="small-text secondary-text wrap">
-                      Mecanismo de Lock em disco (PID) para evitar rebuilds concorrentes.
+                      Mecanismo de Lock em disco (PID) para evitar rebuilds
+                      concorrentes.
                     </div>
                   </div>
                 </div>
@@ -139,33 +192,47 @@ export const AppDashboard = () => {
       {activeTab.value === "tools" && (
         <section>
           <div class="row wrap gap margin-bottom">
-            {TOOLS.map((t) => (
+            {TOOLS.map((t,) => (
               <button
                 key={t.id}
                 type="button"
-                class={`chip ${selectedTool.value === t.id ? "primary" : "outline"}`}
+                class={`chip ${
+                  selectedTool.value === t.id ? "primary" : "outline"
+                }`}
                 onClick={() => selectedTool.value = t.id}>
-                <i>{t.icon}</i>
-                <span>{t.name}</span>
+                <i>
+                  {t.icon}
+                </i>
+                <span>
+                  {t.name}
+                </span>
               </button>
             ))}
           </div>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
           <article class="border padding">
             <div class="row space wrap">
               <div class="row gap">
-                <i class={`${currentTool.colorClass} circle large surface-variant`}>
+                <i
+                  class={`${currentTool.colorClass} circle large surface-variant`}>
                   {currentTool.icon}
                 </i>
                 <div>
-                  <h5 class="bold no-margin">{currentTool.name}</h5>
-                  <span class="chip small secondary-container">{currentTool.badge}</span>
+                  <h5 class="bold no-margin">
+                    {currentTool.name}
+                  </h5>
+                  <span class="chip small secondary-container">
+                    {currentTool.badge}
+                  </span>
                 </div>
               </div>
               <div class="row gap">
-                <span class="small-text secondary-text">Configuração:</span>
+                <span class="small-text secondary-text">
+                  Configuração:
+                </span>
                 <button
                   type="button"
                   class="chip small tertiary-container"
@@ -173,43 +240,76 @@ export const AppDashboard = () => {
                     selectedConfig.value = currentTool.configFile;
                     activeTab.value = "configs";
                   }}>
-                  <i>tune</i>
-                  <span>{currentTool.configFile}</span>
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    {currentTool.configFile}
+                  </span>
                 </button>
               </div>
             </div>
 
-            <div class="space"></div>
-            <p class="secondary-text wrap" style="font-size: 1.05rem; line-height: 1.5; overflow-wrap: anywhere;">
+            <div class="space">
+            </div>
+            <p
+              class="secondary-text wrap"
+              style="font-size: 1.05rem; line-height: 1.5; overflow-wrap: anywhere;">
               {currentTool.description}
             </p>
 
-            <div class="divider margin"></div>
+            <div class="divider margin">
+            </div>
 
-            <h6 class="bold">Comando CLI Canônico</h6>
+            <h6 class="bold">
+              Comando CLI Canônico
+            </h6>
             <div class="field border padding surface-container-highest round row">
-              <i class="primary-text">terminal</i>
-              <code class="max font-monospace margin-left" style="user-select: all; overflow-wrap: anywhere;">
+              <i class="primary-text">
+                terminal
+              </i>
+              <code
+                class="max font-monospace margin-left"
+                style="user-select: all; overflow-wrap: anywhere;">
                 {currentTool.cliCommand}
               </code>
               <button
                 type="button"
                 class="chip small primary wave"
-                onClick={() => copyToClipboard(currentTool.cliCommand, `tool-${currentTool.id}`)}>
-                <i>{copiedId.value === `tool-${currentTool.id}` ? "check" : "content_copy"}</i>
-                <span>{copiedId.value === `tool-${currentTool.id}` ? "Copiado!" : "Copiar"}</span>
+                onClick={() =>
+                  copyToClipboard(
+                    currentTool.cliCommand,
+                    `tool-${currentTool.id}`,
+                  )}>
+                <i>
+                  {copiedId.value === `tool-${currentTool.id}`
+                    ? "check"
+                    : "content_copy"}
+                </i>
+                <span>
+                  {copiedId.value === `tool-${currentTool.id}`
+                    ? "Copiado!"
+                    : "Copiar"}
+                </span>
               </button>
             </div>
 
-            <div class="space"></div>
+            <div class="space">
+            </div>
 
-            <h6 class="bold">Recursos e Capacidades</h6>
+            <h6 class="bold">
+              Recursos e Capacidades
+            </h6>
             <div class="grid">
-              {currentTool.features.map((feat, idx) => (
+              {currentTool.features.map((feat, idx,) => (
                 <div key={idx} class="s12">
                   <div class="row gap no-margin padding-bottom">
-                    <i class="green-text">check_circle</i>
-                    <span class="small-text">{feat}</span>
+                    <i class="green-text">
+                      check_circle
+                    </i>
+                    <span class="small-text">
+                      {feat}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -225,48 +325,74 @@ export const AppDashboard = () => {
         <section>
           <div class="row space wrap gap">
             <div>
-              <h5 class="bold no-margin">Referência de Comandos CLI</h5>
+              <h5 class="bold no-margin">
+                Referência de Comandos CLI
+              </h5>
               <div class="small-text secondary-text">
-                Todos os utilitários são executáveis diretamente pelo Deno via JSR ou arquivos locais.
+                Todos os utilitários são executáveis diretamente pelo Deno via
+                JSR ou arquivos locais.
               </div>
             </div>
-            <div class="field border prefix round small max" style="max-width: 320px;">
-              <i>search</i>
+            <div
+              class="field border prefix round small max"
+              style="max-width: 320px;">
+              <i>
+                search
+              </i>
               <input
                 type="text"
                 placeholder="Filtrar comandos..."
                 value={searchQuery.value}
-                onInput={(e) => searchQuery.value = (e.target as HTMLInputElement).value}
-              />
+                onInput={(e,) =>
+                  searchQuery.value = (e.target as HTMLInputElement).value} />
             </div>
           </div>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
           <div class="space-y">
-            {filteredCliCommands.value.map((item) => (
-              <article key={item.id} class="border padding surface-container-low round">
+            {filteredCliCommands.value.map((item,) => (
+              <article
+                key={item.id}
+                class="border padding surface-container-low round">
                 <div class="row space wrap">
                   <div class="row gap">
-                    <span class="chip small outline">{item.tag}</span>
-                    <h6 class="bold no-margin">{item.title}</h6>
+                    <span class="chip small outline">
+                      {item.tag}
+                    </span>
+                    <h6 class="bold no-margin">
+                      {item.title}
+                    </h6>
                   </div>
                   <button
                     type="button"
                     class="chip small primary wave"
-                    onClick={() => copyToClipboard(item.command, item.id)}>
-                    <i>{copiedId.value === item.id ? "check" : "content_copy"}</i>
-                    <span>{copiedId.value === item.id ? "Copiado!" : "Copiar Comando"}</span>
+                    onClick={() => copyToClipboard(item.command, item.id,)}>
+                    <i>
+                      {copiedId.value === item.id ? "check" : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === item.id
+                        ? "Copiado!"
+                        : "Copiar Comando"}
+                    </span>
                   </button>
                 </div>
 
-                <p class="small-text secondary-text margin-top-small no-margin-bottom wrap" style="overflow-wrap: anywhere;">
+                <p
+                  class="small-text secondary-text margin-top-small no-margin-bottom wrap"
+                  style="overflow-wrap: anywhere;">
                   {item.description}
                 </p>
 
                 <div class="field border padding surface-container-highest round margin-top-small row">
-                  <i class="primary-text">terminal</i>
-                  <code class="max font-monospace margin-left small-text" style="user-select: all; overflow-wrap: anywhere;">
+                  <i class="primary-text">
+                    terminal
+                  </i>
+                  <code
+                    class="max font-monospace margin-left small-text"
+                    style="user-select: all; overflow-wrap: anywhere;">
                     {item.command}
                   </code>
                 </div>
@@ -275,7 +401,9 @@ export const AppDashboard = () => {
 
             {filteredCliCommands.value.length === 0 && (
               <div class="center-align padding">
-                <p class="secondary-text">Nenhum comando encontrado para o termo pesquisado.</p>
+                <p class="secondary-text">
+                  Nenhum comando encontrado para o termo pesquisado.
+                </p>
               </div>
             )}
           </div>
@@ -289,40 +417,65 @@ export const AppDashboard = () => {
         <section>
           <div class="row space wrap gap">
             <div>
-              <h5 class="bold no-margin">Arquivos de Configuração (.jsonc)</h5>
+              <h5 class="bold no-margin">
+                Arquivos de Configuração (.jsonc)
+              </h5>
               <div class="small-text secondary-text">
-                O BuildIt utiliza JSON com comentários (JSONC) para uma declaração tipada e legível.
+                O BuildIt utiliza JSON com comentários (JSONC) para uma
+                declaração tipada e legível.
               </div>
             </div>
             <div class="row gap wrap">
-              {Object.keys(CONFIG_SNIPPETS).map((name) => (
+              {Object.keys(CONFIG_SNIPPETS,).map((name,) => (
                 <button
                   key={name}
                   type="button"
-                  class={`chip ${selectedConfig.value === name ? "primary" : "outline"}`}
+                  class={`chip ${
+                    selectedConfig.value === name ? "primary" : "outline"
+                  }`}
                   onClick={() => selectedConfig.value = name}>
-                  <i>tune</i>
-                  <span>{name}</span>
+                  <i>
+                    tune
+                  </i>
+                  <span>
+                    {name}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
           <article class="border padding surface-container-low round">
             <div class="row space padding-bottom wrap">
               <div class="row gap">
-                <i class="primary-text">description</i>
-                <span class="bold font-monospace">{selectedConfig.value}</span>
+                <i class="primary-text">
+                  description
+                </i>
+                <span class="bold font-monospace">
+                  {selectedConfig.value}
+                </span>
               </div>
               <button
                 type="button"
                 class="chip small outline"
                 onClick={() =>
-                  copyToClipboard(CONFIG_SNIPPETS[selectedConfig.value] ?? "", selectedConfig.value)}>
-                <i>{copiedId.value === selectedConfig.value ? "check" : "content_copy"}</i>
-                <span>{copiedId.value === selectedConfig.value ? "Copiado!" : "Copiar JSON"}</span>
+                  copyToClipboard(
+                    CONFIG_SNIPPETS[selectedConfig.value] ?? "",
+                    selectedConfig.value,
+                  )}>
+                <i>
+                  {copiedId.value === selectedConfig.value
+                    ? "check"
+                    : "content_copy"}
+                </i>
+                <span>
+                  {copiedId.value === selectedConfig.value
+                    ? "Copiado!"
+                    : "Copiar JSON"}
+                </span>
               </button>
             </div>
 
@@ -341,28 +494,46 @@ export const AppDashboard = () => {
       {activeTab.value === "api" && (
         <section>
           <div>
-            <h5 class="bold no-margin">API Programática em TypeScript</h5>
+            <h5 class="bold no-margin">
+              API Programática em TypeScript
+            </h5>
             <div class="small-text secondary-text">
-              Como importar e orquestrar as ferramentas diretamente em código TypeScript/Deno.
+              Como importar e orquestrar as ferramentas diretamente em código
+              TypeScript/Deno.
             </div>
           </div>
 
-          <div class="space"></div>
+          <div class="space">
+          </div>
 
           <div class="grid">
             <div class="s12">
               <article class="border padding surface-container-low round fill">
                 <div class="row space padding-bottom wrap">
                   <div class="row gap">
-                    <i class="primary-text">bolt</i>
-                    <span class="bold">Motor esbuild (esBuild)</span>
+                    <i class="primary-text">
+                      bolt
+                    </i>
+                    <span class="bold">
+                      Motor esbuild (esBuild)
+                    </span>
                   </div>
                   <button
                     type="button"
                     class="chip small outline"
-                    onClick={() => copyToClipboard(API_CODE_SNIPPETS.esbuild, "api-esbuild")}>
-                    <i>{copiedId.value === "api-esbuild" ? "check" : "content_copy"}</i>
-                    <span>{copiedId.value === "api-esbuild" ? "Copiado!" : "Copiar"}</span>
+                    onClick={() =>
+                      copyToClipboard(
+                        API_CODE_SNIPPETS.esbuild,
+                        "api-esbuild",
+                      )}>
+                    <i>
+                      {copiedId.value === "api-esbuild"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-esbuild" ? "Copiado!" : "Copiar"}
+                    </span>
                   </button>
                 </div>
                 <pre
@@ -377,15 +548,26 @@ export const AppDashboard = () => {
               <article class="border padding surface-container-low round fill">
                 <div class="row space padding-bottom wrap">
                   <div class="row gap">
-                    <i class="tertiary-text">visibility</i>
-                    <span class="bold">Motor Watch (watchEngine)</span>
+                    <i class="tertiary-text">
+                      visibility
+                    </i>
+                    <span class="bold">
+                      Motor Watch (watchEngine)
+                    </span>
                   </div>
                   <button
                     type="button"
                     class="chip small outline"
-                    onClick={() => copyToClipboard(API_CODE_SNIPPETS.watch, "api-watch")}>
-                    <i>{copiedId.value === "api-watch" ? "check" : "content_copy"}</i>
-                    <span>{copiedId.value === "api-watch" ? "Copiado!" : "Copiar"}</span>
+                    onClick={() =>
+                      copyToClipboard(API_CODE_SNIPPETS.watch, "api-watch",)}>
+                    <i>
+                      {copiedId.value === "api-watch"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-watch" ? "Copiado!" : "Copiar"}
+                    </span>
                   </button>
                 </div>
                 <pre
@@ -400,15 +582,26 @@ export const AppDashboard = () => {
               <article class="border padding surface-container-low round">
                 <div class="row space padding-bottom wrap">
                   <div class="row gap">
-                    <i class="primary-text">smart_toy</i>
-                    <span class="bold">Motor de Exportação IA (exportEngine)</span>
+                    <i class="primary-text">
+                      smart_toy
+                    </i>
+                    <span class="bold">
+                      Motor de Exportação IA (exportEngine)
+                    </span>
                   </div>
                   <button
                     type="button"
                     class="chip small outline"
-                    onClick={() => copyToClipboard(API_CODE_SNIPPETS.export, "api-export")}>
-                    <i>{copiedId.value === "api-export" ? "check" : "content_copy"}</i>
-                    <span>{copiedId.value === "api-export" ? "Copiado!" : "Copiar"}</span>
+                    onClick={() =>
+                      copyToClipboard(API_CODE_SNIPPETS.export, "api-export",)}>
+                    <i>
+                      {copiedId.value === "api-export"
+                        ? "check"
+                        : "content_copy"}
+                    </i>
+                    <span>
+                      {copiedId.value === "api-export" ? "Copiado!" : "Copiar"}
+                    </span>
                   </button>
                 </div>
                 <pre

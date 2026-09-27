@@ -69,12 +69,15 @@ describe("UI Store - Signals & Actions", () => {
     searchQuery.value = "watch";
     const watchCmds = filteredCliCommands.value;
     assertEquals(watchCmds.length > 0, true,);
-    assertEquals(watchCmds.every((c) =>
-      c.title.toLowerCase().includes("watch",) ||
-      c.command.toLowerCase().includes("watch",) ||
-      c.description.toLowerCase().includes("watch",) ||
-      c.tag.toLowerCase().includes("watch",)
-    ), true,);
+    assertEquals(
+      watchCmds.every((c,) =>
+        c.title.toLowerCase().includes("watch",) ||
+        c.command.toLowerCase().includes("watch",) ||
+        c.description.toLowerCase().includes("watch",) ||
+        c.tag.toLowerCase().includes("watch",)
+      ),
+      true,
+    );
 
     searchQuery.value = "termo_completamente_inexistente_12345";
     assertEquals(filteredCliCommands.value.length, 0,);
@@ -92,13 +95,16 @@ describe("UI Store - Signals & Actions", () => {
 
   it("deve atualizar copiedId via copyToClipboard", async () => {
     copiedId.value = null;
-    await copyToClipboard("deno run -A jsr:@vanaware/buildit/cli/esbuild", "test-cmd",);
+    await copyToClipboard(
+      "deno run -A jsr:@vanaware/buildit/cli/esbuild",
+      "test-cmd",
+    );
     assertEquals(copiedId.value, "test-cmd",);
   });
 
   it("deve conter metadados consistentes de ferramentas", () => {
     assertEquals(TOOLS.length, 5,);
-    const ids = TOOLS.map((t) => t.id,);
+    const ids = TOOLS.map((t,) => t.id);
     assertEquals(ids.includes("esbuild",), true,);
     assertEquals(ids.includes("denobuild",), true,);
     assertEquals(ids.includes("watch",), true,);

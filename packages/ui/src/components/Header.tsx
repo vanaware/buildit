@@ -40,7 +40,9 @@ export const Header = () => {
               JSR
             </span>
           </div>
-          <div class="small-text secondary-text wrap" style="overflow-wrap: anywhere; word-break: normal;">
+          <div
+            class="small-text secondary-text wrap"
+            style="overflow-wrap: anywhere; word-break: normal;">
             Orquestrador de Compilação &amp; Exportador de Contexto IA
           </div>
         </div>
@@ -62,14 +64,18 @@ export const Header = () => {
       <nav
         class="tabs left-align responsive scroll"
         style="max-width: 100%; width: 100%; min-width: 0; box-sizing: border-box;">
-        {tabs.map((tab) => (
+        {tabs.map((tab,) => (
           <a
             key={tab.key}
             class={activeTab.value === tab.key ? "active" : ""}
             onClick={() => activeTab.value = tab.key}
             style="cursor: pointer; white-space: nowrap; flex-shrink: 0;">
-            <i>{tab.icon}</i>
-            <span>{tab.label}</span>
+            <i>
+              {tab.icon}
+            </i>
+            <span>
+              {tab.label}
+            </span>
           </a>
         ))}
       </nav>
