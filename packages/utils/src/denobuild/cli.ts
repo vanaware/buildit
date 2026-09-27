@@ -14,7 +14,7 @@ import { parseArgs, } from "../tools/cli-flags.ts";
 /**
  * Executa o CLI do orquestrador de build baseado em Deno.bundle.
  */
-export function denoBuildCli() {
+export function denoBuildCli(): Command<any> {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)

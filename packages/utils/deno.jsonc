@@ -1,6 +1,6 @@
 {
   "name": "@vanaware/buildit",
-  "version": "0.0.0#muj7h50w",
+  "version": "0.3.44",
   "license": "MIT",
   "compilerOptions": {
     "lib": [

@@ -7,6 +7,7 @@
  *
  * @example
  * ```typescript
+ * // @ts-nocheck
  * import { esBuild, watchEngine, denoBuild, exportEngine } from "jsr:@vanaware/buildit";
  *
  * // Executar compilação de produção com esbuild
@@ -36,7 +37,7 @@
  *   config: {
  *     ui: {
  *       arquivoSaida: "snapshots/ui.md",
- *       includes: ["src/**/*"],
+ *       includes: ["src/main.ts"],
  *     },
  *   },
  * });
