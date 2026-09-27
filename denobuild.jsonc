@@ -20,6 +20,12 @@
           "includes": [
             "index.html"
           ]
+        },
+        {
+          "basedir": "packages/utils/",
+          "includes": [
+            "schema/*.json"
+          ]
         }
       ],
       "clean": {
