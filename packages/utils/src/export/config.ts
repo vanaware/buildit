@@ -80,9 +80,14 @@ Exemplo de arquivo "export.jsonc" mínimo:
   ) {
     const rootProjeto = (parsed as ExportConfigFile).projeto;
     const rootCabecalho = (parsed as ExportConfigFile).cabecalho;
+    const rootDefineVersionString = (parsed as ExportConfigFile).defineVersionString;
     const modos = (parsed as ExportConfigFile).modos;
 
-    if (rootProjeto !== undefined || rootCabecalho !== undefined) {
+    if (
+      rootProjeto !== undefined ||
+      rootCabecalho !== undefined ||
+      rootDefineVersionString !== undefined
+    ) {
       for (const [modoKey, modoConfig,] of Object.entries(modos,)) {
         modos[modoKey] = {
           ...(rootProjeto !== undefined && modoConfig.projeto === undefined
@@ -91,6 +96,10 @@ Exemplo de arquivo "export.jsonc" mínimo:
           ...(rootCabecalho !== undefined &&
               modoConfig.cabecalho === undefined
             ? { cabecalho: rootCabecalho, }
+            : {}),
+          ...(rootDefineVersionString !== undefined &&
+              modoConfig.defineVersionString === undefined
+            ? { defineVersionString: rootDefineVersionString, }
             : {}),
           ...modoConfig,
         };

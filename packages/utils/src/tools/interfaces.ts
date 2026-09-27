@@ -264,6 +264,8 @@ export interface ExportConfig {
   cabecalho?: string;
   /** Nome do projeto exibido no cabeçalho (padrão: "BuildIt"). */
   projeto?: string;
+  /** Identificador customizado da constante para substituição da versão (padrão: "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Se o modo deve ser executado por padrão quando nenhum modo for especificado. */
   default?: boolean;
 }
@@ -345,6 +347,8 @@ export interface ExportConfigFile {
   projeto?: string;
   /** Bloco global de cabeçalho customizado para IA. */
   cabecalho?: string;
+  /** Identificador customizado da versão global (padrão: "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Dicionário de modos de exportação. */
   modos: Record<string, ExportConfig>;
 }
@@ -353,6 +357,7 @@ export interface ExportConfigResult {
   modos: Record<string, ExportConfig>;
   projeto?: string;
   cabecalho?: string;
+  defineVersionString?: string;
 }
 
 export interface ExportResult {
@@ -368,6 +373,7 @@ export interface ExportOptions {
   baseDir?: string;
   versaoApp?: string;
   denoJsoncPath?: string;
+  defineVersionString?: string;
   silencioso?: boolean;
 }
 

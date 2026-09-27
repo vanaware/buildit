@@ -132,12 +132,14 @@ export async function exportarModo(
     baseDir?: string;
     silencioso?: boolean;
     denoJsoncPath?: string;
+    defineVersionString?: string;
   },
 ): Promise<ExportResult> {
   const baseDir = opcoes?.baseDir ?? ".";
   const versaoApp = opcoes?.versaoApp ??
     await readProjectVersion(opcoes?.denoJsoncPath, baseDir,);
   const silencioso = opcoes?.silencioso ?? false;
+  const defineVersionString = opcoes?.defineVersionString ?? config.defineVersionString ?? "__APP_VERSION__";
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
 
   if (!silencioso) {
@@ -174,7 +176,7 @@ export async function exportarModo(
 
   try {
     // Escreve o cabeçalho
-    const cabecalho = gerarCabecalho(config, modo, versaoApp,);
+    const cabecalho = gerarCabecalho(config, modo, versaoApp, defineVersionString,);
     const cabecalhoChunk = encoder.encode(cabecalho,);
     await writer.write(cabecalhoChunk,);
     bytesGravados += cabecalhoChunk.byteLength;
@@ -258,6 +260,7 @@ export async function exportEngine(
         versaoApp,
         silencioso: opcoes.silencioso,
         denoJsoncPath: opcoes.denoJsoncPath,
+        defineVersionString: opcoes.defineVersionString,
       },);
       resultados.push(res,);
     }

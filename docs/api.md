@@ -178,7 +178,7 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
 
 - **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
 - **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
-- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da palavra-chave `__APP_VERSION__` em `instrucaoCustomizada` e `cabecalho`.
+- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da constante de versão (`defineVersionString`, padrão: `__APP_VERSION__`) em `instrucaoCustomizada` e `cabecalho`.
 
 ---
 

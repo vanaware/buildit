@@ -150,29 +150,37 @@ export function deveIncluirArquivo(
  * @param config Configuração do modo
  * @param modo Nome identificador do modo
  * @param versaoApp Versão semântica atual do projeto
+ * @param defineVersionString Identificador da constante para substituição da versão (padrão: "__APP_VERSION__")
  * @returns Cabeçalho formatado em Markdown
  *
  * @example
  * ```typescript
- * const header = gerarCabecalho(config, "ui", "0.3.1");
+ * const header = gerarCabecalho(config, "ui", "0.3.1", "__APP_VERSION__");
  * ```
  */
 export function gerarCabecalho(
   config: ExportConfig,
   modo: string,
   versaoApp: string,
+  defineVersionString: string = "__APP_VERSION__",
 ): string {
   const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
-  const instrucao = (config.instrucaoCustomizada ?? "Contexto do projeto.")
-    .replaceAll("__APP_VERSION__", versaoApp,);
+  const targetDefine = config.defineVersionString ?? defineVersionString;
+
+  let instrucao = config.instrucaoCustomizada ?? "Contexto do projeto.";
+  instrucao = instrucao
+    .replaceAll("__APP_VERSION__", versaoApp,)
+    .replaceAll(targetDefine, versaoApp,);
 
   const projeto = config.projeto ?? "BuildIt";
 
   const padraoCabecalho =
     `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
 
-  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim()
-    .replaceAll("__APP_VERSION__", versaoApp,);
+  let cabecalho = (config.cabecalho ?? padraoCabecalho).trim();
+  cabecalho = cabecalho
+    .replaceAll("__APP_VERSION__", versaoApp,)
+    .replaceAll(targetDefine, versaoApp,);
 
   return `> **INSTRUÇÃO PARA A IA:** 
 > ${instrucao}

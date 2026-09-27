@@ -105,4 +105,44 @@ describe("exportEngine programmatic API", () => {
 
     await Deno.remove(tempDir, { recursive: true, },);
   });
+
+  it("deve substituir defineVersionString customizado nas instruções e no cabeçalho", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const srcDir = join(tempDir, "src",);
+    await Deno.mkdir(srcDir, { recursive: true, },);
+
+    await Deno.writeTextFile(
+      join(srcDir, "index.ts",),
+      'console.log("version replacement");',
+    );
+
+    const denoJsonc = join(tempDir, "deno.jsonc",);
+    await Deno.writeTextFile(
+      denoJsonc,
+      JSON.stringify({ version: "2.5.0", },),
+    );
+
+    const resultados = await exportEngine({
+      config: {
+        versionTest: {
+          arquivoSaida: "version-out.md",
+          includes: ["src/**/*.ts",],
+          defineVersionString: "MY_CUSTOM_VER",
+          instrucaoCustomizada: "Versão da app: MY_CUSTOM_VER e padrão __APP_VERSION__",
+          cabecalho: "Cabeçalho com MY_CUSTOM_VER",
+        },
+      },
+      modos: ["versionTest",],
+      baseDir: tempDir,
+      denoJsoncPath: denoJsonc,
+      silencioso: true,
+    },);
+
+    assertEquals(resultados.length, 1,);
+    const snapshot = await Deno.readTextFile(join(tempDir, "version-out.md",),);
+    assertEquals(snapshot.includes("Versão da app: 2.5.0 e padrão 2.5.0",), true,);
+    assertEquals(snapshot.includes("Cabeçalho com 2.5.0",), true,);
+
+    await Deno.remove(tempDir, { recursive: true, },);
+  });
 });
