@@ -4,8 +4,8 @@
  */
 
 import {
-  extractVersion,
   findDenoFile,
+  readProjectVersion,
   replaceVersionInContent,
   sanitizeVersion,
 } from "../../tools/version.ts";
@@ -56,8 +56,13 @@ export async function sanitizeVersionFile(
     console.log(`🔍 Buscando versão em: ${targetPath}`,);
   }
 
+  let rawVersion: string | null = null;
+  try {
+    rawVersion = await readProjectVersion(targetPath, baseDir,);
+  } catch {
+    rawVersion = null;
+  }
   let content = await Deno.readTextFile(targetPath,);
-  let rawVersion = extractVersion(content,);
 
   if (rawVersion === null) {
     if (!options.silencioso) {

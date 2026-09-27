@@ -21,39 +21,6 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Analisa os argumentos fornecidos via linha de comando ou array de strings
- * e determina quais modos devem ser executados.
- *
- * Regras:
- * - Sem argumentos: seleciona todos os modos configurados com `default !== false`
- * - Com argumentos: seleciona apenas os modos correspondentes às chaves conhecidas
- * - Argumentos desconhecidos são ignorados
- *
- * @param args Lista de argumentos recebidos
- * @param configs Dicionário de configurações de modos disponíveis
- * @returns Array de chaves de modos a serem executados
- *
- * @example
- * ```typescript
- * const modos = parseArgs(["ui"], configs); // ["ui"]
- * ```
- */
-export function parseArgs(
-  args: string[],
-  configs: Record<string, ExportConfig>,
-): string[] {
-  const configKeys = Object.keys(configs,);
-  const lowerArgs = args.map((a,) => a.toLowerCase());
-  const requestedModos = lowerArgs.filter((arg,) => configKeys.includes(arg,));
-
-  if (requestedModos.length === 0) {
-    return configKeys.filter((modo,) => configs[modo]?.default !== false);
-  }
-
-  return configKeys.filter((modo,) => requestedModos.includes(modo,));
-}
-
-/**
  * Coleta a lista ordenada e deduplicada de arquivos que devem ser incluídos no snapshot.
  * Utiliza `expandGlob` para varredura otimizada direta.
  *

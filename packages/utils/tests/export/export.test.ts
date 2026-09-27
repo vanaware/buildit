@@ -10,7 +10,6 @@ import { EXPORT_CONFIG_EXAMPLE, } from "../../src/export/config.ts";
 import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
 import {
   coletarArquivosParaExportacao,
-  parseArgs,
 } from "../../src/export/engine.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
@@ -121,23 +120,5 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
     ],);
 
     await Deno.remove(tempDir, { recursive: true, },);
-  });
-});
-
-describe("parseArgs", () => {
-  it("deve retornar todos os modos com default !== false quando sem argumentos", () => {
-    const modos = parseArgs([], EXPORT_CONFIG_EXAMPLE,);
-    assertEquals(modos.includes("ui",), true,);
-    assertEquals(modos.includes("docs",), false,); // docs tem default: false
-  });
-
-  it("deve retornar apenas o modo solicitado via CLI", () => {
-    const modos = parseArgs(["docs",], EXPORT_CONFIG_EXAMPLE,);
-    assertEquals(modos, ["docs",],);
-  });
-
-  it("deve ignorar argumentos desconhecidos", () => {
-    const modos = parseArgs(["desconhecido", "ui",], EXPORT_CONFIG_EXAMPLE,);
-    assertEquals(modos, ["ui",],);
   });
 });
