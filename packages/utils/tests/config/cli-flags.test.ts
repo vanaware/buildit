@@ -1,9 +1,10 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { parseArgs, } from "../../src/tools/cli-flags.ts";
-import { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
+import { resolverOrdemTargets, } from "../../src/tools/targets.ts";
+import type { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
 
-describe("parseArgs", () => {
+describe("parseArgs e resolverOrdemTargets", () => {
   const config: GlobalTargetConfig = {
     ui: {
       entryPoints: ["main.tsx",],
@@ -25,24 +26,21 @@ describe("parseArgs", () => {
     },
   };
 
-  it("deve usar alvos padrão se nenhum for especificado", () => {
-    const res = parseArgs([], config,);
-    assertEquals(res.targets, ["ui", "worker",],);
-    assertEquals(res.globalNoVersion, false,);
-  });
-
-  it("deve identificar a flag noversion", () => {
-    const res = parseArgs(["noversion",], config,);
+  it("parseArgs deve extrair rawTargets e detectar noversion", () => {
+    const res = parseArgs(["noversion", "ui",],);
+    assertEquals(res.targets, ["ui",],);
     assertEquals(res.globalNoVersion, true,);
   });
 
-  it("deve filtrar alvos solicitados", () => {
-    const res = parseArgs(["ui", "sw",], config,);
-    assertEquals(res.targets, ["ui", "sw",],);
+  it("resolverOrdemTargets deve usar alvos padrão se nenhum for especificado", () => {
+    const { targets, } = parseArgs([],);
+    const resolved = resolverOrdemTargets(config, targets,);
+    assertEquals(resolved, ["ui", "worker",],);
   });
 
-  it("deve respeitar a ordem do config independente da ordem dos args", () => {
-    const res = parseArgs(["sw", "ui",], config,);
-    assertEquals(res.targets, ["ui", "sw",],);
+  it("resolverOrdemTargets deve respeitar a ordem do config independente da ordem dos args", () => {
+    const { targets, } = parseArgs(["sw", "ui",],);
+    const resolved = resolverOrdemTargets(config, targets,);
+    assertEquals(resolved, ["ui", "sw",],);
   });
 });
