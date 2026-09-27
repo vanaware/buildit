@@ -8,9 +8,7 @@ import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
 import { EXPORT_CONFIG_EXAMPLE, } from "../../src/export/config.ts";
 import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
-import {
-  coletarArquivosParaExportacao,
-} from "../../src/export/engine.ts";
+import { coletarArquivosParaExportacao, } from "../../src/export/engine.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
 describe("deveIncluirArquivo", () => {

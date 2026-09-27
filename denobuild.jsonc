@@ -1,7 +1,8 @@
 {
   "$schema": "./packages/utils/schema/denobuild.json",
   "versionPaths": [
-    "packages/utils/src/version.ts"
+    "packages/utils/src/version.ts",
+    "packages/ui/src/version.ts"
   ],
   "forcepackagesversion": true,
   "targets": {
