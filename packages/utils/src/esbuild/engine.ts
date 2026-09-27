@@ -115,14 +115,16 @@ export async function esBuild(
         continue;
       }
 
+      const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;
       const startTime = performance.now();
       await processTarget(
         targetName,
         targetConfig,
         finalVersion,
         (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
-        listAssetsForCache,
+        listFn,
         baseDir,
+        opcoes.defineVersionString,
       );
       const durationMs = Number((performance.now() - startTime).toFixed(0,),);
 
@@ -161,6 +163,7 @@ export async function processTarget(
   esbuildBuildFn: (options: any,) => Promise<any>,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
   baseDir: string = ".",
+  defineVersionString?: string,
 ): Promise<void> {
   const resolvedConfig: TargetConfig = {
     ...config,
@@ -198,6 +201,7 @@ export async function processTarget(
     resolvedConfig,
     appVersion,
     listAssetsFn,
+    defineVersionString,
   );
 
   console.log(`🔨 Compilando com esbuild...`,);
@@ -256,20 +260,20 @@ export async function buildEsbuildOptions(
   _targetName: string,
   config: TargetConfig,
   appVersion: string,
-  _listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  const defineVersionKey = config.defineVersionString || "__APP_VERSION__";
+  // deno-lint-ignore no-explicit-any
+  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
   const finalDefine: Record<string, string> = {
     ...config.define,
     [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
   };
 
-  // 🔥 INJEÇÃO DE ASSETS DEFINES: Padrão esbuild (calculado ANTES do build)
-  if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && config.distdir) {
-    const assets = _listAssetsFn
-      ? await _listAssetsFn(config.distdir,)
-      : await listAssetsForCache(config.distdir,);
+  // 🔥 INJEÇÃO DE ASSETS DEFINES: Padrão unificado
+  if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && listAssetsFn && config.distdir) {
+    const assets = await listAssetsFn(config.distdir,);
 
     finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
     console.log(`📋 ${assets.length} assets listados para define '${config.defineAssetsString}'`,);

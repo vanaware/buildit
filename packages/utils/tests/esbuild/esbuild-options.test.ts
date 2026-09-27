@@ -230,20 +230,20 @@ describe("buildEsbuildOptions", () => {
     });
   });
   describe("lógica de defineVersionString e defineAssetsString", () => {
-    it("injeta define customizado de versão quando defineVersionString é informado", async () => {
+    it("injeta define customizado de versão quando defineVersionString é informado como parâmetro global", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
       try {
-        const config = makeConfig(dir, {
-          defineVersionString: "CUSTOM_APP_VERSION",
-        },);
+        const config = makeConfig(dir,);
         const options = await buildEsbuildOptions(
           "ui",
           config,
           "1.0.0",
+          undefined,
+          "CUSTOM_GLOBAL_VERSION",
         );
-        assertEquals(options.define.CUSTOM_APP_VERSION, '"v1.0.0"',);
+        assertEquals(options.define.CUSTOM_GLOBAL_VERSION, '"v1.0.0"',);
         assertEquals(options.define.__APP_VERSION__, undefined,);
       } finally {
         await cleanup();
@@ -262,6 +262,28 @@ describe("buildEsbuildOptions", () => {
           "1.0.0",
         );
         assertEquals(options.define.__APP_VERSION__, '"v1.0.0"',);
+      } finally {
+        await cleanup();
+      }
+    });
+
+    it("injeta assets listados via listAssetsFn quando defineAssetsString é configurado", async () => {
+      const { dir, cleanup, } = await withFileStructure({
+        "src/main.tsx": "",
+      },);
+      try {
+        const config = makeConfig(dir, {
+          distdir: dir,
+          defineAssetsString: "__MOCK_ASSETS__",
+        },);
+        const mockListFn = () => Promise.resolve(["app.js", "style.css",],);
+        const options = await buildEsbuildOptions(
+          "ui",
+          config,
+          "1.0.0",
+          mockListFn,
+        );
+        assertEquals(options.define.__MOCK_ASSETS__, JSON.stringify(["app.js", "style.css",],),);
       } finally {
         await cleanup();
       }

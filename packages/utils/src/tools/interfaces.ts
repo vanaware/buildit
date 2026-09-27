@@ -127,8 +127,6 @@ export interface TargetConfig {
   define?: Record<string, string>;
   /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
   defineAssetsString?: string;
-  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
-  defineVersionString?: string;
   drop?: EsbuildDrop[];
   external?: string[];
   metafile?: boolean;
@@ -193,8 +191,6 @@ export interface WatchTargetConfig {
   define?: Record<string, string>;
   /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
   defineAssetsString?: string;
-  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
-  defineVersionString?: string;
   drop?: EsbuildDrop[];
   external?: string[];
   write?: boolean;
@@ -279,7 +275,6 @@ export interface DenoBundleTargetConfig {
   clean?: CleanConfig | string[];
   copyFiles?: CopyFileConfig[];
   default?: boolean;
-  mode?: "build" | "watch";
   entryPoints: string[];
   format?: DenoBundleFormat;
   platform?: DenoBundlePlatform;
@@ -293,8 +288,6 @@ export interface DenoBundleTargetConfig {
   define?: Record<string, string>;
   /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
   defineAssetsString?: string;
-  /** Identificador customizado da constante para injeção da versão da aplicação (padrão: "__APP_VERSION__"). */
-  defineVersionString?: string;
   outfile?: string;
 }
 

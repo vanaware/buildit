@@ -15,7 +15,6 @@ import type {
  */
 export const DENOBUILD_CONFIG_EXAMPLE: DenoBundleGlobalConfig = {
   ui: {
-    mode: "build",
     default: true,
     srcdir: "packages/ui/src",
     distdir: "packages/server/build/dist",

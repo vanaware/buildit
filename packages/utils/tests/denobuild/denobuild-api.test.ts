@@ -18,7 +18,6 @@ describe("denoBuild programmatic API", () => {
 
     const config = {
       app: {
-        mode: "build" as const,
         entryPoints: ["main.ts",],
         srcdir: srcDir,
         distdir: distDir,

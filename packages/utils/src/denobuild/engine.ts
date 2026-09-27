@@ -54,6 +54,7 @@ export async function processBundleTarget(
   appVersion: string,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
   baseDir: string = ".",
+  defineVersionString?: string,
 ): Promise<DenoBuildResult> {
   const resolvedConfig: DenoBundleTargetConfig = {
     ...config,
@@ -87,7 +88,8 @@ export async function processBundleTarget(
   );
 
   // 3. Preparar defines
-  const defineVersionKey = resolvedConfig.defineVersionString || "__APP_VERSION__";
+  // deno-lint-ignore no-explicit-any
+  const defineVersionKey = defineVersionString || (resolvedConfig as any).defineVersionString || "__APP_VERSION__";
   const defines: Record<string, string> = {
     ...resolvedConfig.define,
     [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
@@ -248,6 +250,7 @@ export async function denoBuild(
       finalVersion,
       listFn,
       baseDir,
+      opcoes.defineVersionString,
     );
     resultados.push(res,);
   }

@@ -170,24 +170,11 @@ Explicação:
   - O número real da versão é injetado dinamicamente no bundle final através do conjunto de `define` (`esbuild`, `watch`) ou em tempo de execução pré-gravação (`applyDefines` no `denobuild`), mantendo os arquivos fontes de versão desacoplados e imutáveis durante os builds.
 
 **TODO LIST 5 (Testes Reais)**
-- [ ] a opção "mode": "build" ou watch não são mais necessários e devem ser excluidos do schema e tipagem de config de alvos em denobuild e esbuild
-- [ ] a opção defineVersionString deve ser configurada para toda a configuração de denobuild e esbuild e não no nível de alvos, ajustar schema e tipagem de config
-- [ ] qual a diferença entre listAssetsFn e listAssetsForCache, por que alguns engines usam:
-
-const assets = _listAssetsFn
-      ? await _listAssetsFn(config.distdir,)
-      : await listAssetsForCache(config.distdir,);
-
-e outros usam simplesmente:
-const assets = await listAssetsFn(resolvedConfig.distdir,);
-
-investigar porque esta diferente e se não tem como usar a mesma solução para os engines, parece que a solução de denobuild esta mais correta pois usa:
-
-const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;
-    const res = await processBundleTarget(
-      targetName,
-      targetConfig,
-      finalVersion,
-      listFn,
-      baseDir,
-    );
+- [x] a opção "mode": "build" ou watch não são mais necessários e foram excluídos do schema e tipagem de config de alvos em denobuild e esbuild
+- [x] a opção defineVersionString configurada para toda a configuração de denobuild, esbuild e watch e removida do nível de alvos (ajustado schema e tipagem)
+- [x] Unificação da listagem de assets (`listAssetsForCache` vs `listAssetsFn`):
+  - `listAssetsForCache` é o scanner do sistema de arquivos (`tools/paths.ts`) e `listAssetsFn` é a função injetada (permitindo mocks em testes).
+  - Padrão do `denobuild` adotado em todos os motores (`esbuild`, `denobuild`, `watch`):
+    - No nível do orquestrador: `const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;`
+    - No processador de alvos / construtor de opções: invoca `await listAssetsFn(distdir)` apenas se `defineAssetsString` estiver configurado e não-vazio.
+    - Eliminado o fallback redundante `_listAssetsFn ? ... : await listAssetsForCache(...)`.

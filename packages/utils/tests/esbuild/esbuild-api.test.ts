@@ -7,7 +7,6 @@ describe("esbuild API & CLI flags integration", () => {
   it("deve integrar flags CLI com parseArgs e resolverOrdemTargets", () => {
     const config = {
       ui: {
-        mode: "build" as const,
         entryPoints: ["main.tsx",],
         srcdir: "src",
         distdir: "dist",

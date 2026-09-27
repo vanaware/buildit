@@ -31,9 +31,11 @@ export async function buildWatchEsbuildOptions(
   config: WatchTargetConfig,
   appVersion: string,
   listAssetsFn?: (distDir: string,) => Promise<string[]>,
+  defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  const defineVersionKey = config.defineVersionString || "__APP_VERSION__";
+  // deno-lint-ignore no-explicit-any
+  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
   const finalDefine: Record<string, string> = {
     ...config.define,
     [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
@@ -245,11 +247,13 @@ export async function watchEngine(
       resolvedConfig.distdir,
     );
 
+    const listFn = resolvedConfig.defineAssetsString ? listAssetsForCache : undefined;
     const esbuildOptions = await buildWatchEsbuildOptions(
       targetName,
       resolvedConfig,
       version,
-      listAssetsForCache,
+      listFn,
+      opcoes.defineVersionString,
     );
 
     esbuildOptions.plugins = [
