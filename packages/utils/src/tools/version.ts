@@ -145,16 +145,47 @@ export function replaceVersionInContent(
   );
 }
 
+/** Template padrão para arquivos version.ts gerados */
+export const VERSION_FILE_TEMPLATE = `// Automatically generated file during build
+declare const __APP_VERSION__: string;
+
+/** Current library/application version. */
+export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
+  ? __APP_VERSION__
+  : "__APP_VERSION__";
+`;
+
 /**
- * Grava o arquivo version.ts no caminho ou diretório especificado.
+ * Garante a existência do arquivo version.ts no caminho ou diretório especificado.
+ * Se o arquivo já existir, NÃO o sobrescreve a cada execução.
+ * Se o arquivo não existir, cria o arquivo com o template usando a palavra-chave __APP_VERSION__.
+ *
+ * @param targetPathOrDir Caminho do arquivo ou diretório
+ * @param baseDir Diretório base opcional (padrão: ".")
+ * @returns true se o arquivo foi criado, false se já existia
  */
-export async function writeVersionFile(
+export async function ensureVersionFile(
   targetPathOrDir: string,
-  version: string,
-): Promise<void> {
-  const filePath = targetPathOrDir.endsWith(".ts",)
+  baseDir: string = ".",
+): Promise<boolean> {
+  const resolvedPath = isAbsolute(targetPathOrDir,)
     ? targetPathOrDir
-    : join(targetPathOrDir, "version.ts",);
+    : join(baseDir, targetPathOrDir,);
+
+  const filePath = resolvedPath.endsWith(".ts",)
+    ? resolvedPath
+    : join(resolvedPath, "version.ts",);
+
+  try {
+    const stat = await Deno.stat(filePath,);
+    if (stat.isFile) {
+      return false;
+    }
+  } catch (err) {
+    if (!(err instanceof Deno.errors.NotFound)) {
+      throw err;
+    }
+  }
 
   const dir = dirname(filePath,);
   if (dir && dir !== ".") {
@@ -165,16 +196,55 @@ export async function writeVersionFile(
     }
   }
 
-  const versionContent = `// Automatically generated file during build
-declare const __APP_VERSION__: string;
+  await Deno.writeTextFile(filePath, VERSION_FILE_TEMPLATE,);
+  return true;
+}
 
-/** Current library/application version. */
-export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined"
-  ? __APP_VERSION__
-  : "${version}";
-`;
+/**
+ * Garante a existência dos arquivos declarados em versionPaths antes do build/bundle.
+ * Verifica previamente a existência de cada arquivo e não o sobrescreve caso já exista.
+ *
+ * @param versionPaths Lista de caminhos de arquivos version.ts
+ * @param baseDir Diretório base opcional (padrão: ".")
+ * @returns Lista de caminhos processados
+ */
+export async function ensureVersionFiles(
+  versionPaths: string[] = [],
+  baseDir: string = ".",
+): Promise<string[]> {
+  const processed: string[] = [];
 
-  await Deno.writeTextFile(filePath, versionContent,);
+  for (const vPath of versionPaths) {
+    const targetPath = isAbsolute(vPath,) ? vPath : join(baseDir, vPath,);
+    const filePath = targetPath.endsWith(".ts",)
+      ? targetPath
+      : join(targetPath, "version.ts",);
+
+    try {
+      const created = await ensureVersionFile(filePath, baseDir,);
+      if (created) {
+        console.log(`📝 Arquivo de versão criado com template __APP_VERSION__: ${filePath}`,);
+      } else {
+        console.log(`ℹ️ Arquivo de versão existente mantido: ${filePath}`,);
+      }
+      processed.push(filePath,);
+    } catch (err) {
+      console.warn(`⚠️ Aviso ao verificar/criar version.ts em ${filePath}:`, err,);
+    }
+  }
+
+  return processed;
+}
+
+/**
+ * Grava ou assegura a existência do arquivo version.ts no caminho ou diretório especificado.
+ * Mantido para compatibilidade.
+ */
+export async function writeVersionFile(
+  targetPathOrDir: string,
+  _version?: string,
+): Promise<void> {
+  await ensureVersionFile(targetPathOrDir,);
 }
 
 /**
@@ -225,24 +295,14 @@ export async function syncVersion(
     }
   }
 
-  if (versionPaths.length === 0 && !forcePackages) {
+  // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam
+  if (versionPaths.length > 0) {
+    await ensureVersionFiles(versionPaths, baseDir,);
+  } else if (!forcePackages) {
     console.warn(
       `⚠️ Nenhum caminho de versão (versionPaths) foi especificado para sincronização.`,
     );
     console.log(`Exemplo de uso: syncVersion({ versionPaths: ["src/version.ts"] })`,);
-  }
-
-  // Atualiza os arquivos version.ts nos caminhos especificados
-  for (const vPath of versionPaths) {
-    const targetPath = isAbsolute(vPath,) ? vPath : join(baseDir, vPath,);
-    try {
-      await writeVersionFile(targetPath, finalVersion,);
-      console.log(`📝 Versão atualizada em: ${targetPath}`,);
-    } catch (err) {
-      if (options.versionPaths) {
-        console.warn(`⚠️ Aviso ao gravar version.ts em ${targetPath}:`, err,);
-      }
-    }
   }
 
   return finalVersion;

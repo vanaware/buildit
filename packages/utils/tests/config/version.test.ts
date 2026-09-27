@@ -2,10 +2,13 @@ import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertThrows, } from "@std/assert";
 import { join, } from "@std/path";
 import {
+  ensureVersionFile,
+  ensureVersionFiles,
   formatVersion,
   parseVersion,
   readProjectVersion,
   updateProjectVersion,
+  VERSION_FILE_TEMPLATE,
   writeVersionFile,
 } from "../../src/tools/version.ts";
 
@@ -44,8 +47,38 @@ describe("version utils", () => {
     });
   });
 
+  describe("ensureVersionFile e ensureVersionFiles", () => {
+    it("deve criar o arquivo com template __APP_VERSION__ se não existir", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const targetPath = join(tempDir, "pkg", "version.ts",);
+
+      const created = await ensureVersionFile(targetPath,);
+      assertEquals(created, true,);
+
+      const content = await Deno.readTextFile(targetPath,);
+      assertEquals(content.includes("__APP_VERSION__",), true,);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("NÃO deve sobrescrever o arquivo se já existir", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const targetPath = join(tempDir, "version.ts",);
+
+      await Deno.writeTextFile(targetPath, "// custom version file content",);
+
+      const created = await ensureVersionFile(targetPath,);
+      assertEquals(created, false,);
+
+      const content = await Deno.readTextFile(targetPath,);
+      assertEquals(content, "// custom version file content",);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+  });
+
   describe("updateProjectVersion e versionPaths", () => {
-    it("deve respeitar a opção noversion e não incrementar patch", async () => {
+    it("deve respeitar a opção noversion e garantir versionPaths", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -61,12 +94,12 @@ describe("version utils", () => {
 
       assertEquals(ver, "1.0.0",);
       const generated = await Deno.readTextFile(join(tempDir, "version.ts",),);
-      assertEquals(generated.includes("1.0.0",), true,);
+      assertEquals(generated.includes("__APP_VERSION__",), true,);
 
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("deve incrementar a versão e salvar em múltiplos versionPaths", async () => {
+    it("deve incrementar a versão e criar múltiplos versionPaths se não existirem", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -89,8 +122,8 @@ describe("version utils", () => {
       const file1 = await Deno.readTextFile(path1,);
       const file2 = await Deno.readTextFile(join(path2, "version.ts",),);
 
-      assertEquals(file1.includes("1.0.1#fixedhash",), true,);
-      assertEquals(file2.includes("1.0.1#fixedhash",), true,);
+      assertEquals(file1.includes("__APP_VERSION__",), true,);
+      assertEquals(file2.includes("__APP_VERSION__",), true,);
 
       await Deno.remove(tempDir, { recursive: true, },);
     });
