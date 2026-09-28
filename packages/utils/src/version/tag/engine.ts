@@ -4,8 +4,8 @@
  */
 
 import {
-  extractVersion,
   findDenoFile,
+  readProjectVersion,
   sanitizeVersion,
 } from "../../tools/version.ts";
 import { sanitizeVersionFile, } from "../sanitize/engine.ts";
@@ -87,8 +87,7 @@ export async function tagVersionEngine(
   }
 
   // Extrai e sanitiza versão em memória
-  const fileContent = await Deno.readTextFile(targetFile,);
-  const rawVersion = extractVersion(fileContent,); 
+  const rawVersion = await readProjectVersion(targetFile, baseDir,);
   if (!rawVersion) {
     throw new Error(`❌ Campo "version" ausente em ${targetFile}`,);
   }

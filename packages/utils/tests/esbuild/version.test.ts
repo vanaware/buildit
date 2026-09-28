@@ -8,7 +8,6 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
-  extractVersion,
   formatVersion,
   parseVersion,
   readProjectVersion,
@@ -81,42 +80,6 @@ describe("formatVersion", () => {
   });
   it("lida com números grandes", () => {
     assertEquals(formatVersion(999, 999, 999, "x",), "999.999.999#x",);
-  });
-});
-
-describe("extractVersion", () => {
-  it("extrai versão de JSON simples", () => {
-    assertEquals(
-      extractVersion(`{ "version": "1.2.3" }`,),
-      "1.2.3",
-    );
-  });
-  it("extrai versão de JSONC com comentários", () => {
-    const content = `{
-      // Comentário
-      "name": "buildit",
-      "version": "2.0.0", /* inline */
-    }`;
-    assertEquals(extractVersion(content,), "2.0.0",);
-  });
-  it("extrai versão com hash", () => {
-    assertEquals(
-      extractVersion(`{ "version": "1.2.3-abc123" }`,),
-      "1.2.3-abc123",
-    );
-  });
-  it("retorna null quando não há versão", () => {
-    assertEquals(
-      extractVersion(`{ "name": "buildit" }`,),
-      null,
-    );
-  });
-  it("retorna null para string vazia", () => {
-    assertEquals(extractVersion("",), null,);
-  });
-  it("ignora campos 'version' não ancorados corretamente", () => {
-    const content = `{ "name": "tem version: 1.0.0 no nome" }`;
-    assertEquals(extractVersion(content,), null,);
   });
 });
 

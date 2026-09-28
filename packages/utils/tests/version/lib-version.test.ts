@@ -1,7 +1,6 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertNotEquals, } from "@std/assert";
 import {
-  extractVersion,
   findDenoFile,
   sanitizeVersion,
 } from "../../src/tools/version.ts";
@@ -48,24 +47,6 @@ describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
       assertEquals(sanitizeVersion("invalid",), "0.0.0",);
       assertEquals(sanitizeVersion("v",), "0.0.0",);
       assertEquals(sanitizeVersion("###",), "0.0.0",);
-    });
-  });
-
-  describe("extractVersion", () => {
-    it("extrai a versão ancorada em 'version'", () => {
-      const jsonc =
-        `{\n  "name": "meu-pacote",\n  "version": "0.3.14#abc1234",\n  "license": "MIT"\n}`;
-      assertEquals(extractVersion(jsonc,), "0.3.14#abc1234",);
-    });
-
-    it("ignora espaços e tabulações ao redor de 'version'", () => {
-      const jsonc = `{\n\t"version" \t : \t "1.0.0" \t,\n}`;
-      assertEquals(extractVersion(jsonc,), "1.0.0",);
-    });
-
-    it("retorna null se não houver version", () => {
-      const jsonc = `{\n  "name": "sem-versao"\n}`;
-      assertEquals(extractVersion(jsonc,), null,);
     });
   });
 

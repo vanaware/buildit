@@ -121,17 +121,6 @@ export function formatVersion(
 }
 
 /**
- * Extrai a string de versão de um conteúdo textual (ex: deno.jsonc ou deno.json).
- *
- * @param content Conteúdo textual do arquivo JSON/JSONC
- * @returns Versão encontrada ou null
- */
-export function extractVersion(content: string,): string | null {
-  const match = content.match(/"version"\s*:\s*"([^"]*)"/,);
-  return match && match[1] !== undefined ? match[1] : null;
-}
-
-/**
  * Substitui a versão no conteúdo textual fornecido.
  */
 export function replaceVersionInContent(

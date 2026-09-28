@@ -84,7 +84,7 @@ describe("tag-version - Motor e CLI", () => {
             silencioso: true,
           },),
         Error,
-        "ausente",
+        "obrigatório não encontrado",
       );
 
       await Deno.remove(tempDir, { recursive: true, },);

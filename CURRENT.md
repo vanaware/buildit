@@ -180,4 +180,4 @@ Explicação:
     - Eliminado o fallback redundante `_listAssetsFn ? ... : await listAssetsForCache(...)`.
 
 **TODO LIST 6 (ajustes)**
-- [ ] continua tendo a função extractVersion sendo que era para usarmos somente readProjectVersion. quem esta usando é tag-version e rotinas de testes que podem ser alteradas
+- [x] continua tendo a função extractVersion sendo que era para usarmos somente readProjectVersion. quem esta usando é tag-version e rotinas de testes que podem ser alteradas
