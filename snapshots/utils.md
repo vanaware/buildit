@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-28T23:20:48.785Z
+Gerado automaticamente em: 2026-09-28T23:52:17.542Z
 
 ---
 
@@ -62,7 +62,7 @@ if (import.meta.main) {
 ```json
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.2#mulveyzj",
+  "version": "0.4.3#mulwjjdl",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -2184,6 +2184,70 @@ export function parseArgs(
 
 ---
 
+## Arquivo: `packages/utils/src/tools/git.ts`
+
+````ts
+/**
+ * @module @vanaware/buildit/tools/git
+ * @description Utilitários para execução de comandos git.
+ */
+
+/**
+ * Interface para o resultado da execução de um comando git.
+ */
+export interface GitResult {
+  success: boolean;
+  code: number;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * Executa um comando git capturando stdout, stderr e código de saída.
+ *
+ * @param args Argumentos do comando git
+ * @param cwd Diretório de trabalho (opcional)
+ * @returns Promessa com o resultado da execução
+ *
+ * @example
+ * ```typescript
+ * const res = await runGit(["status"]);
+ * if (res.success) console.log(res.stdout);
+ * ```
+ */
+export async function runGit(
+  args: string[],
+  cwd?: string,
+): Promise<GitResult> {
+  try {
+    const cmd = new Deno.Command("git", {
+      args,
+      cwd,
+      stdout: "piped",
+      stderr: "piped",
+    },);
+    const output = await cmd.output();
+    const decoder = new TextDecoder();
+    return {
+      success: output.success,
+      code: output.code,
+      stdout: decoder.decode(output.stdout,).trim(),
+      stderr: decoder.decode(output.stderr,).trim(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 1,
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error,),
+    };
+  }
+}
+
+````
+
+---
+
 ## Arquivo: `packages/utils/src/tools/interfaces.ts`
 
 ```ts
@@ -2632,6 +2696,10 @@ export interface TagVersionOptions {
   sanitize?: boolean;
   /** Se true, apenas simula as operações do git sem persistir commits ou tags. */
   dryRun?: boolean;
+  /** Se true, gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag. */
+  changelog?: boolean;
+  /** Se true, atualiza a seção de últimas atualizações no README.md. (Requer changelog: true) */
+  updateReadme?: boolean;
   /** Diretório base de execução. */
   baseDir?: string;
   /** Se true, não emite logs no console durante a execução. */
@@ -2748,6 +2816,11 @@ export {
     findDenoConfig,
     processFilesWithDefines
 } from "./paths.ts"
+
+export {
+    runGit,
+    type GitResult
+} from "./git.ts"
 ```
 
 ---
@@ -4180,6 +4253,135 @@ export { sanitizeVersionFile, } from "./engine.ts";
 
 ---
 
+## Arquivo: `packages/utils/src/version/tag/changelog.ts`
+
+```ts
+/**
+ * @module @vanaware/buildit/version/tag/changelog
+ * @description Utilitários para geração automatizada de changelog baseada em commits git.
+ */
+
+import { join, } from "@std/path";
+import { runGit, } from "../../tools/git.ts";
+
+/**
+ * Obtém a última tag git disponível, opcionalmente limpando o prefixo 'v'.
+ */
+export async function getLastTag(baseDir?: string,): Promise<string | null> {
+  // Tenta fetch tags primeiro (ignora falhas se não houver remote)
+  await runGit(["fetch", "--tags", "--quiet",], baseDir,);
+
+  // Tenta obter tags ordenadas pela data de criação
+  let result = await runGit([
+    "tag",
+    "--sort=-creatordate",
+  ], baseDir,);
+
+  // Fallback para listagem simples caso a ordenação falhe (git antigo)
+  if (!result.success || !result.stdout) {
+    result = await runGit(["tag",], baseDir,);
+  }
+
+  if (!result.success || !result.stdout) {
+    return null;
+  }
+
+  const tags = result.stdout.split("\n",).filter(Boolean,);
+  // No caso de fallback, pega a última tag alfabética (geralmente v0.2 > v0.1)
+  return tags[0] || null;
+}
+
+/**
+ * Gera o conteúdo do changelog para a nova versão baseando-se nos commits desde a última tag.
+ *
+ * @param tagName Nome da nova tag (ex: "v0.4")
+ * @param baseDir Diretório base do repositório
+ * @returns Bloco de markdown com as mudanças
+ */
+export async function generateChangelogContent(
+  tagName: string,
+  baseDir?: string,
+): Promise<string> {
+  const lastTag = await getLastTag(baseDir,);
+  const range = lastTag ? `${lastTag}..HEAD` : "HEAD";
+
+  const logResult = await runGit([
+    "log",
+    "--pretty=format:%h %s",
+    range,
+  ], baseDir,);
+
+  if (!logResult.success) {
+    throw new Error(`❌ Falha ao obter git log: ${logResult.stderr}`,);
+  }
+
+  const date = new Date().toISOString().slice(0, 10,);
+  const logs = logResult.stdout.trim();
+  
+  const formattedLogs = logs
+    ? logs.split("\n",).map((line,) => `- ${line}`).join("\n",)
+    : "- Sem alterações relevantes";
+
+  return `## ${tagName} (${date})\n\n${formattedLogs}\n`;
+}
+
+/**
+ * Atualiza o arquivo CHANGELOG.md prepandendo as novas alterações.
+ */
+export async function updateChangelogFile(
+  content: string,
+  baseDir: string = ".",
+): Promise<void> {
+  const filePath = join(baseDir, "CHANGELOG.md",);
+  let existing = "";
+  try {
+    existing = await Deno.readTextFile(filePath,);
+  } catch {
+    // Arquivo não existe, será criado
+  }
+
+  await Deno.writeTextFile(filePath, `${content}\n${existing}`,);
+}
+
+/**
+ * Atualiza a seção de últimas atualizações no README.md.
+ */
+export async function updateReadmeChangelog(
+  content: string,
+  baseDir: string = ".",
+): Promise<void> {
+  const filePath = join(baseDir, "README.md",);
+  let readme = "";
+  try {
+    readme = await Deno.readTextFile(filePath,);
+  } catch {
+    return; // Sem README, nada a fazer
+  }
+
+  const summary = content
+    .split("\n",)
+    .slice(0, 6,)
+    .join("\n",)
+    .replace(/^## v\d+\.\d+.*$/m, "### 📦 Últimas atualizações",);
+
+  const markerStart = "<!-- START:changelog -->";
+  const markerEnd = "<!-- END:changelog -->";
+  const changelogSection = `${markerStart}\n${summary}\n${markerEnd}`;
+
+  if (readme.includes(markerStart,) && readme.includes(markerEnd,)) {
+    const regex = new RegExp(`${markerStart}[\\s\\S]*${markerEnd}`, "m",);
+    readme = readme.replace(regex, changelogSection,);
+  } else {
+    readme += `\n\n## 📦 Últimas Atualizações\n\n${changelogSection}\n`;
+  }
+
+  await Deno.writeTextFile(filePath, readme,);
+}
+
+```
+
+---
+
 ## Arquivo: `packages/utils/src/version/tag/cli.ts`
 
 ```ts
@@ -4223,6 +4425,20 @@ export function tagVersionCli(): Command<any> {
         default: false,
       },
     )
+    .option(
+      "-c, --changelog",
+      "Gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "--update-readme",
+      "Atualiza a seção de últimas atualizações no README.md (requer --changelog)",
+      {
+        default: false,
+      },
+    )
     .action(async function (options,): Promise<void> {
       try {
         await tagVersionEngine({
@@ -4231,6 +4447,8 @@ export function tagVersionCli(): Command<any> {
           sanitize: options.sanitize,
           baseDir: options.baseDir,
           dryRun: options.dryRun,
+          changelog: options.changelog,
+          updateReadme: options.updateReadme,
         },);
       } catch (error) {
         console.error(error instanceof Error ? error.message : error,);
@@ -4262,42 +4480,16 @@ import {
   sanitizeVersion,
 } from "../../tools/version.ts";
 import { sanitizeVersionFile, } from "../sanitize/engine.ts";
+import { runGit, } from "../../tools/git.ts";
+import {
+  generateChangelogContent,
+  updateChangelogFile,
+  updateReadmeChangelog,
+} from "./changelog.ts";
 import type {
   TagVersionOptions,
   TagVersionResult,
 } from "../../tools/interfaces.ts";
-
-/**
- * Executa um comando git capturando stdout, stderr e código de saída.
- */
-async function runGit(
-  args: string[],
-  cwd?: string,
-): Promise<{ success: boolean; code: number; stdout: string; stderr: string }> {
-  try {
-    const cmd = new Deno.Command("git", {
-      args,
-      cwd,
-      stdout: "piped",
-      stderr: "piped",
-    },);
-    const output = await cmd.output();
-    const decoder = new TextDecoder();
-    return {
-      success: output.success,
-      code: output.code,
-      stdout: decoder.decode(output.stdout,).trim(),
-      stderr: decoder.decode(output.stderr,).trim(),
-    };
-  } catch (error) {
-    return {
-      success: false,
-      code: 1,
-      stdout: "",
-      stderr: error instanceof Error ? error.message : String(error,),
-    };
-  }
-}
 
 /**
  * Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR).
@@ -4349,6 +4541,19 @@ export async function tagVersionEngine(
   const [major = "0", minor = "0",] = sanitizedVersion.split(".",);
   const tagName = `v${major}.${minor}`;
   const message = options.message || `Versão ${tagName}`;
+
+  // Geração de Changelog se solicitado
+  let changelogContent = "";
+  if (options.changelog && !dryRun) {
+    if (!silencioso) {
+      console.log(`📝 Gerando changelog para ${tagName}...`,);
+    }
+    changelogContent = await generateChangelogContent(tagName, baseDir,);
+    await updateChangelogFile(changelogContent, baseDir,);
+    if (options.updateReadme) {
+      await updateReadmeChangelog(changelogContent, baseDir,);
+    }
+  }
 
   if (!silencioso) {
     console.log(
@@ -8396,6 +8601,108 @@ describe("resolverOrdemTargets", () => {
 
 ---
 
+## Arquivo: `packages/utils/tests/version/changelog.test.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, assertStringIncludes, } from "@std/assert";
+import { join, } from "@std/path";
+import {
+  generateChangelogContent,
+  updateChangelogFile,
+  updateReadmeChangelog,
+} from "../../src/version/tag/changelog.ts";
+import { runGit, } from "../../src/tools/git.ts";
+
+describe("changelog utility", () => {
+  it("deve gerar conteúdo de changelog a partir de um repositório git", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      // Inicializa repo git
+      await runGit(["init",], tempDir,);
+      await runGit(["config", "user.email", "test@example.com",], tempDir,);
+      await runGit(["config", "user.name", "Test User",], tempDir,);
+      await runGit(["config", "commit.gpgsign", "false",], tempDir,);
+
+      // Primeiro commit e tag
+      await Deno.writeTextFile(join(tempDir, "file1.txt",), "content 1",);
+      await runGit(["add", ".",], tempDir,);
+      const c1 = await runGit(
+        ["commit", "-m", "feat: initial commit",],
+        tempDir,
+      );
+      if (!c1.success) console.warn("Commit 1 failed:", c1.stderr,);
+
+      const t1 = await runGit(
+        ["tag", "-a", "v0.1", "-m", "v0.1",],
+        tempDir,
+      );
+      if (!t1.success) console.warn("Tag 1 failed:", t1.stderr,);
+
+      // Segundo commit (será o log da nova versão)
+      await Deno.writeTextFile(join(tempDir, "file2.txt",), "content 2",);
+      await runGit(["add", ".",], tempDir,);
+      const c2 = await runGit(["commit", "-m", "fix: bug fixed",], tempDir,);
+      if (!c2.success) console.warn("Commit 2 failed:", c2.stderr,);
+
+      const content = await generateChangelogContent("v0.2", tempDir,);
+
+      assertStringIncludes(content, "## v0.2",);
+      assertStringIncludes(content, "fix: bug fixed",);
+      // Não deve incluir o commit da tag v0.1 no range v0.1..HEAD
+      assertEquals(content.includes("feat: initial commit",), false,);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve atualizar o arquivo CHANGELOG.md (prepend)", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const changelogPath = join(tempDir, "CHANGELOG.md",);
+      await Deno.writeTextFile(changelogPath, "## v0.1\n- Initial",);
+
+      await updateChangelogFile("## v0.2\n- New feature", tempDir,);
+
+      const content = await Deno.readTextFile(changelogPath,);
+      assertStringIncludes(content, "## v0.2",);
+      assertStringIncludes(content, "## v0.1",);
+      assertEquals(content.indexOf("## v0.2",), 0,);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve atualizar o README.md usando os marcadores", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const readmePath = join(tempDir, "README.md",);
+      const initialReadme =
+        `# Project\n\nSome text.\n\n<!-- START:changelog -->\nOld content\n<!-- END:changelog -->\nFooter`;
+      await Deno.writeTextFile(readmePath, initialReadme,);
+
+      await updateReadmeChangelog(
+        "## v0.2 (2024-01-01)\n- Line 1\n- Line 2",
+        tempDir,
+      );
+
+      const content = await Deno.readTextFile(readmePath,);
+      assertStringIncludes(content, "### 📦 Últimas atualizações",);
+      assertStringIncludes(content, "- Line 1",);
+      assertStringIncludes(content, "Footer",);
+      assertEquals(content.includes("Old content",), false,);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+});
+
+```
+
+---
+
 ## Arquivo: `packages/utils/tests/version/ensure.test.ts`
 
 ```ts
@@ -8412,7 +8719,7 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.ts",);
       const created = await ensureVersionFile(filePath,);
-      
+
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
       assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
@@ -8428,14 +8735,17 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.js",);
       const created = await ensureVersionFile(filePath,);
-      
+
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
       // Não deve ter tipos nem declare const
       assertEquals(content.includes("declare const",), false,);
       assertEquals(content.includes(": string",), false,);
       assertStringIncludes(content, "@type {string}",);
-      assertStringIncludes(content, "export const APP_VERSION = typeof __APP_VERSION__ !== \"undefined\"",);
+      assertStringIncludes(
+        content,
+        'export const APP_VERSION = typeof __APP_VERSION__ !== "undefined"',
+      );
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -8445,7 +8755,7 @@ describe("ensureVersionFile", () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const created = await ensureVersionFile(tempDir,);
-      
+
       assertEquals(created, true,);
       const filePath = join(tempDir, "version.ts",);
       const content = await Deno.readTextFile(filePath,);
@@ -8460,9 +8770,12 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.js",);
       await ensureVersionFile(filePath, ".", "MY_CUSTOM_VERSION",);
-      
+
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "typeof MY_CUSTOM_VERSION !== \"undefined\"",);
+      assertStringIncludes(
+        content,
+        'typeof MY_CUSTOM_VERSION !== "undefined"',
+      );
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
