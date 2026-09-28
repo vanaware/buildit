@@ -566,6 +566,50 @@ export function applyDefines(
 }
 
 /**
+ * Processa uma lista de arquivos aplicando substituições de definições (defines).
+ * Útil para injetar variáveis em arquivos estáticos pós-cópia ou arquivos de configuração.
+ *
+ * @param filePaths Lista de caminhos de arquivos para processar
+ * @param defines Mapa de identificadores e valores substitutos
+ * @returns Lista de caminhos de arquivos que foram processados com sucesso
+ *
+ * @example
+ * ```typescript
+ * await processFilesWithDefines(["./dist/config.js"], { "__API_URL__": '"https://api.exemplo.com"' });
+ * ```
+ */
+export async function processFilesWithDefines(
+  filePaths: string[],
+  defines: Record<string, string>,
+): Promise<string[]> {
+  const processed: string[] = [];
+  if (
+    !filePaths || filePaths.length === 0 || !defines ||
+    Object.keys(defines,).length === 0
+  ) {
+    return processed;
+  }
+
+  for (const filePath of filePaths) {
+    try {
+      const content = await Deno.readTextFile(filePath,);
+      const updated = applyDefines(content, defines,);
+      if (content !== updated) {
+        await Deno.writeTextFile(filePath, updated,);
+        processed.push(filePath,);
+      }
+    } catch (err) {
+      console.warn(
+        `⚠️ Falha ao processar defines no arquivo '${filePath}':`,
+        err,
+      );
+    }
+  }
+
+  return processed;
+}
+
+/**
  * Procura por deno.json ou deno.jsonc no diretório "./" (cwd).
  * Retorna o caminho absoluto do primeiro encontrado, ou null.
  * Prioriza deno.json sobre deno.jsonc (mesma ordem do Deno).

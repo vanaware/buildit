@@ -18,5 +18,7 @@ export {
 } from "./jsonc.ts"
 
 export {
-    findDenoConfig
+    applyDefines,
+    findDenoConfig,
+    processFilesWithDefines
 } from "./paths.ts"

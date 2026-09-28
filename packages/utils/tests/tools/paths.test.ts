@@ -7,6 +7,7 @@ import {
   copyStaticFiles,
   copyTargetFiles,
   correspondeGlobs,
+  processFilesWithDefines,
   resolveWithBase,
 } from "../../src/tools/paths.ts";
 
@@ -197,6 +198,50 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       },);
 
       assertEquals(result, 'const ver = "2.5.0";',);
+    });
+  });
+
+  describe("processFilesWithDefines", () => {
+    it("deve alterar o conteúdo dos arquivos e retornar a lista de processados", async () => {
+      const tempDir = await Deno.makeTempDir({
+        prefix: "buildit_test_process_defines_",
+      },);
+      try {
+        const file1 = join(tempDir, "config.js",);
+        const file2 = join(tempDir, "env.txt",);
+        const file3 = join(tempDir, "no-change.txt",);
+
+        await Deno.writeTextFile(file1, "const url = __API_URL__;",);
+        await Deno.writeTextFile(file2, "VERSION: __APP_VERSION__",);
+        await Deno.writeTextFile(file3, "no markers here",);
+
+        const defines = {
+          "__API_URL__": '"https://api.test"',
+          "__APP_VERSION__": '"1.2.3"',
+        };
+
+        const processed = await processFilesWithDefines([
+          file1,
+          file2,
+          file3,
+        ], defines,);
+
+        // Apenas file1 e file2 devem estar na lista pois foram alterados
+        assertEquals(processed.length, 2,);
+        assert(processed.includes(file1,),);
+        assert(processed.includes(file2,),);
+        assert(!processed.includes(file3,),);
+
+        // Verifica o conteúdo alterado
+        const content1 = await Deno.readTextFile(file1,);
+        assertEquals(content1, 'const url = "https://api.test";',);
+        const content2 = await Deno.readTextFile(file2,);
+        assertEquals(content2, 'VERSION: "1.2.3"',);
+        const content3 = await Deno.readTextFile(file3,);
+        assertEquals(content3, "no markers here",);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true, },).catch(() => {},);
+      }
     });
   });
 });

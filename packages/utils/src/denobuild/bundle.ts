@@ -3,33 +3,14 @@
  * @description Funções utilitárias e geradores de opções para a API nativa Deno.bundle.
  */
 
-import { resolveEntryPoints, resolveOutputPaths, } from "../tools/paths.ts";
+import {
+  applyDefines,
+  resolveEntryPoints,
+  resolveOutputPaths,
+} from "../tools/paths.ts";
 import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 
-/**
- * Aplica substituição de definições (defines) em uma string de código em memória.
- *
- * @param text Conteúdo original do código-fonte
- * @param defines Mapa de identificadores e valores substitutos
- * @returns Código com as substituições aplicadas
- *
- * @example
- * ```typescript
- * applyDefines("console.log(__APP_VERSION__)", { "__APP_VERSION__": '"1.0.0"' });
- * ```
- */
-export function applyDefines(
-  text: string,
-  defines: Record<string, string>,
-): string {
-  let result = text;
-  for (const [key, value,] of Object.entries(defines,)) {
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&",);
-    const regex = new RegExp(escapedKey, "g",);
-    result = result.replace(regex, value,);
-  }
-  return result;
-}
+export { applyDefines, resolveEntryPoints, resolveOutputPaths };
 
 /**
  * Constrói o objeto de opções aceito pela API `Deno.bundle`.
