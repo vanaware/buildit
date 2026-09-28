@@ -10,19 +10,26 @@ import { runGit, } from "../../tools/git.ts";
  * Obtém a última tag git disponível, opcionalmente limpando o prefixo 'v'.
  */
 export async function getLastTag(baseDir?: string,): Promise<string | null> {
-  // Tenta fetch tags primeiro
+  // Tenta fetch tags primeiro (ignora falhas se não houver remote)
   await runGit(["fetch", "--tags", "--quiet",], baseDir,);
 
-  const result = await runGit([
+  // Tenta obter tags ordenadas pela data de criação
+  let result = await runGit([
     "tag",
     "--sort=-creatordate",
   ], baseDir,);
+
+  // Fallback para listagem simples caso a ordenação falhe (git antigo)
+  if (!result.success || !result.stdout) {
+    result = await runGit(["tag",], baseDir,);
+  }
 
   if (!result.success || !result.stdout) {
     return null;
   }
 
   const tags = result.stdout.split("\n",).filter(Boolean,);
+  // No caso de fallback, pega a última tag alfabética (geralmente v0.2 > v0.1)
   return tags[0] || null;
 }
 

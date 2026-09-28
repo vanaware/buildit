@@ -29,7 +29,10 @@ describe("changelog utility", () => {
       );
       if (!c1.success) console.warn("Commit 1 failed:", c1.stderr,);
 
-      const t1 = await runGit(["tag", "v0.1",], tempDir,);
+      const t1 = await runGit(
+        ["tag", "-a", "v0.1", "-m", "v0.1",],
+        tempDir,
+      );
       if (!t1.success) console.warn("Tag 1 failed:", t1.stderr,);
 
       // Segundo commit (será o log da nova versão)
