@@ -38,6 +38,20 @@ export function tagVersionCli(): Command<any> {
         default: false,
       },
     )
+    .option(
+      "-c, --changelog",
+      "Gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag",
+      {
+        default: false,
+      },
+    )
+    .option(
+      "--update-readme",
+      "Atualiza a seção de últimas atualizações no README.md (requer --changelog)",
+      {
+        default: false,
+      },
+    )
     .action(async function (options,): Promise<void> {
       try {
         await tagVersionEngine({
@@ -46,6 +60,8 @@ export function tagVersionCli(): Command<any> {
           sanitize: options.sanitize,
           baseDir: options.baseDir,
           dryRun: options.dryRun,
+          changelog: options.changelog,
+          updateReadme: options.updateReadme,
         },);
       } catch (error) {
         console.error(error instanceof Error ? error.message : error,);

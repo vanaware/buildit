@@ -9,6 +9,11 @@ import {
   sanitizeVersion,
 } from "../../tools/version.ts";
 import { sanitizeVersionFile, } from "../sanitize/engine.ts";
+import {
+  generateChangelogContent,
+  updateChangelogFile,
+  updateReadmeChangelog,
+} from "./changelog.ts";
 import type {
   TagVersionOptions,
   TagVersionResult,
@@ -96,6 +101,19 @@ export async function tagVersionEngine(
   const [major = "0", minor = "0",] = sanitizedVersion.split(".",);
   const tagName = `v${major}.${minor}`;
   const message = options.message || `Versão ${tagName}`;
+
+  // Geração de Changelog se solicitado
+  let changelogContent = "";
+  if (options.changelog && !dryRun) {
+    if (!silencioso) {
+      console.log(`📝 Gerando changelog para ${tagName}...`,);
+    }
+    changelogContent = await generateChangelogContent(tagName, baseDir,);
+    await updateChangelogFile(changelogContent, baseDir,);
+    if (options.updateReadme) {
+      await updateReadmeChangelog(changelogContent, baseDir,);
+    }
+  }
 
   if (!silencioso) {
     console.log(

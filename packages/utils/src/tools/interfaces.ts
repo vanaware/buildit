@@ -443,6 +443,10 @@ export interface TagVersionOptions {
   sanitize?: boolean;
   /** Se true, apenas simula as operações do git sem persistir commits ou tags. */
   dryRun?: boolean;
+  /** Se true, gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag. */
+  changelog?: boolean;
+  /** Se true, atualiza a seção de últimas atualizações no README.md. (Requer changelog: true) */
+  updateReadme?: boolean;
   /** Diretório base de execução. */
   baseDir?: string;
   /** Se true, não emite logs no console durante a execução. */
