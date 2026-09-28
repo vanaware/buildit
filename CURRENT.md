@@ -181,4 +181,4 @@ Explicação:
 
 **TODO LIST 6 (ajustes)**
 - [x] continua tendo a função extractVersion sendo que era para usarmos somente readProjectVersion. quem esta usando é tag-version e rotinas de testes que podem ser alteradas
-- [ ] ensureVersionFile se receber um arquivo com extensão ".js" ao invés de ".ts" teria que criar uma versão javascript do que o padrão typescript. a função getVersionFileTemplate teria um parametro se é para gerar typescript (padrão default) ou uma versão javascript. 
+- [x] ensureVersionFile se receber um arquivo com extensão ".js" ao invés de ".ts" teria que criar uma versão javascript do que o padrão typescript. a função getVersionFileTemplate teria um parametro se é para gerar typescript (padrão default) ou uma versão javascript. 

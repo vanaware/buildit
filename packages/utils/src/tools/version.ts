@@ -134,10 +134,17 @@ export function replaceVersionInContent(
 }
 
 /**
- * Gera o template padrão para arquivos version.ts com a constante customizada.
+ * Gera o template padrão para arquivos version.ts/.js com a constante customizada.
+ *
+ * @param defineVersionString Identificador da constante
+ * @param isTypeScript Se deve gerar versão TypeScript (default: true)
  */
-export function getVersionFileTemplate(defineVersionString: string = "__APP_VERSION__",): string {
-  return `// Automatically generated file during build
+export function getVersionFileTemplate(
+  defineVersionString: string = "__APP_VERSION__",
+  isTypeScript: boolean = true,
+): string {
+  if (isTypeScript) {
+    return `// Automatically generated file during build
 declare const ${defineVersionString}: string;
 
 /** Current library/application version. */
@@ -145,6 +152,15 @@ export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
   : "";
 `;
+  } else {
+    return `// Automatically generated file during build
+
+/** Current library/application version. */
+export const APP_VERSION = typeof ${defineVersionString} !== "undefined"
+  ? ${defineVersionString}
+  : "";
+`;
+  }
 }
 
 /**
@@ -166,9 +182,15 @@ export async function ensureVersionFile(
     ? targetPathOrDir
     : join(baseDir, targetPathOrDir,);
 
-  const filePath = resolvedPath.endsWith(".ts",)
-    ? resolvedPath
-    : join(resolvedPath, "version.ts",);
+  let filePath = resolvedPath;
+  if (
+    !resolvedPath.endsWith(".ts",) && !resolvedPath.endsWith(".js",) &&
+    !resolvedPath.endsWith(".mjs",)
+  ) {
+    filePath = join(resolvedPath, "version.ts",);
+  }
+
+  const isTypeScript = !filePath.endsWith(".js",) && !filePath.endsWith(".mjs",);
 
   try {
     const stat = await Deno.stat(filePath,);
@@ -190,7 +212,10 @@ export async function ensureVersionFile(
     }
   }
 
-  await Deno.writeTextFile(filePath, getVersionFileTemplate(defineVersionString,),);
+  await Deno.writeTextFile(
+    filePath,
+    getVersionFileTemplate(defineVersionString, isTypeScript,),
+  );
   return true;
 }
 
@@ -211,21 +236,22 @@ export async function ensureVersionFiles(
   const processed: string[] = []; 
 
   for (const vPath of versionPaths) {
-    const targetPath = isAbsolute(vPath,) ? vPath : join(baseDir, vPath,);
-    const filePath = targetPath.endsWith(".ts",)
-      ? targetPath
-      : join(targetPath, "version.ts",);
-
     try {
-      const created = await ensureVersionFile(filePath, baseDir, defineVersionString,);
+      const created = await ensureVersionFile(
+        vPath,
+        baseDir,
+        defineVersionString,
+      );
       if (created) {
-        console.log(`📝 Arquivo de versão criado com template ${defineVersionString}: ${filePath}`,);
+        console.log(
+          `📝 Arquivo de versão criado com template ${defineVersionString} em: ${vPath}`,
+        );
       } else {
-        console.log(`ℹ️ Arquivo de versão existente mantido: ${filePath}`,);
+        console.log(`ℹ️ Arquivo de versão existente mantido: ${vPath}`,);
       }
-      processed.push(filePath,);
+      processed.push(vPath,);
     } catch (err) {
-      console.warn(`⚠️ Aviso ao verificar/criar version.ts em ${filePath}:`, err,);
+      console.warn(`⚠️ Aviso ao verificar/criar version em ${vPath}:`, err,);
     }
   }
 
