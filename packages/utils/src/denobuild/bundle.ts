@@ -10,7 +10,6 @@ import {
 } from "../tools/paths.ts";
 import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 
-export { applyDefines, resolveEntryPoints, resolveOutputPaths };
 
 /**
  * Constrói o objeto de opções aceito pela API `Deno.bundle`.

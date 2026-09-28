@@ -8,7 +8,6 @@ import type {
   WatchConfigFile,
   WatchConfigResult,
   WatchGlobalConfig,
-  WatchTargetConfig,
 } from "../tools/interfaces.ts";
 
 /** Exemplo de configurações para o modo watch */

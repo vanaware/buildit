@@ -3,7 +3,7 @@
  * @description Mecanismo central de compilação, injeção de defines e processamento de alvos com Deno.bundle.
  */
 
-import { ensureDir, } from "@std/fs";
+
 import { join, } from "@std/path";
 import { updateProjectVersion, } from "../tools/version.ts";
 import {
@@ -12,13 +12,13 @@ import {
   ensureDirForFile,
   listAssetsForCache,
   resolveWithBase,
+  applyDefines
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";
 
-import { applyDefines, buildBundleOptions, } from "./bundle.ts";
-import { carregarConfigDenoBuild, } from "./config.ts";
+import { buildBundleOptions, } from "./bundle.ts";
 import type {
   DenoBuildOptions,
   DenoBuildResult,

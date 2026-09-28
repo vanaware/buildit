@@ -147,9 +147,6 @@ export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
 `;
 }
 
-/** Template padrão para arquivos version.ts gerados */
-export const VERSION_FILE_TEMPLATE = getVersionFileTemplate("__APP_VERSION__",);
-
 /**
  * Garante a existência do arquivo version.ts no caminho ou diretório especificado.
  * Se o arquivo já existir, NÃO o sobrescreve a cada execução.

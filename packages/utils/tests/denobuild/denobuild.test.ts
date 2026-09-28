@@ -6,10 +6,8 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
-import {
-  applyDefines,
-  buildBundleOptions,
-} from "../../src/denobuild/bundle.ts";
+import { buildBundleOptions, } from "../../src/denobuild/bundle.ts";
+import { applyDefines, } from "../../src/tools/paths.ts";
 import { DENOBUILD_CONFIG_EXAMPLE, } from "../../src/denobuild/config.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 

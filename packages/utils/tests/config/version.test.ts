@@ -8,8 +8,6 @@ import {
   parseVersion,
   readProjectVersion,
   updateProjectVersion,
-  VERSION_FILE_TEMPLATE,
-  writeVersionFile,
 } from "../../src/tools/version.ts";
 
 describe("version utils", () => {

@@ -1,9 +1,6 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertNotEquals, } from "@std/assert";
-import {
-  findDenoFile,
-  sanitizeVersion,
-} from "../../src/tools/version.ts";
+import { findDenoFile, sanitizeVersion, } from "../../src/tools/version.ts";
 
 describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
   describe("sanitizeVersion", () => {
