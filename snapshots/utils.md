@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-27T15:13:12.774Z
+Gerado automaticamente em: 2026-09-28T23:20:48.785Z
 
 ---
 
@@ -62,7 +62,7 @@ if (import.meta.main) {
 ```json
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.1#mujyk4w4",
+  "version": "0.4.2#mulveyzj",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -174,33 +174,13 @@ if (import.meta.main) {
  * @description Funções utilitárias e geradores de opções para a API nativa Deno.bundle.
  */
 
-import { resolveEntryPoints, resolveOutputPaths, } from "../tools/paths.ts";
+import {
+  applyDefines,
+  resolveEntryPoints,
+  resolveOutputPaths,
+} from "../tools/paths.ts";
 import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 
-/**
- * Aplica substituição de definições (defines) em uma string de código em memória.
- *
- * @param text Conteúdo original do código-fonte
- * @param defines Mapa de identificadores e valores substitutos
- * @returns Código com as substituições aplicadas
- *
- * @example
- * ```typescript
- * applyDefines("console.log(__APP_VERSION__)", { "__APP_VERSION__": '"1.0.0"' });
- * ```
- */
-export function applyDefines(
-  text: string,
-  defines: Record<string, string>,
-): string {
-  let result = text;
-  for (const [key, value,] of Object.entries(defines,)) {
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&",);
-    const regex = new RegExp(escapedKey, "g",);
-    result = result.replace(regex, value,);
-  }
-  return result;
-}
 
 /**
  * Constrói o objeto de opções aceito pela API `Deno.bundle`.
@@ -458,7 +438,7 @@ Exemplo de arquivo "denobuild.jsonc" mínimo:
  * @description Mecanismo central de compilação, injeção de defines e processamento de alvos com Deno.bundle.
  */
 
-import { ensureDir, } from "@std/fs";
+
 import { join, } from "@std/path";
 import { updateProjectVersion, } from "../tools/version.ts";
 import {
@@ -467,13 +447,13 @@ import {
   ensureDirForFile,
   listAssetsForCache,
   resolveWithBase,
+  applyDefines
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";
 
-import { applyDefines, buildBundleOptions, } from "./bundle.ts";
-import { carregarConfigDenoBuild, } from "./config.ts";
+import { buildBundleOptions, } from "./bundle.ts";
 import type {
   DenoBuildOptions,
   DenoBuildResult,
@@ -1000,10 +980,6 @@ import { validateTargetConfig, } from "../tools/validate.ts";
 // 🔢 FUNÇÕES DE VERSÃO (re-exportadas de config/version.ts)
 // ============================================================================
 import {
-  extractVersion,
-  formatVersion,
-  parseVersion,
-  replaceVersionInContent,
   updateProjectVersion,
 } from "../tools/version.ts";
 import { resolverOrdemTargets, } from "../tools/targets.ts";
@@ -2749,11 +2725,18 @@ export async function loadConfig<T,>(
 
 ```ts
 
-export { EXTENSIONS_EXAMPLE as defaultExtensions } from "./interfaces.ts";
+export { 
+    EXTENSIONS_EXAMPLE as defaultExtensions,
+    type VersionUpdateOptions
+ } from "./interfaces.ts";
 export { VERSION_PATHS_EXAMPLE as versionPathsExample } from "./version.ts";
 
 export { 
-    readProjectVersion
+    readProjectVersion,
+    sanitizeVersion,
+    ensureVersionFiles,
+    syncVersion,
+    syncWorkspaceDir
 } from "./version.ts"
 
 export {
@@ -2761,7 +2744,9 @@ export {
 } from "./jsonc.ts"
 
 export {
-    findDenoConfig
+    applyDefines,
+    findDenoConfig,
+    processFilesWithDefines
 } from "./paths.ts"
 ```
 
@@ -3338,6 +3323,50 @@ export function applyDefines(
 }
 
 /**
+ * Processa uma lista de arquivos aplicando substituições de definições (defines).
+ * Útil para injetar variáveis em arquivos estáticos pós-cópia ou arquivos de configuração.
+ *
+ * @param filePaths Lista de caminhos de arquivos para processar
+ * @param defines Mapa de identificadores e valores substitutos
+ * @returns Lista de caminhos de arquivos que foram processados com sucesso
+ *
+ * @example
+ * ```typescript
+ * await processFilesWithDefines(["./dist/config.js"], { "__API_URL__": '"https://api.exemplo.com"' });
+ * ```
+ */
+export async function processFilesWithDefines(
+  filePaths: string[],
+  defines: Record<string, string>,
+): Promise<string[]> {
+  const processed: string[] = [];
+  if (
+    !filePaths || filePaths.length === 0 || !defines ||
+    Object.keys(defines,).length === 0
+  ) {
+    return processed;
+  }
+
+  for (const filePath of filePaths) {
+    try {
+      const content = await Deno.readTextFile(filePath,);
+      const updated = applyDefines(content, defines,);
+      if (content !== updated) {
+        await Deno.writeTextFile(filePath, updated,);
+        processed.push(filePath,);
+      }
+    } catch (err) {
+      console.warn(
+        `⚠️ Falha ao processar defines no arquivo '${filePath}':`,
+        err,
+      );
+    }
+  }
+
+  return processed;
+}
+
+/**
  * Procura por deno.json ou deno.jsonc no diretório "./" (cwd).
  * Retorna o caminho absoluto do primeiro encontrado, ou null.
  * Prioriza deno.json sobre deno.jsonc (mesma ordem do Deno).
@@ -3528,7 +3557,7 @@ Exemplo de configuração necessária:
 /**
  * Sincroniza a versão em um diretório de workspace (deno.jsonc ou deno.json).
  */
-async function syncWorkspaceDir(
+export async function syncWorkspaceDir(
   wsPath: string,
   newVersion: string,
   wsRelPath: string,
@@ -3606,17 +3635,6 @@ export function formatVersion(
 }
 
 /**
- * Extrai a string de versão de um conteúdo textual (ex: deno.jsonc ou deno.json).
- *
- * @param content Conteúdo textual do arquivo JSON/JSONC
- * @returns Versão encontrada ou null
- */
-export function extractVersion(content: string,): string | null {
-  const match = content.match(/"version"\s*:\s*"([^"]*)"/,);
-  return match && match[1] !== undefined ? match[1] : null;
-}
-
-/**
  * Substitui a versão no conteúdo textual fornecido.
  */
 export function replaceVersionInContent(
@@ -3630,21 +3648,40 @@ export function replaceVersionInContent(
 }
 
 /**
- * Gera o template padrão para arquivos version.ts com a constante customizada.
+ * Gera o template padrão para arquivos version.ts/.js com a constante customizada.
+ *
+ * @param defineVersionString Identificador da constante
+ * @param isTypeScript Se deve gerar versão TypeScript (default: true)
  */
-export function getVersionFileTemplate(defineVersionString: string = "__APP_VERSION__",): string {
-  return `// Automatically generated file during build
+export function getVersionFileTemplate(
+  defineVersionString: string = "__APP_VERSION__",
+  isTypeScript: boolean = true,
+): string {
+  if (isTypeScript) {
+    return `// Automatically generated file during build
 declare const ${defineVersionString}: string;
 
-/** Current library/application version. */
+/**
+ * Current library/application version.
+ * @type {string}
+ */
 export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
   : "";
 `;
-}
+  } else {
+    return `// Automatically generated file during build
 
-/** Template padrão para arquivos version.ts gerados */
-export const VERSION_FILE_TEMPLATE = getVersionFileTemplate("__APP_VERSION__",);
+/**
+ * Current library/application version.
+ * @type {string}
+ */
+export const APP_VERSION = typeof ${defineVersionString} !== "undefined"
+  ? ${defineVersionString}
+  : "";
+`;
+  }
+}
 
 /**
  * Garante a existência do arquivo version.ts no caminho ou diretório especificado.
@@ -3665,9 +3702,15 @@ export async function ensureVersionFile(
     ? targetPathOrDir
     : join(baseDir, targetPathOrDir,);
 
-  const filePath = resolvedPath.endsWith(".ts",)
-    ? resolvedPath
-    : join(resolvedPath, "version.ts",);
+  let filePath = resolvedPath;
+  if (
+    !resolvedPath.endsWith(".ts",) && !resolvedPath.endsWith(".js",) &&
+    !resolvedPath.endsWith(".mjs",)
+  ) {
+    filePath = join(resolvedPath, "version.ts",);
+  }
+
+  const isTypeScript = !filePath.endsWith(".js",) && !filePath.endsWith(".mjs",);
 
   try {
     const stat = await Deno.stat(filePath,);
@@ -3689,7 +3732,10 @@ export async function ensureVersionFile(
     }
   }
 
-  await Deno.writeTextFile(filePath, getVersionFileTemplate(defineVersionString,),);
+  await Deno.writeTextFile(
+    filePath,
+    getVersionFileTemplate(defineVersionString, isTypeScript,),
+  );
   return true;
 }
 
@@ -3707,24 +3753,25 @@ export async function ensureVersionFiles(
   baseDir: string = ".",
   defineVersionString: string = "__APP_VERSION__",
 ): Promise<string[]> {
-  const processed: string[] = [];
+  const processed: string[] = []; 
 
   for (const vPath of versionPaths) {
-    const targetPath = isAbsolute(vPath,) ? vPath : join(baseDir, vPath,);
-    const filePath = targetPath.endsWith(".ts",)
-      ? targetPath
-      : join(targetPath, "version.ts",);
-
     try {
-      const created = await ensureVersionFile(filePath, baseDir, defineVersionString,);
+      const created = await ensureVersionFile(
+        vPath,
+        baseDir,
+        defineVersionString,
+      );
       if (created) {
-        console.log(`📝 Arquivo de versão criado com template ${defineVersionString}: ${filePath}`,);
+        console.log(
+          `📝 Arquivo de versão criado com template ${defineVersionString} em: ${vPath}`,
+        );
       } else {
-        console.log(`ℹ️ Arquivo de versão existente mantido: ${filePath}`,);
+        console.log(`ℹ️ Arquivo de versão existente mantido: ${vPath}`,);
       }
-      processed.push(filePath,);
+      processed.push(vPath,);
     } catch (err) {
-      console.warn(`⚠️ Aviso ao verificar/criar version.ts em ${filePath}:`, err,);
+      console.warn(`⚠️ Aviso ao verificar/criar version em ${vPath}:`, err,);
     }
   }
 
@@ -4210,8 +4257,8 @@ if (import.meta.main) {
  */
 
 import {
-  extractVersion,
   findDenoFile,
+  readProjectVersion,
   sanitizeVersion,
 } from "../../tools/version.ts";
 import { sanitizeVersionFile, } from "../sanitize/engine.ts";
@@ -4293,8 +4340,7 @@ export async function tagVersionEngine(
   }
 
   // Extrai e sanitiza versão em memória
-  const fileContent = await Deno.readTextFile(targetFile,);
-  const rawVersion = extractVersion(fileContent,);
+  const rawVersion = await readProjectVersion(targetFile, baseDir,);
   if (!rawVersion) {
     throw new Error(`❌ Campo "version" ausente em ${targetFile}`,);
   }
@@ -4578,7 +4624,6 @@ import type {
   WatchConfigFile,
   WatchConfigResult,
   WatchGlobalConfig,
-  WatchTargetConfig,
 } from "../tools/interfaces.ts";
 
 /** Exemplo de configurações para o modo watch */
@@ -5248,8 +5293,6 @@ import {
   parseVersion,
   readProjectVersion,
   updateProjectVersion,
-  VERSION_FILE_TEMPLATE,
-  writeVersionFile,
 } from "../../src/tools/version.ts";
 
 describe("version utils", () => {
@@ -5493,10 +5536,8 @@ describe("denoBuild programmatic API", () => {
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
-import {
-  applyDefines,
-  buildBundleOptions,
-} from "../../src/denobuild/bundle.ts";
+import { buildBundleOptions, } from "../../src/denobuild/bundle.ts";
+import { applyDefines, } from "../../src/tools/paths.ts";
 import { DENOBUILD_CONFIG_EXAMPLE, } from "../../src/denobuild/config.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 
@@ -6991,7 +7032,6 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
-  extractVersion,
   formatVersion,
   parseVersion,
   readProjectVersion,
@@ -7064,42 +7104,6 @@ describe("formatVersion", () => {
   });
   it("lida com números grandes", () => {
     assertEquals(formatVersion(999, 999, 999, "x",), "999.999.999#x",);
-  });
-});
-
-describe("extractVersion", () => {
-  it("extrai versão de JSON simples", () => {
-    assertEquals(
-      extractVersion(`{ "version": "1.2.3" }`,),
-      "1.2.3",
-    );
-  });
-  it("extrai versão de JSONC com comentários", () => {
-    const content = `{
-      // Comentário
-      "name": "buildit",
-      "version": "2.0.0", /* inline */
-    }`;
-    assertEquals(extractVersion(content,), "2.0.0",);
-  });
-  it("extrai versão com hash", () => {
-    assertEquals(
-      extractVersion(`{ "version": "1.2.3-abc123" }`,),
-      "1.2.3-abc123",
-    );
-  });
-  it("retorna null quando não há versão", () => {
-    assertEquals(
-      extractVersion(`{ "name": "buildit" }`,),
-      null,
-    );
-  });
-  it("retorna null para string vazia", () => {
-    assertEquals(extractVersion("",), null,);
-  });
-  it("ignora campos 'version' não ancorados corretamente", () => {
-    const content = `{ "name": "tem version: 1.0.0 no nome" }`;
-    assertEquals(extractVersion(content,), null,);
   });
 });
 
@@ -8101,6 +8105,7 @@ import {
   copyStaticFiles,
   copyTargetFiles,
   correspondeGlobs,
+  processFilesWithDefines,
   resolveWithBase,
 } from "../../src/tools/paths.ts";
 
@@ -8293,6 +8298,50 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       assertEquals(result, 'const ver = "2.5.0";',);
     });
   });
+
+  describe("processFilesWithDefines", () => {
+    it("deve alterar o conteúdo dos arquivos e retornar a lista de processados", async () => {
+      const tempDir = await Deno.makeTempDir({
+        prefix: "buildit_test_process_defines_",
+      },);
+      try {
+        const file1 = join(tempDir, "config.js",);
+        const file2 = join(tempDir, "env.txt",);
+        const file3 = join(tempDir, "no-change.txt",);
+
+        await Deno.writeTextFile(file1, "const url = __API_URL__;",);
+        await Deno.writeTextFile(file2, "VERSION: __APP_VERSION__",);
+        await Deno.writeTextFile(file3, "no markers here",);
+
+        const defines = {
+          "__API_URL__": '"https://api.test"',
+          "__APP_VERSION__": '"1.2.3"',
+        };
+
+        const processed = await processFilesWithDefines([
+          file1,
+          file2,
+          file3,
+        ], defines,);
+
+        // Apenas file1 e file2 devem estar na lista pois foram alterados
+        assertEquals(processed.length, 2,);
+        assert(processed.includes(file1,),);
+        assert(processed.includes(file2,),);
+        assert(!processed.includes(file3,),);
+
+        // Verifica o conteúdo alterado
+        const content1 = await Deno.readTextFile(file1,);
+        assertEquals(content1, 'const url = "https://api.test";',);
+        const content2 = await Deno.readTextFile(file2,);
+        assertEquals(content2, 'VERSION: "1.2.3"',);
+        const content3 = await Deno.readTextFile(file3,);
+        assertEquals(content3, "no markers here",);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true, },).catch(() => {},);
+      }
+    });
+  });
 });
 
 ```
@@ -8347,16 +8396,89 @@ describe("resolverOrdemTargets", () => {
 
 ---
 
+## Arquivo: `packages/utils/tests/version/ensure.test.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, assertStringIncludes, } from "@std/assert";
+import { join, } from "@std/path";
+import { ensureVersionFile, } from "../../src/tools/version.ts";
+
+describe("ensureVersionFile", () => {
+  it("deve criar arquivo .ts por padrão com template TypeScript", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const filePath = join(tempDir, "version.ts",);
+      const created = await ensureVersionFile(filePath,);
+      
+      assertEquals(created, true,);
+      const content = await Deno.readTextFile(filePath,);
+      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "@type {string}",);
+      assertStringIncludes(content, "export const APP_VERSION: string =",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve criar arquivo .js com template JavaScript", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const filePath = join(tempDir, "version.js",);
+      const created = await ensureVersionFile(filePath,);
+      
+      assertEquals(created, true,);
+      const content = await Deno.readTextFile(filePath,);
+      // Não deve ter tipos nem declare const
+      assertEquals(content.includes("declare const",), false,);
+      assertEquals(content.includes(": string",), false,);
+      assertStringIncludes(content, "@type {string}",);
+      assertStringIncludes(content, "export const APP_VERSION = typeof __APP_VERSION__ !== \"undefined\"",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve criar version.ts ao receber um diretório", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const created = await ensureVersionFile(tempDir,);
+      
+      assertEquals(created, true,);
+      const filePath = join(tempDir, "version.ts",);
+      const content = await Deno.readTextFile(filePath,);
+      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve respeitar defineVersionString customizado", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const filePath = join(tempDir, "version.js",);
+      await ensureVersionFile(filePath, ".", "MY_CUSTOM_VERSION",);
+      
+      const content = await Deno.readTextFile(filePath,);
+      assertStringIncludes(content, "typeof MY_CUSTOM_VERSION !== \"undefined\"",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+});
+
+```
+
+---
+
 ## Arquivo: `packages/utils/tests/version/lib-version.test.ts`
 
 ```ts
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertNotEquals, } from "@std/assert";
-import {
-  extractVersion,
-  findDenoFile,
-  sanitizeVersion,
-} from "../../src/tools/version.ts";
+import { findDenoFile, sanitizeVersion, } from "../../src/tools/version.ts";
 
 describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
   describe("sanitizeVersion", () => {
@@ -8400,24 +8522,6 @@ describe("lib-version - Equivalente TypeScript de lib-version.sh", () => {
       assertEquals(sanitizeVersion("invalid",), "0.0.0",);
       assertEquals(sanitizeVersion("v",), "0.0.0",);
       assertEquals(sanitizeVersion("###",), "0.0.0",);
-    });
-  });
-
-  describe("extractVersion", () => {
-    it("extrai a versão ancorada em 'version'", () => {
-      const jsonc =
-        `{\n  "name": "meu-pacote",\n  "version": "0.3.14#abc1234",\n  "license": "MIT"\n}`;
-      assertEquals(extractVersion(jsonc,), "0.3.14#abc1234",);
-    });
-
-    it("ignora espaços e tabulações ao redor de 'version'", () => {
-      const jsonc = `{\n\t"version" \t : \t "1.0.0" \t,\n}`;
-      assertEquals(extractVersion(jsonc,), "1.0.0",);
-    });
-
-    it("retorna null se não houver version", () => {
-      const jsonc = `{\n  "name": "sem-versao"\n}`;
-      assertEquals(extractVersion(jsonc,), null,);
     });
   });
 
@@ -8619,7 +8723,7 @@ describe("tag-version - Motor e CLI", () => {
             silencioso: true,
           },),
         Error,
-        "ausente",
+        "obrigatório não encontrado",
       );
 
       await Deno.remove(tempDir, { recursive: true, },);
