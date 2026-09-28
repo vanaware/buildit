@@ -11,7 +11,7 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.ts",);
       const created = await ensureVersionFile(filePath,);
-      
+
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
       assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
@@ -27,14 +27,17 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.js",);
       const created = await ensureVersionFile(filePath,);
-      
+
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
       // Não deve ter tipos nem declare const
       assertEquals(content.includes("declare const",), false,);
       assertEquals(content.includes(": string",), false,);
       assertStringIncludes(content, "@type {string}",);
-      assertStringIncludes(content, "export const APP_VERSION = typeof __APP_VERSION__ !== \"undefined\"",);
+      assertStringIncludes(
+        content,
+        'export const APP_VERSION = typeof __APP_VERSION__ !== "undefined"',
+      );
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -44,7 +47,7 @@ describe("ensureVersionFile", () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const created = await ensureVersionFile(tempDir,);
-      
+
       assertEquals(created, true,);
       const filePath = join(tempDir, "version.ts",);
       const content = await Deno.readTextFile(filePath,);
@@ -59,9 +62,12 @@ describe("ensureVersionFile", () => {
     try {
       const filePath = join(tempDir, "version.js",);
       await ensureVersionFile(filePath, ".", "MY_CUSTOM_VERSION",);
-      
+
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "typeof MY_CUSTOM_VERSION !== \"undefined\"",);
+      assertStringIncludes(
+        content,
+        'typeof MY_CUSTOM_VERSION !== "undefined"',
+      );
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }

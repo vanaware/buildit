@@ -23,20 +23,23 @@ describe("changelog utility", () => {
       // Primeiro commit e tag
       await Deno.writeTextFile(join(tempDir, "file1.txt",), "content 1",);
       await runGit(["add", ".",], tempDir,);
-      const c1 = await runGit(["commit", "-m", "feat: initial commit",], tempDir,);
-      if (!c1.success) console.warn("Commit 1 failed:", c1.stderr);
-      
+      const c1 = await runGit(
+        ["commit", "-m", "feat: initial commit",],
+        tempDir,
+      );
+      if (!c1.success) console.warn("Commit 1 failed:", c1.stderr,);
+
       const t1 = await runGit(["tag", "v0.1",], tempDir,);
-      if (!t1.success) console.warn("Tag 1 failed:", t1.stderr);
+      if (!t1.success) console.warn("Tag 1 failed:", t1.stderr,);
 
       // Segundo commit (será o log da nova versão)
       await Deno.writeTextFile(join(tempDir, "file2.txt",), "content 2",);
       await runGit(["add", ".",], tempDir,);
       const c2 = await runGit(["commit", "-m", "fix: bug fixed",], tempDir,);
-      if (!c2.success) console.warn("Commit 2 failed:", c2.stderr);
+      if (!c2.success) console.warn("Commit 2 failed:", c2.stderr,);
 
       const content = await generateChangelogContent("v0.2", tempDir,);
-      
+
       assertStringIncludes(content, "## v0.2",);
       assertStringIncludes(content, "fix: bug fixed",);
       // Não deve incluir o commit da tag v0.1 no range v0.1..HEAD
@@ -67,10 +70,14 @@ describe("changelog utility", () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const readmePath = join(tempDir, "README.md",);
-      const initialReadme = `# Project\n\nSome text.\n\n<!-- START:changelog -->\nOld content\n<!-- END:changelog -->\nFooter`;
+      const initialReadme =
+        `# Project\n\nSome text.\n\n<!-- START:changelog -->\nOld content\n<!-- END:changelog -->\nFooter`;
       await Deno.writeTextFile(readmePath, initialReadme,);
 
-      await updateReadmeChangelog("## v0.2 (2024-01-01)\n- Line 1\n- Line 2", tempDir,);
+      await updateReadmeChangelog(
+        "## v0.2 (2024-01-01)\n- Line 1\n- Line 2",
+        tempDir,
+      );
 
       const content = await Deno.readTextFile(readmePath,);
       assertStringIncludes(content, "### 📦 Últimas atualizações",);
