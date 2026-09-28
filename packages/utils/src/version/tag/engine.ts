@@ -9,6 +9,7 @@ import {
   sanitizeVersion,
 } from "../../tools/version.ts";
 import { sanitizeVersionFile, } from "../sanitize/engine.ts";
+import { runGit, } from "../../tools/git.ts";
 import {
   generateChangelogContent,
   updateChangelogFile,
@@ -18,38 +19,6 @@ import type {
   TagVersionOptions,
   TagVersionResult,
 } from "../../tools/interfaces.ts";
-
-/**
- * Executa um comando git capturando stdout, stderr e código de saída.
- */
-async function runGit(
-  args: string[],
-  cwd?: string,
-): Promise<{ success: boolean; code: number; stdout: string; stderr: string }> {
-  try {
-    const cmd = new Deno.Command("git", {
-      args,
-      cwd,
-      stdout: "piped",
-      stderr: "piped",
-    },);
-    const output = await cmd.output();
-    const decoder = new TextDecoder();
-    return {
-      success: output.success,
-      code: output.code,
-      stdout: decoder.decode(output.stdout,).trim(),
-      stderr: decoder.decode(output.stderr,).trim(),
-    };
-  } catch (error) {
-    return {
-      success: false,
-      code: 1,
-      stdout: "",
-      stderr: error instanceof Error ? error.message : String(error,),
-    };
-  }
-}
 
 /**
  * Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR).

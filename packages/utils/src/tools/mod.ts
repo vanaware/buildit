@@ -22,3 +22,8 @@ export {
     findDenoConfig,
     processFilesWithDefines
 } from "./paths.ts"
+
+export {
+    runGit,
+    type GitResult
+} from "./git.ts"
