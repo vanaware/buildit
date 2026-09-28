@@ -8,11 +8,7 @@ import {
   updateChangelogFile,
   updateReadmeChangelog,
 } from "../../src/version/tag/changelog.ts";
-
-async function runGit(args: string[], cwd: string,) {
-  const cmd = new Deno.Command("git", { args, cwd, },);
-  return await cmd.output();
-}
+import { runGit, } from "../../src/tools/git.ts";
 
 describe("changelog utility", () => {
   it("deve gerar conteúdo de changelog a partir de um repositório git", async () => {
@@ -22,17 +18,22 @@ describe("changelog utility", () => {
       await runGit(["init",], tempDir,);
       await runGit(["config", "user.email", "test@example.com",], tempDir,);
       await runGit(["config", "user.name", "Test User",], tempDir,);
+      await runGit(["config", "commit.gpgsign", "false",], tempDir,);
 
       // Primeiro commit e tag
       await Deno.writeTextFile(join(tempDir, "file1.txt",), "content 1",);
       await runGit(["add", ".",], tempDir,);
-      await runGit(["commit", "-m", "feat: initial commit",], tempDir,);
-      await runGit(["tag", "v0.1",], tempDir,);
+      const c1 = await runGit(["commit", "-m", "feat: initial commit",], tempDir,);
+      if (!c1.success) console.warn("Commit 1 failed:", c1.stderr);
+      
+      const t1 = await runGit(["tag", "v0.1",], tempDir,);
+      if (!t1.success) console.warn("Tag 1 failed:", t1.stderr);
 
       // Segundo commit (será o log da nova versão)
       await Deno.writeTextFile(join(tempDir, "file2.txt",), "content 2",);
       await runGit(["add", ".",], tempDir,);
-      await runGit(["commit", "-m", "fix: bug fixed",], tempDir,);
+      const c2 = await runGit(["commit", "-m", "fix: bug fixed",], tempDir,);
+      if (!c2.success) console.warn("Commit 2 failed:", c2.stderr);
 
       const content = await generateChangelogContent("v0.2", tempDir,);
       
