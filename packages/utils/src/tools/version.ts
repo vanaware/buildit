@@ -147,7 +147,10 @@ export function getVersionFileTemplate(
     return `// Automatically generated file during build
 declare const ${defineVersionString}: string;
 
-/** Current library/application version. */
+/**
+ * Current library/application version.
+ * @type {string}
+ */
 export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
   : "";
@@ -155,7 +158,10 @@ export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   } else {
     return `// Automatically generated file during build
 
-/** Current library/application version. */
+/**
+ * Current library/application version.
+ * @type {string}
+ */
 export const APP_VERSION = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
   : "";

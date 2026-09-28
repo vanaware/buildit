@@ -15,6 +15,7 @@ describe("ensureVersionFile", () => {
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
       assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "@type {string}",);
       assertStringIncludes(content, "export const APP_VERSION: string =",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
@@ -32,6 +33,7 @@ describe("ensureVersionFile", () => {
       // Não deve ter tipos nem declare const
       assertEquals(content.includes("declare const",), false,);
       assertEquals(content.includes(": string",), false,);
+      assertStringIncludes(content, "@type {string}",);
       assertStringIncludes(content, "export const APP_VERSION = typeof __APP_VERSION__ !== \"undefined\"",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
