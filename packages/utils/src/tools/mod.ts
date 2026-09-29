@@ -10,7 +10,8 @@ export {
     sanitizeVersion,
     ensureVersionFiles,
     syncVersion,
-    syncWorkspaceDir
+    syncWorkspaceDir,
+    syncWorkspaces
 } from "./version.ts"
 
 export {

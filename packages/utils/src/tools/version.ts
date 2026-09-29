@@ -65,6 +65,33 @@ export async function syncWorkspaceDir(
 }
 
 /**
+ * Sincroniza a versão em todos os workspaces definidos no arquivo de configuração raiz.
+ *
+ * @param denoJsonPath Caminho do arquivo deno.json[c] raiz
+ * @param version Versão a ser aplicada em todos os workspaces
+ */
+export async function syncWorkspaces(
+  denoJsonPath: string,
+  version: string,
+): Promise<void> {
+  try {
+    const rootContent = await Deno.readTextFile(denoJsonPath,);
+    const rootDir = dirname(denoJsonPath,);
+    const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
+
+    if (parsed.workspace && Array.isArray(parsed.workspace,)) {
+      console.log(`📦 Sincronizando workspaces para v${version}...`,);
+      for (const ws of parsed.workspace) {
+        const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
+        await syncWorkspaceDir(wsPath, version, ws,);
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️ Falha ao sincronizar workspaces em ${denoJsonPath}:`, err,);
+  }
+}
+
+/**
  * Exemplo de caminhos onde o arquivo version.ts pode ser sincronizado.
  */
 export const VERSION_PATHS_EXAMPLE: string[] = [
@@ -307,21 +334,7 @@ export async function syncVersion(
 
   // Sincroniza workspaces se solicitado
   if (forcePackages) {
-    try {
-      const rootContent = await Deno.readTextFile(denoJsonPath,);
-      const rootDir = dirname(denoJsonPath,);
-      const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
-
-      if (parsed.workspace && Array.isArray(parsed.workspace,)) {
-        console.log(`📦 Sincronizando workspaces para v${finalVersion}...`,);
-        for (const ws of parsed.workspace) {
-          const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
-          await syncWorkspaceDir(wsPath, finalVersion, ws,);
-        }
-      }
-    } catch (err) {
-      console.warn(`⚠️ Falha ao sincronizar workspaces:`, err,);
-    }
+    await syncWorkspaces(denoJsonPath, finalVersion,);
   }
 
   // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam
