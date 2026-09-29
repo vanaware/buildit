@@ -5,6 +5,7 @@ import {
   ensureVersionFile,
   ensureVersionFiles,
   formatVersion,
+  incrementProjectVersion,
   parseVersion,
   readProjectVersion,
   updateProjectVersion,
@@ -171,6 +172,52 @@ describe("version utils", () => {
 
       assertEquals(content.includes("__CUSTOM_VERSION__",), true,);
       assertEquals(content.includes("__APP_VERSION__",), false,);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+  });
+
+  describe("incrementProjectVersion", () => {
+    it("deve ler do arquivo deno.jsonc, incrementar patch + 1 e salvar", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const denoJsonc = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        denoJsonc,
+        JSON.stringify({ name: "my-pkg", version: "1.2.3", }, null, 2,),
+      );
+
+      const newVer = await incrementProjectVersion({
+        denoJsonPath: denoJsonc,
+        buildHash: "hash999",
+      },);
+
+      assertEquals(newVer, "1.2.4#hash999",);
+
+      const saved = await Deno.readTextFile(denoJsonc,);
+      assertEquals(JSON.parse(saved,).version, "1.2.4#hash999",);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("deve respeitar currentVersion explicitamente fornecida e atualizar deno.json", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const denoJson = join(tempDir, "deno.json",);
+      await Deno.writeTextFile(
+        denoJson,
+        JSON.stringify({ name: "my-pkg", version: "0.1.0", }, null, 2,),
+      );
+
+      const newVer = await incrementProjectVersion({
+        baseDir: tempDir,
+        denoJsonPath: denoJson,
+        currentVersion: "3.4.5",
+        buildHash: "xyz",
+      },);
+
+      assertEquals(newVer, "3.4.6#xyz",);
+
+      const saved = await Deno.readTextFile(denoJson,);
+      assertEquals(JSON.parse(saved,).version, "3.4.6#xyz",);
 
       await Deno.remove(tempDir, { recursive: true, },);
     });

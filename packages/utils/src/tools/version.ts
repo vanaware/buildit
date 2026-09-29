@@ -8,6 +8,7 @@ import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
 
 import type {
+  IncrementVersionOptions,
   ParsedVersion,
   SyncWorkspacesOptions,
   VersionUpdateOptions,
@@ -378,6 +379,65 @@ export async function syncVersion(
 }
 
 /**
+ * Lê a versão atual do projeto (se não fornecida), incrementa a versão patch (+1),
+ * formata com buildHash e grava a nova versão de volta no deno.jsonc raiz.
+ *
+ * @param options Opções contendo baseDir, denoJsonPath, currentVersion e buildHash
+ * @returns Nova versão incrementada aplicada no arquivo
+ *
+ * @example
+ * ```typescript
+ * const newVersion = await incrementProjectVersion({
+ *   baseDir: ".",
+ *   buildHash: "abc1234",
+ * });
+ * ```
+ */
+export async function incrementProjectVersion(
+  options: IncrementVersionOptions = {},
+): Promise<string> {
+  const baseDir = options.baseDir ?? ".";
+  const denoJsonPath = options.denoJsonPath ??
+    join(baseDir, "deno.jsonc",);
+
+  let currentVer = options.currentVersion;
+  if (!currentVer) {
+    currentVer = await readProjectVersion(denoJsonPath, baseDir,);
+  }
+
+  const { major, minor, patch, } = parseVersion(currentVer,);
+  const finalVersion = formatVersion(major, minor, patch + 1, options.buildHash,);
+
+  // Atualiza deno.jsonc raiz
+  try {
+    let actualDenoJsonPath = denoJsonPath;
+    let rootContent = "";
+    try {
+      rootContent = await Deno.readTextFile(denoJsonPath,);
+    } catch {
+      if (denoJsonPath.endsWith(".jsonc",)) {
+        const alt = denoJsonPath.slice(0, -1,);
+        rootContent = await Deno.readTextFile(alt,);
+        actualDenoJsonPath = alt;
+      } else {
+        throw new Deno.errors.NotFound(`Arquivo ${denoJsonPath} não encontrado`);
+      }
+    }
+
+    const updatedRootContent = replaceVersionInContent(
+      rootContent,
+      finalVersion,
+    );
+    await Deno.writeTextFile(actualDenoJsonPath, updatedRootContent,);
+    console.log(`📈 Versão incrementada para: v${finalVersion}`,);
+  } catch (err) {
+    console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err,);
+  }
+
+  return finalVersion;
+}
+
+/**
  * Incrementa a versão patch e sincroniza o projeto.
  *
  * @param options Opções de atualização
@@ -399,30 +459,19 @@ export async function updateProjectVersion(
     join(baseDir, "deno.jsonc",);
   const noversion = options.noversion ?? false;
 
-  let currentVer = options.currentVersion;
-  if (!currentVer) {
-    currentVer = await readProjectVersion(denoJsonPath, baseDir,);
-  }
-
-  let finalVersion = currentVer;
+  let finalVersion = options.currentVersion;
 
   if (!noversion) {
-    const { major, minor, patch, } = parseVersion(currentVer,);
-    finalVersion = formatVersion(major, minor, patch + 1, options.buildHash,);
-
-    // Atualiza deno.jsonc raiz
-    try {
-      const rootContent = await Deno.readTextFile(denoJsonPath,);
-      const updatedRootContent = replaceVersionInContent(
-        rootContent,
-        finalVersion,
-      );
-      await Deno.writeTextFile(denoJsonPath, updatedRootContent,);
-      console.log(`📈 Versão incrementada para: v${finalVersion}`,);
-    } catch (err) {
-      console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err,);
-    }
+    finalVersion = await incrementProjectVersion({
+      baseDir,
+      denoJsonPath,
+      currentVersion: options.currentVersion,
+      buildHash: options.buildHash,
+    },);
   } else {
+    if (!finalVersion) {
+      finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
+    }
     console.log(`📌 Versão mantida (noversion): v${finalVersion}`,);
   }
 

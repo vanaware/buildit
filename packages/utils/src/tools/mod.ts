@@ -1,6 +1,7 @@
 
 export { 
     EXTENSIONS_EXAMPLE as defaultExtensions,
+    type IncrementVersionOptions,
     type SyncWorkspacesOptions,
     type VersionUpdateOptions
  } from "./interfaces.ts";
@@ -10,6 +11,7 @@ export {
     readProjectVersion,
     sanitizeVersion,
     ensureVersionFiles,
+    incrementProjectVersion,
     syncVersion,
     syncWorkspaceDir,
     syncWorkspaces

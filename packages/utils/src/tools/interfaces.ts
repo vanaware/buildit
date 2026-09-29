@@ -390,6 +390,18 @@ export interface SyncWorkspacesOptions {
   version?: string;
 }
 
+/** Opções para incremento de versão do projeto. */
+export interface IncrementVersionOptions {
+  /** Diretório base de resolução (padrão: "."). */
+  baseDir?: string;
+  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  denoJsonPath?: string;
+  /** Versão atual base. Se omitida, lê diretamente do arquivo deno.json[c]. */
+  currentVersion?: string;
+  /** Hash de build customizado a ser anexado (ex: "abc1234"). */
+  buildHash?: string;
+}
+
 export interface VersionUpdateOptions {
   currentVersion?: string;
   denoJsonPath?: string;
