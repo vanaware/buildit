@@ -37,7 +37,9 @@ describe("syncWorkspaces", () => {
       const syncedVersion = await syncWorkspaces({ baseDir: tempDir, },);
       assertEquals(syncedVersion, "1.2.3#xyz",);
 
-      const pkgAContent = await Deno.readTextFile(join(pkgADir, "deno.jsonc",),);
+      const pkgAContent = await Deno.readTextFile(
+        join(pkgADir, "deno.jsonc",),
+      );
       const pkgBContent = await Deno.readTextFile(join(pkgBDir, "deno.json",),);
 
       assertEquals(JSON.parse(pkgAContent,).version, "1.2.3#xyz",);
@@ -74,7 +76,9 @@ describe("syncWorkspaces", () => {
       },);
       assertEquals(syncedVersion, "2.0.0",);
 
-      const subPkgContent = await Deno.readTextFile(join(subPkgDir, "deno.json",),);
+      const subPkgContent = await Deno.readTextFile(
+        join(subPkgDir, "deno.json",),
+      );
       assertEquals(JSON.parse(subPkgContent,).version, "2.0.0",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
