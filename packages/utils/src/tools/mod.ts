@@ -1,6 +1,7 @@
 
 export { 
     EXTENSIONS_EXAMPLE as defaultExtensions,
+    type SyncWorkspacesOptions,
     type VersionUpdateOptions
  } from "./interfaces.ts";
 export { VERSION_PATHS_EXAMPLE as versionPathsExample } from "./version.ts";

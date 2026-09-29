@@ -7,7 +7,11 @@
 import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
 
-import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
+import type {
+  ParsedVersion,
+  SyncWorkspacesOptions,
+  VersionUpdateOptions,
+} from "./interfaces.ts";
 
 import { loadConfig, } from "./jsonc.ts";
 
@@ -65,18 +69,35 @@ export async function syncWorkspaceDir(
 }
 
 /**
- * Sincroniza a versão em todos os workspaces definidos no arquivo de configuração raiz.
+ * Sincroniza a versão definida no deno.jsonc raiz com todos os workspaces configurados.
+ * Se nenhuma versão for fornecida nas options, lê diretamente a versão existente no deno.jsonc raiz.
  *
- * @param denoJsonPath Caminho do arquivo deno.json[c] raiz
- * @param version Versão a ser aplicada em todos os workspaces
+ * @param options Opções contendo baseDir, denoJsonPath e versão opcional
+ * @returns Versão sincronizada nos workspaces
  */
 export async function syncWorkspaces(
-  denoJsonPath: string,
-  version: string,
-): Promise<void> {
+  options: SyncWorkspacesOptions = {},
+): Promise<string> {
+  const baseDir = options.baseDir ?? ".";
+  const denoJsonPath = options.denoJsonPath ??
+    join(baseDir, "deno.jsonc",);
+
+  const version = options.currentVersion ?? options.version ??
+    await readProjectVersion(denoJsonPath, baseDir,);
+
   try {
-    const rootContent = await Deno.readTextFile(denoJsonPath,);
-    const rootDir = dirname(denoJsonPath,);
+    let rootContent = "";
+    let actualDenoJsonPath = denoJsonPath;
+    try {
+      rootContent = await Deno.readTextFile(denoJsonPath,);
+    } catch {
+      if (denoJsonPath.endsWith(".jsonc",)) {
+        const alt = denoJsonPath.slice(0, -1,);
+        rootContent = await Deno.readTextFile(alt,);
+        actualDenoJsonPath = alt;
+      }
+    }
+    const rootDir = dirname(actualDenoJsonPath,);
     const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
 
     if (parsed.workspace && Array.isArray(parsed.workspace,)) {
@@ -89,6 +110,8 @@ export async function syncWorkspaces(
   } catch (err) {
     console.warn(`⚠️ Falha ao sincronizar workspaces em ${denoJsonPath}:`, err,);
   }
+
+  return version;
 }
 
 /**
@@ -334,7 +357,11 @@ export async function syncVersion(
 
   // Sincroniza workspaces se solicitado
   if (forcePackages) {
-    await syncWorkspaces(denoJsonPath, finalVersion,);
+    await syncWorkspaces({
+      baseDir,
+      denoJsonPath,
+      currentVersion: finalVersion,
+    },);
   }
 
   // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam

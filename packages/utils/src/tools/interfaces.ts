@@ -378,6 +378,18 @@ export interface CommonCliFlags {
   positional: string[];
 }
 
+/** Opções para sincronização de workspaces. */
+export interface SyncWorkspacesOptions {
+  /** Diretório base de resolução (padrão: "."). */
+  baseDir?: string;
+  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  denoJsonPath?: string;
+  /** Versão atual a ser propagada. Se omitida, lê do deno.jsonc raiz. */
+  currentVersion?: string;
+  /** Alias para currentVersion. */
+  version?: string;
+}
+
 export interface VersionUpdateOptions {
   currentVersion?: string;
   denoJsonPath?: string;
