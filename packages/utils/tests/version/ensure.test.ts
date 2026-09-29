@@ -14,7 +14,7 @@ describe("ensureVersionFile", () => {
 
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "// @ts-ignore",);
       assertStringIncludes(content, "@type {string}",);
       assertStringIncludes(content, "export const APP_VERSION: string =",);
     } finally {
@@ -51,7 +51,7 @@ describe("ensureVersionFile", () => {
       assertEquals(created, true,);
       const filePath = join(tempDir, "version.ts",);
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "// @ts-ignore",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
