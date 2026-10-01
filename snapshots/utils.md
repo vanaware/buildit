@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-10-01T11:16:15.960Z
+Gerado automaticamente em: 2026-10-01T21:54:34.997Z
 
 ---
 
@@ -16,7 +16,7 @@ Gerado automaticamente em: 2026-10-01T11:16:15.960Z
 ```json
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.8#mupf9ocu",
+  "version": "0.4.9#muq2nrcc",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
