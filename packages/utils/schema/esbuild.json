@@ -178,8 +178,34 @@
           "default": true
         },
         "treeShaking": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "enum": ["ignore"] }
+          ],
+          "description": "Se habilita a eliminação de código morto (dead code elimination). Aceita 'ignore' para desativar explicitamente."
+        },
+        "jsxFactory": {
+          "type": "string",
+          "description": "Fábrica JSX customizada (ex: 'h', 'React.createElement')."
+        },
+        "jsxFragment": {
+          "type": "string",
+          "description": "Fragmento JSX customizado (ex: 'Fragment', 'React.Fragment')."
+        },
+        "analyze": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "enum": ["verbose"] }
+          ],
+          "description": "Gera um relatório analítico do bundle no console após o build (ativa metafile automaticamente)."
+        },
+        "reserveProps": {
+          "type": "string",
+          "description": "Regex para propriedades a serem preservadas durante o mangling (ex: '/^_.*/')."
+        },
+        "sideEffects": {
           "type": "boolean",
-          "description": "Se habilita a eliminação de código morto (dead code elimination)."
+          "description": "Informa ao esbuild se o código deve ser tratado como tendo efeitos colaterais para fins de tree-shaking."
         },
         "legalComments": {
           "enum": ["none", "inline", "eof", "linked", "external"],
@@ -201,19 +227,7 @@
           "type": "object",
           "additionalProperties": {
             "enum": [
-              "js",
-              "jsx",
-              "ts",
-              "tsx",
-              "css",
-              "json",
-              "text",
-              "base64",
-              "dataurl",
-              "file",
-              "binary",
-              "empty",
-              "copy"
+              "js", "jsx", "ts", "tsx", "css", "json", "text", "base64", "dataurl", "file", "binary", "empty", "copy"
             ]
           },
           "description": "Mapeamento de loaders por extensão de arquivo."
@@ -258,6 +272,95 @@
         "logLevel": {
           "enum": ["verbose", "debug", "info", "warning", "error", "silent"],
           "description": "Nível de detalhamento dos logs gerados pelo esbuild."
+        },
+        "logLimit": {
+          "type": "number",
+          "description": "Limite máximo de mensagens de log."
+        },
+        "logOverride": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": ["verbose", "debug", "info", "warning", "error", "silent"]
+          },
+          "description": "Sobrescrita de nível de log por identificador de mensagem."
+        },
+        "entryNames": {
+          "type": "string",
+          "description": "Padrão de nome para arquivos de entrada."
+        },
+        "chunkNames": {
+          "type": "string",
+          "description": "Padrão de nome para chunks gerados."
+        },
+        "assetNames": {
+          "type": "string",
+          "description": "Padrão de nome para assets gerados."
+        },
+        "publicPath": {
+          "type": "string",
+          "description": "Caminho público base para carregar chunks e assets."
+        },
+        "pure": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Identificadores tratados como puros para remoção se não utilizados (ex: ['console.log'])."
+        },
+        "globalName": {
+          "type": "string",
+          "description": "Nome da variável global para exposição do bundle no formato IIFE."
+        },
+        "tsconfig": {
+          "type": "string",
+          "description": "Caminho para um arquivo de configuração TypeScript (tsconfig.json) customizado."
+        },
+        "tsconfigRaw": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ],
+          "description": "Conteúdo bruto de configuração TypeScript (string JSON ou objeto)."
+        },
+        "outExtension": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Mapeamento de extensões de saída (ex: { '.js': '.mjs' })."
+        },
+        "supported": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "description": "Define suporte explícito para recursos de linguagem (ex: { 'dynamic-import': false })."
+        },
+        "sourcesContent": {
+          "type": "boolean",
+          "description": "Se deve incluir o conteúdo original dos arquivos fonte dentro dos sourcemaps."
+        },
+        "ignoreAnnotations": {
+          "type": "boolean",
+          "description": "Se deve ignorar anotações de pureza como /* @__PURE__ */ durante a minificação."
+        },
+        "minifyWhitespace": {
+          "type": "boolean",
+          "description": "Minificação granular: remove espaços em branco extras."
+        },
+        "minifyIdentifiers": {
+          "type": "boolean",
+          "description": "Minificação granular: renomeia identificadores para nomes curtos."
+        },
+        "minifySyntax": {
+          "type": "boolean",
+          "description": "Minificação granular: reescreve sintaxe para formas mais compactas."
+        },
+        "mangleProps": {
+          "type": "string",
+          "description": "Regex para mangling de propriedades de objetos (ex: '/^_.*/')."
+        },
+        "mangleQuoted": {
+          "type": "boolean",
+          "description": "Se deve aplicar mangling em propriedades de objetos que estão entre aspas."
+        },
+        "mangleCache": {
+          "type": "object",
+          "description": "Cache para persistência de nomes de mangling entre builds."
         }
       }
     }

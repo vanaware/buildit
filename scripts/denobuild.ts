@@ -8,7 +8,7 @@
  * e carrega as configurações declarativas de denobuild.jsonc.
  */
 
-import { denoBuildCli, } from "./packages/utils/src/denobuild/cli.ts";
+import { denoBuildCli, } from "../packages/utils/src/denobuild/cli.ts";
 
 if (import.meta.main) {
   const cli = denoBuildCli();

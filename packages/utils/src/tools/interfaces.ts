@@ -131,62 +131,83 @@ export interface TargetConfig {
   external?: string[];
   metafile?: boolean;
   write?: boolean;
+  /** Se habilita a eliminação de código morto (dead code elimination). Aceita 'ignore' para desativar explicitamente. */
   treeShaking?: boolean | "ignore";
-  /** Fábrica JSX (ex: "h"). */
+  /** Fábrica JSX customizada (ex: "h", "React.createElement"). */
   jsxFactory?: string;
-  /** Fragmento JSX (ex: "Fragment"). */
+  /** Fragmento JSX customizado (ex: "Fragment", "React.Fragment"). */
   jsxFragment?: string;
-  /** Gera um relatório analítico do bundle no console. */
+  /** Gera um relatório analítico do bundle no console após o build. */
   analyze?: boolean | "verbose";
-  /** Regex para propriedades a serem preservadas no mangling. */
+  /** Expressão regular para propriedades a serem preservadas durante o mangling (ex: "/^_.+/"). */
   reserveProps?: string;
-  /** Se o código deve ser tratado como tendo efeitos colaterais. */
+  /** Informa ao esbuild se o código deve ser tratado como tendo efeitos colaterais para fins de tree-shaking. */
   sideEffects?: boolean;
+  /** Preservação e posicionamento de comentários de licença e copyright. */
   legalComments?: EsbuildLegalComments;
+  /** Preserva os nomes originais de funções e classes mesmo quando minificado. */
   keepNames?: boolean;
+  /** Caminho do arquivo de saída consolidado (relativo ao distdir quando este for fornecido). */
   outfile?: string;
+  /** Habilita a divisão de código (code splitting) para carregamento dinâmico em ESM. */
   splitting?: boolean;
+  /** Mapeamento de loaders por extensão de arquivo. */
   loader?: Record<string, EsbuildLoader>;
+  /** Aliases de módulos ou caminhos de importação. */
   alias?: Record<string, string>;
+  /** Arquivos para injetar no topo do bundle antes dos entrypoints. */
   inject?: string[];
+  /** Comentários ou trechos de código adicionados no início do arquivo gerado. Suporta __APP_VERSION__. */
   banner?: { js?: string; css?: string };
+  /** Comentários ou trechos de código adicionados no final do arquivo gerado. Suporta __APP_VERSION__. */
   footer?: { js?: string; css?: string };
+  /** Ambiente alvo JavaScript/ECMAScript (ex: 'es2022', 'chrome100', 'esnext'). */
   target?: string | string[];
+  /** Conjunto de caracteres dos arquivos gerados. */
   charset?: EsbuildCharset;
+  /** Nível de detalhamento dos logs gerados pelo esbuild. */
   logLevel?: EsbuildLogLevel;
+  /** Limite máximo de mensagens de log. */
   logLimit?: number;
+  /** Sobrescrita de nível de log por identificador de mensagem. */
   logOverride?: Record<string, EsbuildLogLevel>;
+  /** Padrão de nome para arquivos de entrada. */
   entryNames?: string;
+  /** Padrão de nome para chunks gerados. */
   chunkNames?: string;
+  /** Padrão de nome para assets gerados. */
   assetNames?: string;
+  /** Caminho público base para carregar chunks e assets. */
   publicPath?: string;
+  /** Identificadores tratados como puros para remoção se não utilizados (ex: ['console.log']). */
   pure?: string[];
-  /** Nome global para formato IIFE. */
+  /** Nome da variável global para exposição do bundle no formato IIFE. */
   globalName?: string;
-  /** Caminho para arquivo tsconfig customizado. */
+  /** Caminho para um arquivo de configuração TypeScript (tsconfig.json) customizado. */
   tsconfig?: string;
-  /** Conteúdo raw do tsconfig. */
+  /** Conteúdo bruto de configuração TypeScript (string JSON ou objeto). */
   tsconfigRaw?: string | Record<string, unknown>;
-  /** Mapeamento de extensões de saída. */
+  /** Mapeamento de extensões de saída (ex: { ".js": ".mjs" }). */
   outExtension?: Record<string, string>;
-  /** Suporte a recursos específicos de linguagem. */
+  /** Define suporte explícito para recursos de linguagem (ex: { "dynamic-import": false }). */
   supported?: Record<string, boolean>;
-  /** Inclui o conteúdo original no sourcemap. */
+  /** Se deve incluir o conteúdo original dos arquivos fonte dentro dos sourcemaps. */
   sourcesContent?: boolean;
-  /** Ignora anotações de pureza. */
+  /** Se deve ignorar anotações de pureza como "@__PURE__" durante a minificação. */
   ignoreAnnotations?: boolean;
-  /** Minificação fina: espaços em branco. */
+  /** Minificação granular: remove espaços em branco extras. */
   minifyWhitespace?: boolean;
-  /** Minificação fina: identificadores. */
+  /** Minificação granular: renomeia identificadores para nomes curtos. */
   minifyIdentifiers?: boolean;
-  /** Minificação fina: sintaxe. */
+  /** Minificação granular: reescreve sintaxe para formas mais compactas. */
   minifySyntax?: boolean;
-  /** Regex para mangling de propriedades. */
+  /** Expressão regular para mangling de propriedades de objetos (ex: "/^_.+/"). */
   mangleProps?: string;
-  /** Se deve fazer mangle em propriedades entre aspas. */
+  /** Se deve aplicar mangling em propriedades de objetos que estão entre aspas. */
   mangleQuoted?: boolean;
-  /** Cache para mangling de propriedades. */
+  /** Cache para persistência de nomes de mangling entre builds. */
   mangleCache?: Record<string, string | false>;
+  /** Lista de plugins customizados do esbuild. */
   plugins?: unknown[];
 }
 
@@ -209,39 +230,9 @@ export interface EsbuildOptions {
   silencioso?: boolean;
 }
 
-export interface WatchTargetConfig {
-  srcdir?: string;
-  distdir?: string;
-  clean?: CleanConfig | string[];
-  copyFiles?: CopyFileConfig[];
-  default?: boolean;
-  entryPoints: string[];
-  platform?: EsbuildPlatform;
-  format?: EsbuildFormat;
-  bundle?: boolean;
-  minify?: boolean;
-  sourcemap?: EsbuildSourcemap;
-  jsx?: EsbuildJsx;
-  jsxImportSource?: string;
-  conditions?: string[];
-  define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
-  defineAssetsString?: string;
-  drop?: EsbuildDrop[];
-  external?: string[];
-  write?: boolean;
-  legalComments?: EsbuildLegalComments;
-  keepNames?: boolean;
-  outfile?: string;
-  loader?: Record<string, EsbuildLoader>;
-  alias?: Record<string, string>;
-  inject?: string[];
-  banner?: { js?: string; css?: string };
-  footer?: { js?: string; css?: string };
-  target?: string | string[];
-  charset?: EsbuildCharset;
-  logLevel?: EsbuildLogLevel;
-  plugins?: unknown[];
+export interface WatchTargetConfig extends TargetConfig {
+  /** Se habilitado, o watch também monitora o arquivo de configuração para recarregamento automático (não implementado). */
+  watchConfig?: boolean;
 }
 
 export interface WatchGlobalConfig {
@@ -306,25 +297,58 @@ export type DenoBundleSourceMap = "linked" | "inline" | "external";
 export type DenoBundlePackageHandling = "bundle" | "external";
 
 export interface DenoBundleTargetConfig {
+  /** Diretório base dos fontes (padrão: "."). */
   srcdir?: string;
+  /** Diretório de saída final (padrão: "."). */
   distdir?: string;
+  /** Regras de limpeza pré-build. */
   clean?: CleanConfig | string[];
+  /** Lista de conjuntos de regras para cópia de arquivos estáticos. */
   copyFiles?: CopyFileConfig[];
+  /** Se deve ser executado automaticamente quando nenhum alvo é passado via CLI. */
   default?: boolean;
+  /** Arquivos de entrada TypeScript, JavaScript ou HTML a serem empacotados. */
   entryPoints: string[];
+  /** Formato de saída do bundle (padrão: "esm"). */
   format?: DenoBundleFormat;
+  /** Plataforma alvo de execução (padrão: "browser"). */
   platform?: DenoBundlePlatform;
+  /** Se deve minificar o código gerado. */
   minify?: boolean;
+  /** Se deve preservar nomes originais de funções e classes. */
   keepNames?: boolean;
+  /** Estratégia de geração de mapa de fontes. */
   sourcemap?: DenoBundleSourceMap;
+  /** Habilita a divisão de código em múltiplos arquivos. */
   codeSplitting?: boolean;
+  /** Se deve embutir imports dinâmicos diretamente no bundle. */
   inlineImports?: boolean;
+  /** Como lidar com pacotes externos (padrão: "bundle"). */
   packages?: DenoBundlePackageHandling;
+  /** Lista de módulos a serem tratados como externos. */
   external?: string[];
+  /** Mapeamento de constantes substituídas em memória após o build. */
   define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). */
   defineAssetsString?: string;
+  /** Nome do arquivo de saída consolidado (relativo ao distdir). */
   outfile?: string;
+  /** Se true, o Deno.bundle gravará diretamente no disco (padrão: false no BuildIt para permitir pós-processamento). */
+  write?: boolean;
+  /** Nome da variável global para exposição do bundle no formato IIFE (implementado via pós-processamento). */
+  globalName?: string;
+  /** Trechos de código injetados no início do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  banner?: { js?: string; css?: string };
+  /** Trechos de código injetados no final do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  footer?: { js?: string; css?: string };
+  /** Modo de transformação JSX (automatic, transform ou preserve). Lido do deno.json pelo Deno.bundle. */
+  jsx?: string;
+  /** Fábrica JSX customizada (ex: "h"). Lido do deno.json pelo Deno.bundle. */
+  jsxFactory?: string;
+  /** Fragmento JSX customizado (ex: "Fragment"). Lido do deno.json pelo Deno.bundle. */
+  jsxFragment?: string;
+  /** Pacote para runtime automático do JSX. Lido do deno.json pelo Deno.bundle. */
+  jsxImportSource?: string;
 }
 
 export interface DenoBuildConfigFile {

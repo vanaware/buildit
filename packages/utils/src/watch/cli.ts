@@ -18,7 +18,6 @@ export function watchCli(): Command<any> {
     .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "watch.jsonc",
       env: { prefix: "WATCH_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {

@@ -6,7 +6,7 @@
  * Gera tags no formato vMAJOR.MINOR e publica no repositório remoto.
  */
 
-import { tagVersionCli, } from "./packages/utils/src/version/tag/cli.ts";
+import { tagVersionCli, } from "../packages/utils/src/version/tag/cli.ts";
 
 if (import.meta.main) {
   const cli = tagVersionCli();

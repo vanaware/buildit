@@ -34,7 +34,7 @@ export function buildBundleOptions(
 
   const options: Deno.bundle.Options = {
     entrypoints: resolvedEntryPoints,
-    write: false,
+    write: config.write ?? false,
   };
 
   if (outfile) {
@@ -56,6 +56,15 @@ export function buildBundleOptions(
   }
   if (config.packages !== undefined) options.packages = config.packages;
   if (config.external !== undefined) options.external = config.external;
+
+  // Opções estendidas que podem ser suportadas por versões futuras do Deno.bundle
+  const extendedOptions = options as any;
+  if (config.jsx !== undefined) extendedOptions.jsx = config.jsx;
+  if (config.jsxFactory !== undefined) extendedOptions.jsxFactory = config.jsxFactory;
+  if (config.jsxFragment !== undefined) extendedOptions.jsxFragment = config.jsxFragment;
+  if (config.jsxImportSource !== undefined) {
+    extendedOptions.jsxImportSource = config.jsxImportSource;
+  }
 
   return options;
 }

@@ -109,6 +109,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
      - Define `__APP_VERSION__`.
      - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
      - Resolve entry points e saídas com sourcemap `inline` padrão.
+     - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
   4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
   5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.
   6. `ctx.watch()`: Dispara os observadores do sistema de arquivos e compilação contínua em segundo plano.

@@ -7,53 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-09-28T23:52:17.542Z
-
----
-
-## Arquivo: `esbuild.ts`
-
-```ts
-/// <reference lib="deno.ns" />
-
-/**
- * @file esbuild.ts
- * @description CLI do orquestrador de build baseado em esbuild nativo.
- * Delega a execução para a biblioteca @vanaware/buildit
- * e carrega as configurações declarativas de esbuild.jsonc.
- */
-
-import { esBuildCli, } from "./packages/utils/src/esbuild/cli.ts";
-
-if (import.meta.main) {
-  const cli = esBuildCli();
-  await cli.parse(Deno.args,);
-}
-
-```
-
----
-
-## Arquivo: `export.ts`
-
-```ts
-/// <reference lib="deno.ns" />
-
-/**
- * @file export.ts
- * @description CLI de consolidação de contexto para IAs no projeto BuildIt.
- * Delega a execução e regras para a biblioteca @vanaware/buildit
- * e carrega as configurações declarativas de export.jsonc.
- */
-
-import { exportCli, } from "./packages/utils/src/export/cli.ts";
-
-if (import.meta.main) {
-  const cli = exportCli();
-  await cli.parse(Deno.args,);
-}
-
-```
+Gerado automaticamente em: 2026-10-01T11:16:15.960Z
 
 ---
 
@@ -62,7 +16,7 @@ if (import.meta.main) {
 ```json
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.3#mulwjjdl",
+  "version": "0.4.8#mupf9ocu",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -205,7 +159,7 @@ export function buildBundleOptions(
 
   const options: Deno.bundle.Options = {
     entrypoints: resolvedEntryPoints,
-    write: false,
+    write: config.write ?? false,
   };
 
   if (outfile) {
@@ -227,6 +181,15 @@ export function buildBundleOptions(
   }
   if (config.packages !== undefined) options.packages = config.packages;
   if (config.external !== undefined) options.external = config.external;
+
+  // Opções estendidas que podem ser suportadas por versões futuras do Deno.bundle
+  const extendedOptions = options as any;
+  if (config.jsx !== undefined) extendedOptions.jsx = config.jsx;
+  if (config.jsxFactory !== undefined) extendedOptions.jsxFactory = config.jsxFactory;
+  if (config.jsxFragment !== undefined) extendedOptions.jsxFragment = config.jsxFragment;
+  if (config.jsxImportSource !== undefined) {
+    extendedOptions.jsxImportSource = config.jsxImportSource;
+  }
 
   return options;
 }
@@ -260,7 +223,6 @@ export function denoBuildCli(): Command<any> {
     .description("BuildIt Deno.bundle Orchestrator",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "denobuild.jsonc",
       env: { prefix: "DENOBUILD_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
@@ -593,18 +555,48 @@ export async function processBundleTarget(
   }
 
   for (const outputFile of outputFiles) {
-    await ensureDirForFile(outputFile.path,);
-
     let content = outputFile.text();
+
+    // 7.1 Injetar globalName se for IIFE e não houver suporte nativo (fallback manual)
+    if (resolvedConfig.format === "iife" && resolvedConfig.globalName && !content.includes(`var ${resolvedConfig.globalName}`)) {
+      content = `var ${resolvedConfig.globalName} = (function() {\nvar exports = {};\n${content}\nreturn exports;\n})();`;
+    }
+
+    // 7.2 Aplicar Defines
     if (hasDefines) {
       content = applyDefines(content, defines,);
     }
 
-    await Deno.writeTextFile(outputFile.path, content,);
-    writtenPaths.push(outputFile.path,);
-    console.log(
-      `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
-    );
+    // 7.3 Aplicar Banner (JS)
+    if (resolvedConfig.banner?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
+      const banner = resolvedConfig.banner.js
+        .replaceAll("__APP_VERSION__", appVersion)
+        .replaceAll(defineVersionKey, appVersion);
+      content = banner + "\n" + content;
+    }
+
+    // 7.4 Aplicar Footer (JS)
+    if (resolvedConfig.footer?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
+      const footer = resolvedConfig.footer.js
+        .replaceAll("__APP_VERSION__", appVersion)
+        .replaceAll(defineVersionKey, appVersion);
+      content = content + "\n" + footer;
+    }
+
+    // 7.5 Gravar no disco (se write não for explicitamente false)
+    if (resolvedConfig.write !== false) {
+      await ensureDirForFile(outputFile.path,);
+      await Deno.writeTextFile(outputFile.path, content,);
+      writtenPaths.push(outputFile.path,);
+      console.log(
+        `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
+      );
+    } else {
+      writtenPaths.push(outputFile.path,);
+      console.log(
+        `   📦 [In-Memory] ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
+      );
+    }
   }
 
   const durationMs = Number((performance.now() - startTime).toFixed(0,),);
@@ -766,7 +758,6 @@ export function esBuildCli(): Command<any> {
     .description("BuildIt esbuild Orchestrator",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "esbuild.jsonc",
       env: { prefix: "ESBUILD_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
@@ -1168,6 +1159,15 @@ export async function processTarget(
       );
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
+
+    // 🔥 ANALYZE REPORT: Se solicitado, imprime o relatório no console
+    if (config.analyze) {
+      const analyzeResult = await esbuild.analyzeMetafile(result.metafile, {
+        verbose: config.analyze === "verbose",
+      });
+      console.log(`\n📊 RELATÓRIO DE ANÁLISE [${targetName}]:\n`);
+      console.log(analyzeResult);
+    }
   } catch (error) {
     if (
       error instanceof TypeError &&
@@ -1274,6 +1274,22 @@ export async function buildEsbuildOptions(
     "assetNames",
     "publicPath",
     "pure",
+    "globalName",
+    "tsconfig",
+    "tsconfigRaw",
+    "outExtension",
+    "supported",
+    "sourcesContent",
+    "ignoreAnnotations",
+    "minifyWhitespace",
+    "minifyIdentifiers",
+    "minifySyntax",
+    "jsxFactory",
+    "jsxFragment",
+    "analyze",
+    "sideEffects",
+    "mangleQuoted",
+    "mangleCache",
     "plugins",
   ];
   for (const prop of optionalProps) {
@@ -1281,6 +1297,31 @@ export async function buildEsbuildOptions(
     if ((config as any)[prop] !== undefined) {
       // deno-lint-ignore no-explicit-any
       (options as any)[prop] = (config as any)[prop];
+    }
+  }
+
+  // 🔥 REQUISITO: Para usar analyze, o esbuild precisa gerar o metafile
+  if (config.analyze) {
+    options.metafile = true;
+  }
+
+  // 🔥 TRATAMENTO ESPECIAL: mangleProps e reserveProps devem ser RegExp no JS API
+  const regexProps = ["mangleProps", "reserveProps"];
+  for (const propName of regexProps) {
+    const val = (config as any)[propName];
+    if (val !== undefined) {
+      if (typeof val === "string") {
+        let pattern = val;
+        let flags = "";
+        if (pattern.startsWith("/") && pattern.lastIndexOf("/") > 0) {
+          const lastSlash = pattern.lastIndexOf("/");
+          flags = pattern.substring(lastSlash + 1);
+          pattern = pattern.substring(1, lastSlash);
+        }
+        options[propName] = new RegExp(pattern, flags);
+      } else {
+        options[propName] = val;
+      }
     }
   }
 
@@ -1395,7 +1436,6 @@ export function exportCli(): Command<any> {
     .description("BuildIt Context Exporter",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "export.jsonc",
       env: { prefix: "EXPORT_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
@@ -2384,26 +2424,83 @@ export interface TargetConfig {
   external?: string[];
   metafile?: boolean;
   write?: boolean;
-  treeShaking?: boolean;
+  /** Se habilita a eliminação de código morto (dead code elimination). Aceita 'ignore' para desativar explicitamente. */
+  treeShaking?: boolean | "ignore";
+  /** Fábrica JSX customizada (ex: "h", "React.createElement"). */
+  jsxFactory?: string;
+  /** Fragmento JSX customizado (ex: "Fragment", "React.Fragment"). */
+  jsxFragment?: string;
+  /** Gera um relatório analítico do bundle no console após o build. */
+  analyze?: boolean | "verbose";
+  /** Expressão regular para propriedades a serem preservadas durante o mangling (ex: "/^_.+/"). */
+  reserveProps?: string;
+  /** Informa ao esbuild se o código deve ser tratado como tendo efeitos colaterais para fins de tree-shaking. */
+  sideEffects?: boolean;
+  /** Preservação e posicionamento de comentários de licença e copyright. */
   legalComments?: EsbuildLegalComments;
+  /** Preserva os nomes originais de funções e classes mesmo quando minificado. */
   keepNames?: boolean;
+  /** Caminho do arquivo de saída consolidado (relativo ao distdir quando este for fornecido). */
   outfile?: string;
+  /** Habilita a divisão de código (code splitting) para carregamento dinâmico em ESM. */
   splitting?: boolean;
+  /** Mapeamento de loaders por extensão de arquivo. */
   loader?: Record<string, EsbuildLoader>;
+  /** Aliases de módulos ou caminhos de importação. */
   alias?: Record<string, string>;
+  /** Arquivos para injetar no topo do bundle antes dos entrypoints. */
   inject?: string[];
+  /** Comentários ou trechos de código adicionados no início do arquivo gerado. Suporta __APP_VERSION__. */
   banner?: { js?: string; css?: string };
+  /** Comentários ou trechos de código adicionados no final do arquivo gerado. Suporta __APP_VERSION__. */
   footer?: { js?: string; css?: string };
+  /** Ambiente alvo JavaScript/ECMAScript (ex: 'es2022', 'chrome100', 'esnext'). */
   target?: string | string[];
+  /** Conjunto de caracteres dos arquivos gerados. */
   charset?: EsbuildCharset;
+  /** Nível de detalhamento dos logs gerados pelo esbuild. */
   logLevel?: EsbuildLogLevel;
+  /** Limite máximo de mensagens de log. */
   logLimit?: number;
+  /** Sobrescrita de nível de log por identificador de mensagem. */
   logOverride?: Record<string, EsbuildLogLevel>;
+  /** Padrão de nome para arquivos de entrada. */
   entryNames?: string;
+  /** Padrão de nome para chunks gerados. */
   chunkNames?: string;
+  /** Padrão de nome para assets gerados. */
   assetNames?: string;
+  /** Caminho público base para carregar chunks e assets. */
   publicPath?: string;
+  /** Identificadores tratados como puros para remoção se não utilizados (ex: ['console.log']). */
   pure?: string[];
+  /** Nome da variável global para exposição do bundle no formato IIFE. */
+  globalName?: string;
+  /** Caminho para um arquivo de configuração TypeScript (tsconfig.json) customizado. */
+  tsconfig?: string;
+  /** Conteúdo bruto de configuração TypeScript (string JSON ou objeto). */
+  tsconfigRaw?: string | Record<string, unknown>;
+  /** Mapeamento de extensões de saída (ex: { ".js": ".mjs" }). */
+  outExtension?: Record<string, string>;
+  /** Define suporte explícito para recursos de linguagem (ex: { "dynamic-import": false }). */
+  supported?: Record<string, boolean>;
+  /** Se deve incluir o conteúdo original dos arquivos fonte dentro dos sourcemaps. */
+  sourcesContent?: boolean;
+  /** Se deve ignorar anotações de pureza como "@__PURE__" durante a minificação. */
+  ignoreAnnotations?: boolean;
+  /** Minificação granular: remove espaços em branco extras. */
+  minifyWhitespace?: boolean;
+  /** Minificação granular: renomeia identificadores para nomes curtos. */
+  minifyIdentifiers?: boolean;
+  /** Minificação granular: reescreve sintaxe para formas mais compactas. */
+  minifySyntax?: boolean;
+  /** Expressão regular para mangling de propriedades de objetos (ex: "/^_.+/"). */
+  mangleProps?: string;
+  /** Se deve aplicar mangling em propriedades de objetos que estão entre aspas. */
+  mangleQuoted?: boolean;
+  /** Cache para persistência de nomes de mangling entre builds. */
+  mangleCache?: Record<string, string | false>;
+  /** Lista de plugins customizados do esbuild. */
   plugins?: unknown[];
 }
 
@@ -2426,39 +2523,9 @@ export interface EsbuildOptions {
   silencioso?: boolean;
 }
 
-export interface WatchTargetConfig {
-  srcdir?: string;
-  distdir?: string;
-  clean?: CleanConfig | string[];
-  copyFiles?: CopyFileConfig[];
-  default?: boolean;
-  entryPoints: string[];
-  platform?: EsbuildPlatform;
-  format?: EsbuildFormat;
-  bundle?: boolean;
-  minify?: boolean;
-  sourcemap?: EsbuildSourcemap;
-  jsx?: EsbuildJsx;
-  jsxImportSource?: string;
-  conditions?: string[];
-  define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
-  defineAssetsString?: string;
-  drop?: EsbuildDrop[];
-  external?: string[];
-  write?: boolean;
-  legalComments?: EsbuildLegalComments;
-  keepNames?: boolean;
-  outfile?: string;
-  loader?: Record<string, EsbuildLoader>;
-  alias?: Record<string, string>;
-  inject?: string[];
-  banner?: { js?: string; css?: string };
-  footer?: { js?: string; css?: string };
-  target?: string | string[];
-  charset?: EsbuildCharset;
-  logLevel?: EsbuildLogLevel;
-  plugins?: unknown[];
+export interface WatchTargetConfig extends TargetConfig {
+  /** Se habilitado, o watch também monitora o arquivo de configuração para recarregamento automático (não implementado). */
+  watchConfig?: boolean;
 }
 
 export interface WatchGlobalConfig {
@@ -2523,25 +2590,58 @@ export type DenoBundleSourceMap = "linked" | "inline" | "external";
 export type DenoBundlePackageHandling = "bundle" | "external";
 
 export interface DenoBundleTargetConfig {
+  /** Diretório base dos fontes (padrão: "."). */
   srcdir?: string;
+  /** Diretório de saída final (padrão: "."). */
   distdir?: string;
+  /** Regras de limpeza pré-build. */
   clean?: CleanConfig | string[];
+  /** Lista de conjuntos de regras para cópia de arquivos estáticos. */
   copyFiles?: CopyFileConfig[];
+  /** Se deve ser executado automaticamente quando nenhum alvo é passado via CLI. */
   default?: boolean;
+  /** Arquivos de entrada TypeScript, JavaScript ou HTML a serem empacotados. */
   entryPoints: string[];
+  /** Formato de saída do bundle (padrão: "esm"). */
   format?: DenoBundleFormat;
+  /** Plataforma alvo de execução (padrão: "browser"). */
   platform?: DenoBundlePlatform;
+  /** Se deve minificar o código gerado. */
   minify?: boolean;
+  /** Se deve preservar nomes originais de funções e classes. */
   keepNames?: boolean;
+  /** Estratégia de geração de mapa de fontes. */
   sourcemap?: DenoBundleSourceMap;
+  /** Habilita a divisão de código em múltiplos arquivos. */
   codeSplitting?: boolean;
+  /** Se deve embutir imports dinâmicos diretamente no bundle. */
   inlineImports?: boolean;
+  /** Como lidar com pacotes externos (padrão: "bundle"). */
   packages?: DenoBundlePackageHandling;
+  /** Lista de módulos a serem tratados como externos. */
   external?: string[];
+  /** Mapeamento de constantes substituídas em memória após o build. */
   define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). */
   defineAssetsString?: string;
+  /** Nome do arquivo de saída consolidado (relativo ao distdir). */
   outfile?: string;
+  /** Se true, o Deno.bundle gravará diretamente no disco (padrão: false no BuildIt para permitir pós-processamento). */
+  write?: boolean;
+  /** Nome da variável global para exposição do bundle no formato IIFE (implementado via pós-processamento). */
+  globalName?: string;
+  /** Trechos de código injetados no início do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  banner?: { js?: string; css?: string };
+  /** Trechos de código injetados no final do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  footer?: { js?: string; css?: string };
+  /** Modo de transformação JSX (automatic, transform ou preserve). Lido do deno.json pelo Deno.bundle. */
+  jsx?: string;
+  /** Fábrica JSX customizada (ex: "h"). Lido do deno.json pelo Deno.bundle. */
+  jsxFactory?: string;
+  /** Fragmento JSX customizado (ex: "Fragment"). Lido do deno.json pelo Deno.bundle. */
+  jsxFragment?: string;
+  /** Pacote para runtime automático do JSX. Lido do deno.json pelo Deno.bundle. */
+  jsxImportSource?: string;
 }
 
 export interface DenoBuildConfigFile {
@@ -2629,6 +2729,30 @@ export interface CommonCliFlags {
   forcepackagesversion: boolean;
   versionPaths?: string[];
   positional: string[];
+}
+
+/** Opções para sincronização de workspaces. */
+export interface SyncWorkspacesOptions {
+  /** Diretório base de resolução (padrão: "."). */
+  baseDir?: string;
+  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  denoJsonPath?: string;
+  /** Versão atual a ser propagada. Se omitida, lê do deno.jsonc raiz. */
+  currentVersion?: string;
+  /** Alias para currentVersion. */
+  version?: string;
+}
+
+/** Opções para incremento de versão do projeto. */
+export interface IncrementVersionOptions {
+  /** Diretório base de resolução (padrão: "."). */
+  baseDir?: string;
+  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  denoJsonPath?: string;
+  /** Versão atual base. Se omitida, lê diretamente do arquivo deno.json[c]. */
+  currentVersion?: string;
+  /** Hash de build customizado a ser anexado (ex: "abc1234"). */
+  buildHash?: string;
 }
 
 export interface VersionUpdateOptions {
@@ -2741,11 +2865,16 @@ export interface WatchLockData {
 
 ```ts
 import { parse as parseJsonc, } from "@std/jsonc";
-import { join, } from "@std/path";
+import { dirname, fromFileUrl, join, } from "@std/path";
 
 /**
  * Carrega e faz o parse de um arquivo JSON ou JSONC de forma segura.
  * Tenta carregar o arquivo especificado ou busca por alternativas padrão.
+ *
+ * Prioridade de busca:
+ * 1. Caminho explícito (se fornecido)
+ * 2. Diretório do script em execução (Deno.mainModule)
+ * 3. Diretório base informado (baseDir)
  *
  * @param fileName Nome base do arquivo (ex: "denobuild")
  * @param explicitPath Caminho explícito fornecido pelo usuário (opcional)
@@ -2757,22 +2886,42 @@ export async function loadConfig<T,>(
   explicitPath?: string,
   baseDir: string = ".",
 ): Promise<T | null> {
-  const candidates = explicitPath ? [explicitPath,] : [
-    join(baseDir, `${fileName}.jsonc`,),
-    join(baseDir, `${fileName}.json`,),
-  ];
+  const candidates: string[] = [];
 
-  for (const path of candidates) {
+  if (explicitPath) {
+    candidates.push(explicitPath,);
+  } else {
+    // 1. Tentar diretório do script principal (se for um arquivo local)
+    try {
+      if (Deno.mainModule && Deno.mainModule.startsWith("file://",)) {
+        const scriptDir = dirname(fromFileUrl(Deno.mainModule,),);
+        candidates.push(join(scriptDir, `${fileName}.jsonc`,),);
+        candidates.push(join(scriptDir, `${fileName}.json`,),);
+      }
+    } catch {
+      // Ignora erros de URL/Path no mainModule
+    }
+
+    // 2. Tentar diretório base (normalmente o CWD ou raiz do projeto)
+    candidates.push(join(baseDir, `${fileName}.jsonc`,),);
+    candidates.push(join(baseDir, `${fileName}.json`,),);
+  }
+
+  // Remover duplicatas mantendo a ordem
+  const uniqueCandidates = [...new Set(candidates),];
+
+  // console.debug(`🔍 Buscando config '${fileName}' em:`, uniqueCandidates);
+
+  for (const path of uniqueCandidates) {
     try {
       const content = await Deno.readTextFile(path,);
       const parsed = parseJsonc(content,);
 
       if (parsed && typeof parsed === "object") {
+        // console.debug(`✅ Config encontrada em: ${path}`);
         return parsed as T;
       }
     } catch (error) {
-      // Se o usuário passou um caminho específico e ele não existe ou está quebrado, avisamos.
-      // Se for a busca padrão, falhamos silenciosamente para tentar o próximo candidato.
       if (explicitPath && !(error instanceof Deno.errors.NotFound)) {
         console.warn(
           `⚠️ Erro ao ler arquivo de configuração em ${path}:`,
@@ -2795,6 +2944,8 @@ export async function loadConfig<T,>(
 
 export { 
     EXTENSIONS_EXAMPLE as defaultExtensions,
+    type IncrementVersionOptions,
+    type SyncWorkspacesOptions,
     type VersionUpdateOptions
  } from "./interfaces.ts";
 export { VERSION_PATHS_EXAMPLE as versionPathsExample } from "./version.ts";
@@ -2803,8 +2954,10 @@ export {
     readProjectVersion,
     sanitizeVersion,
     ensureVersionFiles,
+    incrementProjectVersion,
     syncVersion,
-    syncWorkspaceDir
+    syncWorkspaceDir,
+    syncWorkspaces
 } from "./version.ts"
 
 export {
@@ -2817,10 +2970,6 @@ export {
     processFilesWithDefines
 } from "./paths.ts"
 
-export {
-    runGit,
-    type GitResult
-} from "./git.ts"
 ```
 
 ---
@@ -3594,7 +3743,12 @@ export function validateTargetConfig(
 import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
 
-import type { ParsedVersion, VersionUpdateOptions, } from "./interfaces.ts";
+import type {
+  IncrementVersionOptions,
+  ParsedVersion,
+  SyncWorkspacesOptions,
+  VersionUpdateOptions,
+} from "./interfaces.ts";
 
 import { loadConfig, } from "./jsonc.ts";
 
@@ -3649,6 +3803,52 @@ export async function syncWorkspaceDir(
       }
     }
   }
+}
+
+/**
+ * Sincroniza a versão definida no deno.jsonc raiz com todos os workspaces configurados.
+ * Se nenhuma versão for fornecida nas options, lê diretamente a versão existente no deno.jsonc raiz.
+ *
+ * @param options Opções contendo baseDir, denoJsonPath e versão opcional
+ * @returns Versão sincronizada nos workspaces
+ */
+export async function syncWorkspaces(
+  options: SyncWorkspacesOptions = {},
+): Promise<string> {
+  const baseDir = options.baseDir ?? ".";
+  const denoJsonPath = options.denoJsonPath ??
+    join(baseDir, "deno.jsonc",);
+
+  const version = options.currentVersion ?? options.version ??
+    await readProjectVersion(denoJsonPath, baseDir,);
+
+  try {
+    let rootContent = "";
+    let actualDenoJsonPath = denoJsonPath;
+    try {
+      rootContent = await Deno.readTextFile(denoJsonPath,);
+    } catch {
+      if (denoJsonPath.endsWith(".jsonc",)) {
+        const alt = denoJsonPath.slice(0, -1,);
+        rootContent = await Deno.readTextFile(alt,);
+        actualDenoJsonPath = alt;
+      }
+    }
+    const rootDir = dirname(actualDenoJsonPath,);
+    const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
+
+    if (parsed.workspace && Array.isArray(parsed.workspace,)) {
+      console.log(`📦 Sincronizando workspaces para v${version}...`,);
+      for (const ws of parsed.workspace) {
+        const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
+        await syncWorkspaceDir(wsPath, version, ws,);
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️ Falha ao sincronizar workspaces em ${denoJsonPath}:`, err,);
+  }
+
+  return version;
 }
 
 /**
@@ -3732,12 +3932,12 @@ export function getVersionFileTemplate(
 ): string {
   if (isTypeScript) {
     return `// Automatically generated file during build
-declare const ${defineVersionString}: string;
 
 /**
  * Current library/application version.
  * @type {string}
  */
+// @ts-ignore: Identifier '${defineVersionString}' is replaced by a string literal at build time
 export const APP_VERSION: string = typeof ${defineVersionString} !== "undefined"
   ? ${defineVersionString}
   : "";
@@ -3894,21 +4094,11 @@ export async function syncVersion(
 
   // Sincroniza workspaces se solicitado
   if (forcePackages) {
-    try {
-      const rootContent = await Deno.readTextFile(denoJsonPath,);
-      const rootDir = dirname(denoJsonPath,);
-      const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
-
-      if (parsed.workspace && Array.isArray(parsed.workspace,)) {
-        console.log(`📦 Sincronizando workspaces para v${finalVersion}...`,);
-        for (const ws of parsed.workspace) {
-          const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
-          await syncWorkspaceDir(wsPath, finalVersion, ws,);
-        }
-      }
-    } catch (err) {
-      console.warn(`⚠️ Falha ao sincronizar workspaces:`, err,);
-    }
+    await syncWorkspaces({
+      baseDir,
+      denoJsonPath,
+      currentVersion: finalVersion,
+    },);
   }
 
   // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam
@@ -3919,6 +4109,65 @@ export async function syncVersion(
       `⚠️ Nenhum caminho de versão (versionPaths) foi especificado para sincronização.`,
     );
     console.log(`Exemplo de uso: syncVersion({ versionPaths: ["src/version.ts"] })`,);
+  }
+
+  return finalVersion;
+}
+
+/**
+ * Lê a versão atual do projeto (se não fornecida), incrementa a versão patch (+1),
+ * formata com buildHash e grava a nova versão de volta no deno.jsonc raiz.
+ *
+ * @param options Opções contendo baseDir, denoJsonPath, currentVersion e buildHash
+ * @returns Nova versão incrementada aplicada no arquivo
+ *
+ * @example
+ * ```typescript
+ * const newVersion = await incrementProjectVersion({
+ *   baseDir: ".",
+ *   buildHash: "abc1234",
+ * });
+ * ```
+ */
+export async function incrementProjectVersion(
+  options: IncrementVersionOptions = {},
+): Promise<string> {
+  const baseDir = options.baseDir ?? ".";
+  const denoJsonPath = options.denoJsonPath ??
+    join(baseDir, "deno.jsonc",);
+
+  let currentVer = options.currentVersion;
+  if (!currentVer) {
+    currentVer = await readProjectVersion(denoJsonPath, baseDir,);
+  }
+
+  const { major, minor, patch, } = parseVersion(currentVer,);
+  const finalVersion = formatVersion(major, minor, patch + 1, options.buildHash,);
+
+  // Atualiza deno.jsonc raiz
+  try {
+    let actualDenoJsonPath = denoJsonPath;
+    let rootContent = "";
+    try {
+      rootContent = await Deno.readTextFile(denoJsonPath,);
+    } catch {
+      if (denoJsonPath.endsWith(".jsonc",)) {
+        const alt = denoJsonPath.slice(0, -1,);
+        rootContent = await Deno.readTextFile(alt,);
+        actualDenoJsonPath = alt;
+      } else {
+        throw new Deno.errors.NotFound(`Arquivo ${denoJsonPath} não encontrado`);
+      }
+    }
+
+    const updatedRootContent = replaceVersionInContent(
+      rootContent,
+      finalVersion,
+    );
+    await Deno.writeTextFile(actualDenoJsonPath, updatedRootContent,);
+    console.log(`📈 Versão incrementada para: v${finalVersion}`,);
+  } catch (err) {
+    console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err,);
   }
 
   return finalVersion;
@@ -3946,30 +4195,19 @@ export async function updateProjectVersion(
     join(baseDir, "deno.jsonc",);
   const noversion = options.noversion ?? false;
 
-  let currentVer = options.currentVersion;
-  if (!currentVer) {
-    currentVer = await readProjectVersion(denoJsonPath, baseDir,);
-  }
-
-  let finalVersion = currentVer;
+  let finalVersion = options.currentVersion;
 
   if (!noversion) {
-    const { major, minor, patch, } = parseVersion(currentVer,);
-    finalVersion = formatVersion(major, minor, patch + 1, options.buildHash,);
-
-    // Atualiza deno.jsonc raiz
-    try {
-      const rootContent = await Deno.readTextFile(denoJsonPath,);
-      const updatedRootContent = replaceVersionInContent(
-        rootContent,
-        finalVersion,
-      );
-      await Deno.writeTextFile(denoJsonPath, updatedRootContent,);
-      console.log(`📈 Versão incrementada para: v${finalVersion}`,);
-    } catch (err) {
-      console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err,);
-    }
+    finalVersion = await incrementProjectVersion({
+      baseDir,
+      denoJsonPath,
+      currentVersion: options.currentVersion,
+      buildHash: options.buildHash,
+    },);
   } else {
+    if (!finalVersion) {
+      finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
+    }
     console.log(`📌 Versão mantida (noversion): v${finalVersion}`,);
   }
 
@@ -4738,7 +4976,6 @@ export function watchCli(): Command<any> {
     .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "watch.jsonc",
       env: { prefix: "WATCH_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {
@@ -5495,6 +5732,7 @@ import {
   ensureVersionFile,
   ensureVersionFiles,
   formatVersion,
+  incrementProjectVersion,
   parseVersion,
   readProjectVersion,
   updateProjectVersion,
@@ -5661,6 +5899,52 @@ describe("version utils", () => {
 
       assertEquals(content.includes("__CUSTOM_VERSION__",), true,);
       assertEquals(content.includes("__APP_VERSION__",), false,);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+  });
+
+  describe("incrementProjectVersion", () => {
+    it("deve ler do arquivo deno.jsonc, incrementar patch + 1 e salvar", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const denoJsonc = join(tempDir, "deno.jsonc",);
+      await Deno.writeTextFile(
+        denoJsonc,
+        JSON.stringify({ name: "my-pkg", version: "1.2.3", }, null, 2,),
+      );
+
+      const newVer = await incrementProjectVersion({
+        denoJsonPath: denoJsonc,
+        buildHash: "hash999",
+      },);
+
+      assertEquals(newVer, "1.2.4#hash999",);
+
+      const saved = await Deno.readTextFile(denoJsonc,);
+      assertEquals(JSON.parse(saved,).version, "1.2.4#hash999",);
+
+      await Deno.remove(tempDir, { recursive: true, },);
+    });
+
+    it("deve respeitar currentVersion explicitamente fornecida e atualizar deno.json", async () => {
+      const tempDir = await Deno.makeTempDir();
+      const denoJson = join(tempDir, "deno.json",);
+      await Deno.writeTextFile(
+        denoJson,
+        JSON.stringify({ name: "my-pkg", version: "0.1.0", }, null, 2,),
+      );
+
+      const newVer = await incrementProjectVersion({
+        baseDir: tempDir,
+        denoJsonPath: denoJson,
+        currentVersion: "3.4.5",
+        buildHash: "xyz",
+      },);
+
+      assertEquals(newVer, "3.4.6#xyz",);
+
+      const saved = await Deno.readTextFile(denoJson,);
+      assertEquals(JSON.parse(saved,).version, "3.4.6#xyz",);
 
       await Deno.remove(tempDir, { recursive: true, },);
     });
@@ -8298,6 +8582,52 @@ describe("resolverOrdemTargets", () => {
 
 ---
 
+## Arquivo: `packages/utils/tests/tools/jsonc.test.ts`
+
+```ts
+import { describe, it } from "@std/testing/bdd";
+import { assertEquals, assertNotEquals } from "@std/assert";
+import { loadConfig } from "../../src/tools/jsonc.ts";
+import { join } from "@std/path";
+
+describe("loadConfig - Prioridades de busca", () => {
+  it("deve carregar o arquivo explicitPath se fornecido", async () => {
+    const tempFile = await Deno.makeTempFile({ suffix: ".json" });
+    await Deno.writeTextFile(tempFile, JSON.stringify({ explicit: true }));
+    
+    try {
+      const config = await loadConfig<{ explicit: boolean }>("test", tempFile);
+      assertEquals(config?.explicit, true);
+    } finally {
+      await Deno.remove(tempFile);
+    }
+  });
+
+  it("deve cair para o baseDir se o scriptDir não possuir o arquivo", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const configPath = join(tempDir, "test.jsonc");
+    await Deno.writeTextFile(configPath, JSON.stringify({ baseDir: true }));
+
+    try {
+      // Como não podemos mudar facilmente o Deno.mainModule em runtime de teste, 
+      // verificamos apenas se ele encontra no baseDir passado.
+      const config = await loadConfig<{ baseDir: boolean }>("test", undefined, tempDir);
+      assertEquals(config?.baseDir, true);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true });
+    }
+  });
+
+  it("deve retornar null se nenhum arquivo for encontrado", async () => {
+    const config = await loadConfig("inexistente", undefined, "/tmp/pasta-fantasma");
+    assertEquals(config, null);
+  });
+});
+
+```
+
+---
+
 ## Arquivo: `packages/utils/tests/tools/paths.test.ts`
 
 ```ts
@@ -8722,7 +9052,7 @@ describe("ensureVersionFile", () => {
 
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "// @ts-ignore",);
       assertStringIncludes(content, "@type {string}",);
       assertStringIncludes(content, "export const APP_VERSION: string =",);
     } finally {
@@ -8759,7 +9089,7 @@ describe("ensureVersionFile", () => {
       assertEquals(created, true,);
       const filePath = join(tempDir, "version.ts",);
       const content = await Deno.readTextFile(filePath,);
-      assertStringIncludes(content, "declare const __APP_VERSION__: string;",);
+      assertStringIncludes(content, "// @ts-ignore",);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
@@ -8940,6 +9270,101 @@ describe("sanitize-version - Motor e CLI", () => {
       const cmd = sanitizeVersionCli();
       assertEquals(cmd.getName(), "sanitize-version",);
     });
+  });
+});
+
+```
+
+---
+
+## Arquivo: `packages/utils/tests/version/sync-workspaces.test.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+import { join, } from "@std/path";
+import { syncWorkspaces, } from "../../src/tools/version.ts";
+
+describe("syncWorkspaces", () => {
+  it("deve sincronizar a versão já existente no deno.jsonc raiz para os pacotes do workspace", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const rootConfig = {
+        name: "root-project",
+        version: "1.2.3#xyz",
+        workspace: ["./packages/pkg-a", "./packages/pkg-b",],
+      };
+      await Deno.writeTextFile(
+        join(tempDir, "deno.jsonc",),
+        JSON.stringify(rootConfig, null, 2,),
+      );
+
+      const pkgADir = join(tempDir, "packages", "pkg-a",);
+      const pkgBDir = join(tempDir, "packages", "pkg-b",);
+      await Deno.mkdir(pkgADir, { recursive: true, },);
+      await Deno.mkdir(pkgBDir, { recursive: true, },);
+
+      await Deno.writeTextFile(
+        join(pkgADir, "deno.jsonc",),
+        JSON.stringify({ name: "pkg-a", version: "0.0.1", }, null, 2,),
+      );
+      await Deno.writeTextFile(
+        join(pkgBDir, "deno.json",),
+        JSON.stringify({ name: "pkg-b", version: "0.0.2", }, null, 2,),
+      );
+
+      // Executa syncWorkspaces apenas com baseDir (deve ler a versão do deno.jsonc raiz)
+      const syncedVersion = await syncWorkspaces({ baseDir: tempDir, },);
+      assertEquals(syncedVersion, "1.2.3#xyz",);
+
+      const pkgAContent = await Deno.readTextFile(
+        join(pkgADir, "deno.jsonc",),
+      );
+      const pkgBContent = await Deno.readTextFile(join(pkgBDir, "deno.json",),);
+
+      assertEquals(JSON.parse(pkgAContent,).version, "1.2.3#xyz",);
+      assertEquals(JSON.parse(pkgBContent,).version, "1.2.3#xyz",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve aceitar denoJsonPath explícito e sobrescrever com currentVersion se fornecido", async () => {
+    const tempDir = await Deno.makeTempDir();
+    try {
+      const rootConfig = {
+        name: "custom-root",
+        version: "1.0.0",
+        workspace: ["./subpkg",],
+      };
+      const customConfigPath = join(tempDir, "custom-deno.jsonc",);
+      await Deno.writeTextFile(
+        customConfigPath,
+        JSON.stringify(rootConfig, null, 2,),
+      );
+
+      const subPkgDir = join(tempDir, "subpkg",);
+      await Deno.mkdir(subPkgDir, { recursive: true, },);
+      await Deno.writeTextFile(
+        join(subPkgDir, "deno.json",),
+        JSON.stringify({ name: "subpkg", version: "0.1.0", }, null, 2,),
+      );
+
+      const syncedVersion = await syncWorkspaces({
+        denoJsonPath: customConfigPath,
+        currentVersion: "2.0.0",
+      },);
+      assertEquals(syncedVersion, "2.0.0",);
+
+      const subPkgContent = await Deno.readTextFile(
+        join(subPkgDir, "deno.json",),
+      );
+      assertEquals(JSON.parse(subPkgContent,).version, "2.0.0",);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
   });
 });
 

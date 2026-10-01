@@ -19,7 +19,6 @@ export function esBuildCli(): Command<any> {
     .description("BuildIt esbuild Orchestrator",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "esbuild.jsonc",
       env: { prefix: "ESBUILD_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {

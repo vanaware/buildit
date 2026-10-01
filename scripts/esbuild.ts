@@ -7,7 +7,7 @@
  * e carrega as configurações declarativas de esbuild.jsonc.
  */
 
-import { esBuildCli, } from "./packages/utils/src/esbuild/cli.ts";
+import { esBuildCli, } from "../packages/utils/src/esbuild/cli.ts";
 
 if (import.meta.main) {
   const cli = esBuildCli();

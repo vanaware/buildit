@@ -20,7 +20,6 @@ export function denoBuildCli(): Command<any> {
     .description("BuildIt Deno.bundle Orchestrator",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "denobuild.jsonc",
       env: { prefix: "DENOBUILD_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {

@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: DOCS
 
-Gerado automaticamente em: 2026-09-28T23:52:17.442Z
+Gerado automaticamente em: 2026-10-01T11:16:15.936Z
 
 ---
 
@@ -1074,8 +1074,12 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
        │       │
        │       ├──► readProjectVersion(denoJsonPath, baseDir)
        │       │       └──► parseVersion(rawVersion)
-       │       ├──► syncVersion(versionStr, versionPaths, baseDir)
-       │       └──► formatVersion(parsed) / replaceVersionInContent(...)
+       │       ├──► incrementProjectVersion({ baseDir, denoJsonPath, currentVersion, buildHash }) [Se noversion=false]
+       │       │       ├──► readProjectVersion(...)
+       │       │       ├──► parseVersion(...) / formatVersion(...)
+       │       │       └──► replaceVersionInContent(...) -> Deno.writeTextFile(...)
+       │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [Se forcepackagesversion=true]
+       │               └──► [Itera workspaces] -> syncWorkspaceDir(...)
        │
        ├──► resolverOrdemTargets(configs, targets)
        │
@@ -1099,13 +1103,16 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
                │       ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
                │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
-               │       └──► resolveOutputPaths(config)
+               │       ├──► resolveOutputPaths(config)
+               │       └──► [Mapeia opções avançadas: jsx, minify, mangle, analyze, etc.]
                │
                ├──► esbuildBuildFn(esbuildOptions) -> buildWithDenoPlugin(options, denoJsoncPath)
                │       ├──► denoPlugin({ configPath: denoJsoncPath })
                │       └──► esbuild.build(options)
                │
-               └──► Deno.writeTextFile(metafilePath, ...) [se metafile: true]
+               ├──► Deno.writeTextFile(metafilePath, ...) [se metafile: true ou analyze configurado]
+               │
+               └──► esbuild.analyzeMetafile(result.metafile) [se analyze: true ou "verbose"]
 ```
 
 ---
@@ -1140,8 +1147,9 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
 * **Ações**:
   1. `updateProjectVersion(...)`:
      - Lê a versão de `deno.jsonc`.
-     - Incrementa versão de patch (se `noversion === false`).
-     - Sincroniza a nova versão em arquivos adicionais (`versionPaths` ou pacotes em `packages/*`).
+     - Invoca `incrementProjectVersion(...)` para elevar a versão de patch (se `noversion === false`).
+     - Invoca `syncWorkspaces(...)` para propagar a versão em pacotes do workspace (se `forcepackagesversion === true`).
+     - Sincroniza a nova versão em arquivos adicionais (`versionPaths`).
      - Retorna a `finalVersion` (string semântica, ex: `"0.3.14"`).
   2. `resolverOrdemTargets(configs, targets)`:
      - Garante estritamente que a ordem de execução dos alvos respeite a ordem de declaração no arquivo de configuração, ignorando alvos inexistentes e selecionando os alvos com `default !== false` caso nenhum tenha sido explicitado na CLI.
@@ -1172,11 +1180,13 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Se `config.defineAssetsString` estiver configurado, executa `listAssetsFn(distdir)` e injeta a constante correspondente. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída (incluindo arquivos estáticos copiados no passo anterior), sendo ideal para automatizar a lista de pré-cache em Service Workers.
      - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
      - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
+      - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
      - Formata `banner` e `footer` com substituição de versão.
   5. `buildWithDenoPlugin(esbuildOptions, denoJsoncPath)`:
      - Anexa a instância do `@deno/esbuild-plugin`.
      - Chama `esbuild.build(options)` nativo.
-  6. Se `config.metafile === true`, salva o arquivo `${targetName}-metafile.json` no disco.
+  6. Se `config.metafile === true` ou `config.analyze` estiver ativado, salva o arquivo `${targetName}-metafile.json` no disco.
+  7. Se `config.analyze` estiver ativado, gera e imprime o relatório `analyzeMetafile` no console.
 
 ---
 
@@ -1614,6 +1624,7 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
      - Define `__APP_VERSION__`.
      - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
      - Resolve entry points e saídas com sourcemap `inline` padrão.
+     - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
   4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
   5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.
   6. `ctx.watch()`: Dispara os observadores do sistema de arquivos e compilação contínua em segundo plano.

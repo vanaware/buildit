@@ -18,7 +18,6 @@ export function exportCli(): Command<any> {
     .description("BuildIt Context Exporter",)
     .version(APP_VERSION,)
     .option("-c, --app-config [file:string]", "Arquivo de configuração", {
-      default: "export.jsonc",
       env: { prefix: "EXPORT_", },
     },)
     .option("-b, --base-dir [dir:string]", "Diretório Base", {

@@ -142,6 +142,56 @@
           "enum": ["bundle", "external"],
           "description": "Se empacota dependências de terceiros ou as mantém externas."
         },
+        "external": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lista de módulos ou pacotes a serem tratados como externos e não empacotados."
+        },
+        "write": {
+          "type": "boolean",
+          "description": "Se true, o Deno.bundle grava os arquivos diretamente. No BuildIt, o padrão é false para permitir pós-processamento (defines, banners).",
+          "default": false
+        },
+        "keepNames": {
+          "type": "boolean",
+          "description": "Se true, preserva os nomes originais de funções e classes mesmo após a minificação."
+        },
+        "globalName": {
+          "type": "string",
+          "description": "Nome da variável global para exposição do bundle no formato IIFE (ex: 'MeuApp')."
+        },
+        "banner": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Trechos de código injetados no início do arquivo gerado. Suporta __APP_VERSION__."
+        },
+        "footer": {
+          "type": "object",
+          "properties": {
+            "js": { "type": "string" },
+            "css": { "type": "string" }
+          },
+          "description": "Trechos de código injetados no final do arquivo gerado. Suporta __APP_VERSION__."
+        },
+        "jsx": {
+          "enum": ["automatic", "transform", "preserve"],
+          "description": "Modo de transformação de JSX (lido automaticamente do deno.json pelo Deno.bundle)."
+        },
+        "jsxFactory": {
+          "type": "string",
+          "description": "Fábrica JSX customizada (ex: 'h')."
+        },
+        "jsxFragment": {
+          "type": "string",
+          "description": "Fragmento JSX customizado (ex: 'Fragment')."
+        },
+        "jsxImportSource": {
+          "type": "string",
+          "description": "Pacote para runtime automático do JSX (ex: 'preact')."
+        },
         "define": {
           "type": "object",
           "additionalProperties": { "type": "string" },

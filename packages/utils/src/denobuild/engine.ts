@@ -158,18 +158,48 @@ export async function processBundleTarget(
   }
 
   for (const outputFile of outputFiles) {
-    await ensureDirForFile(outputFile.path,);
-
     let content = outputFile.text();
+
+    // 7.1 Injetar globalName se for IIFE e não houver suporte nativo (fallback manual)
+    if (resolvedConfig.format === "iife" && resolvedConfig.globalName && !content.includes(`var ${resolvedConfig.globalName}`)) {
+      content = `var ${resolvedConfig.globalName} = (function() {\nvar exports = {};\n${content}\nreturn exports;\n})();`;
+    }
+
+    // 7.2 Aplicar Defines
     if (hasDefines) {
       content = applyDefines(content, defines,);
     }
 
-    await Deno.writeTextFile(outputFile.path, content,);
-    writtenPaths.push(outputFile.path,);
-    console.log(
-      `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
-    );
+    // 7.3 Aplicar Banner (JS)
+    if (resolvedConfig.banner?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
+      const banner = resolvedConfig.banner.js
+        .replaceAll("__APP_VERSION__", appVersion)
+        .replaceAll(defineVersionKey, appVersion);
+      content = banner + "\n" + content;
+    }
+
+    // 7.4 Aplicar Footer (JS)
+    if (resolvedConfig.footer?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
+      const footer = resolvedConfig.footer.js
+        .replaceAll("__APP_VERSION__", appVersion)
+        .replaceAll(defineVersionKey, appVersion);
+      content = content + "\n" + footer;
+    }
+
+    // 7.5 Gravar no disco (se write não for explicitamente false)
+    if (resolvedConfig.write !== false) {
+      await ensureDirForFile(outputFile.path,);
+      await Deno.writeTextFile(outputFile.path, content,);
+      writtenPaths.push(outputFile.path,);
+      console.log(
+        `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
+      );
+    } else {
+      writtenPaths.push(outputFile.path,);
+      console.log(
+        `   📦 [In-Memory] ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
+      );
+    }
   }
 
   const durationMs = Number((performance.now() - startTime).toFixed(0,),);
