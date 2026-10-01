@@ -35,6 +35,36 @@ describe("loadConfig - Prioridades de busca", () => {
     }
   });
 
+  it("deve encontrar configuração dentro da subpasta scripts do baseDir", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const scriptsDir = join(tempDir, "scripts",);
+    await Deno.mkdir(scriptsDir,);
+    const configPath = join(scriptsDir, "test.jsonc",);
+    await Deno.writeTextFile(
+      configPath,
+      JSON.stringify({ inScripts: true, },),
+    );
+
+    try {
+      const config = await loadConfig<{ inScripts: boolean }>(
+        "test",
+        undefined,
+        tempDir,
+      );
+      assertEquals(config?.inScripts, true,);
+
+      // Também com explicitPath relativo ao baseDir ou scripts
+      const configExplicit = await loadConfig<{ inScripts: boolean }>(
+        "test",
+        "test.jsonc",
+        tempDir,
+      );
+      assertEquals(configExplicit?.inScripts, true,);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
   it("deve retornar null se nenhum arquivo for encontrado", async () => {
     const config = await loadConfig(
       "inexistente",

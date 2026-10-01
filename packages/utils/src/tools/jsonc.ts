@@ -24,6 +24,8 @@ export async function loadConfig<T,>(
 
   if (explicitPath) {
     candidates.push(explicitPath,);
+    candidates.push(join(baseDir, explicitPath,),);
+    candidates.push(join(baseDir, "scripts", explicitPath,),);
   } else {
     // 1. Tentar diretório do script principal (se for um arquivo local)
     try {
@@ -36,7 +38,11 @@ export async function loadConfig<T,>(
       // Ignora erros de URL/Path no mainModule
     }
 
-    // 2. Tentar diretório base (normalmente o CWD ou raiz do projeto)
+    // 2. Tentar subpasta scripts/ dentro de baseDir
+    candidates.push(join(baseDir, "scripts", `${fileName}.jsonc`,),);
+    candidates.push(join(baseDir, "scripts", `${fileName}.json`,),);
+
+    // 3. Tentar diretório base (normalmente o CWD ou raiz do projeto)
     candidates.push(join(baseDir, `${fileName}.jsonc`,),);
     candidates.push(join(baseDir, `${fileName}.json`,),);
   }
