@@ -44,7 +44,7 @@
     "watch": "deno run -A ./scripts/watch.ts",
     "sanitize-version": "deno run -A ./scripts/sanitize-version.ts",
     "tag-version": "deno run -A ./scripts/tag-version.ts",
-    "bump": "deno install --frozen=false && deno task build dist noversion && deno run -A ./scripts/tag-version.ts"
+    "bump": "deno install --frozen=false && deno task build dist noversion && deno task tag-version"
   },
   "nodeModulesDir": "none",
   "vendor": true,

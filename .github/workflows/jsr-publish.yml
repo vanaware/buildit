@@ -28,7 +28,7 @@ jobs:
 
       - name: Sanitize Version
         run: |
-          deno run -A ./sanitize-version.ts ./packages/utils/deno.jsonc
+          deno task sanitize-version ./packages/utils/deno.jsonc
 
       - name: Publish BuildIt to JSR
         run: |
