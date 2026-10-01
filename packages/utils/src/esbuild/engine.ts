@@ -220,6 +220,15 @@ export async function processTarget(
       );
       console.log(`📊 Metafile gerado: ${metafilePath}`,);
     }
+
+    // 🔥 ANALYZE REPORT: Se solicitado, imprime o relatório no console
+    if (config.analyze) {
+      const analyzeResult = await esbuild.analyzeMetafile(result.metafile, {
+        verbose: config.analyze === "verbose",
+      });
+      console.log(`\n📊 RELATÓRIO DE ANÁLISE [${targetName}]:\n`);
+      console.log(analyzeResult);
+    }
   } catch (error) {
     if (
       error instanceof TypeError &&
@@ -326,6 +335,22 @@ export async function buildEsbuildOptions(
     "assetNames",
     "publicPath",
     "pure",
+    "globalName",
+    "tsconfig",
+    "tsconfigRaw",
+    "outExtension",
+    "supported",
+    "sourcesContent",
+    "ignoreAnnotations",
+    "minifyWhitespace",
+    "minifyIdentifiers",
+    "minifySyntax",
+    "jsxFactory",
+    "jsxFragment",
+    "analyze",
+    "sideEffects",
+    "mangleQuoted",
+    "mangleCache",
     "plugins",
   ];
   for (const prop of optionalProps) {
@@ -333,6 +358,31 @@ export async function buildEsbuildOptions(
     if ((config as any)[prop] !== undefined) {
       // deno-lint-ignore no-explicit-any
       (options as any)[prop] = (config as any)[prop];
+    }
+  }
+
+  // 🔥 REQUISITO: Para usar analyze, o esbuild precisa gerar o metafile
+  if (config.analyze) {
+    options.metafile = true;
+  }
+
+  // 🔥 TRATAMENTO ESPECIAL: mangleProps e reserveProps devem ser RegExp no JS API
+  const regexProps = ["mangleProps", "reserveProps"];
+  for (const propName of regexProps) {
+    const val = (config as any)[propName];
+    if (val !== undefined) {
+      if (typeof val === "string") {
+        let pattern = val;
+        let flags = "";
+        if (pattern.startsWith("/") && pattern.lastIndexOf("/") > 0) {
+          const lastSlash = pattern.lastIndexOf("/");
+          flags = pattern.substring(lastSlash + 1);
+          pattern = pattern.substring(1, lastSlash);
+        }
+        options[propName] = new RegExp(pattern, flags);
+      } else {
+        options[propName] = val;
+      }
     }
   }
 

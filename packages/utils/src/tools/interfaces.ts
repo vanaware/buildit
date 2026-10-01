@@ -131,7 +131,17 @@ export interface TargetConfig {
   external?: string[];
   metafile?: boolean;
   write?: boolean;
-  treeShaking?: boolean;
+  treeShaking?: boolean | "ignore";
+  /** Fábrica JSX (ex: "h"). */
+  jsxFactory?: string;
+  /** Fragmento JSX (ex: "Fragment"). */
+  jsxFragment?: string;
+  /** Gera um relatório analítico do bundle no console. */
+  analyze?: boolean | "verbose";
+  /** Regex para propriedades a serem preservadas no mangling. */
+  reserveProps?: string;
+  /** Se o código deve ser tratado como tendo efeitos colaterais. */
+  sideEffects?: boolean;
   legalComments?: EsbuildLegalComments;
   keepNames?: boolean;
   outfile?: string;
@@ -151,6 +161,32 @@ export interface TargetConfig {
   assetNames?: string;
   publicPath?: string;
   pure?: string[];
+  /** Nome global para formato IIFE. */
+  globalName?: string;
+  /** Caminho para arquivo tsconfig customizado. */
+  tsconfig?: string;
+  /** Conteúdo raw do tsconfig. */
+  tsconfigRaw?: string | Record<string, unknown>;
+  /** Mapeamento de extensões de saída. */
+  outExtension?: Record<string, string>;
+  /** Suporte a recursos específicos de linguagem. */
+  supported?: Record<string, boolean>;
+  /** Inclui o conteúdo original no sourcemap. */
+  sourcesContent?: boolean;
+  /** Ignora anotações de pureza. */
+  ignoreAnnotations?: boolean;
+  /** Minificação fina: espaços em branco. */
+  minifyWhitespace?: boolean;
+  /** Minificação fina: identificadores. */
+  minifyIdentifiers?: boolean;
+  /** Minificação fina: sintaxe. */
+  minifySyntax?: boolean;
+  /** Regex para mangling de propriedades. */
+  mangleProps?: string;
+  /** Se deve fazer mangle em propriedades entre aspas. */
+  mangleQuoted?: boolean;
+  /** Cache para mangling de propriedades. */
+  mangleCache?: Record<string, string | false>;
   plugins?: unknown[];
 }
 
