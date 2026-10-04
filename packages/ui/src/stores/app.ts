@@ -57,7 +57,7 @@ export const copyToClipboard = async (text: string, id: string,) => {
       }
     }, 2000,);
   } catch (err) {
-    console.warn("Falha ao copiar para clipboard:", err,);
+    console.warn("Failed to copy to clipboard:", err,);
   }
 };
 

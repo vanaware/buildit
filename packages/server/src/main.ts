@@ -20,7 +20,7 @@ const fsRoot = (() => {
   }
 })();
 
-console.log(`🚀 Iniciando servidor na porta: ${port} (fsRoot: ${fsRoot})`,);
+console.log(`🚀 Starting server on port: ${port} (fsRoot: ${fsRoot})`,);
 
 Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
   try {
@@ -39,7 +39,7 @@ Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
     staticResponse.headers.set("Pragma", "no-cache",);
     staticResponse.headers.set("Expires", "0",);
 
-    // Permitir escopo global para Service Worker
+    // Allow global scope for Service Worker
     if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js",)) {
       staticResponse.headers.set("Service-Worker-Allowed", "/",);
     }
@@ -47,7 +47,7 @@ Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
     return staticResponse;
   } catch (err) {
     console.warn(
-      `[STATIC] Falha ao servir arquivo estático. Build ainda não foi executado?`,
+      `[STATIC] Failed to serve static file. Has the build been executed?`,
       err instanceof Error ? err.message : err,
     );
 
