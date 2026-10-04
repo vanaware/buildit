@@ -7,7 +7,7 @@
 
 # Contexto Exportado do Projeto BuildIt - Modo: UTILS
 
-Gerado automaticamente em: 2026-10-01T21:54:34.997Z
+Gerado automaticamente em: 2026-10-04T14:00:35.441Z
 
 ---
 
@@ -2890,6 +2890,8 @@ export async function loadConfig<T,>(
 
   if (explicitPath) {
     candidates.push(explicitPath,);
+    candidates.push(join(baseDir, explicitPath,),);
+    candidates.push(join(baseDir, "scripts", explicitPath,),);
   } else {
     // 1. Tentar diretório do script principal (se for um arquivo local)
     try {
@@ -2902,7 +2904,11 @@ export async function loadConfig<T,>(
       // Ignora erros de URL/Path no mainModule
     }
 
-    // 2. Tentar diretório base (normalmente o CWD ou raiz do projeto)
+    // 2. Tentar subpasta scripts/ dentro de baseDir
+    candidates.push(join(baseDir, "scripts", `${fileName}.jsonc`,),);
+    candidates.push(join(baseDir, "scripts", `${fileName}.json`,),);
+
+    // 3. Tentar diretório base (normalmente o CWD ou raiz do projeto)
     candidates.push(join(baseDir, `${fileName}.jsonc`,),);
     candidates.push(join(baseDir, `${fileName}.json`,),);
   }
@@ -8585,42 +8591,80 @@ describe("resolverOrdemTargets", () => {
 ## Arquivo: `packages/utils/tests/tools/jsonc.test.ts`
 
 ```ts
-import { describe, it } from "@std/testing/bdd";
-import { assertEquals, assertNotEquals } from "@std/assert";
-import { loadConfig } from "../../src/tools/jsonc.ts";
-import { join } from "@std/path";
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, assertNotEquals, } from "@std/assert";
+import { loadConfig, } from "../../src/tools/jsonc.ts";
+import { join, } from "@std/path";
 
 describe("loadConfig - Prioridades de busca", () => {
   it("deve carregar o arquivo explicitPath se fornecido", async () => {
-    const tempFile = await Deno.makeTempFile({ suffix: ".json" });
-    await Deno.writeTextFile(tempFile, JSON.stringify({ explicit: true }));
-    
+    const tempFile = await Deno.makeTempFile({ suffix: ".json", },);
+    await Deno.writeTextFile(tempFile, JSON.stringify({ explicit: true, },),);
+
     try {
-      const config = await loadConfig<{ explicit: boolean }>("test", tempFile);
-      assertEquals(config?.explicit, true);
+      const config = await loadConfig<{ explicit: boolean }>("test", tempFile,);
+      assertEquals(config?.explicit, true,);
     } finally {
-      await Deno.remove(tempFile);
+      await Deno.remove(tempFile,);
     }
   });
 
   it("deve cair para o baseDir se o scriptDir não possuir o arquivo", async () => {
     const tempDir = await Deno.makeTempDir();
-    const configPath = join(tempDir, "test.jsonc");
-    await Deno.writeTextFile(configPath, JSON.stringify({ baseDir: true }));
+    const configPath = join(tempDir, "test.jsonc",);
+    await Deno.writeTextFile(configPath, JSON.stringify({ baseDir: true, },),);
 
     try {
-      // Como não podemos mudar facilmente o Deno.mainModule em runtime de teste, 
+      // Como não podemos mudar facilmente o Deno.mainModule em runtime de teste,
       // verificamos apenas se ele encontra no baseDir passado.
-      const config = await loadConfig<{ baseDir: boolean }>("test", undefined, tempDir);
-      assertEquals(config?.baseDir, true);
+      const config = await loadConfig<{ baseDir: boolean }>(
+        "test",
+        undefined,
+        tempDir,
+      );
+      assertEquals(config?.baseDir, true,);
     } finally {
-      await Deno.remove(tempDir, { recursive: true });
+      await Deno.remove(tempDir, { recursive: true, },);
+    }
+  });
+
+  it("deve encontrar configuração dentro da subpasta scripts do baseDir", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const scriptsDir = join(tempDir, "scripts",);
+    await Deno.mkdir(scriptsDir,);
+    const configPath = join(scriptsDir, "test.jsonc",);
+    await Deno.writeTextFile(
+      configPath,
+      JSON.stringify({ inScripts: true, },),
+    );
+
+    try {
+      const config = await loadConfig<{ inScripts: boolean }>(
+        "test",
+        undefined,
+        tempDir,
+      );
+      assertEquals(config?.inScripts, true,);
+
+      // Também com explicitPath relativo ao baseDir ou scripts
+      const configExplicit = await loadConfig<{ inScripts: boolean }>(
+        "test",
+        "test.jsonc",
+        tempDir,
+      );
+      assertEquals(configExplicit?.inScripts, true,);
+    } finally {
+      await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
   it("deve retornar null se nenhum arquivo for encontrado", async () => {
-    const config = await loadConfig("inexistente", undefined, "/tmp/pasta-fantasma");
-    assertEquals(config, null);
+    const config = await loadConfig(
+      "inexistente",
+      undefined,
+      "/tmp/pasta-fantasma",
+    );
+    assertEquals(config, null,);
   });
 });
 
@@ -9860,6 +9904,386 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
     }
   });
 });
+
+```
+
+---
+
+## Arquivo: `scripts/denobuild.jsonc`
+
+```json
+{
+  "$schema": "./packages/utils/schema/denobuild.json",
+  "versionPaths": [
+    "packages/utils/src/version.ts",
+    "packages/ui/src/version.ts"
+  ],
+  "forcepackagesversion": true,
+  "targets": {
+    "ui": {
+      "mode": "build",
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "copyFiles": [
+        {
+          "basedir": "packages/ui/public"
+        },
+        {
+          "basedir": "packages/ui/src",
+          "includes": [
+            "index.html"
+          ]
+        },
+        {
+          "basedir": "packages/utils/",
+          "includes": [
+            "schema/*.json"
+          ]
+        }
+      ],
+      "clean": {
+        "includes": [
+          "*"
+        ]
+      },
+      "entryPoints": [
+        "main.tsx"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "minify": false,
+      "sourcemap": "linked",
+      "keepNames": true,
+      "codeSplitting": false,
+      "packages": "bundle",
+      "inlineImports": true
+    }
+  }
+}
+
+```
+
+---
+
+## Arquivo: `scripts/denobuild.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+/// <reference lib="deno.unstable" />
+
+/**
+ * @file build.ts
+ * @description CLI do orquestrador de build baseado em Deno.bundle (denobuild).
+ * Delega a execução para a biblioteca @vanaware/buildit
+ * e carrega as configurações declarativas de denobuild.jsonc.
+ */
+
+import { denoBuildCli, } from "../packages/utils/src/denobuild/cli.ts";
+
+if (import.meta.main) {
+  const cli = denoBuildCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `scripts/esbuild.jsonc`
+
+```json
+{
+  "$schema": "./packages/utils/schema/esbuild.json",
+  "versionPaths": [
+    "packages/utils/src/version.ts",
+    "packages/ui/src/version.ts"
+  ],
+  "forcepackagesversion": true,
+  "targets": {
+    "ui": {
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "copyFiles": [
+        {
+          "basedir": "packages/ui/public"
+        },
+        {
+          "basedir": "packages/ui/src",
+          "includes": [
+            "index.html"
+          ]
+        },
+        {
+          "basedir": "packages/utils/",
+          "includes": [
+            "schema/*.json"
+          ]
+        }
+      ],
+      "clean": {
+        "includes": [
+          "*"
+        ]
+      },
+      "entryPoints": [
+        "main.tsx"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": false,
+      "sourcemap": "linked",
+      "conditions": [
+        "browser"
+      ],
+      "drop": [
+        "debugger"
+      ],
+      "jsx": "automatic",
+      "jsxImportSource": "preact",
+      "metafile": true,
+      "write": true,
+      "legalComments": "eof",
+      "keepNames": true,
+      "splitting": false,
+      "banner": {
+        "js": "/*!\n * BuildIt v__APP_VERSION__\n * (c) 2026 Vanaware - MIT License\n */\n"
+      }
+    }
+  }
+}
+
+```
+
+---
+
+## Arquivo: `scripts/esbuild.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+/**
+ * @file esbuild.ts
+ * @description CLI do orquestrador de build baseado em esbuild nativo.
+ * Delega a execução para a biblioteca @vanaware/buildit
+ * e carrega as configurações declarativas de esbuild.jsonc.
+ */
+
+import { esBuildCli, } from "../packages/utils/src/esbuild/cli.ts";
+
+if (import.meta.main) {
+  const cli = esBuildCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `scripts/export.jsonc`
+
+```json
+{
+  "$schema": "./packages/utils/schema/export.json",
+  "projeto": "BuildIt",
+  "modos": {
+    "ui": {
+      "arquivoSaida": "snapshots/ui.md",
+      "includes": [
+        "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
+        "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
+      ],
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
+      "incluiVersao": true,
+      "instrucaoCustomizada": "O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).",
+      "default": true
+    },
+    "docs": {
+      "arquivoSaida": "snapshots/docs.md",
+      "includes": [
+        "docs/**/*.{md,txt}",
+        "{readme.md,readme,license,license.md,license.txt,.tool-versions}"
+      ],
+      "excludes": [],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
+      "default": true
+    },
+    "server": {
+      "arquivoSaida": "snapshots/server.md",
+      "includes": [
+        "packages/server/{src,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,json,jsonc,yaml,yml,md}",
+        "packages/server/{deno.json,deno.jsonc,readme.md}",
+        ".github/workflows/**/*.{yaml,yml}"
+      ],
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém os arquivos de configuração e execução do SERVIDOR @vanaware/server e CI/CD.",
+      "default": true
+    },
+    "utils": {
+      "arquivoSaida": "snapshots/utils.md",
+      "includes": [
+        "packages/utils/{src,tests,docs}/**/*.{tsx,jsx,js,ts,json,jsonc,md}",
+        "packages/utils/{deno.json,deno.jsonc,readme.md}",
+        "scripts/*.{ts,jsonc,json}"
+      ],
+      "excludes": [
+        "**/node_modules/**",
+        "**/.git/**"
+      ],
+      "incluiVersao": false,
+      "instrucaoCustomizada": "O texto abaixo contém o código e testes da biblioteca @vanaware/buildit",
+      "default": true
+    }
+  }
+}
+
+```
+
+---
+
+## Arquivo: `scripts/export.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+/**
+ * @file export.ts
+ * @description CLI de consolidação de contexto para IAs no projeto BuildIt.
+ * Delega a execução e regras para a biblioteca @vanaware/buildit
+ * e carrega as configurações declarativas de export.jsonc.
+ */
+
+import { exportCli, } from "../packages/utils/src/export/cli.ts";
+
+if (import.meta.main) {
+  const cli = exportCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `scripts/sanitize-version.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+/**
+ * @file sanitize-version.ts
+ * @description CLI de sanitização de versão semântica do deno.json[c].
+ * Normaliza o campo "version" para o formato estrito semver (MAJOR.MINOR.PATCH).
+ */
+
+import { sanitizeVersionCli, } from "../packages/utils/src/version/sanitize/cli.ts";
+
+if (import.meta.main) {
+  const cli = sanitizeVersionCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `scripts/tag-version.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+/**
+ * @file tag-version.ts
+ * @description CLI para criação e publicação de tag git baseada na versão do deno.json[c].
+ * Gera tags no formato vMAJOR.MINOR e publica no repositório remoto.
+ */
+
+import { tagVersionCli, } from "../packages/utils/src/version/tag/cli.ts";
+
+if (import.meta.main) {
+  const cli = tagVersionCli();
+  await cli.parse(Deno.args,);
+}
+
+```
+
+---
+
+## Arquivo: `scripts/watch.jsonc`
+
+```json
+{
+  "$schema": "./packages/utils/schema/watch.json",
+  "targets": {
+    "ui": {
+      "default": true,
+      "srcdir": "packages/ui/src",
+      "distdir": "packages/server/build/dist",
+      "copyFiles": [
+        {
+          "basedir": "packages/ui/public"
+        },
+        {
+          "basedir": "packages/ui/src",
+          "includes": [
+            "index.html"
+          ]
+        },
+        {
+          "basedir": "packages/utils/",
+          "includes": [
+            "schema/*.json"
+          ]
+        }
+      ],
+      "entryPoints": [
+        "main.tsx"
+      ],
+      "platform": "browser",
+      "format": "esm",
+      "bundle": true,
+      "minify": false,
+      "sourcemap": "inline",
+      "conditions": [
+        "browser"
+      ],
+      "jsx": "automatic",
+      "jsxImportSource": "preact",
+      "write": true,
+      "legalComments": "eof",
+      "outfile": "main.js",
+      "banner": {
+        "js": "/*!\n * BuildIt v__APP_VERSION__ [DEV WATCH]\n * (c) 2026 Vanaware - MIT License\n */\n"
+      }
+    }
+  }
+}
+
+```
+
+---
+
+## Arquivo: `scripts/watch.ts`
+
+```ts
+/**
+ * BuildIt Watch CLI Entry Point.
+ * Delegado para o utilitário @vanaware/buildit.
+ */
+import { watchCli } from "../packages/utils/src/watch/cli.ts";
+
+if (import.meta.main) {
+  await watchCli().parse(Deno.args);
+}
 
 ```
 

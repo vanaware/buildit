@@ -47,7 +47,7 @@
       "includes": [
         "packages/utils/{src,tests,docs}/**/*.{tsx,jsx,js,ts,json,jsonc,md}",
         "packages/utils/{deno.json,deno.jsonc,readme.md}",
-        "{export.ts,esbuild.ts,build.ts}"
+        "scripts/*.{ts,jsonc,json}"
       ],
       "excludes": [
         "**/node_modules/**",
