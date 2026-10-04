@@ -1,17 +1,17 @@
-> **INSTRUÇÃO PARA A IA:** 
-> O texto abaixo contém os arquivos de configuração e execução do SERVIDOR @vanaware/server e CI/CD.
-> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).
-> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
+> **AI INSTRUCTION:** 
+> The text below contains the configuration and execution files for the SERVER @vanaware/server and CI/CD.
+> Each file starts with a title indicating its exact relative path (e.g., `## File: src/main.ts`).
+> Whenever suggesting changes, clearly indicate which file should be modified based on these paths and provide the complete new code for the file.
 
 ---
 
-# Contexto Exportado do Projeto BuildIt - Modo: SERVER
+# Exported Context from Project BuildIt - Mode: SERVER
 
-Gerado automaticamente em: 2026-10-01T21:54:34.975Z
+Automatically generated at: 2026-10-04T19:05:09.038Z
 
 ---
 
-## Arquivo: `.github/workflows/gh-pages.yml`
+## File: `.github/workflows/gh-pages.yml`
 
 ```yaml
 name: Deploy to GitHub Pages
@@ -73,7 +73,7 @@ jobs:
 
 ---
 
-## Arquivo: `.github/workflows/jsr-publish.yml`
+## File: `.github/workflows/jsr-publish.yml`
 
 ```yaml
 name: Publish to JSR
@@ -106,7 +106,7 @@ jobs:
 
       - name: Sanitize Version
         run: |
-          deno run -A ./sanitize-version.ts ./packages/utils/deno.jsonc
+          deno task sanitize-version ./packages/utils/deno.jsonc
 
       - name: Publish BuildIt to JSR
         run: |
@@ -117,7 +117,7 @@ jobs:
 
 ---
 
-## Arquivo: `packages/server/deno.jsonc`
+## File: `packages/server/deno.jsonc`
 
 ```json
 {
@@ -148,7 +148,7 @@ jobs:
 
 ---
 
-## Arquivo: `packages/server/src/main.ts`
+## File: `packages/server/src/main.ts`
 
 ```ts
 import { serveDir, } from "@std/http/file-server";
@@ -173,7 +173,7 @@ const fsRoot = (() => {
   }
 })();
 
-console.log(`🚀 Iniciando servidor na porta: ${port} (fsRoot: ${fsRoot})`,);
+console.log(`🚀 Starting server on port: ${port} (fsRoot: ${fsRoot})`,);
 
 Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
   try {
@@ -192,7 +192,7 @@ Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
     staticResponse.headers.set("Pragma", "no-cache",);
     staticResponse.headers.set("Expires", "0",);
 
-    // Permitir escopo global para Service Worker
+    // Allow global scope for Service Worker
     if (url.pathname === "/sw.js" || url.pathname.endsWith("/sw.js",)) {
       staticResponse.headers.set("Service-Worker-Allowed", "/",);
     }
@@ -200,7 +200,7 @@ Deno.serve({ port, hostname: "0.0.0.0", }, async (req,) => {
     return staticResponse;
   } catch (err) {
     console.warn(
-      `[STATIC] Falha ao servir arquivo estático. Build ainda não foi executado?`,
+      `[STATIC] Failed to serve static file. Has the build been executed?`,
       err instanceof Error ? err.message : err,
     );
 

@@ -1,17 +1,17 @@
-> **INSTRUÇÃO PARA A IA:** 
-> O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.
-> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).
-> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.
+> **AI INSTRUCTION:** 
+> The text below contains the DOCUMENTATION and architectural guidelines of the project.
+> Each file starts with a title indicating its exact relative path (e.g., `## File: src/main.ts`).
+> Whenever suggesting changes, clearly indicate which file should be modified based on these paths and provide the complete new code for the file.
 
 ---
 
-# Contexto Exportado do Projeto BuildIt - Modo: DOCS
+# Exported Context from Project BuildIt - Mode: DOCS
 
-Gerado automaticamente em: 2026-10-01T21:54:34.960Z
+Automatically generated at: 2026-10-04T19:05:09.030Z
 
 ---
 
-## Arquivo: `.tool-versions`
+## File: `.tool-versions`
 
 ```tool-versions
 deno 2.9.7
@@ -20,95 +20,96 @@ deno 2.9.7
 
 ---
 
-## Arquivo: `docs/api.md`
+## File: `docs/api.md`
 
 ````md
-# 📖 Referência da API e Configurações do BuildIt
+# 📖 BuildIt API and Configuration Reference
 
-Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 6 utilitários:
+Official technical documentation for the `@vanaware/buildit` library utilities. This guide covers the **programmatic TypeScript API**, **CLI architecture**, and **all possible configurations via JSONC/JSON files** for the 6 utilities:
 
-1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc) — [Ver Topologia](./topology-esbuild.md)
-2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc) — [Ver Topologia](./topology-watch.md)
-3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc) — [Ver Topologia](./topology-denobuild.md)
-4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc) — [Ver Topologia](./topology-export.md)
-5. [🧼 Sanitizador de Versão (`sanitize-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-sanitize-version.md)
-6. [🏷️ Publicador de Versão (`tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-tag-version.md)
-7. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
-8. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
-9. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
-10. [📂 Impacto do `baseDir` na Resolução de Caminhos](./impacto-basedir.md)
-
----
-
-## ⚡ 1. Motor esbuild (`esbuild.jsonc`)
-
-O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizando o esbuild e o plugin oficial `@deno/esbuild-plugin`, incluindo limpeza de pastas, cópia de ativos estáticos, injeção de versão semântica (`__APP_VERSION__`), substituição de variáveis e geração de manifestos de cache.
-
-### Estrutura Raiz do Arquivo (`esbuild.jsonc`)
-
-| Campo | Tipo | Obrigatório | Descrição |
-| :--- | :--- | :--- | :--- |
-| `$schema` | `string` | Não | Caminho relativo ou URL do JSON Schema para autocomplete e validação. |
-| `defineVersionString` | `string` | Não | Identificador customizado da constante para injeção da versão da aplicação (padrão: `"__APP_VERSION__"`). |
-| `versionPaths` | `string[]` | Não | Caminhos onde o arquivo `version.ts` sincronizado é gerado. |
-| `forcepackagesversion` | `boolean` | Não | Se `true`, sincroniza a nova versão para todos os pacotes do workspace. |
-| `targets` / `alvos` | `Record<string, TargetConfig>` | Sim | Dicionário de alvos de compilação em lote. |
+1. [⚡ esbuild Engine (`esbuild.jsonc`)](#-1-esbuild-engine-esbuildjsonc) — [View Topology](./topology-esbuild.md)
+2. [👀 Watch Engine (`watch.jsonc`)](#-2-watch-engine-watchjsonc) — [View Topology](./topology-watch.md)
+3. [📦 Deno.bundle Engine (`denobuild.jsonc`)](#-3-denobundle-engine-denobuildjsonc) — [View Topology](./topology-denobuild.md)
+4. [📝 AI Context Exporter (`export.jsonc`)](#-4-ai-context-exporter-exportjsonc) — [View Topology](./topology-export.md)
+5. [🧼 Version Sanitizer (`sanitize-version`)](#-5-version-sanitizer-and-publisher-sanitize-version--tag-version) — [View Topology](./topology-sanitize-version.md)
+6. [🏷️ Version Publisher (`tag-version`)](#-5-version-sanitizer-and-publisher-sanitize-version--tag-version) — [View Topology](./topology-tag-version.md)
+7. [📂 Smart Configuration Discovery](#-smart-configuration-discovery)
+8. [💡 How to Use Schemas in the Editor ($schema)](#-6-how-to-use-schemas-in-the-editor-schema)
+9. [🛠️ Version and CLI Utilities](#-7-version-and-cli-utilities)
+10. [💻 Programmatic TypeScript API](#-8-programmatic-typescript-api)
+11. [📂 Impact of `baseDir` on Path Resolution](./basedir-impact.md)
 
 ---
 
-### Opções de Cada Alvo (`TargetConfig`)
+## ⚡ 1. esbuild Engine (`esbuild.jsonc`)
 
-#### 🔄 Pipeline e Gestão de Arquivos (Pré/Pós Build)
+The `esbuild` engine orchestrates ultra-fast production bundling using esbuild and the official `@deno/esbuild-plugin`, including folder cleanup, static asset copying, semantic version injection (`__APP_VERSION__`), variable substitution, and cache manifest generation.
 
-| Propriedade | Tipo | Padrão | Descrição |
+### Root File Structure (`esbuild.jsonc`)
+
+| Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `default` | `boolean` | `true` | Se `true`, roda automaticamente quando nenhum alvo específico é passado na CLI. |
-| `srcdir` | `string` | `"."` | Diretório base dos fontes do alvo (relativo à raiz de execução). |
-| `distdir` | `string` | `"."` | Diretório de destino final onde os artefatos compilados são gravados. |
-| `clean` | `CleanConfig \| string[]` | `[]` | Regras de limpeza pré-build. Use `["*"]` para esvaziar todo o diretório. |
-| `copyFiles` | `CopyFileConfig[]` | `[]` | Lista de regras para cópia de arquivos estáticos para o `distdir`. |
-
-#### ⚙️ Opções do Compilador esbuild
-
-| Propriedade | Tipo | Padrão | Descrição |
-| :--- | :--- | :--- | :--- |
-| `entryPoints` | `string[]` | **Obrigatório** | Arquivos de entrada a serem compilados (relativos a `srcdir`). |
-| `platform` | `"browser" \| "node" \| "neutral"` | `"browser"` | Plataforma alvo de execução do bundle gerado. |
-| `format` | `"esm" \| "cjs" \| "iife"` | `"esm"` | Formato do módulo de saída. |
-| `bundle` | `boolean` | `true` | Se agrupa dependências e imports externos em arquivos consolidados. |
-| `minify` | `boolean` | `false` | Se aplica minificação total (código, espaços em branco e identificadores). |
-| `sourcemap` | `boolean \| "linked" \| "inline" \| "external"` | `"linked"` | Estratégia de geração de mapa de fontes (`.map`). |
-| `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | Modo de transformação de JSX/TSX. |
-| `jsxImportSource` | `string` | `undefined` | Pacote para runtime automático do JSX (ex: `"preact"`, `"react"`). |
-| `conditions` | `string[]` | `[]` | Condições personalizadas de resolução de export do `package.json`. |
-| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. |
-| `defineAssetsString` | `string` | `undefined` | Se configurado (ex: `"__GENERATED_ASSETS__"`), varre todo o `distdir` (incluindo arquivos estáticos copiados) e injeta a lista de assets gerados via `define` nativo do esbuild. |
-| `defineVersionString` | `string` | `"__APP_VERSION__"` | Identificador customizado da versão para este alvo (utilizado em `defines`, `banners` e `footers`). |
-| `drop` | `("console" \| "debugger")[]` | `[]` | Instruções a serem eliminadas do código compilado (ex: `["debugger"]`). |
-| `external` | `string[]` | `[]` | Módulos a não empacotar, mantendo como imports externos em runtime. |
-| `metafile` | `boolean` | `false` | Se gera arquivo de metadados em formato JSON para análise de bundles. |
-| `write` | `boolean` | `true` | Se grava os arquivos compilados no disco. Se `false`, mantém em memória. |
-| `treeShaking` | `boolean` | `true` | Habilita eliminação de código inativo (dead-code elimination). |
-| `legalComments` | `"none" \| "inline" \| "eof" \| "linked" \| "external"` | `"eof"` | Preservação e posicionamento de comentários de licença. |
-| `keepNames` | `boolean` | `true` | Preserva os nomes originais de funções e classes em builds minificados. |
-| `outfile` | `string` | `undefined` | Nome ou caminho do arquivo de saída gerado (relativo ao `distdir`). |
-| `splitting` | `boolean` | `false` | Habilita divisão de código em chunks sob demanda (requer `format: "esm"`). |
-| `loader` | `Record<string, EsbuildLoader>` | `{}` | Mapeamento de extensões para loaders esbuild (`js`, `jsx`, `ts`, `tsx`, `css`, `json`, `text`, `base64`, `dataurl`, `file`, `binary`, `empty`, `copy`). |
-| `alias` | `Record<string, string>` | `{}` | Mapeamento de aliases de importação de módulos. |
-| `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
-| `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
-| `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade do JavaScript (ex: `["chrome58", "firefox57"]`). |
-| `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
-| `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
+| `$schema` | `string` | No | Relative path or URL to the JSON Schema for autocomplete and validation. |
+| `defineVersionString` | `string` | No | Custom identifier for the application version injection constant (default: `"__APP_VERSION__"`). |
+| `versionPaths` | `string[]` | No | Paths where the synchronized `version.ts` file is generated. |
+| `forcepackagesversion` | `boolean` | No | If `true`, synchronizes the new version across all workspace packages. |
+| `targets` | `Record<string, TargetConfig>` | Yes | Dictionary of batch compilation targets. |
 
 ---
 
-## 👀 2. Motor Watch (`watch.jsonc`)
+### Per-Target Options (`TargetConfig`)
 
-O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. Ele desacopla a rotina de observação do fluxo de compilação final, utilizando `esbuild.context` para recompilações incrementais instantâneas.
+#### 🔄 Pipeline and File Management (Pre/Post Build)
 
-### Estrutura do `watch.jsonc`
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `default` | `boolean` | `true` | If `true`, runs automatically when no specific target is passed via CLI. |
+| `srcdir` | `string` | `"."` | Base directory for the target's source files (relative to execution root). |
+| `distdir` | `string` | `"."` | Final destination directory where compiled artifacts are written. |
+| `clean` | `CleanConfig \| string[]` | `[]` | Pre-build cleanup rules. Use `["*"]` to empty the entire directory. |
+| `copyFiles` | `CopyFileConfig[]` | `[]` | List of rules for copying static files to `distdir`. |
+
+#### ⚙️ esbuild Compiler Options
+
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `entryPoints` | `string[]` | **Required** | Entry files to be compiled (relative to `srcdir`). |
+| `platform` | `"browser" \| "node" \| "neutral"` | `"browser"` | Target execution platform for the generated bundle. |
+| `format` | `"esm" \| "cjs" \| "iife"` | `"esm"` | Output module format. |
+| `bundle` | `boolean` | `true` | Whether to group dependencies and external imports into consolidated files. |
+| `minify` | `boolean` | `false` | Whether to apply full minification (code, whitespace, and identifiers). |
+| `sourcemap` | `boolean \| "linked" \| "inline" \| "external"` | `"linked"` | Source map generation strategy (`.map`). |
+| `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | JSX/TSX transformation mode. |
+| `jsxImportSource` | `string` | `undefined` | Package for automatic JSX runtime (e.g., `"preact"`, `"react"`). |
+| `conditions` | `string[]` | `[]` | Custom export resolution conditions for `package.json`. |
+| `define` | `Record<string, string>` | `{}` | Map of global constants substituted during compilation. |
+| `defineAssetsString` | `string` | `undefined` | If configured (e.g., `"__GENERATED_ASSETS__"`), scans `distdir` and injects the asset list via esbuild's `define`. |
+| `defineVersionString` | `string` | `"__APP_VERSION__"` | Custom version identifier for this target (used in `defines`, `banners`, and `footers`). |
+| `drop` | `("console" \| "debugger")[]` | `[]` | Instructions to be eliminated from compiled code (e.g., `["debugger"]`). |
+| `external` | `string[]` | `[]` | Modules not to be bundled, kept as external imports at runtime. |
+| `metafile` | `boolean` | `false` | Whether to generate a JSON metadata file for bundle analysis. |
+| `write` | `boolean` | `true` | Whether to write compiled files to disk. If `false`, keeps them in memory. |
+| `treeShaking` | `boolean` | `true` | Enables dead-code elimination. |
+| `legalComments` | `"none" \| "inline" \| "eof" \| "linked" \| "external"` | `"eof"` | License comment preservation and positioning. |
+| `keepNames` | `boolean` | `true` | Preserves original function and class names in minified builds. |
+| `outfile` | `string` | `undefined` | Explicit name or path for the generated output file (relative to `distdir`). |
+| `splitting` | `boolean` | `false` | Enables on-demand code splitting (requires `format: "esm"`). |
+| `loader` | `Record<string, EsbuildLoader>` | `{}` | Map of extensions to esbuild loaders. |
+| `alias` | `Record<string, string>` | `{}` | Module import alias mapping. |
+| `inject` | `string[]` | `[]` | Files executed before each entry point (e.g., polyfills). |
+| `banner` | `{ js?: string; css?: string }` | `undefined` | Text block inserted at the beginning of generated files. |
+| `footer` | `{ js?: string; css?: string }` | `undefined` | Text block inserted at the end of generated files. |
+| `target` | `string \| string[]` | `"esnext"` | JavaScript compatibility target environments (e.g., `["chrome58", "firefox57"]`). |
+| `charset` | `"ascii" \| "utf8"` | `"utf8"` | Character encoding of the emitted file. |
+| `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Detailedness level of esbuild messages. |
+
+---
+
+## 👀 2. Watch Engine (`watch.jsonc`)
+
+The `watch` engine was designed for **real-time continuous development**. It decouples the observation routine from the final compilation flow, using `esbuild.context` for instant incremental rebuilds.
+
+### `watch.jsonc` Structure
 
 ```jsonc
 {
@@ -137,46 +138,46 @@ O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. 
 }
 ```
 
-- **Sem flags redundantes**: Não requer `mode` nem `watch: boolean` (todo alvo watch é intrinsecamente contínuo).
-- **Sem poluição de versão**: O modo watch lê a versão atual sem incrementá-la.
-- **Alvo Único por Execução**: Embora múltiplos alvos possam ser definidos na configuração, o motor do watch permite a execução de **apenas 1 alvo por vez**. Se mais de um alvo for informado na CLI, o processo rejeitará com uma mensagem de erro clara. Se nenhum alvo for especificado, apenas o primeiro alvo com `default: true` será executado.
-- **Lock de Concorrência Exclusivo**: Para prevenir conflitos de portas, compilações duplicadas ou gravação concorrente em disco, a engine adquire automaticamente um lock de processo (`.buildit-watch.lock`). Se outra instância do watch estiver ativa no mesmo projeto, uma nova execução é impedida até o encerramento do processo anterior.
+- **No Redundant Flags**: Does not require `mode` or `watch: boolean` (every watch target is intrinsically continuous).
+- **No Version Pollution**: Watch mode reads the current version without incrementing it.
+- **Single Target per Execution**: While multiple targets can be defined, the watch engine allows executing **only 1 target at a time**. If more than one target is passed via CLI, it will reject with a clear error message. If none is specified, only the first target with `default: true` runs.
+- **Exclusive Concurrency Lock**: To prevent port conflicts, duplicate builds, or concurrent disk writing, the engine automatically acquires a process lock (`.buildit-watch.lock`). If another watch instance is active for the same project, a new execution is blocked until the previous process terminates.
 
 ---
 
-## 📦 3. Motor Deno.bundle (`denobuild.jsonc`)
+## 📦 3. Deno.bundle Engine (`denobuild.jsonc`)
 
-O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicações sem dependências de binários externos do esbuild.
+The `denobuild` engine uses the native `Deno.bundle` API to package applications without external esbuild binary dependencies.
 
-### Estrutura do `denobuild.jsonc`
+### `denobuild.jsonc` Structure
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `srcdir` | `string` | Diretório raiz do código-fonte. |
-| `distdir` | `string` | Diretório de destino dos arquivos compilados. |
-| `clean` | `CleanConfig \| string[]` | Regras de limpeza pré-build. |
-| `copyFiles` | `CopyFileConfig[]` | Regras para cópia de arquivos estáticos. |
-| `entryPoints` | `string[]` | Arquivos TypeScript/JavaScript de entrada. |
-| `format` | `"esm" \| "cjs" \| "iife"` | Formato do bundle. |
-| `platform` | `"browser" \| "deno"` | Plataforma alvo. |
-| `minify` | `boolean` | Se deve minificar o bundle gerado. |
-| `sourcemap` | `"linked" \| "inline" \| "external"` | Formato de sourcemap emitido. |
-| `codeSplitting` | `boolean` | Divisão modular de chunks. |
-| `inlineImports` | `boolean` | Se inclui o código de imports externos no arquivo gerado. |
-| `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
-| `define` | `Record<string, string>` | Injeção de constantes globais. |
-| `defineAssetsString` | `string` | Se configurado (ex: `"__GENERATED_ASSETS__"`), injeta a lista de assets presentes no `distdir`. |
-| `defineVersionString` | `string` | Identificador customizado da versão para este alvo (padrão: `"__APP_VERSION__"`). |
-| `outfile` | `string` | Nome explícito do arquivo gerado. |
-| `targets` | `Record<string, DenoBundleTargetConfig>` | Dicionário de alvos de compilação. |
+| `srcdir` | `string` | Source code root directory. |
+| `distdir` | `string` | Destination directory for compiled files. |
+| `clean` | `CleanConfig \| string[]` | Pre-build cleanup rules. |
+| `copyFiles` | `CopyFileConfig[]` | Rules for copying static files. |
+| `entryPoints` | `string[]` | Input TypeScript/JavaScript files. |
+| `format` | `"esm" \| "cjs" \| "iife"` | Bundle format. |
+| `platform` | `"browser" \| "deno"` | Target platform. |
+| `minify` | `boolean` | Whether to minify the generated bundle. |
+| `sourcemap` | `"linked" \| "inline" \| "external"` | Emitted sourcemap format. |
+| `codeSplitting` | `boolean` | Modular chunk splitting. |
+| `inlineImports` | `boolean` | Whether to include external import code in the generated file. |
+| `packages` | `"bundle" \| "external"` | Whether to bundle or externalize dependencies. |
+| `define` | `Record<string, string>` | Global constant injection. |
+| `defineAssetsString` | `string` | If configured, injects the list of assets present in `distdir`. |
+| `defineVersionString` | `string` | Custom version identifier for this target (default: `"__APP_VERSION__"`). |
+| `outfile` | `string` | Explicit name of the generated file. |
+| `targets` | `Record<string, DenoBundleTargetConfig>` | Compilation targets dictionary. |
 
 ---
 
-## 📝 4. Exportador de Contexto para IA (`export.jsonc`)
+## 📝 4. AI Context Exporter (`export.jsonc`)
 
-O `export` gera snapshots consolidados em formato Markdown com cabeçalho semântico e proteções ativas anti-loop para alimentar LLMs e assistentes de código.
+`export` generates consolidated snapshots in Markdown format with a semantic header and active anti-loop protections to feed LLMs and code assistants.
 
-### Estrutura do `export.jsonc`
+### `export.jsonc` Structure
 
 ```jsonc
 {
@@ -194,56 +195,68 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
         "**/.git/**"
       ],
       "incluiVersao": true,
-      "instrucaoCustomizada": "Contexto do frontend Preact + BeerCSS.",
+      "instrucaoCustomizada": "Frontend context with Preact + BeerCSS.",
       "default": true
     }
   }
 }
 ```
 
-- **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
-- **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
-- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da constante de versão (`defineVersionString`, padrão: `__APP_VERSION__`) em `instrucaoCustomizada` e `cabecalho`.
+- **Glob Patterns and Brace Expansion**: The exporter uses `expandGlob` under the hood, allowing concise declaration of paths and extensions (e.g., `{src,docs}/**/*.{ts,tsx,md}`).
+- **O(1) Streaming Write**: Progressive recording directly to disk via `Deno.open` and `WritableStream`, ensuring maximum memory efficiency even in large monorepos.
+- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `instrucaoCustomizada` and `cabecalho`.
 
 ---
 
-## 🧼 5. Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)
+## 🧼 5. Version Sanitizer and Publisher (`sanitize-version` & `tag-version`)
 
-O BuildIt inclui utilitários especializados para manter o arquivo `deno.jsonc` em conformidade com o padrão SemVer e automatizar a criação de tags git.
+BuildIt includes specialized utilities to keep your `deno.jsonc` compliant with SemVer and automate git tag creation.
 
 ### 🧼 `sanitize-version`
-Normaliza o campo `"version"` para o formato estrito `MAJOR.MINOR.PATCH`.
-- **Comportamento:** Remove sufixos como `#hash`, `-alpha`, `+build`.
-- **Injeção:** Se o campo `"version"` estiver ausente, ele insere `"version": "0.0.0"` automaticamente.
+Normalizes the `"version"` field to strict `MAJOR.MINOR.PATCH` format.
+- **Behavior**: Removes suffixes like `#hash`, `-alpha`, `+build`.
+- **Injection**: If the `"version"` field is missing, it inserts `"version": "0.0.0"` automatically.
 
 ### 🏷️ `tag-version`
-Automatiza o fluxo de release local e remoto:
-1.  (Opcional) Sanitiza o arquivo `deno.jsonc` em disco.
-2.  Executa `git add -A` e `git commit -m "Versão vX.Y"`.
-3.  Executa `git push` do código.
-4.  Remove tags locais e remotas antigas com o mesmo prefixo `vMAJOR.MINOR`.
-5.  Cria uma nova tag anotada e executa `git push --force origin vX.Y`.
+Automates the local and remote release flow:
+1. (Optional) Sanitizes the `deno.jsonc` file on disk.
+2. Executes `git add -A` and `git commit -m "Version vX.Y"`.
+3. Executes `git push`.
+4. Removes old local and remote tags with the same `vMAJOR.MINOR` prefix.
+5. Creates a new annotated tag and executes `git push --force origin vX.Y`.
 
 ---
 
-## 💡 6. Como Usar os Schemas no Editor ($schema)
+## 📂 Smart Configuration Discovery
 
-Cada utilitário possui um JSON Schema oficial no diretório `packages/utils/schema/`:
+BuildIt uses a priority search strategy to locate your configuration files (`.jsonc`/`.json`). This allows you to organize your scripts in subfolders without manually passing the path via CLI.
 
-1. `esbuild.json` -> Para `esbuild.jsonc` ou `esbuild.json`
-2. `watch.json` -> Para `watch.jsonc` ou `watch.json`
-3. `denobuild.json` -> Para `denobuild.jsonc` ou `denobuild.json`
-4. `export.json` -> Para `export.jsonc` ou `export.json`
+**Priority Order:**
+1. **Explicit Path**: Provided via `-c` or `--app-config` flag.
+2. **Script Directory**: If you run `deno run scripts/export.ts`, the system first looks for `scripts/export.jsonc`.
+3. **scripts/ Subfolder**: Looks in `scripts/` inside the provided `baseDir`.
+4. **Project Root**: Looks in the provided `baseDir` directory (default: `.`).
 
-### Como Configurar no Arquivo
+---
 
-Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo do seu JSON/JSONC:
+## 💡 6. How to Use Schemas in the Editor ($schema)
+
+Each utility has an official JSON Schema in the `packages/utils/schema/` directory:
+
+1. `esbuild.json` -> For `esbuild.jsonc` or `esbuild.json`
+2. `watch.json` -> For `watch.jsonc` or `watch.json`
+3. `denobuild.json` -> For `denobuild.jsonc` or `denobuild.json`
+4. `export.json` -> For `export.jsonc` or `export.json`
+
+### How to Configure in the File
+
+Just include the `$schema` key pointing to the corresponding file at the top of your JSON/JSONC:
 
 ```jsonc
 {
   "$schema": "./packages/utils/schema/esbuild.json",
   "targets": {
-    // Autocomplete automático com Ctrl+Espaço (VSCode / Cursor / Zed / Neovim)
+    // Automatic autocomplete with Ctrl+Space (VSCode / Cursor / Zed / Neovim)
     "ui": {
       "entryPoints": ["main.tsx"]
     }
@@ -251,37 +264,37 @@ Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo 
 }
 ```
 
-### Benefícios:
-- **Autocomplete Completo:** Sugestão de todas as opções de compilador, tipos de sourcemap, loaders e formatos.
-- **Validação Instantânea:** Avisos em tempo real caso uma propriedade seja escrita incorretamente ou tenha tipo inválido.
-- **Documentação Inline (Hover):** Passe o mouse sobre qualquer propriedade para ver sua descrição oficial.
+### Benefits:
+- **Full Autocomplete**: Suggestions for all compiler options, sourcemap types, loaders, and formats.
+- **Instant Validation**: Real-time warnings if a property is mistyped or has an invalid type.
+- **Inline Documentation (Hover)**: Hover over any property to see its official description.
 
 ---
 
-## 🛠️ 7. Utilitários de Versão e CLI
+## 🛠️ 7. Version and CLI Utilities
 
-### Flags Comuns a Todos os CLIs
+### Common Flags for All CLIs
 
-Todos os utilitários de linha de comando (`esbuild`, `watch`, `denobuild`, `export`) seguem a mesma convenção unificada de argumentos:
+All command-line utilities (`esbuild`, `watch`, `denobuild`, `export`) follow the same unified argument convention:
 
-| Flag Curta | Flag Longa | Padrão | Descrição |
+| Short Flag | Long Flag | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `-c` | `--app-config <file>` | `<tool>.jsonc` | Caminho explícito para o arquivo de configuração. |
-| `-b` | `--base-dir <dir>` | `./` | Diretório base para resolução e join de caminhos. |
-| `-d` | `--deno-config <file>` | `deno.jsonc` | Caminho para o `deno.jsonc` raiz que contém a versão. |
-| `-n` | `--noversion` | `false` | Desabilita o incremento automático de versão. |
+| `-c` | `--app-config <file>` | *Auto Search* | Explicit path to the configuration file. |
+| `-b` | `--base-dir <dir>` | `./` | Base directory for path resolution and joins. |
+| `-d` | `--deno-config <file>` | *Auto Search* | Path to the root `deno.jsonc` containing the version. |
+| `-n` | `--noversion` | `false` | Disables automatic version increment. |
 
-### Ordem de Execução Determinística
+### Deterministic Execution Order
 
-O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
-- A ordem declarada no arquivo `.jsonc` é estritamente preservada.
-- O CLI repassa os argumentos fornecidos pelo usuário; o engine filtra os alvos selecionados mantendo a ordem correta.
+The **Engine** is the single source of truth for the execution order of targets:
+- The order declared in the `.jsonc` file is strictly preserved.
+- The CLI passes user-provided arguments; the engine filters selected targets while maintaining the correct order.
 
 ---
 
-## 💻 8. API Programática em TypeScript
+## 💻 8. Programmatic TypeScript API
 
-A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
+The `@vanaware/buildit` library can be imported and executed directly in TypeScript code:
 
 ```typescript
 import {
@@ -291,7 +304,7 @@ import {
   watchEngine,
 } from "jsr:@vanaware/buildit";
 
-// Compilação com esbuild
+// esbuild compilation
 await esBuild({
   config: {
     ui: {
@@ -303,7 +316,7 @@ await esBuild({
   noversion: true,
 });
 
-// Desenvolvimento contínuo com Watch
+// Continuous development with Watch
 const handles = await watchEngine({
   config: {
     ui: {
@@ -314,7 +327,7 @@ const handles = await watchEngine({
   },
 });
 
-// Para encerrar o watch programaticamente:
+// To stop the watch programmatically:
 // for (const h of handles) await h.close();
 ```
 
@@ -322,591 +335,172 @@ const handles = await watchEngine({
 
 ---
 
-## Arquivo: `docs/impacto-basedir.md`
+## File: `docs/basedir-impact.md`
 
 ```md
-# Guia Técnico: O Impacto do `baseDir` no BuildIt
+# Technical Guide: The Impact of `baseDir` in BuildIt
 
-Este documento explica detalhadamente como a opção `basedir` (configurável via CLI `-b` ou `--base-dir`) influencia o comportamento de leitura, escrita e resolução de caminhos em todos os utilitários do ecossistema BuildIt.
-
----
-
-## 1. O que é o `baseDir`?
-
-O `baseDir` é o **Diretório Raiz de Execução** (ou Workspace Root). Ele define o ponto de ancoragem para todos os caminhos relativos declarados nos arquivos de configuração (`.jsonc`).
-
-- **Padrão:** Se não informado, o BuildIt assume `.` (o diretório atual onde o comando foi disparado).
-- **Escopo:** O impacto é **global** em cada utilitário, afetando desde a localização do arquivo de configuração até a geração dos arquivos de saída.
+This document explains in detail how the `baseDir` option (configurable via CLI `-b` or `--base-dir`) influences reading, writing, and path resolution behavior across all BuildIt ecosystem utilities.
 
 ---
 
-## 2. Impacto por Utilitário
+## 1. What is `baseDir`?
 
-### ⚡ esbuild & 📦 denobuild (Build de Produção)
+The `baseDir` is the **Execution Root Directory** (or Workspace Root). It defines the anchor point for all relative paths declared in configuration files (`.jsonc`).
 
-Neste contexto, o `baseDir` atua como o prefixo para a estrutura do monorepo ou projeto.
+- **Default:** If not provided, BuildIt assumes `.` (the current directory where the command was triggered).
+- **Scope:** The impact is **global** for each utility, affecting everything from configuration file location to output file generation.
 
-1.  **Resolução de Pastas Centrais**:
-    - `srcdir`, `distdir` e `publicdir` são resolvidos usando `join(baseDir, path)`. Se você estiver na raiz do monorepo e rodar `--base-dir packages/ui`, o BuildIt procurará a origem em `packages/ui/src`.
+---
+
+## 2. Impact per Utility
+
+### ⚡ esbuild & 📦 denobuild (Production Build)
+
+In this context, `baseDir` acts as the prefix for the monorepo or project structure.
+
+1.  **Core Folder Resolution**:
+    - `srcdir`, `distdir`, and `publicdir` are resolved using `join(baseDir, path)`. If you are at the monorepo root and run `--base-dir packages/ui`, BuildIt will look for the source in `packages/ui/src`.
 2.  **EntryPoints**:
-    - São resolvidos em relação ao `srcdir` já prefixado pelo `baseDir`.
-3.  **Cópia de Arquivos (`copyFiles`)**:
-    - Atua como o `generalBaseDir`. Cada entrada no array `copyFiles` que possuir um `basedir` próprio será resolvida em relação ao `baseDir` global da execução.
-    - Exemplo: Se `baseDir` é `packages/ui` e o item tem `basedir: "public"`, a varredura real ocorre em `packages/ui/public`.
-4.  **Limpeza (`clean`)**:
-    - O diretório `distdir` (alvo da limpeza) é prefixado pelo `baseDir`. As regras de inclusão/exclusão de limpeza operam estritamente dentro desse caminho resultante.
+    - Resolved relative to the `srcdir` already prefixed by `baseDir`.
+3.  **File Copying (`copyFiles`)**:
+    - Acts as the `generalBaseDir`. Each entry in the `copyFiles` array that has its own `basedir` will be resolved relative to the global execution `baseDir`.
+    - Example: If `baseDir` is `packages/ui` and the item has `basedir: "public"`, the actual scan occurs in `packages/ui/public`.
+4.  **Cleanup (`clean`)**:
+    - The `distdir` (cleanup target) is prefixed by `baseDir`. Cleanup inclusion/exclusion rules operate strictly within this resulting path.
 
-### 👀 watch (Monitoramento de Desenvolvimento)
+### 👀 watch (Development Monitoring)
 
-O `watch` herda todo o comportamento do `esbuild`, mas adiciona uma camada crítica de segurança:
+`watch` inherits all `esbuild` behavior but adds a critical security layer:
 
 1.  **Lock File (`.buildit-watch.lock`)**:
-    - O arquivo de trava de PID é criado na raiz do `baseDir`.
-    - **Por que isso importa?** Isso permite que você execute múltiplos processos `watch` no mesmo servidor, desde que apontem para `baseDir` diferentes, evitando colisões de processos que tentam monitorar o mesmo projeto.
+    - The PID lock file is created at the root of `baseDir`.
+    - **Why does this matter?** This allows you to run multiple `watch` processes on the same server, as long as they point to different `baseDir`, avoiding collisions between processes trying to monitor the same project.
 
-### 📝 export (Snapshot para IA)
+### 📝 export (AI Snapshot)
 
-O `export` é o utilitário mais sensível ao `baseDir`, pois ele determina o que "entra na foto".
+`export` is the utility most sensitive to `baseDir`, as it determines what "gets in the picture".
 
-1.  **Raiz do Glob**:
-    - O `baseDir` é passado como o parâmetro `root` para a função `expandGlob`. Padrões como `src/**/*.ts` só encontrarão arquivos dentro do `baseDir`.
-2.  **Caminhos no Markdown**:
-    - O utilitário calcula o caminho relativo de cada arquivo usando `relative(baseDir, arquivo.path)`. Isso garante que o snapshot gerado seja limpo e não exponha a estrutura absoluta de pastas do seu servidor/máquina.
-3.  **Destino do Snapshot**:
-    - O arquivo gerado (ex: `exports/ui.md`) é criado dentro do `baseDir`. Se você rodar com `--base-dir packages/utils`, o resultado irá para `packages/utils/exports/ui.md`.
+1.  **Glob Root**:
+    - `baseDir` is passed as the `root` parameter to the `expandGlob` function. Patterns like `src/**/*.ts` will only find files within `baseDir`.
+2.  **Paths in Markdown**:
+    - The utility calculates each file's relative path using `relative(baseDir, file.path)`. This ensures the generated snapshot is clean and doesn't expose your server/machine's absolute folder structure.
+3.  **Snapshot Destination**:
+    - The generated file (e.g., `exports/ui.md`) is created inside `baseDir`. If you run with `--base-dir packages/utils`, the result will go to `packages/utils/exports/ui.md`.
 
-### 🧼 sanitize-version & 🏷️ tag-version (Versionamento)
+### 🧼 sanitize-version & 🏷️ tag-version (Versioning)
 
-1.  **Localização do `deno.jsonc`**:
-    - Se o caminho do arquivo não for absoluto, o utilitário tenta localizá-lo dentro do `baseDir`.
+1.  **`deno.jsonc` Location**:
+    - If the file path is not absolute, the utility tries to locate it within `baseDir`.
 
 ---
 
-## 3. Resumo de Comportamento de Paths
+## 3. Path Behavior Summary
 
-| Tipo de Caminho | Comportamento com `baseDir` |
+| Path Type | Behavior with `baseDir` |
 | :--- | :--- |
-| **Caminho Absoluto** (`/etc/config`) | **Ignora** o `baseDir`. O sistema usa o caminho literal. |
-| **Caminho Relativo** (`src/main.ts`) | **Prefixa** com `baseDir` → `join(baseDir, "src/main.ts")`. |
-| **Padrão Glob** (`**/*.ts`) | **Restringe** a busca ao escopo do `baseDir`. |
+| **Absolute Path** (`/etc/config`) | **Ignores** `baseDir`. System uses the literal path. |
+| **Relative Path** (`src/main.ts`) | **Prefixes** with `baseDir` → `join(baseDir, "src/main.ts")`. |
+| **Glob Pattern** (`**/*.ts`) | **Restricts** search to `baseDir` scope. |
 
 ---
 
-## 4. Status da Implementação
+## 4. Implementation Status
 
-A implementação do `baseDir` é **Sistêmica e Global**. 
+The `baseDir` implementation is **Systemic and Global**.
 
-Ela foi refatorada para ser propagada desde a camada de CLI (`packages/utils/src/*/cli.ts`) até o motor (`engine.ts`) e finalmente para as funções de baixo nível em `packages/utils/src/tools/paths.ts`. 
+It has been refactored to propagate from the CLI layer (`packages/utils/src/*/cli.ts`) to the engine (`engine.ts`) and finally to low-level functions in `packages/utils/src/tools/paths.ts`.
 
-### Pontos de Verificação (Garantia de Integridade):
-- [x] **Consistência**: Todos os utilitários usam a mesma função `resolveWithBase` para normalização.
-- [x] **Segurança**: Funções de escrita e deleção (`cleanTarget`, `copyStaticFiles`) validam se o caminho final não "escapa" do diretório pretendido através de travas contra path traversal.
-- [x] **Transparência**: Os logs de console exibem os caminhos resolvidos para que o usuário saiba exatamente onde o BuildIt está operando.
+### Verification Points (Integrity Guarantee):
+- [x] **Consistency**: All utilities use the same `resolveWithBase` function for normalization.
+- [x] **Security**: Write and delete functions (`cleanTarget`, `copyStaticFiles`) validate that the final path does not "escape" the intended directory via path traversal locks.
+- [x] **Transparency**: Console logs display resolved paths so the user knows exactly where BuildIt is operating.
 
 ```
 
 ---
 
-## Arquivo: `docs/publish-jsr-rules.md`
-
-`````md
-# Diretrizes de Documentação e Publicação no JSR
-
-> **Nota para Agentes de IA:** Este documento define os padrões obrigatórios para documentação (README.md e JSDoc) e as regras de configuração do `deno.json` para publicação no JSR. Siga estas diretrizes rigorosamente ao gerar ou refatorar código neste repositório.
-
----
-
-## 📌 Sumário
-
-1. [Visão Geral](#-visão-geral)
-2. [Padrões para o README.md](#-padrões-para-o-readmemd)
-3. [Padrões para Comentários JSDoc](#-padrões-para-comentários-jsdoc)
-4. [Recomendações de Uso e Qualidade](#-recomendações-de-uso-e-qualidade)
-5. [Configuração de `publish: false` em Workspaces](#-configuração-de-publish-false-em-workspaces)
-6. [Configuração de `publish.include` e `publish.exclude`](#-configuração-de-publishinclude-e-publishexclude)
-7. [Checklist Antes de Publicar](#-checklist-antes-de-publicar)
-
----
-
-## 🎯 Visão Geral
-
-Todo pacote publicado no JSR deve ter **duas camadas de documentação**:
-
-| Camada | Arquivo/Local | Propósito | Público-Alvo |
-| :--- | :--- | :--- | :--- |
-| **Guia Rápido** | `README.md` na raiz | Explicar *por que* usar o pacote e como começar. | Desenvolvedores avaliando adotar o pacote. |
-| **Referência da API** | Comentários JSDoc no código | Documentar *como* usar cada símbolo exportado. | Desenvolvedores que já usam o pacote. |
-
-Ambas as camadas impactam diretamente a **pontuação de qualidade do JSR** e a experiência do usuário final (incluindo autocompletar no editor).
-
----
-
-## 📝 Padrões para o README.md
-
-### Localização e Formato
-- **Arquivo:** `README.md` 
-- **Localização:** Obrigatório, na raiz do pacote, não é o mesmo README da raiz do worspace, cada pacote a ser publicado precisa de seu próprio README.
-- **Sintaxe:** Markdown padrão (GFM - GitHub Flavored Markdown).
-- **Idioma:** Inglês (mantenha consistência e use o mesmo idioma em toda a documentação a ser publicada).
-
-### Estrutura Obrigatória
-
-O README **deve** conter, no mínimo, as seguintes seções nesta ordem:
-
-1. **Título** (`# Nome do Pacote`) — usar o nome real do pacote, sem o escopo.
-2. **Descrição curta** — uma ou duas frases explicando o que o pacote faz.
-3. **Instalação** — bloco de código com o comando `deno add`.
-4. **Uso Básico** — **obrigatório** um bloco de código funcional mostrando import + uso real.
-5. **Documentação** — link para a página do pacote no JSR (referência da API).
-
-### Estrutura Recomendada (Adicional)
-
-- **Features** — lista de bullets com os principais recursos.
-- **API Overview** — tabela ou lista dos principais exports.
-- **Exemplos Avançados** — casos de uso além do "hello world".
-
-### Exemplo de Template
-
-````markdown
-# nome-do-pacote
-
-Uma breve descrição de uma ou duas frases sobre o que este pacote faz.
-
-## Instalação
-
-```bash
-deno add jsr:@seu-escopo/nome-do-pacote
-```
-
-## Uso
-
-```ts
-import { funcaoPrincipal } from "jsr:@seu-escopo/nome-do-pacote";
-
-const resultado = funcaoPrincipal({ opcao: "valor" });
-console.log(resultado);
-```
-
-## Features
-
-- ✅ Recurso A
-- ✅ Recurso B
-- ✅ Recurso C
-
-## Documentação
-
-Para a referência completa da API, visite a
-[página do pacote no JSR](https://jsr.io/@vanaware/nome-do-pacote).
-
-````
-
-### ⚠️ Regras Críticas
-- **NUNCA** deixe o README vazio ou com apenas o título.
-- **SEMPRE** inclua um bloco de código no README — o JSR usa isso para pontuar o pacote.
-- **NÃO** duplique toda a documentação JSDoc aqui; o README é visão geral, não referência.
-
----
-
-## 📚 Padrões para Comentários JSDoc
-
-### Regras Gerais
-- **Local:** Imediatamente acima de **cada símbolo exportado** (função, classe, interface, tipo, constante).
-- **Sintaxe:** Bloco `/** ... */` com cada linha interna iniciando por `*`.
-- **Idioma:** Manter o mesmo do README.
-- **Obrigatoriedade:** Todo `export` **deve** ter JSDoc. Sem exceção.
-
-### Estrutura do Bloco
-
-1. **Resumo** (primeira linha) — frase curta e imperativa. Aparece em tooltips do editor.
-2. **Descrição detalhada** (opcional) — parágrafo(s) adicional(is) com contexto.
-3. **Tags** — na ordem: `@param`, `@returns`, `@throws`, `@example`, `@see`.
-4. **Exemplo** — sempre que a função não for trivial.
-
-### Exemplo Completo — Função
-
-````ts
-/**
- * Busca registros no banco de dados usando a consulta fornecida.
- *
- * Realiza normalização de entrada e aplica limite padrão quando não
- * especificado, evitando sobrecarga em consultas muito amplas.
- *
- * @param query - Consulta textual. Deve ter entre 1 e 50 caracteres.
- * @param limit - Número máximo de itens a retornar. Padrão: `20`.
- * @returns Array com os registros encontrados. Vazio se nada corresponder.
- * @throws {Error} Se `query` estiver vazia ou exceder 50 caracteres.
- *
- * @example
- * ```ts
- * const resultados = search("Deno");
- * console.log(resultados); // ["Deno", "Deno Deploy"]
- * ```
- *
- * @see {@link normalizeQuery} para detalhes da normalização.
- */
-export function search(query: string, limit: number = 20): string[] {
-  // ...
-}
-````
-
-### Exemplo Completo — Interface / Tipo
-
-````ts
-/**
- * Opções aceitas pelo cliente HTTP.
- */
-export interface ClientOptions {
-  /** URL base para todas as requisições. */
-  baseUrl: string;
-
-  /** Tempo limite em milissegundos. Padrão: `5000`. */
-  timeout?: number;
-
-  /** Cabeçalhos adicionais enviados em cada requisição. */
-  headers?: Record<string, string>;
-}
-````
-
-### Exemplo Completo — Classe
-
-````ts
-/**
- * Cliente HTTP leve com suporte a retry automático.
- *
- * @example
- * ```ts
- * const client = new Client({ baseUrl: "https://api.example.com" });
- * const data = await client.get("/users");
- * ```
- */
-export class Client {
-  /**
-   * Cria uma nova instância do cliente.
-   *
-   * @param options - Configurações do cliente.
-   */
-  constructor(options: ClientOptions) {
-    // ...
-  }
-
-  /**
-   * Executa uma requisição GET.
-   *
-   * @param path - Caminho relativo à `baseUrl`.
-   * @returns Resposta parseada como JSON.
-   */
-  async get<T>(path: string): Promise<T> {
-    // ...
-  }
-}
-````
-
-### Tags Suportadas e Quando Usar
-
-| Tag | Uso |
-| :--- | :--- |
-| `@param` | Descrever **cada** parâmetro. Use `-` após o nome. |
-| `@returns` | Descrever o valor de retorno (omita apenas se `void`). |
-| `@throws` | Tipos e condições de erro lançados. |
-| `@example` | Bloco de código executável. Sempre em cercas ` ```ts `. |
-| `@see` | Referência cruzada. Combine com `{@link Symbol}`. |
-| `@deprecated` | Marcar símbolos obsoletos e indicar substituto. |
-| `@since` | Versão em que o símbolo foi introduzido. |
-
-### Links Internos
-Use `{@link <Símbolo>}` para criar links clicáveis entre símbolos na documentação gerada:
-
-```ts
-/**
- * Atalho para {@link Client.get} com timeout customizado.
- */
-export function quickGet(path: string) { /* ... */ }
-```
-
-### ⚠️ Regras Críticas
-- **NÃO** use JSDoc para comentários internos de linha — use `//`.
-- **NÃO** documente símbolos não exportados (a menos que sejam úteis para contexto).
-- **SEMPRE** coloque o `@example` **após** `@returns`/`@throws`.
-- **NUNCA** escreva "TODO" dentro de JSDoc; use comentários normais.
-
----
-
-## ✅ Recomendações de Uso e Qualidade
-
-1. **README e JSDoc são complementares** — nunca um substitui o outro.
-2. **Escreva exemplos reais** — evite `foo`/`bar`; use nomes que reflitam o domínio.
-3. **Mantenha o README curto** — se passar de ~150 linhas, crie uma pasta `docs/` dentro do diretório do pacote.
-4. **Valide antes de commitar:**
-   ```bash
-   deno doc --lint mod.ts
-   ```
-   Isso aponta exports sem JSDoc e tags malformadas.
-5. **Valide antes de publicar:**
-   ```bash
-   deno publish --dry-run
-   ```
-   Inspecione o output para confirmar que apenas os arquivos desejados serão enviados.
-6. **Atualize o JSDoc ao refatorar** — nunca deixe documentação divergente do código.
-7. **Use `@deprecated`** ao invés de remover símbolos abruptamente — quebre consumidores com aviso.
-
----
-
-## 🏢 Configuração de `publish: false` em Workspaces
-
-Em um **workspace Deno** (definido por `workspace` no `deno.json` raiz), o comando `deno publish` tenta publicar **todos os membros** que possuem `name` e `exports`.
-
-Para **excluir um membro interno** (pacotes utilitários compartilhados, ferramentas de build, etc.), defina `"publish": false` no `deno.json` desse membro.
-
-### Estrutura Real no WorkerDB
-
-No monorepo do WorkerDB, temos múltiplos pacotes publicados e pacotes de aplicação/infraestrutura interna:
-
-```
-/
-├── deno.jsonc                 # workspace raiz
-├── packages/
-│   ├── worker-db/             # publicado no JSR como @vanaware/workerdb
-│   │   └── deno.jsonc
-│   ├── service-worker/        # publicado no JSR como @vanaware/opfs-explorer
-│   │   └── deno.jsonc
-│   ├── ui/                    # app frontend (publish: false)
-│   │   └── deno.jsonc
-│   ├── server/                # dev/prod server Deno (publish: false)
-│   │   └── deno.jsonc
-│   └── utils/                 # scripts de bundling/build (publish: false)
-│       └── deno.jsonc
-```
-
-O workflow de CI/CD em `.github/workflows/jsr-publish.yml` executa a matriz de publicação automatizada para `packages/worker-db` e `packages/service-worker`.
-
-### Estrutura de Exemplo Genérica
-
-```
-/
-├── deno.json              # workspace raiz
-├── packages/
-│   ├── core/
-│   │   └── deno.json      # publicado no JSR
-│   ├── utils-internal/
-│   │   └── deno.json      # NÃO publicado
-│   └── cli/
-│       └── deno.json      # publicado no JSR
-```
-
-### `deno.json` raiz (workspace)
-
-```json
-{
-  "workspace": [
-    "./packages/core",
-    "./packages/utils-internal",
-    "./packages/cli"
-  ]
-}
-```
-
-### `packages/core/deno.json` (publicado)
-
-```json
-{
-  "name": "@seu-escopo/core",
-  "version": "1.0.0",
-  "exports": "./mod.ts",
-  "license": "MIT"
-}
-```
-> **Importante:** Caso os campos license e version não estejam configurados no deno.jsonc (ou deno.json) do pacote, configure com o mesmo valor encontrado no deno.jsonc raiz do workspace.
-
-### `packages/utils-internal/deno.json` (NÃO publicado)
-
-```json
-{
-  "name": "@seu-escopo/utils-internal",
-  "version": "0.0.0",
-  "exports": "./mod.ts",
-  "publish": false
-}
-```
-
-> **Importante:** Mesmo com `publish: false`, o pacote ainda pode ser importado por outros membros do workspace via `jsr:@seu-escopo/utils-internal` durante o desenvolvimento. Ele apenas não será enviado ao registro.
-
-> **Regra fundamental:** Caso alguma função do pacote que não será publicado esteja em uso por um pacote que será publicado, o desenvolvedor deverá ser alertado e uma documentação de BUG deve ser criada com todas as referidas funções que deverão ser analisadas e devidamente tratadas antes da publicação do pacote.
-
----
-
-## 🗂️ Configuração de `publish.include` e `publish.exclude`
-
-### Regras Básicas
-- Os padrões são avaliados **relativos à raiz do pacote** (onde está o `deno.json` do pacote a ser publicado).
-- Use **globs POSIX** com `/` como separador (funciona em Windows também).
-- **`publish.include`** — lista branca. Se definido, **somente** o que casar será publicado.
-- **`publish.exclude`** — lista negra. Aplicada **após** o `include`.
-- Se apenas `exclude` for definido, tudo é incluído por padrão e depois filtrado.
-- **NUNCA** inclua `deno.json` no `exclude` — ele é sempre publicado automaticamente.
-
-### Globs Recomendados
-
-#### Incluir apenas o código-fonte publicável
-
-```json
-{
-  "publish": {
-    "include": [
-      "src/**/*.ts",
-      "mod.ts",
-      "README.md",
-      "LICENSE"
-    ]
-  }
-}
-```
-
-#### Excluir arquivos de desenvolvimento
-
-```json
-{
-  "publish": {
-    "exclude": [
-      "**/*_test.ts",
-      "**/*.test.ts",
-      "**/*_bench.ts",
-      "tests/",
-      "test/",
-      "bench/",
-      "examples/",
-      "scripts/",
-      "docs/",
-      "planning/",
-      "AGENTS.md",
-      "CURRENT.md",
-      "TODO.md",
-      "CHANGELOG.md",
-      ".github/",
-      "*.config.ts",
-      "build.ts",
-      "bundle.ts",
-      "deploy.ts",
-      "deno.lock",
-      ".gitignore"
-    ]
-  }
-}
-```
-
-### Combinação Recomendada (Include + Exclude)
-
-A abordagem mais segura é **combinar ambos**: um `include` restritivo que define o que é código, e um `exclude` para varrer resíduos.
-
-```json
-{
-  "name": "@seu-escopo/seu-pacote",
-  "version": "1.0.0",
-  "exports": "./mod.ts",
-  "license": "MIT",
-  "publish": {
-    "include": [
-      "src/**/*.ts",
-      "mod.ts",
-      "README.md",
-      "LICENSE"
-    ],
-    "exclude": [
-      "**/*_test.ts",
-      "**/*.test.ts",
-      "**/*_bench.ts",
-      "src/**/__mocks__/**",
-      "examples/",
-      "scripts/",
-      "docs/",
-      "planning/",
-      "AGENTS.md",
-      "CURRENT.md",
-      "CHANGELOG.md",
-      ".github/"
-    ]
-  }
-}
-```
-
-### Mapa de Decisão: Incluir ou Excluir?
-
-| Arquivo/Pasta | Ação | Justificativa |
-| :--- | :--- | :--- |
-| `src/**/*.ts` | ✅ Incluir | Código-fonte principal. |
-| `mod.ts` | ✅ Incluir | Ponto de entrada principal. |
-| `README.md` | ✅ Incluir | Exibido no JSR. |
-| `**/*_test.ts` | ❌ Excluir | Testes não vão para o registro. |
-| `tests/`, `test/` | ❌ Excluir | Idem. |
-| `examples/` | ❌ Excluir | Exemplos grandes ou não-API. |
-| `scripts/` | ❌ Excluir | Scripts de build/deploy. |
-| `build.ts`, `bundle.ts`, `deploy.ts` | ❌ Excluir | Ferramentas de dev. |
-| `docs/` | ❌ Excluir o docs da raiz pode incluir o subset do pacote | Documentação estendida da raiz do workspace fica no repo, documentação essencial reduzida do pacote pode incluir. |
-| `planning/` | ❌ Excluir | Planejamento interno. |
-| `AGENTS.md`, `CURRENT.md` | ❌ Excluir | Metadados para agentes de IA. |
-| `CHANGELOG.md` | ⚠️ Excluir | Útil para consumidores, mas aumenta o pacote. |
-| `deno.lock` | ❌ Excluir | Reconstruído pelo consumidor. |
-| `.github/` | ❌ Excluir | CI/CD. |
-| `deno.json` | 🚫 Nunca listar | Sempre publicado automaticamente. |
-
-### Padrões Glob de Referência
-
-| Padrão | Casa com |
-| :--- | :--- |
-| `src/**/*.ts` | Todos os `.ts` em `src/` recursivamente. |
-| `**/*_test.ts` | Qualquer arquivo terminando em `_test.ts`. |
-| `**/*.test.ts` | Qualquer arquivo terminando em `.test.ts`. |
-| `test/` | Todo o diretório `test/`. |
-| `**/__mocks__/**` | Qualquer diretório `__mocks__` em qualquer nível. |
-| `scripts/**` | Tudo dentro de `scripts/`. |
-| `*.config.ts` | Arquivos `.config.ts` na raiz. |
-
-### ⚠️ Erros Comuns a Evitar
-- **Não** use `./` no início dos padrões (`"./src/**"` ❌ → `"src/**"` ✅).
-- **Não** use `\` como separador — sempre `/`.
-- **Não** inclua `deno.json` no `exclude` — quebra a publicação.
-- **Não** use `include` e `exclude` contraditórios (ex: incluir `src/**` e excluir `src/`).
-- **Sempre** valide com `deno publish --dry-run` antes de publicar de verdade.
-
----
-
-## ✅ Checklist Antes de Publicar
-
-Execute na ordem:
-
-- [ ] `deno fmt --check` — formatação consistente.
-- [ ] `deno lint` — sem avisos.
-- [ ] `deno check mod.ts` — sem erros de tipo.
-- [ ] `deno test` — todos os testes passando.
-- [ ] `deno doc --lint mod.ts` — sem exports sem JSDoc.
-- [ ] `README.md` revisado e com bloco de código de exemplo.
-- [ ] `deno.jsonc` com `name`, `version`, `exports`, `license` corretos.
-- [ ] `publish.include` e `publish.exclude` revisados.
-- [ ] `deno publish --dry-run` — inspecionar arquivos listados.
-- [ ] Versão incrementada conforme SemVer, temos um script de sanitização a ser executado antes da publicação.
-- [ ] `deno publish` — publicar de fato.
-
----
-
-## 📎 Referências
-
-- [Documentação oficial do JSR](https://jsr.io/docs)
-- [Escrevendo documentação para JSR](https://jsr.io/docs/writing-docs)
-- [Configuração `deno.jsonc`](https://docs.deno.com/runtime/fundamentals/configuration/)
-- [Globs no Deno](https://docs.deno.com/runtime/fundamentals/configuration/#glob-patterns)
-`````
-
----
-
-## Arquivo: `docs/topology-denobuild.md`
+## File: `docs/publish-jsr-rules.md`
 
 ````md
-# Topologia de Execução: `denobuild` (Orquestrador Deno.bundle)
+# 🚀 Rules for Publishing to JSR (`@vanaware/buildit`)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`denobuild`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document defines the quality and documentation standards required for all packages in the `@vanaware/buildit` suite before publication to the **JSR (Deno)** registry.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Zero Node.js Dependencies
+
+All code in `packages/utils` MUST be pure Deno.
+- **Specifiers:** Use only `jsr:` and `npm:` (via Deno resolution).
+- **APIs:** Use `Deno.*` and `@std/*`. Avoid `node:*` or standard Node.js libraries.
+- **Portability:** The library must be importable in any environment that supports JSR/Deno 2.x.
+
+## 2. Complete JSDoc (Mandatory)
+
+Every exported function, interface, type, or constant must have a JSDoc block in English.
+
+### Required Fields:
+- `@description`: Detailed explanation of the item's purpose.
+- `@param`: Description of each parameter and its type.
+- `@returns`: Explanation of the return value.
+- `@example`: A runnable and clear usage example.
+
+**Example:**
+```typescript
+/**
+ * @description Normalizes a semver string.
+ * @param raw - The original version string.
+ * @returns The sanitized MAJOR.MINOR.PATCH string.
+ */
+export function sanitizeVersion(raw: string): string { ... }
+```
+
+## 3. Documentation Linter (`deno doc --lint`)
+
+Before every push/release, you must run the documentation linter:
+```bash
+deno task lint:doc
+```
+- No warnings or errors are allowed.
+- All public items must be documented.
+
+## 4. Descriptive README per Package
+
+Each sub-package (e.g., `packages/utils`) must have its own `README.md` (English).
+- **Core Value:** What problem does this specific package solve?
+- **Quick Start:** One or two examples of common usage.
+- **JSR Badges:** Links to the module on JSR.
+
+## 5. Automation via GitHub Actions
+
+Publication is managed exclusively by the `.github/workflows/jsr-publish.yml` workflow.
+- **Prerequisite:** The version must be a valid SemVer (e.g., `0.3.14`).
+- **Sanitization:** The `sanitize-version.ts` script is executed before publication to ensure no git hashes (e.g., `#mu...`) remain in the version.
+
+---
+
+## ✅ Checklist for Pull Requests:
+- [ ] `deno task test` passes.
+- [ ] `deno task lint` passes.
+- [ ] `deno task lint:doc` returns zero warnings.
+- [ ] New exports have runnable `@example` in JSDoc.
+- [ ] New configuration fields are added to the corresponding JSON Schema in `schema/`.
+
+````
+
+---
+
+## File: `docs/topology-denobuild.md`
+
+````md
+# Execution Topology: `denobuild` (Deno.bundle Orchestrator)
+
+This document describes the complete execution topology of the **`denobuild`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
+
+---
+
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -915,41 +509,41 @@ Este documento descreve a topologia completa de execução de funções do utili
 denoBuildCli() (packages/utils/src/denobuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigDenoBuild(caminhoConfig, baseDir)
+       ├──► carregarConfigDenoBuild(configPath, baseDir)
        │       │
-       │       └──► loadConfig<DenoBundleConfigFile>("denobuild", caminhoConfig, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │       └──► loadConfig<DenoBundleConfigFile>("denobuild", configPath, baseDir)
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        ├──► parseArgs(args, configs)
        │
        ▼
-denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
+denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
        │
        ├──► updateProjectVersion({ denoJsonPath, baseDir, noversion, versionPaths, forcepackagesversion })
        │       │
        │       ├──► readProjectVersion(denoJsonPath, baseDir)
        │       └──► syncVersion(...) / formatVersion(...)
        │
-       └──► [Loop para cada Target Selecionado]
+       └──► [Loop for each Selected Target]
                │
                ▼
        processBundleTarget(targetName, config, appVersion, listAssetsFn)
                │
                ├──► validateTargetConfig(targetName, config)
                │
-               ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► [Itera config.clean.includes/excludes]
+               ├──► cleanTarget(config.distdir, config.clean) [if configured]
+               │       └──► [Iterate config.clean.includes/excludes]
                │
                ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
                │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │
-               ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
+               ├──► listAssetsForCache(config.distdir) [if defineAssetsString configured]
                │
                ├──► buildBundleOptions(config) (packages/utils/src/denobuild/bundle.ts)
                │       └──► resolveEntryPoints(config.srcdir, config.entryPoints)
                │
-               ├──► Deno.bundle(bundleOptions) [API Nativa do Deno]
+               ├──► Deno.bundle(bundleOptions) [Native Deno API]
                │
-               └──► [Loop para cada arquivo em result.outputFiles]
+               └──► [Loop for each file in result.outputFiles]
                        │
                        ├──► ensureDirForFile(outputFile.path)
                        ├──► applyDefines(content, defines) (packages/utils/src/denobuild/bundle.ts)
@@ -958,24 +552,24 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `denoBuildCli()`
-* **Arquivo**: `packages/utils/src/denobuild/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
-* **Ações**:
-  1. Localiza configuração do Deno via `findDenoConfig()`.
-  2. Executa `carregarConfigDenoBuild(caminhoConfig, baseDir)` para ler `denobuild.jsonc`.
-  3. Filtra argumentos com `parseArgs(args, configs)`.
-  4. Chama `denoBuild(opcoes)`.
+### Step 1: CLI Initialization
+* **Function**: `denoBuildCli()`
+* **File**: `packages/utils/src/denobuild/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
+* **Actions**:
+  1. Locates Deno configuration via `findDenoConfig()`.
+  2. Executes `carregarConfigDenoBuild(configPath, baseDir)` to read `denobuild.jsonc`.
+  3. Filters arguments with `parseArgs(args, configs)`.
+  4. Calls `denoBuild(options)`.
 
-### Passo 2: Orquestração Principal do Engine
-* **Função**: `denoBuild(opcoes: DenoBuildOptions)`
-* **Arquivo**: `packages/utils/src/denobuild/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Main Engine Orchestration
+* **Function**: `denoBuild(options: DenoBuildOptions)`
+* **File**: `packages/utils/src/denobuild/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: DenoBundleGlobalConfig;
     targets?: string[];
     baseDir?: string;
@@ -985,74 +579,74 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
     forcepackagesversion?: boolean;
   }
   ```
-* **Ações**:
-  1. `updateProjectVersion(...)`: Atualiza ou mantém versão semântica e sincroniza pacotes.
-  2. Filtra a lista de alvos a serem compilados preservando a ordem declarada na configuração.
-  3. Itera sobre cada alvo executando `processBundleTarget(...)`.
-  4. Agrega e retorna a lista de `DenoBuildResult[]`.
+* **Actions**:
+  1. `updateProjectVersion(...)`: Updates or maintains semantic version and synchronizes packages.
+  2. Filters the list of targets to be compiled, preserving the order declared in the configuration.
+  3. Iterates over each target executing `processBundleTarget(...)`.
+  4. Aggregates and returns the list of `DenoBuildResult[]`.
 
-### Passo 3: Processamento e Pós-processamento do Alvo
-* **Função**: `processBundleTarget(targetName, config, appVersion, listAssetsFn)`
-* **Arquivo**: `packages/utils/src/denobuild/engine.ts`
-* **Parâmetros de Entrada**:
-  - `targetName: string`: Nome do alvo (ex: `"ui"`, `"sw"`)
-  - `config: DenoBundleTargetConfig`: Configuração específica do alvo
-  - `appVersion: string`: Versão semântica injetada
-  - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utilitário para coletar assets do cache
-* **Ações e Subfunções**:
-  1. `validateTargetConfig(targetName, config)`: Validação estrutural prévia.
-  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída baseada em `includes`/`excludes` antes do build.
-  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
-  4. Preparação de constantes `defines` em memória:
+### Step 3: Target Processing and Post-processing
+* **Function**: `processBundleTarget(targetName, config, appVersion, listAssetsFn)`
+* **File**: `packages/utils/src/denobuild/engine.ts`
+* **Input Parameters**:
+  - `targetName: string`: Target name (e.g., `"ui"`, `"sw"`)
+  - `config: DenoBundleTargetConfig`: Specific target configuration
+  - `appVersion: string`: Injected semantic version
+  - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utility to collect cache assets
+* **Actions and Sub-functions**:
+  1. `validateTargetConfig(targetName, config)`: Structural validation.
+  2. `cleanTarget(distdir, clean)`: Cleanup of output directories based on `includes`/`excludes` before the build.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Recursive copy via `copyFiles` with glob support and version injection in `manifest.json`.
+  4. Memory preparation of `defines` constants:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
-     - `defineAssetsString = JSON.stringify(assets)` (se configurado). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` (incluindo arquivos estáticos copiados no passo anterior) para estratégias de caching offline.
+     - `defineAssetsString = JSON.stringify(assets)` (if configured). This injection allows the generated Service Worker to have dynamic knowledge of all assets in `distdir` (including static files copied in the previous step) for offline caching strategies.
   5. `buildBundleOptions(config)` (`packages/utils/src/denobuild/bundle.ts`):
-     - Monta o objeto de opções esperado pela API instável `Deno.bundle`.
-     - Mapeia entry points, target de plataforma (`browser`/`deno`), formato (`esm`/`cjs`/`iife`), sourcemap e minify.
+     - Builds the options object expected by the unstable `Deno.bundle` API.
+     - Maps entry points, platform target (`browser`/`deno`), format (`esm`/`cjs`/`iife`), sourcemap, and minify.
   6. `Deno.bundle(bundleOptions)`:
-     - Invoca o compilador nativo do Deno para gerar os arquivos empacotados em memória (`result.outputFiles`).
-     - Em caso de erros, exibe o traceback com linha/coluna e lança exceção.
-  7. Gravação e Injeção de Defines em Disco:
-     - Itera sobre cada `outputFile` gerado pelo bundle.
-     - `ensureDirForFile(outputFile.path)`: Cria pastas pai no disco.
-     - `applyDefines(content, defines)` (`packages/utils/src/denobuild/bundle.ts`): Realiza a substituição global via Regex das chaves literais (ex: `__APP_VERSION__`) pelo valor JSON.
-     - `Deno.writeTextFile(outputFile.path, content)`: Grava o arquivo final em disco.
+     - Invokes the native Deno compiler to generate bundled files in memory (`result.outputFiles`).
+     - In case of errors, displays traceback with line/column and throws an exception.
+  7. Disk Recording and Define Injection:
+     - Iterates over each `outputFile` generated by the bundle.
+     - `ensureDirForFile(outputFile.path)`: Creates parent folders on disk.
+     - `applyDefines(content, defines)` (`packages/utils/src/denobuild/bundle.ts`): Performs global regex substitution of literal keys (e.g., `__APP_VERSION__`) with JSON values.
+     - `Deno.writeTextFile(outputFile.path, content)`: Writes the final file to disk.
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `denoBuildCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
-| `carregarConfigDenoBuild()` | `denoBuildCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | Leitura do sistema de arquivos (`denobuild.jsonc`) |
-| `denoBuild()` | `denoBuildCli` / API | `opcoes: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Atualização de versões e compilação de bundles |
-| `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Limpeza de dist, cópia estática, bundle, escrita no disco |
-| `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Resolução de caminhos e mapeamento de propriedades |
-| `applyDefines()` | `processBundleTarget` | `content: string`, `defines: Record<string, string>` | `string` | Substituição em memória de identificadores literais |
+| `denoBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
+| `carregarConfigDenoBuild()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
+| `denoBuild()` | `denoBuildCli` / API | `options: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Version updates and bundle compilation |
+| `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Cleanup, static copy, bundle, disk writing |
+| `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Path resolution and property mapping |
+| `applyDefines()` | `processBundleTarget` | `content: string`, `defines: Record<string, string>` | `string` | Memory substitution of literal identifiers |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Substituição de Defines por AST vs Regex**: O `applyDefines` opera via expressão regular textual. Para evitar falsos positivos dentro de strings literais ou comentários de código, pode-se avaliar substituição contextual ou tokenizada.
-2. **Dependência de API Unstable**: `Deno.bundle` é uma feature instável do Deno. A estrutura modular do engine isola essa dependência em `packages/utils/src/denobuild/bundle.ts`, facilitando futura migração ou compatibilização com versões Deno 2.x.
-3. **Reutilização de Utilitários de Ordenação**: Padronizar `resolverOrdemTargets` (utilizado no `esbuild`) também no `denoBuild` para manter exatamente o mesmo comportamento determinístico de alvos.
+1. **Defines Substitution via AST vs Regex**: `applyDefines` operates via textual regular expression. To avoid false positives within literal strings or code comments, contextual or tokenized substitution can be evaluated.
+2. **Unstable API Dependency**: `Deno.bundle` is an unstable Deno feature. The engine's modular structure isolates this dependency in `packages/utils/src/denobuild/bundle.ts`, facilitating future migration or compatibility with Deno 2.x versions.
+3. **Target Ordering Utility Reuse**: Standardize `resolverOrdemTargets` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.
 
 ````
 
 ---
 
-## Arquivo: `docs/topology-esbuild.md`
+## File: `docs/topology-esbuild.md`
 
 ````md
-# Topologia de Execução: `esbuild` (Orquestrador de Build)
+# Execution Topology: `esbuild` (Build Orchestrator)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`esbuild`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`esbuild`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -1061,80 +655,80 @@ Este documento descreve a topologia completa de execução de funções do utili
 esBuildCli() (packages/utils/src/esbuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigEsbuild(caminhoConfig, baseDir)
+       ├──► carregarConfigEsbuild(configPath, baseDir)
        │       │
-       │       └──► loadConfig<EsbuildConfigFile>("esbuild", caminhoConfig, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │       └──► loadConfig<EsbuildConfigFile>("esbuild", configPath, baseDir)
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        ├──► parseArgs(args, configs)
        │
        ▼
-esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
+esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
        │
        ├──► updateProjectVersion({ denoJsonPath, baseDir, noversion, versionPaths, forcepackagesversion })
        │       │
        │       ├──► readProjectVersion(denoJsonPath, baseDir)
        │       │       └──► parseVersion(rawVersion)
-       │       ├──► incrementProjectVersion({ baseDir, denoJsonPath, currentVersion, buildHash }) [Se noversion=false]
+       │       ├──► incrementProjectVersion({ baseDir, denoJsonPath, currentVersion, buildHash }) [If noversion=false]
        │       │       ├──► readProjectVersion(...)
        │       │       ├──► parseVersion(...) / formatVersion(...)
        │       │       └──► replaceVersionInContent(...) -> Deno.writeTextFile(...)
-       │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [Se forcepackagesversion=true]
-       │               └──► [Itera workspaces] -> syncWorkspaceDir(...)
+       │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [If forcepackagesversion=true]
+       │               └──► [Iterate workspaces] -> syncWorkspaceDir(...)
        │
        ├──► resolverOrdemTargets(configs, targets)
        │
-       └──► [Loop para cada Target Selecionado]
+       └──► [Loop for each Selected Target]
                │
                ▼
        processTarget(targetName, targetConfig, appVersion, esbuildBuildFn, listAssetsFn)
                │
                ├──► validateTargetConfig(targetName, config)
                │
-               ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► [Itera config.clean.includes/excludes]
+               ├──► cleanTarget(config.distdir, config.clean) [if configured]
+               │       └──► [Iterate config.clean.includes/excludes]
                │               └──► Deno.remove(...) / emptyDir(...)
                │
                ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
                │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │               ├──► expandGlob(includes, { root: basedir, exclude: excludes })
                │               ├──► replaceVersionInFile(manifest.json, appVersion)
-               │               └──► Log "index.html copiado" [se index.html detectado]
+               │               └──► Log "index.html copied" [if index.html detected]
                │
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
-               │       ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
+               │       ├──► listAssetsForCache(config.distdir) [if defineAssetsString configured]
                │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
                │       ├──► resolveOutputPaths(config)
-               │       └──► [Mapeia opções avançadas: jsx, minify, mangle, analyze, etc.]
+               │       └──► [Maps advanced options: jsx, minify, mangle, analyze, etc.]
                │
                ├──► esbuildBuildFn(esbuildOptions) -> buildWithDenoPlugin(options, denoJsoncPath)
                │       ├──► denoPlugin({ configPath: denoJsoncPath })
                │       └──► esbuild.build(options)
                │
-               ├──► Deno.writeTextFile(metafilePath, ...) [se metafile: true ou analyze configurado]
+               ├──► Deno.writeTextFile(metafilePath, ...) [if metafile: true or analyze configured]
                │
-               └──► esbuild.analyzeMetafile(result.metafile) [se analyze: true ou "verbose"]
+               └──► esbuild.analyzeMetafile(result.metafile) [if analyze: true or "verbose"]
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `esBuildCli()`
-* **Arquivo**: `packages/utils/src/esbuild/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
-* **Ações**:
-  1. `findDenoConfig()`: Procura `deno.jsonc` ou `deno.json` nos diretórios raiz/parentes.
-  2. `carregarConfigEsbuild(caminhoConfig, baseDir)`: Carrega e valida o arquivo de configuração (ou devolve `CONFIGURACOES_PADRAO`).
-  3. `parseArgs(args, configs)`: Filtra os alvos solicitados pelo usuário contra as chaves declaradas na configuração.
-  4. Chama `esBuild(opcoes)`.
+### Step 1: CLI Initialization
+* **Function**: `esBuildCli()`
+* **File**: `packages/utils/src/esbuild/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
+* **Actions**:
+  1. `findDenoConfig()`: Looks for `deno.jsonc` or `deno.json` in root/parent directories.
+  2. `carregarConfigEsbuild(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
+  3. `parseArgs(args, configs)`: Filters targets requested by the user against those declared in the config.
+  4. Calls `esBuild(options)`.
 
-### Passo 2: Orquestração Principal do Engine
-* **Função**: `esBuild(opcoes: EsbuildOptions)`
-* **Arquivo**: `packages/utils/src/esbuild/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Main Engine Orchestration
+* **Function**: `esBuild(options: EsbuildOptions)`
+* **File**: `packages/utils/src/esbuild/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: GlobalTargetConfig;
     targets?: string[];
     baseDir?: string;
@@ -1144,89 +738,89 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
     forcepackagesversion?: boolean;
   }
   ```
-* **Ações**:
+* **Actions**:
   1. `updateProjectVersion(...)`:
-     - Lê a versão de `deno.jsonc`.
-     - Invoca `incrementProjectVersion(...)` para elevar a versão de patch (se `noversion === false`).
-     - Invoca `syncWorkspaces(...)` para propagar a versão em pacotes do workspace (se `forcepackagesversion === true`).
-     - Sincroniza a nova versão em arquivos adicionais (`versionPaths`).
-     - Retorna a `finalVersion` (string semântica, ex: `"0.3.14"`).
+     - Reads the version from `deno.jsonc`.
+     - Invokes `incrementProjectVersion(...)` to bump the patch version (if `noversion === false`).
+     - Invokes `syncWorkspaces(...)` to propagate the version across workspace packages (if `forcepackagesversion === true`).
+     - Synchronizes the new version in additional files (`versionPaths`).
+     - Returns `finalVersion` (semantic string, e.g., `"0.3.14"`).
   2. `resolverOrdemTargets(configs, targets)`:
-     - Garante estritamente que a ordem de execução dos alvos respeite a ordem de declaração no arquivo de configuração, ignorando alvos inexistentes e selecionando os alvos com `default !== false` caso nenhum tenha sido explicitado na CLI.
-  3. Itera sobre cada alvo resolvido e invoca `processTarget(...)`.
+     - Strictly ensures target execution order respects the configuration file declaration, ignoring non-existent targets and selecting those with `default !== false` if none were specified via CLI.
+  3. Iterates over each resolved target and invokes `processTarget(...)`.
 
-### Passo 3: Processamento do Alvo Individual
-* **Função**: `processTarget(targetName, config, appVersion, esbuildBuildFn, listAssetsFn)`
-* **Arquivo**: `packages/utils/src/esbuild/engine.ts`
-* **Parâmetros de Entrada**:
-  - `targetName: string` (ex: `"ui"`, `"sw"`)
-  - `config: TargetConfig` (opções do alvo específico)
-  - `appVersion: string` (ex: `"0.3.14"`)
-  - `esbuildBuildFn: (options) => Promise<any>` (closure com `buildWithDenoPlugin`)
-  - `listAssetsFn: (distDir) => Promise<string[]>` (utilitário `listAssetsForCache`)
-* **Ações e Subfunções**:
+### Step 3: Individual Target Processing
+* **Function**: `processTarget(targetName, config, appVersion, esbuildBuildFn, listAssetsFn)`
+* **File**: `packages/utils/src/esbuild/engine.ts`
+* **Input Parameters**:
+  - `targetName: string` (e.g., `"ui"`, `"sw"`)
+  - `config: TargetConfig` (specific target options)
+  - `appVersion: string` (e.g., `"0.3.14"`)
+  - `esbuildBuildFn: (options) => Promise<any>` (closure with `buildWithDenoPlugin`)
+  - `listAssetsFn: (distDir) => Promise<string[]>` (`listAssetsForCache` utility)
+* **Actions and Sub-functions**:
   1. `validateTargetConfig(targetName, config)` (`packages/utils/src/tools/validate.ts`):
-     - Valida campos obrigatórios (`entryPoints`, regras de `outfile`/`outdir`).
-     - Lança erro imediato (fail-fast) se a configuração for inválida.
+     - Validates required fields (`entryPoints`, `outfile`/`outdir` rules).
+     - Throws immediate error (fail-fast) if the configuration is invalid.
   2. `cleanTarget(config.distdir, config.clean)` (`packages/utils/src/tools/paths.ts`):
-     - Esvazia ou remove caminhos especificados em `config.clean.includes` e `config.clean.excludes` dentro de `distdir`.
+     - Empties or removes paths specified in `config.clean.includes` and `config.clean.excludes` within `distdir`.
   3. `copyStaticFiles(config, appVersion, baseDir, distDir)` (`packages/utils/src/tools/paths.ts`):
-     - Executa a cópia recursiva de arquivos baseada no array `config.copyFiles`.
-     - Utiliza `expandGlob` com suporte a `includes`, `excludes` e `basedir` personalizado.
-     - Se o arquivo for `manifest.json`, injeta a versão da aplicação.
-     - Detecta `index.html` para log de console.
+     - Executes recursive file copying based on the `config.copyFiles` array.
+     - Uses `expandGlob` with support for `includes`, `excludes`, and custom `basedir`.
+     - If the file is `manifest.json`, injects the application version.
+     - Detects `index.html` for console logging.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
-     - Monta o dicionário de `define` com `__APP_VERSION__`.
-     - Se `config.defineAssetsString` estiver configurado, executa `listAssetsFn(distdir)` e injeta a constante correspondente. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída (incluindo arquivos estáticos copiados no passo anterior), sendo ideal para automatizar a lista de pré-cache em Service Workers.
-     - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
-     - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
-      - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
-     - Formata `banner` e `footer` com substituição de versão.
+     - Assembles the `define` dictionary with `__APP_VERSION__`.
+     - If `config.defineAssetsString` is set, executes `listAssetsFn(distdir)` and injects the corresponding constant. This constant contains a JSON array with all file paths in the output directory (including static files copied in the previous step), ideal for automating the pre-cache list in Service Workers.
+     - `resolveEntryPoints(srcdir, entryPoints)`: Ensures safe path resolution and existence of entry files.
+     - `resolveOutputPaths(config)`: Resolves `outfile` / `outdir` relative to `distdir`.
+     - Maps advanced options (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
+     - Formats `banner` and `footer` with version substitution.
   5. `buildWithDenoPlugin(esbuildOptions, denoJsoncPath)`:
-     - Anexa a instância do `@deno/esbuild-plugin`.
-     - Chama `esbuild.build(options)` nativo.
-  6. Se `config.metafile === true` ou `config.analyze` estiver ativado, salva o arquivo `${targetName}-metafile.json` no disco.
-  7. Se `config.analyze` estiver ativado, gera e imprime o relatório `analyzeMetafile` no console.
+     - Attaches the `@deno/esbuild-plugin` instance.
+     - Calls native `esbuild.build(options)`.
+  6. If `config.metafile === true` or `config.analyze` is enabled, saves the `${targetName}-metafile.json` file to disk.
+  7. If `config.analyze` is enabled, generates and prints the `analyzeMetafile` report to the console.
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `esBuildCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Leitura de CLI e saída no stdout |
-| `carregarConfigEsbuild()` | `esBuildCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | Leitura do sistema de arquivos (`esbuild.jsonc`) |
-| `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (alvos válidos) | Puro (sem I/O) |
-| `esBuild()` | `esBuildCli` / API | `opcoes: EsbuildOptions` | `Promise<EsbuildResult[]>` | Atualiza versões, compila alvos |
-| `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Grava novas versões em `deno.jsonc` e pacotes |
-| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `solicitados?: string[]` | `string[]` | Puro (ordenação e filtragem) |
-| `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Limpa pastas, copia static, compila bundle |
-| `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (lança erro se inválido) | Validação estrita (fail-fast) |
-| `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Leitura opcional de distdir para SW |
-| `buildWithDenoPlugin()` | `processTarget` | `options: any`, `denoJsoncPath: string` | `Promise<esbuild.BuildResult>` | Execução de compilação esbuild em memória/disco |
+| `esBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI reading and stdout output |
+| `carregarConfigEsbuild()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
+| `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (valid targets) | Pure (no I/O) |
+| `esBuild()` | `esBuildCli` / API | `options: EsbuildOptions` | `Promise<EsbuildResult[]>` | Updates versions, compiles targets |
+| `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Writes new versions to `deno.jsonc` and packages |
+| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
+| `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Cleans folders, copies static, compiles bundle |
+| `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (throws if invalid) | Strict validation (fail-fast) |
+| `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Optional reading of distdir for SW |
+| `buildWithDenoPlugin()` | `processTarget` | `options: any`, `denoJsoncPath: string` | `Promise<esbuild.BuildResult>` | Esbuild compilation execution |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Separação de Build do SW**: Como o Service Worker necessita da lista de assets gerados pelo alvo `ui`, a ordenação dos alvos na configuração é crítica (`ui` deve sempre rodar antes de `sw`).
-2. **Tipagem Unificada de Plugins**: O array `plugins` no `BuildOptions` atualmente aceita `any[]` para contornar variações de tipo entre `@deno/esbuild-plugin` e o typeset do esbuild.
-3. **Paralelização de Alvos Independentes**: Alvos que não compartilham dependência de assets poderiam ser executados em paralelo com `Promise.all` caso não haja conflito de escrita em `distdir`.
+1. **SW Build Separation**: Since the Service Worker needs the asset list generated by the `ui` target, target ordering in the configuration is critical (`ui` must always run before `sw`).
+2. **Unified Plugin Typing**: The `plugins` array in `BuildOptions` currently accepts `any[]` to bypass type variations between `@deno/esbuild-plugin` and esbuild's typeset.
+3. **Independent Target Parallelization**: Targets that do not share asset dependencies could be executed in parallel using `Promise.all` if there is no disk writing conflict in `distdir`.
 
 ````
 
 ---
 
-## Arquivo: `docs/topology-export.md`
+## File: `docs/topology-export.md`
 
 `````md
-# Topologia de Execução: `export` (Exportador de Contexto)
+# Execution Topology: `export` (Context Exporter)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`export`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`export`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -1235,65 +829,65 @@ Este documento descreve a topologia completa de execução de funções do utili
 exportCli() (packages/utils/src/export/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigExport(caminhoConfig, baseDir) (packages/utils/src/export/config.ts)
+       ├──► carregarConfigExport(configPath, baseDir) (packages/utils/src/export/config.ts)
        │       │
-       │       └──► loadConfig<ExportConfigFile>("export", caminhoConfig, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │       └──► loadConfig<ExportConfigFile>("export", configPath, baseDir)
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        │
        ▼
-exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
+exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
-       ├──► resolverOrdemTargets(configs, opcoes.modos)
+       ├──► resolverOrdemTargets(configs, options.modos)
        │
-       └──► [Loop para cada Modo Selecionado]
+       └──► [Loop for each Selected Mode]
                │
                ▼
-       exportarModo(modo, config, opcoes)
+       exportarModo(modo, config, options)
                │
                ├──► coletarArquivosParaExportacao(config, baseDir)
                │       │
-               │       └──► expandGlob(padrao, { root, exclude })
-               │               ├──► normalizarCaminho(caminhoRelativo)
-               │               └──► correspondeGlobs(caminhoRelativo, config.excludes)
+               │       └──► expandGlob(pattern, { root, exclude })
+               │               ├──► normalizarCaminho(relative_path)
+               │               └──► correspondeGlobs(relative_path, config.excludes)
                │
-               ├──► ensureDirForFile(caminhoSaida)
+               ├──► ensureDirForFile(outputPath)
                │
-               ├──► Deno.open(caminhoSaida, { write, create, truncate }) [Streaming O(1)]
+               ├──► Deno.open(outputPath, { write, create, truncate }) [Streaming O(1)]
                │       │
-               │       ├──► writer.write(encoder.encode(gerarCabecalho(config, modo, versaoApp)))
+               │       ├──► writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))
                │       │
-               │       └──► [Loop para cada arquivo coletado]
+               │       └──► [Loop for each collected file]
                │               │
-               │               ├──► Deno.readTextFile(caminhoCompleto)
-               │               ├──► formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)
-               │               │       ├──► mapearExtensao(caminhoRelativo)
-               │               │       └──► calcularCraseWrapper(conteudoArquivo)
-               │               └──► writer.write(encoder.encode(blocoMarkdown))
+               │               ├──► Deno.readTextFile(fullPath)
+               │               ├──► formatarArquivoMarkdown(relative_path, fileContent)
+               │               │       ├──► mapearExtensao(relative_path)
+               │               │       └──► calcularCraseWrapper(fileContent)
+               │               └──► writer.write(encoder.encode(markdownBlock))
                │
                └──► writer.close()
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `exportCli()`
-* **Arquivo**: `packages/utils/src/export/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modos...:string]`).
-* **Ações**:
-  1. Identifica o arquivo de configuração e diretório base.
-  2. Executa `carregarConfigExport(caminhoConfig, baseDir)` para ler `export.jsonc` ou carregar o fallback padrão (`ui`, `docs`, `server`, `utils`).
-  3. Coleta os modos passados via argumentos posicionais.
-  4. Chama `exportEngine(opcoes)`.
+### Step 1: CLI Initialization
+* **Function**: `exportCli()`
+* **File**: `packages/utils/src/export/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modos...:string]`).
+* **Actions**:
+  1. Identifies the configuration file and base directory.
+  2. Executes `carregarConfigExport(configPath, baseDir)` to read `export.jsonc` or load the default fallback (`ui`, `docs`, `server`, `utils`).
+  3. Collects modes passed via positional arguments.
+  4. Calls `exportEngine(options)`.
 
-### Passo 2: Orquestração Principal do Engine
-* **Função**: `exportEngine(opcoes: ExportOptions)`
-* **Arquivo**: `packages/utils/src/export/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Main Engine Orchestration
+* **Function**: `exportEngine(options: ExportOptions)`
+* **File**: `packages/utils/src/export/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: Record<string, ExportConfig>;
     modos?: string[];
     baseDir?: string;
@@ -1302,68 +896,68 @@ exportEngine(opcoes: ExportOptions) (packages/utils/src/export/engine.ts)
     denoJsoncPath?: string;
   }
   ```
-* **Ações**:
-  1. Determina a versão da aplicação via `readProjectVersion(denoJsoncPath, baseDir)`.
-  2. Executa `resolverOrdemTargets(configs, opcoes.modos)` para filtrar e ordenar estritamente os modos. Se nenhum foi passado explicitamente, filtra aqueles com `default !== false`.
-  3. Itera sequencialmente sobre cada modo executando `exportarModo(...)`.
-  4. Retorna a lista de `ExportResult[]` com contagem de arquivos e total de bytes gravados.
+* **Actions**:
+  1. Determines the application version via `readProjectVersion(denoJsoncPath, baseDir)`.
+  2. Executes `resolverOrdemTargets(configs, options.modos)` to strictly filter and order modes. If none were passed explicitly, filters those with `default !== false`.
+  3. Sequentially iterates over each mode executing `exportarModo(...)`.
+  4. Returns the list of `ExportResult[]` with file count and total bytes written.
 
-### Passo 3: Processamento do Modo com `expandGlob` e Stream de Escrita
-* **Função**: `exportarModo(modo, config, opcoes)`
-* **Arquivo**: `packages/utils/src/export/engine.ts`
-* **Parâmetros de Entrada**:
-  - `modo: string`: Nome do modo (ex: `"ui"`, `"docs"`)
-  - `config: ExportConfig`: Configuração detalhada do modo contendo `includes: string[]` e opcionalmente `excludes?: string[]`
-  - `opcoes?: { versaoApp?, baseDir?, silencioso?, denoJsoncPath? }`
-* **Ações e Subfunções**:
+### Step 3: Mode Processing with `expandGlob` and Write Stream
+* **Function**: `exportarModo(modo, config, options)`
+* **File**: `packages/utils/src/export/engine.ts`
+* **Input Parameters**:
+  - `modo: string`: Mode name (e.g., `"ui"`, `"docs"`)
+  - `config: ExportConfig`: Detailed mode configuration containing `includes: string[]` and optionally `excludes?: string[]`
+  - `options?: { versaoApp?, baseDir?, silencioso?, denoJsoncPath? }`
+* **Actions and Sub-functions**:
   1. `coletarArquivosParaExportacao(config, baseDir)`:
-     - Itera sobre cada padrão glob em `config.includes` chamando `expandGlob(padrao, { root: baseDir, exclude: config.excludes, includeDirs: false })`.
-     - Aplica proteção anti-looping (`exports/`, `snapshots/`) e deduplica em um `Set<string>`.
-     - Retorna array ordenado alfabeticamente para gerar snapshots determinísticos.
-  2. Abertura do Stream de Escrita:
-     - `ensureDirForFile(caminhoSaida)`: Cria pastas pai no disco.
-     - `Deno.open(caminhoSaida, { write: true, create: true, truncate: true })`: Inicializa o arquivo para streaming.
-     - `writer.write(encoder.encode(gerarCabecalho(config, modo, versaoApp)))`: Grava o cabeçalho gerado por `gerarCabecalho(...)`.
-  3. Processamento Individual de Arquivos:
-     - Para cada arquivo coletado, lê via `Deno.readTextFile(caminhoCompleto)`.
-     - `formatarArquivoMarkdown(caminhoRelativo, conteudoArquivo)`:
-       - `mapearExtensao(ext)`: Mapeia extensões especiais (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(conteudo)`: Calcula dinamicamente a quantidade de crases (``` ou mais) para garantir que o code block seja válido.
-     - `writer.write(encoder.encode(blocoMarkdown))`: Envia o bloco Markdown diretamente para o stream em disco.
-  4. Finalização:
-     - `writer.close()`: Garante o fechamento limpo do arquivo.
+     - Iterates over each glob pattern in `config.includes` calling `expandGlob(pattern, { root: baseDir, exclude: config.excludes, includeDirs: false })`.
+     - Applies anti-loop protection (`exports/`, `snapshots/`) and deduplicates in a `Set<string>`.
+     - Returns an alphabetically sorted array for deterministic snapshots.
+  2. Opening the Write Stream:
+     - `ensureDirForFile(outputPath)`: Creates parent folders on disk.
+     - `Deno.open(outputPath, { write: true, create: true, truncate: true })`: Initializes the file for streaming.
+     - `writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))`: Writes the header generated by `gerarCabecalho(...)`.
+  3. Individual File Processing:
+     - For each collected file, reads via `Deno.readTextFile(fullPath)`.
+     - `formatarArquivoMarkdown(relative_path, fileContent)`:
+       - `mapearExtensao(ext)`: Maps special extensions (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
+       - `calcularCraseWrapper(content)`: Dynamically calculates the number of backticks (``` or more) to ensure the code block is valid.
+     - `writer.write(encoder.encode(markdownBlock))`: Sends the Markdown block directly to the disk stream.
+  4. Finalization:
+     - `writer.close()`: Ensures a clean file closure.
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `exportCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
-| `carregarConfigExport()` | `exportCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | Leitura do sistema de arquivos (`export.jsonc`) |
-| `exportEngine()` | `exportCli` / API | `opcoes: ExportOptions` | `Promise<ExportResult[]>` | Orquestração de exportação |
-| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `opcoes?` | `Promise<ExportResult>` | Varredura otimizada e streaming para disco |
-| `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Varredura com `expandGlob` e ordenação alfabética |
-| `correspondeGlobs()` | `formatter` / `engine` | `caminho: string`, `padroes: string[]` | `boolean` | Avaliação de regex gerada via `globToRegExp` |
-| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `versaoApp: string`, `defineVersionString?: string` | `string` | Formatação de string Markdown em memória |
-| `formatarArquivoMarkdown()` | `exportarModo` | `caminho: string`, `conteudo: string` | `string` | Formatação com code fence e syntax highlight |
-| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `conteudo: string` | `string` (ex: ```` ``` ```` ou ```` ```` ````) | Escape dinâmico de crases Markdown |
-| `mapearExtensao()` | `formatarArquivoMarkdown` | `extensao: string` | `string` (linguagem de highlight) | Normalização de highlight de sintaxe |
+| `exportCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
+| `carregarConfigExport()` | `exportCli` | `configPath?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | File system reading (`export.jsonc`) |
+| `exportEngine()` | `exportCli` / API | `options: ExportOptions` | `Promise<ExportResult[]>` | Export orchestration |
+| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `options?` | `Promise<ExportResult>` | Optimized scanning and disk streaming |
+| `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Scanning with `expandGlob` and alphabetical sorting |
+| `correspondeGlobs()` | `formatter` / `engine` | `path: string`, `patterns: string[]` | `boolean` | Regex evaluation generated via `globToRegExp` |
+| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `appVersion: string`, `defineVersionString?: string` | `string` | Markdown string formatting in memory |
+| `formatarArquivoMarkdown()` | `exportarModo` | `path: string`, `content: string` | `string` | Formatting with code fence and syntax highlighting |
+| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `content: string` | `string` (e.g., ```` ``` ````) | Dynamic Markdown backtick escape |
+| `mapearExtensao()` | `formatarArquivoMarkdown` | `extension: string` | `string` (highlight language) | Syntax highlight normalization |
 
 `````
 
 ---
 
-## Arquivo: `docs/topology-sanitize-version.md`
+## File: `docs/topology-sanitize-version.md`
 
 ````md
-# Topologia de Execução: `sanitize-version`
+# Execution Topology: `sanitize-version`
 
-Este documento descreve a topologia de execução do utilitário **`sanitize-version`**, responsável por normalizar a versão no arquivo `deno.jsonc` para o formato estrito SemVer (`MAJOR.MINOR.PATCH`).
+This document describes the execution topology of the **`sanitize-version`** utility, responsible for normalizing the version in the `deno.jsonc` file to strict SemVer format (`MAJOR.MINOR.PATCH`).
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -1374,12 +968,12 @@ sanitizeVersionCli() (packages/utils/src/version/sanitize/cli.ts)
        ├──► findDenoConfig()
        │
        ▼
-sanitizeVersion(opcoes: SanitizeOptions) (packages/utils/src/version/sanitize/mod.ts)
+sanitizeVersionFile(options: SanitizeOptions) (packages/utils/src/version/sanitize/engine.ts)
        │
        ├──► Deno.readTextFile(denoJsonPath)
        ├──► parseJsonc(content)
        │
-       ├──► [Se version ausente]
+       ├──► [If version is missing]
        │       └──► version = "0.0.0"
        │
        ├──► parseVersion(version) (packages/utils/src/tools/version.ts)
@@ -1396,53 +990,53 @@ sanitizeVersion(opcoes: SanitizeOptions) (packages/utils/src/version/sanitize/mo
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `sanitizeVersionCli()`
-* **Arquivo**: `packages/utils/src/version/sanitize/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`[path:string]`).
-* **Ações**:
-  1. Resolve o caminho do `deno.jsonc` (padrão: `./deno.jsonc`).
-  2. Chama `sanitizeVersion({ denoJsonPath })`.
-  3. Exibe mensagem de sucesso com a versão normalizada.
+### Step 1: CLI Initialization
+* **Function**: `sanitizeVersionCli()`
+* **File**: `packages/utils/src/version/sanitize/cli.ts`
+* **Input**: CLI arguments via Cliffy (`[path:string]`).
+* **Actions**:
+  1. Resolves the `deno.jsonc` path (default: automatic search via `findDenoConfig`).
+  2. Calls `sanitizeVersionFile({ filePath })`.
+  3. Displays a success message with the normalized version.
 
-### Passo 2: Normalização da Versão
-* **Função**: `sanitizeVersion(opcoes)`
-* **Arquivo**: `packages/utils/src/version/sanitize/mod.ts`
-* **Ações**:
-  1. Lê o conteúdo do arquivo `deno.jsonc`.
-  2. Extrai o campo `version` atual.
-  3. Utiliza `parseVersion` para capturar apenas os componentes numéricos (ignorando sufixos git ou pré-release).
-  4. Formata a nova string de versão.
-  5. Substitui a versão no conteúdo original (preservando comentários e formatação JSONC).
-  6. Grava o arquivo de volta no disco.
+### Step 2: Version Normalization
+* **Function**: `sanitizeVersionFile(options)`
+* **File**: `packages/utils/src/version/sanitize/engine.ts`
+* **Actions**:
+  1. Reads the `deno.jsonc` file content.
+  2. Extracts the current `version` field.
+  3. Uses `parseVersion` to capture only numeric components (ignoring git suffixes or pre-releases).
+  4. Formats the new version string.
+  5. Replaces the version in the original content (preserving JSONC comments and formatting).
+  6. Writes the file back to disk.
 
 ---
 
-## 3. Tabela Resumo
+## 3. Summary Table
 
-| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+| Function | Caller | Input | Return | Side Effect |
 |---|---|---|---|---|
-| `sanitizeVersionCli()` | Deno CLI | `Deno.args` | `void` | Log de console |
-| `sanitizeVersion()` | CLI / API | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
-| `parseVersion()` | `sanitizeVersion` | `string` | `ParsedVersion` | Puro |
-| `formatVersion()` | `sanitizeVersion` | `ParsedVersion` | `string` | Puro |
+| `sanitizeVersionCli()` | Deno CLI | `Deno.args` | `void` | Console log |
+| `sanitizeVersionFile()` | CLI / API | `SanitizeOptions` | `Promise<string>` | `deno.jsonc` writing |
+| `parseVersion()` | `sanitizeVersionFile` | `string` | `ParsedVersion` | Pure |
+| `formatVersion()` | `sanitizeVersionFile` | `ParsedVersion` | `string` | Pure |
 
 ````
 
 ---
 
-## Arquivo: `docs/topology-tag-version.md`
+## File: `docs/topology-tag-version.md`
 
 ````md
-# Topologia de Execução: `tag-version`
+# Execution Topology: `tag-version`
 
-Este documento descreve a topologia de execução do utilitário **`tag-version`**, que automatiza o ciclo de release git (commit, limpeza de tags e push).
+This document describes the execution topology of the **`tag-version`** utility, which automates the git release cycle (commit, tag cleanup, and push).
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -1453,73 +1047,73 @@ tagVersionCli() (packages/utils/src/version/tag/cli.ts)
        ├──► findDenoConfig()
        │
        ▼
-tagVersion(opcoes: TagOptions) (packages/utils/src/version/tag/mod.ts)
+tagVersionEngine(options: TagVersionOptions) (packages/utils/src/version/tag/engine.ts)
        │
-       ├──► [Se sanitize === true]
-       │       └──► sanitizeVersion({ denoJsonPath })
+       ├──► [If sanitize === true]
+       │       └──► sanitizeVersionFile({ filePath, baseDir })
        │
        ├──► readProjectVersion(denoJsonPath)
        │
        ├──► [Git Flow]
        │       ├──► git add -A
-       │       ├──► git commit -m "Versão vX.Y.Z"
+       │       ├──► git commit -m "Version vX.Y"
        │       ├──► git push
        │       │
        │       ├──► git tag -d vX.Y (local)
        │       ├──► git push origin :refs/tags/vX.Y (remote)
        │       │
-       │       ├──► git tag -a vX.Y -m "Release vX.Y.Z"
+       │       ├──► git tag -a vX.Y -m "Release vX.Y"
        │       └──► git push origin vX.Y
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `tagVersionCli()`
-* **Arquivo**: `packages/utils/src/version/tag/cli.ts`
-* **Entrada**: Argumentos CLI (`--no-sanitize`, `[path:string]`).
-* **Ações**:
-  1. Resolve o caminho do `deno.jsonc`.
-  2. Chama `tagVersion({ denoJsonPath, sanitize: true })`.
+### Step 1: CLI Initialization
+* **Function**: `tagVersionCli()`
+* **File**: `packages/utils/src/version/tag/cli.ts`
+* **Input**: CLI arguments (`-s/--sanitize`, `-m/--message`, etc.).
+* **Actions**:
+  1. Resolves the `deno.jsonc` path.
+  2. Calls `tagVersionEngine(options)`.
 
-### Passo 2: Orquestração do Release Git
-* **Função**: `tagVersion(opcoes)`
-* **Arquivo**: `packages/utils/src/version/tag/mod.ts`
-* **Ações**:
-  1. Opcionalmente normaliza a versão no disco via `sanitizeVersion`.
-  2. Lê a versão atual do `deno.jsonc`.
-  3. Executa uma sequência de comandos `git` usando `Deno.Command`:
-     - **Commit**: Adiciona todas as mudanças e cria um commit com a versão.
-     - **Push**: Envia o branch atual para o remoto.
-     - **Cleanup**: Remove tags anteriores do mesmo nível (MAJOR.MINOR) para garantir que a tag de release aponte sempre para o commit mais recente.
-     - **Tagging**: Cria uma nova tag anotada e envia para o origin com `--force`.
+### Step 2: Git Release Orchestration
+* **Function**: `tagVersionEngine(options)`
+* **File**: `packages/utils/src/version/tag/engine.ts`
+* **Actions**:
+  1. Optionally normalizes the version on disk via `sanitizeVersionFile`.
+  2. Reads the current version from `deno.jsonc`.
+  3. Executes a sequence of `git` commands using `runGit`:
+     - **Commit**: Adds all changes and creates a commit with the version.
+     - **Push**: Pushes the current branch to the remote.
+     - **Cleanup**: Removes previous tags at the same level (MAJOR.MINOR) to ensure the release tag always points to the latest commit.
+     - **Tagging**: Creates a new annotated tag and pushes it to origin with `--force`.
 
 ---
 
-## 3. Tabela Resumo
+## 3. Summary Table
 
-| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+| Function | Caller | Input | Return | Side Effect |
 |---|---|---|---|---|
-| `tagVersionCli()` | Deno CLI | `Deno.args` | `void` | Execução de comandos Git |
-| `tagVersion()` | CLI / API | `TagOptions` | `Promise<void>` | Mutação de estado Git local/remoto |
-| `sanitizeVersion()` | `tagVersion` | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
+| `tagVersionCli()` | Deno CLI | `Deno.args` | `void` | Git command execution |
+| `tagVersionEngine()` | CLI / API | `TagVersionOptions` | `Promise<TagVersionResult>` | Local/remote Git state mutation |
+| `sanitizeVersionFile()` | `tagVersionEngine` | `SanitizeOptions` | `Promise<string>` | `deno.jsonc` writing |
 
 ````
 
 ---
 
-## Arquivo: `docs/topology-watch.md`
+## File: `docs/topology-watch.md`
 
 ````md
-# Topologia de Execução: `watch` (Desenvolvimento Contínuo)
+# Execution Topology: `watch` (Continuous Development)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`watch`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`watch`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -1531,67 +1125,67 @@ watchCli() (packages/utils/src/watch/cli.ts)
        ├──► carregarConfigWatch(configPath, baseDir) (packages/utils/src/watch/config.ts)
        │       │
        │       └──► loadConfig<WatchConfigFile>("watch", configPath, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        │
        ▼
-watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
+watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
        │
-       ├──► [Resolução de Alvo Único: opcoes.target ou Primeiro 'default: true']
+       ├──► [Single Target Resolution: options.target or first 'default: true']
        │
        ├──► validateTargetConfig(targetName, targetConfig)
        │
        ├──► acquireWatchLock(baseDir, targetName, lockFile) (packages/utils/src/watch/lock.ts)
        │       │
        │       ├──► isProcessRunning(pid)
-       │       ├──► [Remoção de Lock Órfão / Rejeição se Processo Ativo]
-       │       ├──► Deno.writeTextFile(caminhoLock, JSON.stringify(LockInfo))
-       │       └──► [Registro de listeners para SIGINT, SIGTERM, unload]
+       │       ├──► [Orphan Lock Removal / Rejection if Process Active]
+       │       ├──► Deno.writeTextFile(lockPath, JSON.stringify(LockInfo))
+       │       └──► [Register listeners for SIGINT, SIGTERM, unload]
        │
-       ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [se configurado]
-       │       └──► [Itera targetConfig.clean.includes/excludes]
+       ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [if configured]
+       │       └──► [Iterate targetConfig.clean.includes/excludes]
        │
        ├──► copyStaticFiles(targetConfig, version, baseDir, distDir)
        │       └──► [Loop targetConfig.copyFiles: { includes, excludes, basedir }]
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
-       │       ├──► listAssetsForCache(targetConfig.distdir) [se defineAssetsString configurado]
+       │       ├──► listAssetsForCache(targetConfig.distdir) [if defineAssetsString configured]
        │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
        │       └──► resolveOutputPaths(config)
        │
        ├──► denoPlugin({ configPath: denoJsoncPath })
        │
-       ├──► esbuild.context(esbuildOptions) [Criação do Contexto Persistente]
+       ├──► esbuild.context(esbuildOptions) [Persistent Context Creation]
        │
-       ├──► ctx.watch() [Início do Monitoramento em Tempo Real]
+       ├──► ctx.watch() [Real-time Monitoring Start]
        │
-       └──► Retorna [WatchHandle] com { target, close: async () => { ctx.dispose(); releaseLock(); } }
+       └──► Returns [WatchHandle] with { target, close: async () => { ctx.dispose(); releaseLock(); } }
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI e Validação do Argumento
-* **Função**: `watchCli()`
-* **Arquivo**: `packages/utils/src/watch/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[target:string]`).
-* **Ações**:
-  1. Configuração do comando Cliffy com `.arguments("[target:string]")`. O próprio Cliffy rejeita a passagem de múltiplos argumentos posicionais com erro nativo (`Too many arguments: ...`).
-  2. `findDenoConfig()`: Localiza o arquivo de configuração do Deno.
-  3. `carregarConfigWatch(configPath, baseDir)`: Lê `watch.jsonc` ou devolve `CONFIGURACOES_PADRAO_WATCH`.
-  4. Repassa `target: target || undefined` para `watchEngine(opcoes)`.
-  5. Configura `Deno.addSignalListener("SIGINT" | "SIGTERM")` para encerramento gracioso via `handle.close()`.
-  6. Mantém o processo ativo em espera contínua (`await new Promise(() => {})`).
+### Step 1: CLI Initialization and Argument Validation
+* **Function**: `watchCli()`
+* **File**: `packages/utils/src/watch/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[target:string]`).
+* **Actions**:
+  1. Configures Cliffy command with `.arguments("[target:string]")`. Cliffy rejects multiple positional arguments with a native error (`Too many arguments: ...`).
+  2. `findDenoConfig()`: Locates Deno configuration file.
+  3. `carregarConfigWatch(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
+  4. Passes `target: target || undefined` to `watchEngine(options)`.
+  5. Configures `Deno.addSignalListener("SIGINT" | "SIGTERM")` for graceful shutdown via `handle.close()`.
+  6. Keeps process active in continuous wait (`await new Promise(() => {})`).
 
-### Passo 2: Resolução de Alvo e Controle de Concorrência
-* **Função**: `watchEngine(opcoes: WatchOptions)`
-* **Arquivo**: `packages/utils/src/watch/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Target Resolution and Concurrency Control
+* **Function**: `watchEngine(options: WatchOptions)`
+* **File**: `packages/utils/src/watch/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: WatchGlobalConfig;
     target?: string;
     baseDir?: string;
@@ -1600,57 +1194,57 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
     silencioso?: boolean;
   }
   ```
-* **Ações e Subfunções**:
-  1. `readProjectVersion(denoJsoncPath, baseDir)`: Lê a versão sem modificá-la nem incrementá-la (comportamento estrito do watch).
-  2. **Resolução de Alvo**:
-     - Se `opcoes.target` foi informado, busca o nome correspondente (case-insensitive). Se não existir, lança erro `Alvo '<target>' não encontrado...`.
-     - Se nenhum alvo for informado, seleciona **apenas o primeiro** alvo com `default !== false`.
-  3. `validateTargetConfig(targetName, targetConfig)`: Valida a integridade da configuração.
+* **Actions and Sub-functions**:
+  1. `readProjectVersion(denoJsoncPath, baseDir)`: Reads version without modifying or incrementing it (strict watch behavior).
+  2. **Target Resolution**:
+     - If `options.target` was provided, looks for corresponding name (case-insensitive). If not found, throws `Target '<target>' not found...`.
+     - If no target provided, selects **only the first** target with `default !== false`.
+  3. `validateTargetConfig(targetName, targetConfig)`: Validates configuration integrity.
   4. `acquireWatchLock(baseDir, targetName, lockFile)` (`packages/utils/src/watch/lock.ts`):
-     - Verifica a existência do arquivo de lock (`.buildit-watch.lock`).
-     - Se existir, extrai o PID do lock anterior e chama `isProcessRunning(pid)`.
-     - Se o processo anterior estiver ativo, lança erro `Já existe uma instância do watch em execução...` bloqueando concorrência.
-     - Se o processo anterior estiver morto (lock órfão), descarta o arquivo e prossegue.
-     - Grava o novo lock com PID atual, timestamp, alvo e caminho.
-     - Retorna a função de limpeza `releaseLock()`.
+     - Checks for lock file existence (`.buildit-watch.lock`).
+     - If exists, extracts PID and calls `isProcessRunning(pid)`.
+     - If active, throws `A watch instance is already running...` blocking concurrency.
+     - If dead (orphan lock), discards file and proceeds.
+     - Writes new lock with current PID, timestamp, target, and path.
+     - Returns `releaseLock()` cleanup function.
 
-### Passo 3: Inicialização do Motor esbuild Context
-* **Função**: `buildWatchEsbuildOptions` & `esbuild.context`
-* **Arquivo**: `packages/utils/src/watch/engine.ts`
-* **Ações e Subfunções**:
-  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída baseada em `includes`/`excludes`.
-  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
+### Step 3: esbuild Context Initialization
+* **Function**: `buildWatchEsbuildOptions` & `esbuild.context`
+* **File**: `packages/utils/src/watch/engine.ts`
+* **Actions and Sub-functions**:
+  1. `cleanTarget(distdir, clean)`: Cleans output folder based on `includes`/`excludes`.
+  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copies files based on `copyFiles` (glob support).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
-     - Define `__APP_VERSION__`.
-     - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
-     - Resolve entry points e saídas com sourcemap `inline` padrão.
-     - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
-  4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
-  5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.
-  6. `ctx.watch()`: Dispara os observadores do sistema de arquivos e compilação contínua em segundo plano.
-  7. Retorna o handle com o método `close()` que fecha o contexto (`ctx.dispose()`) e libera o arquivo de lock (`releaseLock()`).
+     - Defines `__APP_VERSION__`.
+     - Collects assets for cache if `defineAssetsString` is configured.
+     - Resolves entry points and outputs with default `inline` sourcemap.
+     - Maps advanced options.
+  4. Injects `denoPlugin({ configPath: denoJsoncPath })`.
+  5. `esbuild.context(esbuildOptions)`: Instantiates incremental esbuild context.
+  6. `ctx.watch()`: Starts file system observers and background continuous compilation.
+  7. Returns handle with `close()` method that closes context (`ctx.dispose()`) and releases lock file (`releaseLock()`).
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `watchCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI, captura de sinais, loop de vida |
-| `carregarConfigWatch()` | `watchCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | Leitura de `watch.jsonc` no disco |
-| `watchEngine()` | `watchCli` / API | `opcoes: WatchOptions` | `Promise<WatchHandle[]>` | Criação do Lock, inicialização de watcher incremental |
-| `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Criação de arquivo `.buildit-watch.lock`, registro de listeners |
-| `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | Verificação de PID via sinal 0 no SO |
-| `buildWatchEsbuildOptions()` | `watchEngine` | `targetName`, `config`, `version`, `listAssetsFn?` | `Promise<esbuild.BuildOptions>` | Mapeamento de entrypoints, sourcemap inline e defines |
-| `handle.close()` | `watchCli` / Testes | Nenhuma | `Promise<void>` | `ctx.dispose()` e `releaseLock()` |
+| `watchCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing, signal capture, life loop |
+| `carregarConfigWatch()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
+| `watchEngine()` | `watchCli` / API | `options: WatchOptions` | `Promise<WatchHandle[]>` | Lock creation, incremental watcher initialization |
+| `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Lock file creation, listener registration |
+| `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | PID check via signal 0 |
+| `buildWatchEsbuildOptions()` | `watchEngine` | `targetName`, `config`, `version`, `listAssetsFn?` | `Promise<esbuild.BuildOptions>` | Entrypoint mapping, inline sourcemap, and defines |
+| `handle.close()` | `watchCli` / Tests | None | `Promise<void>` | `ctx.dispose()` and `releaseLock()` |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Recarregamento de Static Files (Hot Copy)**: Atualmente `copyStaticFiles` é executado na inicialização. Um watcher complementar para a pasta `publicdir` permitiria recopiar automaticamente imagens ou assets modificados durante a sessão de desenvolvimento.
-2. **Notificação de Rebuild / Callback Hook**: Adicionar suporte a callbacks de hook (ex: `onRebuild(result)`) nas opções do `watchEngine` para integração com servidores de desenvolvimento que queiram emitir SSE ou WebSocket de recarga para o navegador.
-3. **Suporte a Multi-Target Paralelo com Isolamento de Lock**: Caso no futuro seja desejado monitorar múltiplos alvos simultâneos (ex: `ui` e `server` em paralelo), o mecanismo de lock pode evoluir para locks nomeados por alvo (`.buildit-watch-<target>.lock`).
+1. **Static Files Reload (Hot Copy)**: Currently `copyStaticFiles` runs at initialization. A complementary watcher for the `publicdir` folder would allow auto-copying modified images or assets during dev session.
+2. **Rebuild Notification / Callback Hook**: Add support for hook callbacks (e.g., `onRebuild(result)`) in `watchEngine` options for integration with dev servers emitting SSE/WebSocket reloads.
+3. **Parallel Multi-Target with Lock Isolation**: If monitoring multiple simultaneous targets is desired (e.g., `ui` and `server`), the lock mechanism can evolve to per-target named locks (`.buildit-watch-<target>.lock`).
 
 ````
 
