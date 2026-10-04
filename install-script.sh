@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-# ---------- Localizar .tool-versions ----------
-# Procura no diretório do script, depois sobe a árvore até a raiz
+# ---------- Locate .tool-versions ----------
+# Search in script directory, then check current directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 find_tool_versions() {
@@ -19,12 +19,12 @@ find_tool_versions() {
 
 TOOL_VERSIONS_FILE=""
 if TOOL_VERSIONS_FILE="$(find_tool_versions "$SCRIPT_DIR")"; then
-  echo "📄 Usando $TOOL_VERSIONS_FILE"
+  echo "📄 Using $TOOL_VERSIONS_FILE"
 else
-  echo "⚠️ .tool-versions não encontrado — instalará a versão mais recente" >&2
+  echo "⚠️ .tool-versions not found — installing latest version" >&2
 fi
 
-# ---------- Extrair versão do Deno ----------
+# ---------- Extract Deno version ----------
 DENO_VERSION=""
 if [ -n "$TOOL_VERSIONS_FILE" ]; then
   DENO_VERSION="$(awk '
@@ -33,20 +33,20 @@ if [ -n "$TOOL_VERSIONS_FILE" ]; then
   ' "$TOOL_VERSIONS_FILE")"
 fi
 
-# Normaliza: remove prefixo "v" se existir
+# Normalize: strip "v" prefix if present
 DENO_VERSION="${DENO_VERSION#v}"
 
-# Valida formato (apenas dígitos e pontos)
+# Validate format (digits and dots only)
 case "$DENO_VERSION" in
   ''|*[!0-9.]*)
     if [ -n "$DENO_VERSION" ]; then
-      echo "⚠️ Versão inválida em .tool-versions: '$DENO_VERSION'" >&2
+      echo "⚠️ Invalid version in .tool-versions: '$DENO_VERSION'" >&2
     fi
     DENO_VERSION=""
     ;;
 esac
 
-# ---------- PATH e detecção do Deno instalado ----------
+# ---------- PATH and installed Deno detection ----------
 export PATH="${HOME:-/root}/.deno/bin:/root/.deno/bin:/usr/local/bin:$PATH"
 
 INSTALLED_VERSION=""
@@ -54,22 +54,22 @@ if command -v deno >/dev/null 2>&1; then
   INSTALLED_VERSION="$(deno --version 2>/dev/null | head -n 1 | awk '{print $2}')"
 fi
 
-# ---------- Instalar / reinstalar se necessário ----------
+# ---------- Install / reinstall if needed ----------
 if [ -n "$DENO_VERSION" ]; then
   if [ "$INSTALLED_VERSION" = "$DENO_VERSION" ]; then
-    echo "✅ Deno $DENO_VERSION já instalado"
+    echo "✅ Deno $DENO_VERSION already installed"
   else
     if [ -n "$INSTALLED_VERSION" ]; then
-      echo "🔄 Deno $INSTALLED_VERSION encontrado, reinstalando $DENO_VERSION..."
+      echo "🔄 Deno $INSTALLED_VERSION found, reinstalling $DENO_VERSION..."
     else
-      echo "📥 Instalando Deno $DENO_VERSION (unattended)..."
+      echo "📥 Installing Deno $DENO_VERSION (unattended)..."
     fi
     (curl -fsSL https://deno.land/install.sh || curl -fsSL https://github.com/denoland/deno_install/raw/master/install.sh) \
       | sh -s -- -y "v$DENO_VERSION"
   fi
 else
   if [ -z "$INSTALLED_VERSION" ]; then
-    echo "📥 Instalando Deno (versão mais recente)..."
+    echo "📥 Installing Deno (latest version)..."
     (curl -fsSL https://deno.land/install.sh || curl -fsSL https://github.com/denoland/deno_install/raw/master/install.sh) \
       | sh -s -- -y
   fi
