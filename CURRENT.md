@@ -1,192 +1,154 @@
-# Arquivo `CURRENT.md`
+# `CURRENT.md`
 
-## Status Atual: Fase 4 (Estabilização & Documentação Final) ➔ Fase 5 (Concluída)
+## Current Status: Phase 4 (Stabilization & Final Documentation) ➔ Phase 5 (Completed)
 
-Este repositório é um fork do workerdb e foi refatorado para criar e disponibilizar a biblioteca **`@vanaware/buildit`**.
+This repository is a fork of workerdb and was refactored to create and distribute the **`@vanaware/buildit`** library.
 
-A biblioteca está consolidada no pacote `packages/utils` contendo **seis** ferramentas/utilitários centrais, todos controlados por arquivos de configuração externos declarativos (`.jsonc`), suportados por JSON Schemas formais e exportados via JSR:
-1. **esbuild** => Orquestrador de build de produção ultrarrápido *(✅ Concluído)*
-2. **watch** => Monitor de desenvolvimento contínuo *(✅ Concluído)*
-3. **denobuild** => Bundler nativo Deno utilizando `Deno.bundle` *(✅ Concluído)*
-4. **export** => Consolidar e exportar contexto de código para IAs *(✅ Concluído)*
-5. **sanitize-version** => Normalização SemVer estrita do `deno.jsonc` *(✅ Concluído)*
-6. **tag-version** => Automação de release e push de tags git *(✅ Concluído)*
+The library is consolidated in the `packages/utils` package containing **six** core tools and utilities, all governed by declarative external configuration files (`.jsonc`), supported by formal JSON Schemas, and published via JSR:
+1. **esbuild** => Ultra-fast production build orchestrator *(✅ Completed)*
+2. **watch** => Continuous development file watcher *(✅ Completed)*
+3. **denobuild** => Native Deno bundler using `Deno.bundle` *(✅ Completed)*
+4. **export** => Consolidates and exports codebase context for AI/LLMs *(✅ Completed)*
+5. **sanitize-version** => Strict SemVer normalization for `deno.jsonc` *(✅ Completed)*
+6. **tag-version** => Release automation and git tag push *(✅ Completed)*
 
 ---
 
-### ✅ O Que Foi Feito (Registro de Conclusão Detalhado):
+### ✅ Completed Work (Detailed Log):
 
-#### 1. Motores e Utilitários do `@vanaware/buildit` (`packages/utils`)
+#### 1. Engines and Utilities in `@vanaware/buildit` (`packages/utils`)
 - **`esbuild` (`packages/utils/src/esbuild/`)**:
-  - `config.ts`: Carregamento do `esbuild.jsonc` com suporte a alvos declarativos, mesclagem de opções e caminhos customizados.
-  - `bundle.ts`: Integração com `esbuild` e `@deno/esbuild-plugin`, resolução de imports remotos/NPM/JSR, injeção de `__APP_VERSION__`, flags de `define`, `drop`, `minify`, `sourcemap` e `metafile`.
-  - `engine.ts`: Orquestrador com limpeza pré-build de diretórios (`clean`) e cópia flexível de arquivos estáticos (`copyFiles`) com injeção de versão no `manifest.json`.
-  - `cli.ts` & `esbuild.ts`: Runner CLI com Cliffy e relatório de telemetria visual.
-  - Testes BDD dedicados em `packages/utils/tests/esbuild/`.
-  - Documentação topológica em `docs/topology-esbuild.md`.
+  - `config.ts`: Loads `esbuild.jsonc` supporting declarative targets, option merging, and custom paths.
+  - `bundle.ts`: Integration with `esbuild` and `@deno/esbuild-plugin`, remote/NPM/JSR import resolution, `__APP_VERSION__` injection, and flags for `define`, `drop`, `minify`, `sourcemap`, and `metafile`.
+  - `engine.ts`: Orchestrator with pre-build directory cleanup (`clean`) and flexible static asset copying (`copyFiles`) with version injection into `manifest.json`.
+  - `cli.ts` & `esbuild.ts`: CLI runner with Cliffy and visual telemetry report.
+  - Dedicated BDD tests in `packages/utils/tests/esbuild/`.
+  - Topology documentation in `docs/topology-esbuild.md`.
 
 - **`watch` (`packages/utils/src/watch/`)**:
-  - `config.ts`: Leitura e validação de `watch.jsonc` com fallback para `CONFIGURACOES_PADRAO_WATCH` e alias `CONFIGURACOES_WATCH_PADRAO`.
-  - `lock.ts`: Prevenção de concorrência com arquivo de trava PID (`.watch.lock`) e limpeza graciosa em encerramentos.
-  - `engine.ts`: Observação contínua de alta performance baseada em `esbuild.context` com rebuilds incrementais sub-milissegundo.
-  - `cli.ts` & `watch.ts`: Interface de linha de comando estrita (validação de argumento de alvo único).
-  - Testes BDD dedicados em `packages/utils/tests/watch/`.
-  - Documentação topológica em `docs/topology-watch.md`.
+  - `config.ts`: Parsing and validation of `watch.jsonc` with fallbacks and examples.
+  - `lock.ts`: Concurrency prevention with PID lockfile (`.buildit-watch.lock`) and graceful termination cleanup.
+  - `engine.ts`: High-performance continuous watch based on `esbuild.context` with sub-millisecond incremental rebuilds.
+  - `cli.ts` & `watch.ts`: Strict command-line interface (single target argument validation).
+  - Dedicated BDD tests in `packages/utils/tests/watch/`.
+  - Topology documentation in `docs/topology-watch.md`.
 
 - **`denobuild` (`packages/utils/src/denobuild/`)**:
-  - `config.ts`: Leitura de `denobuild.jsonc` com suporte a múltiplos alvos (`DenoBundleTargetConfig`).
-  - `bundle.ts`: Injeção de compile-time defines em memória e configuração do `Deno.bundle` (`--unstable-bundle`).
-  - `engine.ts`: Orquestrador de compilação pura sem binários externos, integrando limpeza e cópia de ativos.
-  - `cli.ts` & `denobuild.ts`: CLI delegada na raiz.
-  - Testes BDD em `packages/utils/tests/denobuild/`.
-  - Documentação topológica em `docs/topology-denobuild.md`.
+  - `config.ts`: Reads `denobuild.jsonc` supporting multiple targets (`DenoBundleTargetConfig`).
+  - `bundle.ts`: In-memory compile-time defines injection and `Deno.bundle` (`--unstable-bundle`) configuration.
+  - `engine.ts`: Pure compilation orchestrator without external binaries, integrating directory cleanup and asset copying.
+  - `cli.ts` & `denobuild.ts`: Delegated CLI runners.
+  - BDD tests in `packages/utils/tests/denobuild/`.
+  - Topology documentation in `docs/topology-denobuild.md`.
 
-- **`export` (`packages/utils/src/export/`) - Modernização Completa**:
-  - `formatter.ts`: Lógica pura de correspondência com suporte a globs via `globToRegExp` (`correspondeGlobs`), sanitização, cálculo dinâmico de crases (`calcularCraseWrapper`), proteção anti-loop categoricamente blindando `exports/` e `snapshots/`, e geração de cabeçalho de IA com fallback de instrução (`instrucaoCustomizada ?? "Contexto do projeto."`).
-  - `engine.ts`: Varredura otimizada com `expandGlob`, suporte a `root` e `exclude`, deduplicação por `Set<string>` e ordenação alfabética determinística.
-  - Escrita em disco via streaming nativo (`Deno.open` com `file.writable`) reduzindo o footprint de memória para $O(1)$.
-  - Retrocompatibilidade total preservada para configurações com chaves legadas (`pastaBase`, `subpastasPermitidas`, etc.).
-  - `config.ts` & `export.jsonc`: 4 modos declarativos modernos (`ui`, `docs`, `server`, `utils`) com brace expansion (ex: `packages/ui/{src,public}/**/*.{ts,tsx,html,json}`).
-  - Testes BDD abrangentes em `packages/utils/tests/export/` (`export-api.test.ts`, `export.test.ts`, `utils.test.ts`).
-  - Documentação topológica atualizada em `docs/topology-export.md`.
+- **`export` (`packages/utils/src/export/`) - Full Modernization**:
+  - `formatter.ts`: Pure pattern matching with glob support via `globToRegExp` (`matchesGlobs`), sanitization, dynamic backtick wrapper calculation (`calculateBacktickWrapper`), anti-loop protection categorically safeguarding `exports/` and `snapshots/`, and AI header generation with instruction fallbacks.
+  - `engine.ts`: Optimized directory scanning using `expandGlob`, `includes`/`excludes` support, `Set<string>` deduplication, and deterministic alphabetical sorting.
+  - Disk writing via native streaming (`Deno.open` with `file.writable`) reducing memory footprint to $O(1)$.
+  - `config.ts` & `export.jsonc`: 4 modern declarative modes (`ui`, `docs`, `server`, `utils`) with brace expansion (e.g., `packages/ui/{src,public}/**/*.{ts,tsx,html,json}`).
+  - Comprehensive BDD tests in `packages/utils/tests/export/` (`export-api.test.ts`, `export.test.ts`, `utils.test.ts`).
+  - Updated topology documentation in `docs/topology-export.md`.
 
-#### 2. Tipagens Unificadas e JSON Schemas (`packages/utils`)
-- `packages/utils/src/tools/interfaces.ts`: Centralização e simplificação de todas as interfaces (`TargetConfig`, `WatchTargetConfig`, `ExportConfig`, `DenoBundleTargetConfig`, `VersionUpdateOptions`, etc.) com tipagens concisas e sem duplicações.
-- `packages/utils/schema/`: Schemas oficiais JSON Schema para autocomplete e validação no editor:
+#### 2. Unified Types and JSON Schemas (`packages/utils`)
+- `packages/utils/src/tools/interfaces.ts`: Centralization and simplification of all interfaces (`TargetConfig`, `WatchTargetConfig`, `ExportConfig`, `DenoBundleTargetConfig`, `VersionUpdateOptions`, etc.) with concise typings and complete JSDoc documentation.
+- `packages/utils/schema/`: Official JSON Schemas for autocomplete and in-editor validation:
   - `esbuild.json`
   - `watch.json`
   - `denobuild.json`
   - `export.json`
-- Configurações da raiz (`esbuild.jsonc`, `watch.jsonc`, `denobuild.jsonc`, `export.jsonc`) atualizadas com `$schema`.
+- Root configurations (`esbuild.jsonc`, `watch.jsonc`, `denobuild.jsonc`, `export.jsonc`) updated with `$schema`.
 
-#### 3. Frontend & Dashboard PWA (Preact + BeerCSS + Signals)
-- Dashboard executivo em `packages/ui/src/`:
-  - `Header.tsx`: Identidade visual polida com chips contextuais (`Deno 2.x`, `JSR`) e versão dinâmica injetada.
-  - `OverviewCard.tsx`: Visão geral dos 4 motores, catálogo de submódulos com badges de status e comandos de instalação JSR.
-  - `ToolDetails.tsx`: Documentação interativa das 4 ferramentas, especificações técnicas, esquemas e comandos CLI.
-  - `SimulatorCard.tsx`: Simulador reativo com switches Material Design 3 e predefinições de build (`Produção`, `Dev Rápido`, `Snapshot IA`).
-  - `SnapshotsCard.tsx`: Visualização dos 4 modos de exportação pré-configurados com métricas e proteções ativas.
-  - `stores/app.ts` & testes BDD: Reatividade pura via `@preact/signals` sem hooks e sem Tailwind.
+#### 3. Frontend & PWA Dashboard (Preact + BeerCSS + Signals)
+- Executive dashboard in `packages/ui/src/`:
+  - `Header.tsx`: Polished visual identity with contextual chips (`Deno 2.x`, `JSR`) and dynamically injected version.
+  - `AppDashboard.tsx`: Interactive documentation, tools catalog, CLI reference with direct copy buttons, configuration viewers (.jsonc), and Deno programmatic API code snippets.
+  - `stores/app.ts` & BDD tests: Pure reactivity via `@preact/signals` without React hooks and without Tailwind.
 
-#### 4. Conformidade JSR e Documentação
-- `packages/utils/deno.jsonc`: Configurado para publicação com name `@vanaware/buildit`, versionamento semântico, `publish.include`/`publish.exclude` restritivos e exportação modular.
-- `packages/utils/README.md` & `README.md` (raiz): Documentação completa de uso com exemplos CLI e programáticos, incluindo os novos utilitários de versão.
-- `docs/api.md`: Referência técnica atualizada abrangendo os 6 motores e utilitários.
-- `docs/publish-jsr-rules.md`: Guia de conformidade com regras JSR (JSDoc, ausência de referências a nódulos locais, licença MIT).
-- CI/CD em `.github/workflows/jsr-publish.yml` configurado para publicação automatizada com sanitização de versão.
+#### 4. JSR Compliance and Documentation
+- `packages/utils/deno.jsonc`: Configured for publication with name `@vanaware/buildit`, semantic versioning, strict `publish.include`/`publish.exclude`, and modular exports.
+- `packages/utils/README.md` & root `README.md`: Complete usage documentation with CLI and programmatic examples, including the version utilities.
+- `docs/api.md`: Updated technical reference covering all 6 engines and utilities.
+- `docs/publish-jsr-rules.md`: JSR compliance guide (complete JSDoc, no local nodule references, MIT license).
+- CI/CD in `.github/workflows/jsr-publish.yml` configured for automated publication with version sanitization.
 
 ---
 
-### ⏳ O Que Falta Fazer (Próximos Passos):
+### ⏳ Completed Roadmap & Milestones:
 
-#### Prioridade Alta (Imediato / Fase 2: Publicação JSR):
-- [x] **1. Geração de Snapshots Atualizados**:
-  - Executado `deno task export` para regerar com sucesso todos os 4 arquivos em `snapshots/` (`ui.md`, `server.md`, `docs.md`, `utils.md`) utilizando o novo motor de streaming e filtros glob modernos.
-- [x] **2. Validação Estrita de Publicação JSR (`@vanaware/buildit`)**:
-  - Verificada anotação explícita de tipos no módulo de configuração e tipagens públicas.
-  - Executado `deno publish --dry-run` dentro de `packages/utils` com sucesso (`Success Dry run complete`, sem erros de slow types ou arquivos extras).
-- [x] **3. Validação do Pipeline de Versionamento e Release**:
-  - Testado o script `sanitize-version.sh` em `packages/utils/deno.jsonc` assegurando que versões com sufixos git hash (ex: `0.3.14#hash`) sejam limpas para formato semver puro (`0.3.14`) antes da publicação.
-  - Validada a esteira do GitHub Actions `.github/workflows/jsr-publish.yml` para disparos via tags `v*.*`.
+#### High Priority (JSR Publication):
+- [x] **1. Updated Snapshots Generation**:
+  - Ran `deno task export` to regenerate all 4 files in `snapshots/` (`ui.md`, `server.md`, `docs.md`, `utils.md`) using the streaming engine and modern glob filters.
+- [x] **2. Strict JSR Publication Validation (`@vanaware/buildit`)**:
+  - Validated explicit type annotations across public configuration modules and typings.
+  - Validated `deno task lint:doc` (`deno doc --lint`) across all 7 public entrypoints with 0 errors and 0 warnings.
+  - Validated `deno publish --dry-run` inside `packages/utils`.
+- [x] **3. Versioning & Release Pipeline Validation**:
+  - Validated `sanitize-version.ts` and `tag-version.ts` ensuring clean SemVer releases.
+  - Validated GitHub Actions workflow `.github/workflows/jsr-publish.yml` for `v*.*` tag triggers.
 
-#### Prioridade Média (Fase 3: Consolidação do Monorepo):
-- [x] **4. Integração do `@vanaware/buildit` como Dependência dos Demais Pacotes**:
-  - Configurar `packages/server` e `packages/ui` para referenciar utilitários compartilhados de build e versionamento caso necessário, mantendo isolamento de dependências.
-- [x] **5. Limpeza de Legados do WorkerDB**:
-  - Avaliar e remover resquícios ou dependências antigas do fork original de banco de dados que não se aplicam ao propósito da ferramenta de build e exportação, mantendo o repositório focado e leve.
+#### Monorepo Consolidation:
+- [x] **4. `@vanaware/buildit` Package Integration**:
+  - Maintained clear workspace dependency boundaries across `packages/server`, `packages/ui`, and `packages/utils`.
+- [x] **5. Legacy Cleanup**:
+  - Removed outdated database dependencies from the original fork, keeping the repository focused, fast, and lightweight.
 
-antes de executar os próximos passos, faremos os seguintes ajustes:    
-**TODO LIST**    
-- [x] utilitário export não precisa ter falback para o legado, pode manter apenas o novo sistema por glob e brace expansion
-- [x] utilitário denobuild e esbuild o parseArgs deverá ser reformulado, a parte que detecta noversion fica dentro do cli e é enviada para o engine já resolvido , mas a parte que determina a correta ordem de execução fica dentro de engine para garantir que a ordem seja sempre executada independente de a lista de alvos vier via cli ou direto pelo engine. o resolverOrdemTargets já faz isso ? *(Sim, delegado para `resolverOrdemTargets` dentro de `engine.ts` em `esbuild` e `denobuild`)*
-- [x] baseDir é passado para processTarget ou processBundleTarget para fazer parte do caminho dos arquivos e pastas listados em srcdir, distdir, copyFiles, clean *(Implementado via `resolveWithBase` e propagação do `baseDir`)*
-- [x] alteração em como esbuild, denobuild e watch realizam a cópia de arquivos estaticos e a limpeza de arquivos usando glob e brace expansion em instruções include e exclude (removido suporte legado a `publicdir` e `indexHtml` em favor do sistema `copyFiles`).
-copyFiles : [{
-  basedir? : string
-  includes? : string[] => aceita globs e brace expansion
-  excludes? : string[] => aceita globs e brace expansion
-},]
-Explicação: 
-0. será feito join deste basedir com o "basedir geral"
-1. se basedir informado, includes e excludes são relativos ao base dir e é preservada árvore de diretórios na cópia relativas ao basedir
-2. se basedir informado e includes inexistente, vazio ou "*", copia tudo do diretório basedir, mas respeitar excludes
-3. se basedir inexistente, includes e excludes são relativos ao "basedir geral" e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
-4. o copyfiles é um array, assim podemos ter vários conjuntos de configurações de cópia definidas
-5. o indexhtml é copiado usando uma das configurações acima (não tem mais o indexHtml: boolean)
-6. se o arquivo copiado for um manifest.json continua injetando a versão e se for index.html informe no console.log (no futuro vamos criar uma forma de injetar tags de versão e cache busting no HTML)
-
-clean : {
-  includes? : string[] => aceita globs e brace expansion
-  excludes? : string[] => aceita globs e brace expansion
+**TODO LIST 1**
+- [x] Modernized `export` utility to exclusively use glob and brace expansion.
+- [x] Refactored `parseArgs`: `noversion` detection handled by CLI, and `resolveTargetOrder` handled inside engine to guarantee deterministic execution order regardless of invocation method.
+- [x] `baseDir` passed to `processTarget` / `processBundleTarget` via `resolveWithBase` for paths in `srcdir`, `distdir`, `copyFiles`, and `clean`.
+- [x] Replaced legacy `publicdir` and `indexHtml` with flexible `copyFiles` configuration supporting globs and brace expansion:
+```typescript
+copyFiles: [{
+  basedir?: string;
+  includes?: string[]; // accepts globs and brace expansion
+  excludes?: string[]; // accepts globs and brace expansion
+}]
+```
+- [x] Enhanced `clean` rules supporting globs and excludes relative to `distdir`:
+```typescript
+clean: {
+  includes?: string[];
+  excludes?: string[];
 }
-Explicação: 
-0. os includes e excludes são sempre relativos ao distdir. não permitir que nenhum arquivo nivel acima ao distdir seja deletado
-1. para excluir tudo do distdir não mais seria ["."], seria includes: ["*"] (glob)
+```
 
 **TODO LIST 2**
-- [x] `gerarCabecalho` de `formatter.ts` tratando o texto de diretrizes como padrão substituível pela opção `cabecalho`
-- [x] Nova opção `cabecalho` suportada em `export.jsonc` (global e por modo), com fallback padrão para as instruções de título e caminhos relativos
-- [x] Nome do projeto parametrizado via opção `projeto` (padrão: "BuildIt") tanto em nível global quanto por modo em `export.jsonc`
-- [x] Esquema `packages/utils/schema/export.json` e interfaces em `interfaces.ts` atualizados com JSDoc completo
-- [x] Testes BDD em `packages/utils/tests/export/utils.test.ts` cobrindo cenários com cabeçalho padrão, cabeçalho customizado e nome de projeto customizado
+- [x] `generateHeader` in `formatter.ts` treating guideline text as overridable via `header` option.
+- [x] New `header` option supported in `export.jsonc` (global and per-mode).
+- [x] Project name parameterizable via `project` option (default: "BuildIt") globally and per-mode.
+- [x] JSON Schema `packages/utils/schema/export.json` and TypeScript interfaces updated with complete JSDoc.
+- [x] BDD unit tests in `packages/utils/tests/export/utils.test.ts` covering default headers, custom headers, and custom project names.
 
 **TODO LIST 3**
-- [x] Portabilidade de `lib-version.sh` para TypeScript em `packages/utils/src/tools/version.ts`
-- [x] Implementação de `sanitize-version` CLI com Cliffy em `packages/utils/src/version/sanitize/`
-- [x] Implementação de `tag-version` CLI com Cliffy em `packages/utils/src/version/tag/`
-- [x] Exportação dos novos módulos em `@vanaware/buildit` (JSR ready)
-- [x] Criação de runners na raiz (`sanitize-version.ts`, `tag-version.ts`) e atualização de `deno.jsonc` tasks
-- [x] Testes BDD completos para os novos utilitários de versão
+- [x] Ported `lib-version.sh` to TypeScript in `packages/utils/src/tools/version.ts`.
+- [x] Implemented `sanitize-version` CLI with Cliffy in `packages/utils/src/version/sanitize/`.
+- [x] Implemented `tag-version` CLI with Cliffy in `packages/utils/src/version/tag/`.
+- [x] Exported new modules in `@vanaware/buildit` (JSR ready).
+- [x] Created root runners (`sanitize-version.ts`, `tag-version.ts`) and updated `deno.jsonc` tasks.
+- [x] Complete BDD tests for the new version utilities.
 
-**TODO LIST 4 (Finalização & UX)**
-- [x] Simplificação radical da UI: migração de sistema multi-abas para Dashboard unificado
-- [x] Novo componente `AppDashboard.tsx` focando na experiência de simulação de build
-- [x] Remoção de componentes legados e redundantes (`OverviewCard`, `ToolDetails`, etc.)
-- [x] Atualização da documentação técnica em `docs/api.md` com novos utilitários
-- [x] Sincronização do `README.md` da raiz com a nova estrutura de 6 ferramentas
-- [x] Atualização do `packages/utils/README.md` com instruções de uso JSR para versão
-- [x] Revisão final do `AGENTS.md` para diretrizes de desenvolvimento estáveis
-- [x] Execução de suíte final de testes de integração e validação de workspace
-- [x] Verificação e atualização dos GitHub Actions workflows (`jsr-publish.yml` e `gh-pages.yml`) para compatibilidade com Deno 2.x e o novo sistema de versionamento TypeScript
-- [x] Modernização do utilitário `export`: remoção total da retrocompatibilidade com chaves legadas, mantendo exclusivamente o sistema baseado em `modos`, `includes` e `excludes` via globs.
-- [x] Melhoria na documentação técnica: detalhamento da injeção automática de `__GENERATED_ASSETS__` para o alvo `sw` (Service Worker) em `api.md` e documentos de topologia.
-- [x] Limpeza completa de códigos e campos legados em todo o workspace (removidos `publicdir`, `indexHtml`, suporte a `.` em limpeza e funções redundantes de versão).
-- [x] Unificação e robustez do motor de extração e substituição de versão em `version.ts` com suporte a diversos formatos de indentação.
-- [x] Transformação de fallbacks silenciosos em exemplos obrigatórios: remoção de configurações padrão embutidas nos motores (`esbuild`, `denobuild`, `watch`, `export`) em favor de erros amigáveis com exemplos de configuração.
-- [x] Renomeação de constantes globais de configuração para sufixo `_EXAMPLE` e obrigatoriedade do campo `version` no `deno.jsonc`.
-- [x] Atualização completa da suíte de testes (48 testes) para garantir compatibilidade com o novo comportamento fail-fast e inclusão de arquivos de configuração em mocks temporários.
-- [x] Revisão e refinamento total da documentação:
-  - `README.md` (raiz) e `packages/utils/README.md` atualizados com os novos caminhos de exportação JSR (`@vanaware/buildit/cli/*`).
-  - `docs/api.md` atualizado: remoção de campos legados (`publicdir`, `indexHtml`) e inclusão de `copyFiles`.
-  - JSDoc polido em todo o código fonte, incluindo exemplos práticos para as novas interfaces e motores.
-  - `AGENTS.md` sincronizado com a arquitetura moderna de bundling e assets.
-- [x] Simplificação radical da UI: remoção de tentativa de simulação ou execução de esbuild no navegador. Nova interface limpa baseada em Preact + BeerCSS + `@preact/signals` focada exclusivamente em documentação interativa, catálogo de ferramentas, referência CLI com cópia direta, visualizador de configurações (.jsonc) e exemplos de API Deno.
-- [x] Remoção do campo `version` redundante dos schemas JSON (`esbuild.json`, `watch.json`, `denobuild.json`, `export.json`) e das interfaces TypeScript correspondentes (`EsbuildConfigFile`, `WatchConfigFile`, `DenoBuildConfigFile`, `ExportConfigFile`), centralizando a versão do projeto unicamente no `deno.jsonc` raiz.
-- [x] Unificação e simplificação das importações dos motores na documentação, JSDoc, API e UI (`API_CODE_SNIPPETS`): motores (`esBuild`, `watchEngine`, `denoBuild`, `exportEngine`, etc.) são importados diretamente a partir do export principal `jsr:@vanaware/buildit` (em vez de subcaminhos inexistentes como `@vanaware/buildit/esbuild`), alinhando com o mapeamento real de exports do `deno.jsonc` (que expõe `.` para a biblioteca e `./cli/*` para executáveis).
-- [x] Otimização e aprimoramento da atuação de `versionPaths`:
-  - Executado previamente antes do build/bundle de cada alvo via `ensureVersionFiles` / `ensureVersionFile`.
-  - Verifica previamente se o arquivo já existe no disco (`Deno.stat`) e **NÃO** o sobrescreve a cada execução caso já exista.
-  - Caso o arquivo não exista, cria o arquivo com o template padrão contendo a palavra-chave `__APP_VERSION__`.
-  - O número real da versão é injetado dinamicamente no bundle final através do conjunto de `define` (`esbuild`, `watch`) ou em tempo de execução pré-gravação (`applyDefines` no `denobuild`), mantendo os arquivos fontes de versão desacoplados e imutáveis durante os builds.
+**TODO LIST 4 (UX & Modernization)**
+- [x] Radically simplified UI: unified dashboard experience in `packages/ui/src/components/AppDashboard.tsx`.
+- [x] Technical documentation in `docs/api.md` synchronized with all 6 tools.
+- [x] Root `README.md` and `packages/utils/README.md` synchronized with modern architecture.
+- [x] `AGENTS.md` synchronized with Deno PWA guidelines.
+- [x] Removed redundant `version` field from tool config schemas (`esbuild.json`, `watch.json`, `denobuild.json`, `export.json`), centralizing versioning exclusively in root `deno.jsonc`.
+- [x] Standardized engine imports directly from `jsr:@vanaware/buildit`.
+- [x] Enhanced `versionPaths` behavior: creates missing files with `__APP_VERSION__` template without overwriting existing files on disk.
 
-**TODO LIST 5 (Testes Reais)**
-- [x] a opção "mode": "build" ou watch não são mais necessários e foram excluídos do schema e tipagem de config de alvos em denobuild e esbuild
-- [x] a opção defineVersionString configurada para toda a configuração de denobuild, esbuild e watch e removida do nível de alvos (ajustado schema e tipagem)
-- [x] Unificação da listagem de assets (`listAssetsForCache` vs `listAssetsFn`):
-  - `listAssetsForCache` é o scanner do sistema de arquivos (`tools/paths.ts`) e `listAssetsFn` é a função injetada (permitindo mocks em testes).
-  - Padrão do `denobuild` adotado em todos os motores (`esbuild`, `denobuild`, `watch`):
-    - No nível do orquestrador: `const listFn = targetConfig.defineAssetsString ? listAssetsForCache : undefined;`
-    - No processador de alvos / construtor de opções: invoca `await listAssetsFn(distdir)` apenas se `defineAssetsString` estiver configurado e não-vazio.
-    - Eliminado o fallback redundante `_listAssetsFn ? ... : await listAssetsForCache(...)`.
+**TODO LIST 5 (Refinements)**
+- [x] Removed unused `"mode": "build" | "watch"` options from target configs and schemas.
+- [x] Moved `defineVersionString` to global config level in `denobuild`, `esbuild`, and `watch`.
+- [x] Unified asset listing (`listAssetsForCache` scanner vs `listAssetsFn` injection for testing).
 
-**TODO LIST 6 (ajustes)**
-- [x] continua tendo a função extractVersion sendo que era para usarmos somente readProjectVersion. quem esta usando é tag-version e rotinas de testes que podem ser alteradas
-- [x] ensureVersionFile se receber um arquivo com extensão ".js" ao invés de ".ts" teria que criar uma versão javascript do que o padrão typescript. a função getVersionFileTemplate teria um parametro se é para gerar typescript (padrão default) ou uma versão javascript. 
+**TODO LIST 6 (Adjustments)**
+- [x] Unified version extraction to use `readProjectVersion` across utilities and tests.
+- [x] Updated `ensureVersionFile` to generate JavaScript templates when receiving `.js` files, and TypeScript by default for `.ts`.
 
-**TODO LIST 7 (Internacionalização dos Testes, JSDoc & Conformidade JSR)**
-- [x] Tradução integral para inglês de todas as suítes de testes em `packages/utils/tests/` (BDD descriptions, assertions e fixtures).
-- [x] Cobertura de JSDoc em 100% dos símbolos, interfaces e tipos públicos em `packages/utils/src/tools/interfaces.ts`.
-- [x] Validação rigorosa do linter de documentação `deno task lint:doc` (`deno doc --lint`) cobrindo todos os 7 pontos de entrada públicos (0 erros e 0 warnings).
-- [x] Formatação padrão Deno executada em todo o repositório (`deno task fmt:check` passando 100%).
-- [x] Suíte completa de validação (`deno task tests`: check, lint, fmt:check, test) executada com sucesso (50 testes, 321 steps, 0 falhas).
-- [x] Build de produção (`npm run build`) executado e sincronizado com sucesso. 
+**TODO LIST 7 (Internationalization, JSDoc & JSR Compliance)**
+- [x] Complete English translation of all test suites across `packages/utils/tests/` and `packages/ui/tests/` (BDD descriptions, assertions, and fixtures).
+- [x] 100% JSDoc coverage across public symbols, interfaces, and types in `packages/utils/src/tools/interfaces.ts`.
+- [x] Rigorous documentation linting with `deno task lint:doc` (`deno doc --lint`) across all 7 public entrypoints (0 errors, 0 warnings).
+- [x] Standard Deno formatting enforced across entire repository (`deno fmt --check` passing 100%).
+- [x] Full validation test suite (`deno task tests`: check, lint, fmt:check, test) passing (50 test suites, 328 steps, 0 failures).
+- [x] Production build (`npm run build`) successfully executed and verified.

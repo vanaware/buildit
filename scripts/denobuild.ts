@@ -2,10 +2,10 @@
 /// <reference lib="deno.unstable" />
 
 /**
- * @file build.ts
- * @description CLI do orquestrador de build baseado em Deno.bundle (denobuild).
- * Delega a execução para a biblioteca @vanaware/buildit
- * e carrega as configurações declarativas de denobuild.jsonc.
+ * @file denobuild.ts
+ * @description CLI runner for the build orchestrator based on native Deno.bundle (denobuild).
+ * Delegates execution to the @vanaware/buildit library
+ * and loads declarative configurations from denobuild.jsonc.
  */
 
 import { denoBuildCli, } from "../packages/utils/src/denobuild/cli.ts";

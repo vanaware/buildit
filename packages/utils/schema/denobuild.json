@@ -1,37 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BuildIt denobuild Configuration",
-  "description": "Schema oficial de configuração para o compilador Deno.bundle do BuildIt.",
+  "description": "Official JSON Schema configuration for BuildIt Deno.bundle compiler.",
   "type": "object",
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "URL do JSON Schema para validação e autocomplete no editor."
+      "description": "JSON Schema URL for validation and autocomplete in editors."
     },
     "defineVersionString": {
       "type": "string",
-      "description": "Identificador da constante para injeção da versão da aplicação (padrão: '__APP_VERSION__').",
+      "description": "Identifier of the constant for application version injection (default: '__APP_VERSION__').",
       "default": "__APP_VERSION__"
     },
     "versionPaths": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Lista de arquivos ou diretórios onde salvar o version.ts gerado."
+      "description": "List of files or directories where the generated version.ts should be ensured."
     },
     "forcepackagesversion": {
       "type": "boolean",
-      "description": "Se true, sincroniza a versão para os pacotes do workspace."
+      "description": "If true, synchronizes the version across workspace packages."
     },
     "targets": {
       "type": "object",
-      "description": "Dicionário de alvos de compilação com Deno.bundle.",
-      "additionalProperties": {
-        "$ref": "#/definitions/DenoBundleTargetConfig"
-      }
-    },
-    "alvos": {
-      "type": "object",
-      "description": "Alias em português para targets.",
+      "description": "Dictionary of compilation targets for Deno.bundle.",
       "additionalProperties": {
         "$ref": "#/definitions/DenoBundleTargetConfig"
       }
@@ -44,36 +37,36 @@
       "properties": {
         "default": {
           "type": "boolean",
-          "description": "Se roda automaticamente quando nenhum alvo é indicado na chamada CLI.",
+          "description": "Whether to build automatically when no target is specified in CLI.",
           "default": true
         },
         "srcdir": {
           "type": "string",
-          "description": "Diretório fonte onde residem os pontos de entrada."
+          "description": "Source directory where entry points reside."
         },
         "distdir": {
           "type": "string",
-          "description": "Diretório de saída final dos arquivos empacotados."
+          "description": "Output directory for bundled files."
         },
         "copyFiles": {
           "type": "array",
-          "description": "Conjuntos de regras de cópia de arquivos estáticos para o distdir.",
+          "description": "Sets of copy rules for static files to distdir.",
           "items": {
             "type": "object",
             "properties": {
               "basedir": {
                 "type": "string",
-                "description": "Diretório base de origem dos arquivos."
+                "description": "Base origin directory for files."
               },
               "includes": {
                 "type": "array",
                 "items": { "type": "string" },
-                "description": "Lista de padrões glob/brace expansion para incluir."
+                "description": "List of glob / brace expansion patterns to include."
               },
               "excludes": {
                 "type": "array",
                 "items": { "type": "string" },
-                "description": "Lista de padrões glob/brace expansion para excluir."
+                "description": "List of glob / brace expansion patterns to exclude."
               }
             }
           }
@@ -86,41 +79,41 @@
                 "includes": {
                   "type": "array",
                   "items": { "type": "string" },
-                  "description": "Padrões glob/brace expansion relativos a distdir a remover (use '*' para tudo)."
+                  "description": "Glob patterns relative to distdir to remove (use '*' for everything)."
                 },
                 "excludes": {
                   "type": "array",
                   "items": { "type": "string" },
-                  "description": "Padrões glob/brace expansion relativos a distdir a preservar."
+                  "description": "Glob patterns relative to distdir to preserve."
                 }
               }
             },
             {
               "type": "array",
               "items": { "type": "string" },
-              "description": "Pastas ou arquivos a limpar antes do build (relativos a distdir)."
+              "description": "Folders or files to clean before build (relative to distdir)."
             }
           ],
-          "description": "Regras de limpeza prévia no diretório de saída."
+          "description": "Pre-build cleanup rules for output directory."
         },
         "entryPoints": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Pontos de entrada TypeScript ou JavaScript a serem empacotados."
+          "description": "TypeScript or JavaScript entry points to bundle."
         },
         "format": {
           "enum": ["esm", "cjs", "iife"],
-          "description": "Formato de saída do bundle gerado pelo Deno.bundle.",
+          "description": "Bundle output format generated by Deno.bundle.",
           "default": "esm"
         },
         "platform": {
           "enum": ["browser", "deno"],
-          "description": "Plataforma alvo de otimização de runtime.",
+          "description": "Target runtime execution platform.",
           "default": "browser"
         },
         "minify": {
           "type": "boolean",
-          "description": "Se aplica minificação no arquivo emitido.",
+          "description": "Whether to minify the generated file.",
           "default": false
         },
         "sourcemap": {
@@ -128,37 +121,37 @@
             { "type": "boolean" },
             { "enum": ["linked", "inline", "external"] }
           ],
-          "description": "Estratégia de mapa de fontes."
+          "description": "Sourcemap generation strategy."
         },
         "codeSplitting": {
           "type": "boolean",
-          "description": "Se divide o bundle em múltiplos arquivos modulares."
+          "description": "Whether to split bundle into multiple modular chunks."
         },
         "inlineImports": {
           "type": "boolean",
-          "description": "Se inclui o código de imports externos diretamente no bundle final."
+          "description": "Whether to inline dynamic imports directly into the bundle."
         },
         "packages": {
           "enum": ["bundle", "external"],
-          "description": "Se empacota dependências de terceiros ou as mantém externas."
+          "description": "Whether to bundle third-party dependencies or keep them external."
         },
         "external": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Lista de módulos ou pacotes a serem tratados como externos e não empacotados."
+          "description": "List of modules or packages to treat as external."
         },
         "write": {
           "type": "boolean",
-          "description": "Se true, o Deno.bundle grava os arquivos diretamente. No BuildIt, o padrão é false para permitir pós-processamento (defines, banners).",
+          "description": "If true, Deno.bundle writes directly to disk. Defaults to false in BuildIt to allow post-processing.",
           "default": false
         },
         "keepNames": {
           "type": "boolean",
-          "description": "Se true, preserva os nomes originais de funções e classes mesmo após a minificação."
+          "description": "Whether to preserve original function and class names after minification."
         },
         "globalName": {
           "type": "string",
-          "description": "Nome da variável global para exposição do bundle no formato IIFE (ex: 'MeuApp')."
+          "description": "Global variable name for exposing IIFE bundle (e.g., 'MyApp')."
         },
         "banner": {
           "type": "object",
@@ -166,7 +159,7 @@
             "js": { "type": "string" },
             "css": { "type": "string" }
           },
-          "description": "Trechos de código injetados no início do arquivo gerado. Suporta __APP_VERSION__."
+          "description": "Code snippets injected at the top of the generated file. Supports __APP_VERSION__."
         },
         "footer": {
           "type": "object",
@@ -174,36 +167,36 @@
             "js": { "type": "string" },
             "css": { "type": "string" }
           },
-          "description": "Trechos de código injetados no final do arquivo gerado. Suporta __APP_VERSION__."
+          "description": "Code snippets injected at the bottom of the generated file. Supports __APP_VERSION__."
         },
         "jsx": {
           "enum": ["automatic", "transform", "preserve"],
-          "description": "Modo de transformação de JSX (lido automaticamente do deno.json pelo Deno.bundle)."
+          "description": "JSX transformation mode (read from deno.json by Deno.bundle)."
         },
         "jsxFactory": {
           "type": "string",
-          "description": "Fábrica JSX customizada (ex: 'h')."
+          "description": "Custom JSX factory (e.g., 'h')."
         },
         "jsxFragment": {
           "type": "string",
-          "description": "Fragmento JSX customizado (ex: 'Fragment')."
+          "description": "Custom JSX fragment (e.g., 'Fragment')."
         },
         "jsxImportSource": {
           "type": "string",
-          "description": "Pacote para runtime automático do JSX (ex: 'preact')."
+          "description": "Package for automatic JSX runtime (e.g., 'preact')."
         },
         "define": {
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "description": "Mapeamento de constantes substituídas em memória (ex: define: { \"__DEBUG__\": \"false\" })."
+          "description": "Mapping of constants replaced in memory (e.g., define: { \"__DEBUG__\": \"false\" })."
         },
         "defineAssetsString": {
           "type": "string",
-          "description": "Identificador da constante para injeção da lista de assets gerados (ex: '__GENERATED_ASSETS__'). Se omitido ou vazio, não injeta."
+          "description": "Identifier of the constant for injecting the list of generated assets (e.g., '__GENERATED_ASSETS__')."
         },
         "outfile": {
           "type": "string",
-          "description": "Nome explícito do arquivo compilado gerado (relativo ao distdir se este existir)."
+          "description": "Explicit output filename (relative to distdir if provided)."
         }
       }
     }

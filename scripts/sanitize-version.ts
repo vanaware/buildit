@@ -2,8 +2,8 @@
 
 /**
  * @file sanitize-version.ts
- * @description CLI de sanitização de versão semântica do deno.json[c].
- * Normaliza o campo "version" para o formato estrito semver (MAJOR.MINOR.PATCH).
+ * @description CLI runner for semantic version sanitization in deno.json[c].
+ * Normalizes the "version" field to strict semver format (MAJOR.MINOR.PATCH).
  */
 
 import { sanitizeVersionCli, } from "../packages/utils/src/version/sanitize/cli.ts";
