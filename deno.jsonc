@@ -1,5 +1,5 @@
 {
-  "version": "0.4.22#muu6xhan",
+  "version": "0.5.0#muu6r04a",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",

@@ -152,3 +152,6 @@ clean: {
 - [x] Standard Deno formatting enforced across entire repository (`deno fmt --check` passing 100%).
 - [x] Full validation test suite (`deno task tests`: check, lint, fmt:check, test) passing (50 test suites, 328 steps, 0 failures).
 - [x] Production build (`npm run build`) successfully executed and verified.
+
+**TODO LIST 7**
+- [ ] criar novo utilitário de extração de documentação , ver arquivo docs/todo.md
