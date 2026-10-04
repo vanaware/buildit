@@ -3,15 +3,15 @@ import { dirname, isAbsolute, join, } from "@std/path";
 import type { DenoBundleTargetConfig, TargetConfig, } from "./interfaces.ts";
 
 // ============================================================================
-// 🎯 VALIDAÇÃO DE CONFIGURAÇÃO DO ALVO (fail-fast com mensagens claras)
+// 🎯 TARGET CONFIGURATION VALIDATION (fail-fast with clear messages)
 // ============================================================================
 /**
- * Valida se a configuração do alvo possui os campos obrigatórios para as operações solicitadas.
- * Lança erro com mensagem didática indicando exatamente qual condição falhou.
+ * Validates if the target configuration has the required fields for the requested operations.
+ * Throws an error with an educational message indicating exactly which condition failed.
  *
- * Regras de obrigatoriedade:
- * - 'distdir' é obrigatório quando 'copyFiles' está configurado ou 'outfile' não está configurado
- * - 'srcdir' é obrigatório quando 'entryPoints' contém paths relativos
+ * Requirements rules:
+ * - 'distdir' is required when 'copyFiles' is configured or 'outfile' is not configured
+ * - 'srcdir' is required when 'entryPoints' contains relative paths
  */
 export function validateTargetConfig(
   targetName: string,
@@ -19,26 +19,26 @@ export function validateTargetConfig(
 ): void {
   const reasons: string[] = [];
 
-  // Validação de distdir
+  // distdir validation
   if (config.copyFiles && config.copyFiles.length > 0 && !config.distdir) {
     reasons.push(
-      "'copyFiles' está configurado (necessário 'distdir' para copiar arquivos estáticos)",
+      "'copyFiles' is configured (requires 'distdir' to copy static files)",
     );
   }
   if (!config.outfile && !config.distdir) {
     reasons.push(
-      "'outfile' não está configurado (necessário 'distdir' para usar como 'outdir')",
+      "'outfile' is not configured (requires 'distdir' to use as 'outdir')",
     );
   }
 
-  // Verifica se algum entrypoint é relativo e srcdir não existe
+  // Check if any entrypoint is relative and srcdir does not exist
   if (!config.srcdir && config.entryPoints && config.entryPoints.length > 0) {
     const hasRelativeEntry = config.entryPoints.some((entry,) =>
       !isAbsolute(entry,)
     );
     if (hasRelativeEntry) {
       reasons.push(
-        "'entryPoints' contém caminhos relativos (necessário 'srcdir' para resolver)",
+        "'entryPoints' contains relative paths (requires 'srcdir' to resolve)",
       );
     }
   }
@@ -53,11 +53,11 @@ export function validateTargetConfig(
     }
 
     throw new Error(
-      `❌ [${targetName}] Configuração incompleta.\n` +
-        `   Campos obrigatórios faltando: ${missingFields.join(", ",)}\n` +
-        `   Motivos:\n` +
+      `❌ [${targetName}] Incomplete configuration.\n` +
+        `   Missing required fields: ${missingFields.join(", ",)}\n` +
+        `   Reasons:\n` +
         reasons.map((r,) => `   - ${r}`).join("\n",) +
-        `\n   Por favor, configure os campos necessários no alvo '${targetName}'.`,
+        `\n   Please configure the required fields in the target '${targetName}'.`,
     );
   }
 }

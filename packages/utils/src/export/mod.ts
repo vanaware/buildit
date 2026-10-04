@@ -1,23 +1,23 @@
 /**
  * @module @vanaware/buildit/export
- * @description Ferramenta e biblioteca para consolidação estruturada de código-fonte
- * e documentação de projetos em snapshots Markdown otimizados para consumo por IAs.
+ * @description Tool and library for structured consolidation of source code
+ * and project documentation into Markdown snapshots optimized for AI consumption.
  *
- * Suporta configuração declarativa externa via `export.jsonc`, filtros por extensão,
- * proteção contra loops e execução via CLI ou programática.
+ * Supports external declarative configuration via `export.jsonc`, extension filters,
+ * anti-loop protection, and execution via CLI or programmatically.
  *
  * @example
  * ```typescript
  * import { exportEngine } from "jsr:@vanaware/buildit";
  *
- * const resultados = await exportEngine({
+ * const results = await exportEngine({
  *   config: {
  *     ui: {
- *       arquivoSaida: "snapshots/ui.md",
+ *       outputFile: "snapshots/ui.md",
  *       includes: ["src/**\/*"],
  *     },
  *   },
- *   modos: ["ui", "docs"],
+ *   modes: ["ui", "docs"],
  * });
  * ```
  */
@@ -26,7 +26,7 @@ export { exportEngine, } from "./engine.ts";
 
 export { 
   EXPORT_CONFIG_EXAMPLE as exportExample,
-  carregarConfigExport
+  loadExportConfig
  } from "./config.ts";
 
 export type {

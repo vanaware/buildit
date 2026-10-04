@@ -4,13 +4,13 @@ import { join, } from "@std/path";
 import { denoBuild, } from "../../src/denobuild/engine.ts";
 
 describe("denoBuild programmatic API", () => {
-  it("deve aceitar objeto DenoBundleGlobalConfig em memória diretamente", async () => {
+  it("should accept DenoBundleGlobalConfig object directly in memory", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src",);
     const distDir = join(tempDir, "dist",);
     await Deno.mkdir(srcDir, { recursive: true, },);
 
-    // Cria entrypoint
+    // Create entrypoint
     await Deno.writeTextFile(
       join(srcDir, "main.ts",),
       'export const version = "test";',
@@ -26,7 +26,7 @@ describe("denoBuild programmatic API", () => {
       },
     };
 
-    // Adiciona deno.jsonc para evitar erro de versão obrigatória
+    // Add deno.jsonc to avoid required version error
     const denoJsonc = join(tempDir, "deno.jsonc",);
     await Deno.writeTextFile(
       denoJsonc,
@@ -39,7 +39,7 @@ describe("denoBuild programmatic API", () => {
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
       noversion: true,
-      silencioso: true,
+      silent: true,
     },);
 
     assertEquals(results.length, 1,);

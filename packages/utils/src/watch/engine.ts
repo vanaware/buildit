@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/watch/engine
- * @description Motor de desenvolvimento contínuo (Watch) utilizando esbuild context e @deno/esbuild-plugin.
+ * @description Continuous development engine (Watch) using esbuild context and @deno/esbuild-plugin.
  */
 
 import { join, } from "@std/path";
@@ -24,7 +24,7 @@ import { validateTargetConfig, } from "../tools/validate.ts";
 import { acquireWatchLock, } from "./lock.ts";
 
 /**
- * Constrói as opções do esbuild específicas para monitoramento contínuo.
+ * Builds esbuild options specific for continuous monitoring.
  */
 export async function buildWatchEsbuildOptions(
   _targetName: string,
@@ -49,7 +49,7 @@ export async function buildWatchEsbuildOptions(
   ) {
     const assets = await listAssetsFn(config.distdir,);
     finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listados para define '${config.defineAssetsString}'`,);
+    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
   }
 
   const resolvedEntryPoints = resolveEntryPoints(
@@ -140,11 +140,11 @@ export async function buildWatchEsbuildOptions(
 }
 
 /**
- * Inicializa o processo de desenvolvimento contínuo (Watch) para um único alvo.
- * Restringe estritamente a execução a 1 alvo por vez e impede instâncias simultâneas via lock.
+ * Initializes the continuous development process (Watch) for a single target.
+ * Strictly restricts execution to 1 target at a time and prevents simultaneous instances via lock.
  *
- * @param opcoes Opções de execução do watch
- * @returns Lista contendo o handle de controle para encerramento gracioso
+ * @param options Watch execution options
+ * @returns List containing the control handle for graceful termination
  *
  * @example
  * ```typescript
@@ -162,48 +162,48 @@ export async function buildWatchEsbuildOptions(
  * ```
  */
 export async function watchEngine(
-  opcoes: WatchOptions,
+  options: WatchOptions,
 ): Promise<WatchHandle[]> {
-  const configs = opcoes.config;
-  const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = options.config;
+  const baseDir = options.baseDir ?? ".";
+  const denoJsoncPath = options.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
   const version = await readProjectVersion(denoJsoncPath, baseDir,);
 
-  if (opcoes.versionPaths && opcoes.versionPaths.length > 0) {
+  if (options.versionPaths && options.versionPaths.length > 0) {
     await ensureVersionFiles(
-      opcoes.versionPaths,
+      options.versionPaths,
       baseDir,
-      opcoes.defineVersionString ?? "__APP_VERSION__",
+      options.defineVersionString ?? "__APP_VERSION__",
     );
   }
 
-  // 1. Resolução do alvo: se fornecido utiliza opcoes.target, senão executa o primeiro default
+  // 1. Target resolution: if provided use options.target, else execute the first default
   let targetName: string;
   const configKeys = Object.keys(configs,);
-  const requested = opcoes.target;
+  const requestedTarget = options.target;
 
-  if (requested) {
+  if (requestedTarget) {
     const matchingKey = configKeys.find(
-      (k,) => k.toLowerCase() === requested.toLowerCase(),
+      (k,) => k.toLowerCase() === requestedTarget.toLowerCase(),
     );
     if (!matchingKey || !configs[matchingKey]) {
       throw new Error(
-        `❌ Alvo '${requested}' não encontrado na configuração de watch. Alvos disponíveis: ${
+        `❌ Target '${requestedTarget}' not found in watch configuration. Available targets: ${
           configKeys.join(", ",)
         }.`,
       );
     }
     targetName = matchingKey;
   } else {
-    // Se não for passado nenhum literal, busca o primeiro com default !== false
+    // If no literal is passed, seek the first one with default !== false
     const defaultTargets = configKeys.filter(
       (k,) => configs[k]?.default !== false,
     );
 
     const firstDefault = defaultTargets[0];
     if (!firstDefault) {
-      if (!opcoes.silencioso) {
-        console.warn("⚠️ Nenhum alvo configurado para watch.",);
+      if (!options.silent) {
+        console.warn("⚠️ No targets configured for watch.",);
       }
       return [];
     }
@@ -224,16 +224,16 @@ export async function watchEngine(
 
   validateTargetConfig(targetName, resolvedConfig,);
 
-  // 3. Bloqueio de concorrência: adquire o lock para o watch
+  // 3. Concurrency blocking: acquire watch lock
   const releaseLock = await acquireWatchLock(
     baseDir,
     targetName,
-    opcoes.lockFile,
+    options.lockFile,
   );
 
   try {
-    if (!opcoes.silencioso) {
-      console.log(`\n👀 Iniciando Watch: ${targetName.toUpperCase()}`,);
+    if (!options.silent) {
+      console.log(`\n👀 Starting Watch: ${targetName.toUpperCase()}`,);
     }
 
     if (resolvedConfig.clean && resolvedConfig.distdir) {
@@ -253,7 +253,7 @@ export async function watchEngine(
       resolvedConfig,
       version,
       listFn,
-      opcoes.defineVersionString,
+      options.defineVersionString,
     );
 
     esbuildOptions.plugins = [
@@ -264,13 +264,13 @@ export async function watchEngine(
     const ctx = await esbuild.context(esbuildOptions,);
     await ctx.watch();
 
-    if (!opcoes.silencioso) {
+    if (!options.silent) {
       console.log(
-        `✅ [${targetName}] Monitorando alterações em tempo real...`,
+        `✅ [${targetName}] Monitoring changes in real-time...`,
       );
       const resolvedOutfile = esbuildOptions.outfile ||
-        (resolvedConfig.distdir ? `${resolvedConfig.distdir}/` : "disco");
-      console.log(`📦 Saída: ${resolvedOutfile}`,);
+        (resolvedConfig.distdir ? `${resolvedConfig.distdir}/` : "disk");
+      console.log(`📦 Output: ${resolvedOutfile}`,);
     }
 
     const handle: WatchHandle = {

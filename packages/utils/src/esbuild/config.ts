@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/esbuild/config
- * @description Carregamento de configurações externas a partir de `esbuild.jsonc`.
+ * @description Loading external configurations from `esbuild.jsonc`.
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
@@ -11,7 +11,7 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Exemplo de configuração para o motor esbuild no projeto BuildIt.
+ * Example configuration for the esbuild engine in the BuildIt project.
  */
 export const ESBUILD_CONFIG_EXAMPLE: GlobalTargetConfig = {
   ui: {
@@ -43,30 +43,30 @@ export const ESBUILD_CONFIG_EXAMPLE: GlobalTargetConfig = {
 };
 
 /**
- * Carrega as configurações de alvos para o motor esbuild a partir de um arquivo JSONC externo
- * (ex: `esbuild.jsonc` ou `esbuild.json`).
+ * Loads target configurations for the esbuild engine from an external JSONC file
+ * (e.g., `esbuild.jsonc` or `esbuild.json`).
  *
- * Se o arquivo não for encontrado, a execução é interrompida com uma mensagem de exemplo.
+ * If the file is not found, execution is interrupted with an example message.
  *
- * @param caminhoConfig Caminho opcional do arquivo de configuração
- * @param baseDir Diretório base para resolução de arquivos relativos
- * @returns Configuração carregada com alvos e opções globais
+ * @param configPath Optional path to the configuration file
+ * @param baseDir Base directory for relative file resolution
+ * @returns Loaded configuration with targets and global options
  */
-export async function carregarConfigEsbuild(
-  caminhoConfig?: string,
+export async function loadEsbuildConfig(
+  configPath?: string,
   baseDir: string = ".",
 ): Promise<EsbuildConfigResult> {
   const parsed = await loadConfig<EsbuildConfigFile>(
     "esbuild",
-    caminhoConfig,
+    configPath,
     baseDir,
   );
 
   if (!parsed) {
-    throw new Error(`❌ Arquivo de configuração "esbuild.jsonc" não encontrado na raiz do projeto.
-O BuildIt agora exige uma declaração explícita de alvos.
+    throw new Error(`❌ Configuration file "esbuild.jsonc" not found in the project root.
+BuildIt now requires an explicit target declaration.
 
-Exemplo de arquivo "esbuild.jsonc" mínimo:
+Minimum "esbuild.jsonc" file example:
 {
   "targets": {
     "app": {
@@ -89,7 +89,7 @@ Exemplo de arquivo "esbuild.jsonc" mínimo:
   if (parsed.targets && typeof parsed.targets === "object") {
     result.targets = parsed.targets;
   } else {
-    throw new Error(`❌ Chave "targets" não encontrada no arquivo de configuração esbuild.`);
+    throw new Error(`❌ Key "targets" not found in the esbuild configuration file.`);
   }
 
   return result;

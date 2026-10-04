@@ -5,66 +5,66 @@
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "URL do JSON Schema do exportador."
+      "description": "URL of the exporter's JSON Schema."
     },
-    "projeto": {
+    "project": {
       "type": "string",
-      "description": "Nome global do projeto exibido no cabeçalho do contexto exportado (padrão: BuildIt)."
+      "description": "Global project name displayed in the header of the exported context (default: BuildIt)."
     },
-    "cabecalho": {
+    "header": {
       "type": "string",
-      "description": "Instrução ou texto de cabeçalho customizado para a IA (substitui o bloco padrão de diretrizes)."
+      "description": "Custom instruction or header text for the AI (replaces the default guidelines block)."
     },
     "defineVersionString": {
       "type": "string",
-      "description": "Identificador customizado da constante de versão para substituição nos cabeçalhos e instruções (padrão: __APP_VERSION__)."
+      "description": "Custom identifier for the version constant for replacement in headers and instructions (default: __APP_VERSION__)."
     },
-    "modos": {
+    "modes": {
       "type": "object",
-      "description": "Dicionário contendo as configurações de cada modo de exportação.",
+      "description": "Dictionary containing the configuration for each export mode.",
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "arquivoSaida": {
+          "outputFile": {
             "type": "string",
-            "description": "Caminho do arquivo Markdown gerado."
+            "description": "Path to the generated Markdown file."
           },
           "includes": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Lista de padrões glob para inclusão de arquivos (suporta wildcards e brace expansion como {src,public}/**/*.{ts,tsx})."
+            "description": "List of glob patterns for file inclusion (supports wildcards and brace expansion like {src,public}/**/*.{ts,tsx})."
           },
           "excludes": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Lista de padrões glob para exclusão de arquivos (ex: **/*.test.ts, **/dist/**)."
+            "description": "List of glob patterns for file exclusion (e.g., **/*.test.ts, **/dist/**)."
           },
-          "incluiVersao": {
+          "includeVersion": {
             "type": "boolean",
-            "description": "Se true, injeta a versão atual do projeto no topo."
+            "description": "If true, injects the current project version at the top."
           },
-          "instrucaoCustomizada": {
+          "customInstruction": {
             "type": "string",
-            "description": "Mensagem de orientação para o modelo de IA."
+            "description": "Orientation message for the AI model."
           },
-          "cabecalho": {
+          "header": {
             "type": "string",
-            "description": "Instrução ou texto de cabeçalho customizado para a IA específico deste modo."
+            "description": "Custom instruction or header text for the AI specific to this mode."
           },
-          "projeto": {
+          "project": {
             "type": "string",
-            "description": "Nome do projeto específico deste modo (sobrescreve o global)."
+            "description": "Project name specific to this mode (overrides the global one)."
           },
           "default": {
             "type": "boolean",
-            "description": "Se o modo deve ser executado por padrão."
+            "description": "Whether the mode should be executed by default."
           }
         },
         "required": [
-          "arquivoSaida"
+          "outputFile"
         ]
       }
     }
   },
-  "required": ["modos"]
+  "required": ["modes"]
 }

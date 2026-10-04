@@ -3,8 +3,8 @@
 import { join, } from "@std/path";
 
 /**
- * Cria um diretório temporário com estrutura controlada para testes.
- * Retorna o caminho e uma função de cleanup.
+ * Creates a temporary directory with a controlled structure for tests.
+ * Returns the path and a cleanup function.
  */
 export async function withTempDir<T,>(
   fn: (dir: string,) => Promise<T>,
@@ -18,7 +18,7 @@ export async function withTempDir<T,>(
 }
 
 /**
- * Cria um arquivo deno.jsonc temporário com versão especificada.
+ * Creates a temporary deno.jsonc file with the specified version.
  */
 export async function withTempDenoJsonc(
   version: string,
@@ -46,7 +46,7 @@ export async function withTempDenoJsonc(
 }
 
 /**
- * Cria uma estrutura de arquivos temporária para testes de filesystem.
+ * Creates a temporary file structure for filesystem tests.
  */
 export async function withFileStructure(
   files: Record<string, string>,
@@ -71,7 +71,7 @@ export async function withFileStructure(
 }
 
 /**
- * Verifica se um arquivo existe.
+ * Checks if a file exists.
  */
 export async function fileExists(path: string,): Promise<boolean> {
   try {
@@ -83,14 +83,14 @@ export async function fileExists(path: string,): Promise<boolean> {
 }
 
 /**
- * Lê o conteúdo de um arquivo como texto.
+ * Reads the content of a file as text.
  */
 export async function readText(path: string,): Promise<string> {
   return await Deno.readTextFile(path,);
 }
 
 /**
- * Lista arquivos em um diretório recursivamente.
+ * Lists files in a directory recursively.
  */
 export async function listFiles(dir: string,): Promise<string[]> {
   const files: string[] = [];

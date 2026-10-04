@@ -1,89 +1,90 @@
-# 📖 Referência da API e Configurações do BuildIt
+# 📖 BuildIt API and Configuration Reference
 
-Documentação técnica oficial dos utilitários da biblioteca `@vanaware/buildit`. Este guia abrange a **API programática em TypeScript**, **arquitetura de CLI** e **todas as configurações possíveis via arquivos JSONC/JSON** para os 6 utilitários:
+Official technical documentation for the `@vanaware/buildit` library utilities. This guide covers the **programmatic TypeScript API**, **CLI architecture**, and **all possible configurations via JSONC/JSON files** for the 6 utilities:
 
-1. [⚡ Motor esbuild (`esbuild.jsonc`)](#-1-motor-esbuild-esbuildjsonc) — [Ver Topologia](./topology-esbuild.md)
-2. [👀 Motor Watch (`watch.jsonc`)](#-2-motor-watch-watchjsonc) — [Ver Topologia](./topology-watch.md)
-3. [📦 Motor Deno.bundle (`denobuild.jsonc`)](#-3-motor-denobundle-denobuildjsonc) — [Ver Topologia](./topology-denobuild.md)
-4. [📝 Exportador de Contexto para IA (`export.jsonc`)](#-4-exportador-de-contexto-para-ia-exportjsonc) — [Ver Topologia](./topology-export.md)
-5. [🧼 Sanitizador de Versão (`sanitize-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-sanitize-version.md)
-6. [🏷️ Publicador de Versão (`tag-version`)](#-5-sanitizador-e-publicador-de-versão-sanitize-version--tag-version) — [Ver Topologia](./topology-tag-version.md)
-7. [💡 Como Usar os Schemas no Editor ($schema)](#-6-como-usar-os-schemas-no-editor-schema)
-8. [🛠️ Utilitários de Versão e CLI](#-7-utilitários-de-versão-e-cli)
-9. [💻 API Programática em TypeScript](#-8-api-programática-em-typescript)
-10. [📂 Impacto do `baseDir` na Resolução de Caminhos](./impacto-basedir.md)
-
----
-
-## ⚡ 1. Motor esbuild (`esbuild.jsonc`)
-
-O motor `esbuild` orquestra empacotamento ultrarrápido para produção utilizando o esbuild e o plugin oficial `@deno/esbuild-plugin`, incluindo limpeza de pastas, cópia de ativos estáticos, injeção de versão semântica (`__APP_VERSION__`), substituição de variáveis e geração de manifestos de cache.
-
-### Estrutura Raiz do Arquivo (`esbuild.jsonc`)
-
-| Campo | Tipo | Obrigatório | Descrição |
-| :--- | :--- | :--- | :--- |
-| `$schema` | `string` | Não | Caminho relativo ou URL do JSON Schema para autocomplete e validação. |
-| `defineVersionString` | `string` | Não | Identificador customizado da constante para injeção da versão da aplicação (padrão: `"__APP_VERSION__"`). |
-| `versionPaths` | `string[]` | Não | Caminhos onde o arquivo `version.ts` sincronizado é gerado. |
-| `forcepackagesversion` | `boolean` | Não | Se `true`, sincroniza a nova versão para todos os pacotes do workspace. |
-| `targets` / `alvos` | `Record<string, TargetConfig>` | Sim | Dicionário de alvos de compilação em lote. |
+1. [⚡ esbuild Engine (`esbuild.jsonc`)](#-1-esbuild-engine-esbuildjsonc) — [View Topology](./topology-esbuild.md)
+2. [👀 Watch Engine (`watch.jsonc`)](#-2-watch-engine-watchjsonc) — [View Topology](./topology-watch.md)
+3. [📦 Deno.bundle Engine (`denobuild.jsonc`)](#-3-denobundle-engine-denobuildjsonc) — [View Topology](./topology-denobuild.md)
+4. [📝 AI Context Exporter (`export.jsonc`)](#-4-ai-context-exporter-exportjsonc) — [View Topology](./topology-export.md)
+5. [🧼 Version Sanitizer (`sanitize-version`)](#-5-version-sanitizer-and-publisher-sanitize-version--tag-version) — [View Topology](./topology-sanitize-version.md)
+6. [🏷️ Version Publisher (`tag-version`)](#-5-version-sanitizer-and-publisher-sanitize-version--tag-version) — [View Topology](./topology-tag-version.md)
+7. [📂 Smart Configuration Discovery](#-smart-configuration-discovery)
+8. [💡 How to Use Schemas in the Editor ($schema)](#-6-how-to-use-schemas-in-the-editor-schema)
+9. [🛠️ Version and CLI Utilities](#-7-version-and-cli-utilities)
+10. [💻 Programmatic TypeScript API](#-8-programmatic-typescript-api)
+11. [📂 Impact of `baseDir` on Path Resolution](./basedir-impact.md)
 
 ---
 
-### Opções de Cada Alvo (`TargetConfig`)
+## ⚡ 1. esbuild Engine (`esbuild.jsonc`)
 
-#### 🔄 Pipeline e Gestão de Arquivos (Pré/Pós Build)
+The `esbuild` engine orchestrates ultra-fast production bundling using esbuild and the official `@deno/esbuild-plugin`, including folder cleanup, static asset copying, semantic version injection (`__APP_VERSION__`), variable substitution, and cache manifest generation.
 
-| Propriedade | Tipo | Padrão | Descrição |
+### Root File Structure (`esbuild.jsonc`)
+
+| Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `default` | `boolean` | `true` | Se `true`, roda automaticamente quando nenhum alvo específico é passado na CLI. |
-| `srcdir` | `string` | `"."` | Diretório base dos fontes do alvo (relativo à raiz de execução). |
-| `distdir` | `string` | `"."` | Diretório de destino final onde os artefatos compilados são gravados. |
-| `clean` | `CleanConfig \| string[]` | `[]` | Regras de limpeza pré-build. Use `["*"]` para esvaziar todo o diretório. |
-| `copyFiles` | `CopyFileConfig[]` | `[]` | Lista de regras para cópia de arquivos estáticos para o `distdir`. |
-
-#### ⚙️ Opções do Compilador esbuild
-
-| Propriedade | Tipo | Padrão | Descrição |
-| :--- | :--- | :--- | :--- |
-| `entryPoints` | `string[]` | **Obrigatório** | Arquivos de entrada a serem compilados (relativos a `srcdir`). |
-| `platform` | `"browser" \| "node" \| "neutral"` | `"browser"` | Plataforma alvo de execução do bundle gerado. |
-| `format` | `"esm" \| "cjs" \| "iife"` | `"esm"` | Formato do módulo de saída. |
-| `bundle` | `boolean` | `true` | Se agrupa dependências e imports externos em arquivos consolidados. |
-| `minify` | `boolean` | `false` | Se aplica minificação total (código, espaços em branco e identificadores). |
-| `sourcemap` | `boolean \| "linked" \| "inline" \| "external"` | `"linked"` | Estratégia de geração de mapa de fontes (`.map`). |
-| `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | Modo de transformação de JSX/TSX. |
-| `jsxImportSource` | `string` | `undefined` | Pacote para runtime automático do JSX (ex: `"preact"`, `"react"`). |
-| `conditions` | `string[]` | `[]` | Condições personalizadas de resolução de export do `package.json`. |
-| `define` | `Record<string, string>` | `{}` | Mapa de constantes globais substituídas em compilação. |
-| `defineAssetsString` | `string` | `undefined` | Se configurado (ex: `"__GENERATED_ASSETS__"`), varre todo o `distdir` (incluindo arquivos estáticos copiados) e injeta a lista de assets gerados via `define` nativo do esbuild. |
-| `defineVersionString` | `string` | `"__APP_VERSION__"` | Identificador customizado da versão para este alvo (utilizado em `defines`, `banners` e `footers`). |
-| `drop` | `("console" \| "debugger")[]` | `[]` | Instruções a serem eliminadas do código compilado (ex: `["debugger"]`). |
-| `external` | `string[]` | `[]` | Módulos a não empacotar, mantendo como imports externos em runtime. |
-| `metafile` | `boolean` | `false` | Se gera arquivo de metadados em formato JSON para análise de bundles. |
-| `write` | `boolean` | `true` | Se grava os arquivos compilados no disco. Se `false`, mantém em memória. |
-| `treeShaking` | `boolean` | `true` | Habilita eliminação de código inativo (dead-code elimination). |
-| `legalComments` | `"none" \| "inline" \| "eof" \| "linked" \| "external"` | `"eof"` | Preservação e posicionamento de comentários de licença. |
-| `keepNames` | `boolean` | `true` | Preserva os nomes originais de funções e classes em builds minificados. |
-| `outfile` | `string` | `undefined` | Nome ou caminho do arquivo de saída gerado (relativo ao `distdir`). |
-| `splitting` | `boolean` | `false` | Habilita divisão de código em chunks sob demanda (requer `format: "esm"`). |
-| `loader` | `Record<string, EsbuildLoader>` | `{}` | Mapeamento de extensões para loaders esbuild (`js`, `jsx`, `ts`, `tsx`, `css`, `json`, `text`, `base64`, `dataurl`, `file`, `binary`, `empty`, `copy`). |
-| `alias` | `Record<string, string>` | `{}` | Mapeamento de aliases de importação de módulos. |
-| `inject` | `string[]` | `[]` | Arquivos executados antes de cada ponto de entrada (ex: polyfills). |
-| `banner` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no início dos arquivos gerados. |
-| `footer` | `{ js?: string; css?: string }` | `undefined` | Bloco de texto inserido no final dos arquivos gerados. |
-| `target` | `string \| string[]` | `"esnext"` | Ambientes alvos de compatibilidade do JavaScript (ex: `["chrome58", "firefox57"]`). |
-| `charset` | `"ascii" \| "utf8"` | `"utf8"` | Codificação de caracteres do arquivo emitido. |
-| `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Nível de detalhamento das mensagens do esbuild. |
+| `$schema` | `string` | No | Relative path or URL to the JSON Schema for autocomplete and validation. |
+| `defineVersionString` | `string` | No | Custom identifier for the application version injection constant (default: `"__APP_VERSION__"`). |
+| `versionPaths` | `string[]` | No | Paths where the synchronized `version.ts` file is generated. |
+| `forcepackagesversion` | `boolean` | No | If `true`, synchronizes the new version across all workspace packages. |
+| `targets` | `Record<string, TargetConfig>` | Yes | Dictionary of batch compilation targets. |
 
 ---
 
-## 👀 2. Motor Watch (`watch.jsonc`)
+### Per-Target Options (`TargetConfig`)
 
-O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. Ele desacopla a rotina de observação do fluxo de compilação final, utilizando `esbuild.context` para recompilações incrementais instantâneas.
+#### 🔄 Pipeline and File Management (Pre/Post Build)
 
-### Estrutura do `watch.jsonc`
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `default` | `boolean` | `true` | If `true`, runs automatically when no specific target is passed via CLI. |
+| `srcdir` | `string` | `"."` | Base directory for the target's source files (relative to execution root). |
+| `distdir` | `string` | `"."` | Final destination directory where compiled artifacts are written. |
+| `clean` | `CleanConfig \| string[]` | `[]` | Pre-build cleanup rules. Use `["*"]` to empty the entire directory. |
+| `copyFiles` | `CopyFileConfig[]` | `[]` | List of rules for copying static files to `distdir`. |
+
+#### ⚙️ esbuild Compiler Options
+
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `entryPoints` | `string[]` | **Required** | Entry files to be compiled (relative to `srcdir`). |
+| `platform` | `"browser" \| "node" \| "neutral"` | `"browser"` | Target execution platform for the generated bundle. |
+| `format` | `"esm" \| "cjs" \| "iife"` | `"esm"` | Output module format. |
+| `bundle` | `boolean` | `true` | Whether to group dependencies and external imports into consolidated files. |
+| `minify` | `boolean` | `false` | Whether to apply full minification (code, whitespace, and identifiers). |
+| `sourcemap` | `boolean \| "linked" \| "inline" \| "external"` | `"linked"` | Source map generation strategy (`.map`). |
+| `jsx` | `"automatic" \| "transform" \| "preserve"` | `"automatic"` | JSX/TSX transformation mode. |
+| `jsxImportSource` | `string` | `undefined` | Package for automatic JSX runtime (e.g., `"preact"`, `"react"`). |
+| `conditions` | `string[]` | `[]` | Custom export resolution conditions for `package.json`. |
+| `define` | `Record<string, string>` | `{}` | Map of global constants substituted during compilation. |
+| `defineAssetsString` | `string` | `undefined` | If configured (e.g., `"__GENERATED_ASSETS__"`), scans `distdir` and injects the asset list via esbuild's `define`. |
+| `defineVersionString` | `string` | `"__APP_VERSION__"` | Custom version identifier for this target (used in `defines`, `banners`, and `footers`). |
+| `drop` | `("console" \| "debugger")[]` | `[]` | Instructions to be eliminated from compiled code (e.g., `["debugger"]`). |
+| `external` | `string[]` | `[]` | Modules not to be bundled, kept as external imports at runtime. |
+| `metafile` | `boolean` | `false` | Whether to generate a JSON metadata file for bundle analysis. |
+| `write` | `boolean` | `true` | Whether to write compiled files to disk. If `false`, keeps them in memory. |
+| `treeShaking` | `boolean` | `true` | Enables dead-code elimination. |
+| `legalComments` | `"none" \| "inline" \| "eof" \| "linked" \| "external"` | `"eof"` | License comment preservation and positioning. |
+| `keepNames` | `boolean` | `true` | Preserves original function and class names in minified builds. |
+| `outfile` | `string` | `undefined` | Explicit name or path for the generated output file (relative to `distdir`). |
+| `splitting` | `boolean` | `false` | Enables on-demand code splitting (requires `format: "esm"`). |
+| `loader` | `Record<string, EsbuildLoader>` | `{}` | Map of extensions to esbuild loaders. |
+| `alias` | `Record<string, string>` | `{}` | Module import alias mapping. |
+| `inject` | `string[]` | `[]` | Files executed before each entry point (e.g., polyfills). |
+| `banner` | `{ js?: string; css?: string }` | `undefined` | Text block inserted at the beginning of generated files. |
+| `footer` | `{ js?: string; css?: string }` | `undefined` | Text block inserted at the end of generated files. |
+| `target` | `string \| string[]` | `"esnext"` | JavaScript compatibility target environments (e.g., `["chrome58", "firefox57"]`). |
+| `charset` | `"ascii" \| "utf8"` | `"utf8"` | Character encoding of the emitted file. |
+| `logLevel` | `"verbose" \| "debug" \| "info" \| "warning" \| "error" \| "silent"` | `"info"` | Detailedness level of esbuild messages. |
+
+---
+
+## 👀 2. Watch Engine (`watch.jsonc`)
+
+The `watch` engine was designed for **real-time continuous development**. It decouples the observation routine from the final compilation flow, using `esbuild.context` for instant incremental rebuilds.
+
+### `watch.jsonc` Structure
 
 ```jsonc
 {
@@ -112,46 +113,46 @@ O motor `watch` foi projetado para **desenvolvimento contínuo em tempo real**. 
 }
 ```
 
-- **Sem flags redundantes**: Não requer `mode` nem `watch: boolean` (todo alvo watch é intrinsecamente contínuo).
-- **Sem poluição de versão**: O modo watch lê a versão atual sem incrementá-la.
-- **Alvo Único por Execução**: Embora múltiplos alvos possam ser definidos na configuração, o motor do watch permite a execução de **apenas 1 alvo por vez**. Se mais de um alvo for informado na CLI, o processo rejeitará com uma mensagem de erro clara. Se nenhum alvo for especificado, apenas o primeiro alvo com `default: true` será executado.
-- **Lock de Concorrência Exclusivo**: Para prevenir conflitos de portas, compilações duplicadas ou gravação concorrente em disco, a engine adquire automaticamente um lock de processo (`.buildit-watch.lock`). Se outra instância do watch estiver ativa no mesmo projeto, uma nova execução é impedida até o encerramento do processo anterior.
+- **No Redundant Flags**: Does not require `mode` or `watch: boolean` (every watch target is intrinsically continuous).
+- **No Version Pollution**: Watch mode reads the current version without incrementing it.
+- **Single Target per Execution**: While multiple targets can be defined, the watch engine allows executing **only 1 target at a time**. If more than one target is passed via CLI, it will reject with a clear error message. If none is specified, only the first target with `default: true` runs.
+- **Exclusive Concurrency Lock**: To prevent port conflicts, duplicate builds, or concurrent disk writing, the engine automatically acquires a process lock (`.buildit-watch.lock`). If another watch instance is active for the same project, a new execution is blocked until the previous process terminates.
 
 ---
 
-## 📦 3. Motor Deno.bundle (`denobuild.jsonc`)
+## 📦 3. Deno.bundle Engine (`denobuild.jsonc`)
 
-O motor `denobuild` utiliza a API nativa `Deno.bundle` para empacotar aplicações sem dependências de binários externos do esbuild.
+The `denobuild` engine uses the native `Deno.bundle` API to package applications without external esbuild binary dependencies.
 
-### Estrutura do `denobuild.jsonc`
+### `denobuild.jsonc` Structure
 
-| Campo | Tipo | Descrição |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `srcdir` | `string` | Diretório raiz do código-fonte. |
-| `distdir` | `string` | Diretório de destino dos arquivos compilados. |
-| `clean` | `CleanConfig \| string[]` | Regras de limpeza pré-build. |
-| `copyFiles` | `CopyFileConfig[]` | Regras para cópia de arquivos estáticos. |
-| `entryPoints` | `string[]` | Arquivos TypeScript/JavaScript de entrada. |
-| `format` | `"esm" \| "cjs" \| "iife"` | Formato do bundle. |
-| `platform` | `"browser" \| "deno"` | Plataforma alvo. |
-| `minify` | `boolean` | Se deve minificar o bundle gerado. |
-| `sourcemap` | `"linked" \| "inline" \| "external"` | Formato de sourcemap emitido. |
-| `codeSplitting` | `boolean` | Divisão modular de chunks. |
-| `inlineImports` | `boolean` | Se inclui o código de imports externos no arquivo gerado. |
-| `packages` | `"bundle" \| "external"` | Se empacota ou externaliza dependências. |
-| `define` | `Record<string, string>` | Injeção de constantes globais. |
-| `defineAssetsString` | `string` | Se configurado (ex: `"__GENERATED_ASSETS__"`), injeta a lista de assets presentes no `distdir`. |
-| `defineVersionString` | `string` | Identificador customizado da versão para este alvo (padrão: `"__APP_VERSION__"`). |
-| `outfile` | `string` | Nome explícito do arquivo gerado. |
-| `targets` | `Record<string, DenoBundleTargetConfig>` | Dicionário de alvos de compilação. |
+| `srcdir` | `string` | Source code root directory. |
+| `distdir` | `string` | Destination directory for compiled files. |
+| `clean` | `CleanConfig \| string[]` | Pre-build cleanup rules. |
+| `copyFiles` | `CopyFileConfig[]` | Rules for copying static files. |
+| `entryPoints` | `string[]` | Input TypeScript/JavaScript files. |
+| `format` | `"esm" \| "cjs" \| "iife"` | Bundle format. |
+| `platform` | `"browser" \| "deno"` | Target platform. |
+| `minify` | `boolean` | Whether to minify the generated bundle. |
+| `sourcemap` | `"linked" \| "inline" \| "external"` | Emitted sourcemap format. |
+| `codeSplitting` | `boolean` | Modular chunk splitting. |
+| `inlineImports` | `boolean` | Whether to include external import code in the generated file. |
+| `packages` | `"bundle" \| "external"` | Whether to bundle or externalize dependencies. |
+| `define` | `Record<string, string>` | Global constant injection. |
+| `defineAssetsString` | `string` | If configured, injects the list of assets present in `distdir`. |
+| `defineVersionString` | `string` | Custom version identifier for this target (default: `"__APP_VERSION__"`). |
+| `outfile` | `string` | Explicit name of the generated file. |
+| `targets` | `Record<string, DenoBundleTargetConfig>` | Compilation targets dictionary. |
 
 ---
 
-## 📝 4. Exportador de Contexto para IA (`export.jsonc`)
+## 📝 4. AI Context Exporter (`export.jsonc`)
 
-O `export` gera snapshots consolidados em formato Markdown com cabeçalho semântico e proteções ativas anti-loop para alimentar LLMs e assistentes de código.
+`export` generates consolidated snapshots in Markdown format with a semantic header and active anti-loop protections to feed LLMs and code assistants.
 
-### Estrutura do `export.jsonc`
+### `export.jsonc` Structure
 
 ```jsonc
 {
@@ -169,56 +170,68 @@ O `export` gera snapshots consolidados em formato Markdown com cabeçalho semân
         "**/.git/**"
       ],
       "incluiVersao": true,
-      "instrucaoCustomizada": "Contexto do frontend Preact + BeerCSS.",
+      "instrucaoCustomizada": "Frontend context with Preact + BeerCSS.",
       "default": true
     }
   }
 }
 ```
 
-- **Padrões Glob e Brace Expansion:** O exportador utiliza `expandGlob` sob o capô, permitindo expressar caminhos e extensões de forma declarativa e concisa (ex: `{src,docs}/**/*.{ts,tsx,md}`).
-- **Streaming de Escrita O(1):** Gravação progressiva diretamente em disco via `Deno.open` e `WritableStream`, garantindo eficiência máxima de memória mesmo em grandes monorepositórios.
-- **Modo Somente-Leitura:** O `exportEngine` lê a versão atual do projeto para enriquecer os cabeçalhos sem jamais incrementar a versão. Ele suporta substituição automática da constante de versão (`defineVersionString`, padrão: `__APP_VERSION__`) em `instrucaoCustomizada` e `cabecalho`.
+- **Glob Patterns and Brace Expansion**: The exporter uses `expandGlob` under the hood, allowing concise declaration of paths and extensions (e.g., `{src,docs}/**/*.{ts,tsx,md}`).
+- **O(1) Streaming Write**: Progressive recording directly to disk via `Deno.open` and `WritableStream`, ensuring maximum memory efficiency even in large monorepos.
+- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `instrucaoCustomizada` and `cabecalho`.
 
 ---
 
-## 🧼 5. Sanitizador e Publicador de Versão (`sanitize-version` & `tag-version`)
+## 🧼 5. Version Sanitizer and Publisher (`sanitize-version` & `tag-version`)
 
-O BuildIt inclui utilitários especializados para manter o arquivo `deno.jsonc` em conformidade com o padrão SemVer e automatizar a criação de tags git.
+BuildIt includes specialized utilities to keep your `deno.jsonc` compliant with SemVer and automate git tag creation.
 
 ### 🧼 `sanitize-version`
-Normaliza o campo `"version"` para o formato estrito `MAJOR.MINOR.PATCH`.
-- **Comportamento:** Remove sufixos como `#hash`, `-alpha`, `+build`.
-- **Injeção:** Se o campo `"version"` estiver ausente, ele insere `"version": "0.0.0"` automaticamente.
+Normalizes the `"version"` field to strict `MAJOR.MINOR.PATCH` format.
+- **Behavior**: Removes suffixes like `#hash`, `-alpha`, `+build`.
+- **Injection**: If the `"version"` field is missing, it inserts `"version": "0.0.0"` automatically.
 
 ### 🏷️ `tag-version`
-Automatiza o fluxo de release local e remoto:
-1.  (Opcional) Sanitiza o arquivo `deno.jsonc` em disco.
-2.  Executa `git add -A` e `git commit -m "Versão vX.Y"`.
-3.  Executa `git push` do código.
-4.  Remove tags locais e remotas antigas com o mesmo prefixo `vMAJOR.MINOR`.
-5.  Cria uma nova tag anotada e executa `git push --force origin vX.Y`.
+Automates the local and remote release flow:
+1. (Optional) Sanitizes the `deno.jsonc` file on disk.
+2. Executes `git add -A` and `git commit -m "Version vX.Y"`.
+3. Executes `git push`.
+4. Removes old local and remote tags with the same `vMAJOR.MINOR` prefix.
+5. Creates a new annotated tag and executes `git push --force origin vX.Y`.
 
 ---
 
-## 💡 6. Como Usar os Schemas no Editor ($schema)
+## 📂 Smart Configuration Discovery
 
-Cada utilitário possui um JSON Schema oficial no diretório `packages/utils/schema/`:
+BuildIt uses a priority search strategy to locate your configuration files (`.jsonc`/`.json`). This allows you to organize your scripts in subfolders without manually passing the path via CLI.
 
-1. `esbuild.json` -> Para `esbuild.jsonc` ou `esbuild.json`
-2. `watch.json` -> Para `watch.jsonc` ou `watch.json`
-3. `denobuild.json` -> Para `denobuild.jsonc` ou `denobuild.json`
-4. `export.json` -> Para `export.jsonc` ou `export.json`
+**Priority Order:**
+1. **Explicit Path**: Provided via `-c` or `--app-config` flag.
+2. **Script Directory**: If you run `deno run scripts/export.ts`, the system first looks for `scripts/export.jsonc`.
+3. **scripts/ Subfolder**: Looks in `scripts/` inside the provided `baseDir`.
+4. **Project Root**: Looks in the provided `baseDir` directory (default: `.`).
 
-### Como Configurar no Arquivo
+---
 
-Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo do seu JSON/JSONC:
+## 💡 6. How to Use Schemas in the Editor ($schema)
+
+Each utility has an official JSON Schema in the `packages/utils/schema/` directory:
+
+1. `esbuild.json` -> For `esbuild.jsonc` or `esbuild.json`
+2. `watch.json` -> For `watch.jsonc` or `watch.json`
+3. `denobuild.json` -> For `denobuild.jsonc` or `denobuild.json`
+4. `export.json` -> For `export.jsonc` or `export.json`
+
+### How to Configure in the File
+
+Just include the `$schema` key pointing to the corresponding file at the top of your JSON/JSONC:
 
 ```jsonc
 {
   "$schema": "./packages/utils/schema/esbuild.json",
   "targets": {
-    // Autocomplete automático com Ctrl+Espaço (VSCode / Cursor / Zed / Neovim)
+    // Automatic autocomplete with Ctrl+Space (VSCode / Cursor / Zed / Neovim)
     "ui": {
       "entryPoints": ["main.tsx"]
     }
@@ -226,37 +239,37 @@ Basta incluir a chave `$schema` apontando para o arquivo correspondente no topo 
 }
 ```
 
-### Benefícios:
-- **Autocomplete Completo:** Sugestão de todas as opções de compilador, tipos de sourcemap, loaders e formatos.
-- **Validação Instantânea:** Avisos em tempo real caso uma propriedade seja escrita incorretamente ou tenha tipo inválido.
-- **Documentação Inline (Hover):** Passe o mouse sobre qualquer propriedade para ver sua descrição oficial.
+### Benefits:
+- **Full Autocomplete**: Suggestions for all compiler options, sourcemap types, loaders, and formats.
+- **Instant Validation**: Real-time warnings if a property is mistyped or has an invalid type.
+- **Inline Documentation (Hover)**: Hover over any property to see its official description.
 
 ---
 
-## 🛠️ 7. Utilitários de Versão e CLI
+## 🛠️ 7. Version and CLI Utilities
 
-### Flags Comuns a Todos os CLIs
+### Common Flags for All CLIs
 
-Todos os utilitários de linha de comando (`esbuild`, `watch`, `denobuild`, `export`) seguem a mesma convenção unificada de argumentos:
+All command-line utilities (`esbuild`, `watch`, `denobuild`, `export`) follow the same unified argument convention:
 
-| Flag Curta | Flag Longa | Padrão | Descrição |
+| Short Flag | Long Flag | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `-c` | `--app-config <file>` | `<tool>.jsonc` | Caminho explícito para o arquivo de configuração. |
-| `-b` | `--base-dir <dir>` | `./` | Diretório base para resolução e join de caminhos. |
-| `-d` | `--deno-config <file>` | `deno.jsonc` | Caminho para o `deno.jsonc` raiz que contém a versão. |
-| `-n` | `--noversion` | `false` | Desabilita o incremento automático de versão. |
+| `-c` | `--app-config <file>` | *Auto Search* | Explicit path to the configuration file. |
+| `-b` | `--base-dir <dir>` | `./` | Base directory for path resolution and joins. |
+| `-d` | `--deno-config <file>` | *Auto Search* | Path to the root `deno.jsonc` containing the version. |
+| `-n` | `--noversion` | `false` | Disables automatic version increment. |
 
-### Ordem de Execução Determinística
+### Deterministic Execution Order
 
-O **Engine** é a única fonte da verdade para a ordem de execução dos alvos:
-- A ordem declarada no arquivo `.jsonc` é estritamente preservada.
-- O CLI repassa os argumentos fornecidos pelo usuário; o engine filtra os alvos selecionados mantendo a ordem correta.
+The **Engine** is the single source of truth for the execution order of targets:
+- The order declared in the `.jsonc` file is strictly preserved.
+- The CLI passes user-provided arguments; the engine filters selected targets while maintaining the correct order.
 
 ---
 
-## 💻 8. API Programática em TypeScript
+## 💻 8. Programmatic TypeScript API
 
-A biblioteca `@vanaware/buildit` pode ser importada e executada diretamente em código TypeScript:
+The `@vanaware/buildit` library can be imported and executed directly in TypeScript code:
 
 ```typescript
 import {
@@ -266,7 +279,7 @@ import {
   watchEngine,
 } from "jsr:@vanaware/buildit";
 
-// Compilação com esbuild
+// esbuild compilation
 await esBuild({
   config: {
     ui: {
@@ -278,7 +291,7 @@ await esBuild({
   noversion: true,
 });
 
-// Desenvolvimento contínuo com Watch
+// Continuous development with Watch
 const handles = await watchEngine({
   config: {
     ui: {
@@ -289,6 +302,6 @@ const handles = await watchEngine({
   },
 });
 
-// Para encerrar o watch programaticamente:
+// To stop the watch programmatically:
 // for (const h of handles) await h.close();
 ```

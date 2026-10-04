@@ -17,7 +17,7 @@ import {
 } from "../helpers/fixtures.ts";
 
 describe("cleanTarget", () => {
-  it("remove arquivo específico", async () => {
+  it("removes specific file", async () => {
     await withTempDir(async (dir,) => {
       await Deno.writeTextFile(join(dir, "teste.js",), "code",);
       assertEquals(await fileExists(join(dir, "teste.js",),), true,);
@@ -28,7 +28,7 @@ describe("cleanTarget", () => {
     },);
   });
 
-  it("remove pasta recursivamente", async () => {
+  it("removes folder recursively", async () => {
     await withTempDir(async (dir,) => {
       const subDir = join(dir, "subpasta",);
       await Deno.mkdir(subDir,);
@@ -40,7 +40,7 @@ describe("cleanTarget", () => {
     },);
   });
 
-  it("esvazia diretório com '*'", async () => {
+  it("empties directory with '*'", async () => {
     await withTempDir(async (dir,) => {
       await Deno.writeTextFile(join(dir, "a.js",), "a",);
       await Deno.writeTextFile(join(dir, "b.js",), "b",);
@@ -54,44 +54,44 @@ describe("cleanTarget", () => {
     },);
   });
 
-  it("ignora path traversal (..)", async () => {
+  it("ignores path traversal (..)", async () => {
     await withTempDir(async (dir,) => {
-      // Cria arquivo fora do dir que não deve ser removido
+      // Create file outside dir that should not be removed
       const outsideFile = join(dir, "..", "protegido.txt",);
       try {
-        await Deno.writeTextFile(outsideFile, "não me remova",);
+        await Deno.writeTextFile(outsideFile, "do not remove me",);
       } catch {
-        // Pode falhar se não tiver permissão
+        // Can fail if no permissions
       }
 
       await cleanTarget(dir, ["../protegido.txt",],);
 
-      // O arquivo fora do dir deve ainda existir (se foi criado)
+      // The file outside the dir should still exist (if created)
       try {
         assertEquals(await fileExists(outsideFile,), true,);
         await Deno.remove(outsideFile,);
       } catch {
-        // Se não conseguiu criar, ok
+        // If could not create, ok
       }
     },);
   });
 
-  it("ignora paths absolutos", async () => {
+  it("ignores absolute paths", async () => {
     await withTempDir(async (dir,) => {
-      // Não deve lançar erro nem remover nada
+      // Should not throw error or remove anything
       await cleanTarget(dir, ["/etc/passwd", "/tmp/test",],);
       assertEquals(true, true,);
     },);
   });
 
-  it("não lança erro para arquivo inexistente", async () => {
+  it("does not throw error for non-existent file", async () => {
     await withTempDir(async (dir,) => {
       await cleanTarget(dir, ["nao-existe.js",],);
       assertEquals(true, true,);
     },);
   });
 
-  it("lista vazia não faz nada", async () => {
+  it("empty list does nothing", async () => {
     await withTempDir(async (dir,) => {
       await Deno.writeTextFile(join(dir, "keep.js",), "keep",);
       await cleanTarget(dir, [],);
@@ -99,7 +99,7 @@ describe("cleanTarget", () => {
     },);
   });
 
-  it("processa múltiplos paths de uma vez", async () => {
+  it("processes multiple paths at once", async () => {
     await withTempDir(async (dir,) => {
       await Deno.writeTextFile(join(dir, "a.js",), "a",);
       await Deno.writeTextFile(join(dir, "b.js",), "b",);
@@ -115,7 +115,7 @@ describe("cleanTarget", () => {
 });
 
 describe("listAssetsForCache", () => {
-  it("lista arquivos em estrutura simples", async () => {
+  it("lists files in simple structure", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "style.css": "css",
@@ -131,7 +131,7 @@ describe("listAssetsForCache", () => {
     }
   });
 
-  it("exclui arquivos .map", async () => {
+  it("excludes .map files", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "app.js.map": "map",
@@ -146,7 +146,7 @@ describe("listAssetsForCache", () => {
     }
   });
 
-  it("exclui metafile.json", async () => {
+  it("excludes metafile.json", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "ui-metafile.json": "{}",
@@ -160,7 +160,7 @@ describe("listAssetsForCache", () => {
     }
   });
 
-  it("exclui service-worker.js por padrão", async () => {
+  it("excludes service-worker.js by default", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "service-worker.js": "sw code",
@@ -175,7 +175,7 @@ describe("listAssetsForCache", () => {
     }
   });
 
-  it("aceita lista de exclusão customizada", async () => {
+  it("accepts custom exclusion list", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "temp.js": "temp",
@@ -191,7 +191,7 @@ describe("listAssetsForCache", () => {
     }
   });
 
-  it("lida com subdiretórios", async () => {
+  it("handles subdirectories", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "app.js": "code",
       "assets/logo.png": "png",
@@ -201,7 +201,7 @@ describe("listAssetsForCache", () => {
     try {
       const assets = await listAssetsForCache(dir,);
       assertEquals(assets.length, 3,);
-      // Deve conter os paths relativos
+      // Must contain relative paths
       const hasLogo = assets.some((a,) => a.includes("logo.png",));
       const hasIcon = assets.some((a,) => a.includes("favicon.ico",));
       assertEquals(hasLogo, true,);
@@ -213,7 +213,7 @@ describe("listAssetsForCache", () => {
 });
 
 describe("copyStaticFiles", () => {
-  it("copia arquivos via copyFiles", async () => {
+  it("copies files via copyFiles", async () => {
     const { dir: publicDir, cleanup: cleanupPublic, } = await withFileStructure(
       {
         "manifest.json": `{ "name": "BuildIt", "version": "1.0.0" }`,
@@ -234,11 +234,11 @@ describe("copyStaticFiles", () => {
 
       await copyStaticFiles(config, "2.0.0",);
 
-      // Arquivos foram copiados
+      // Files were copied
       assertEquals(await fileExists(join(distDir, "manifest.json",),), true,);
       assertEquals(await fileExists(join(distDir, "icon.png",),), true,);
 
-      // manifest.json foi atualizado
+      // manifest.json was updated
       const manifest = JSON.parse(
         await readText(join(distDir, "manifest.json",),),
       );
@@ -249,7 +249,7 @@ describe("copyStaticFiles", () => {
     }
   });
 
-  it("copia arquivos específicos via copyFiles", async () => {
+  it("copies specific files via copyFiles", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "index.html": "<html></html>",
       "README.md": "docs",
@@ -283,7 +283,7 @@ describe("copyStaticFiles", () => {
     }
   });
 
-  it("não falha quando baseDir de copyFiles não existe", async () => {
+  it("does not fail when baseDir of copyFiles does not exist", async () => {
     const { dir: distDir, cleanup, } = await withFileStructure({},);
 
     try {
@@ -293,7 +293,7 @@ describe("copyStaticFiles", () => {
         entryPoints: [],
       };
 
-      // Não deve lançar erro
+      // Should not throw error
       await copyStaticFiles(config, "1.0.0",);
       assertEquals(true, true,);
     } finally {

@@ -1,30 +1,30 @@
 /**
  * @file export.test.ts
- * @description Testes unitários BDD para a lógica de filtragem, expandGlob e execução do exportador de contexto.
+ * @description BDD unit tests for filtering logic, expandGlob, and context exporter execution.
  */
 
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { join, } from "@std/path";
 import { EXPORT_CONFIG_EXAMPLE, } from "../../src/export/config.ts";
-import { deveIncluirArquivo, } from "../../src/export/formatter.ts";
-import { coletarArquivosParaExportacao, } from "../../src/export/engine.ts";
+import { shouldIncludeFile, } from "../../src/export/formatter.ts";
+import { collectFilesForExport, } from "../../src/export/engine.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
-describe("deveIncluirArquivo", () => {
-  it("deve BLOQUEAR qualquer arquivo dentro da pasta exports/ ou snapshots/", () => {
+describe("shouldIncludeFile", () => {
+  it("should BLOCK any file inside exports/ or snapshots/ folder", () => {
     const config = EXPORT_CONFIG_EXAMPLE.ui!;
-    assertEquals(deveIncluirArquivo("exports/ui.md", config,), false,);
-    assertEquals(deveIncluirArquivo("snapshots/server.md", config,), false,);
+    assertEquals(shouldIncludeFile("exports/ui.md", config,), false,);
+    assertEquals(shouldIncludeFile("snapshots/server.md", config,), false,);
     assertEquals(
-      deveIncluirArquivo("exports/.github/workflows/test.yml", config,),
+      shouldIncludeFile("exports/.github/workflows/test.yml", config,),
       false,
     );
   });
 
-  it("deve PERMITIR caminhos contemplados pelo padrão includes", () => {
+  it("should ALLOW paths matching includes pattern", () => {
     const config: ExportConfig = {
-      arquivoSaida: "snapshots/custom.md",
+      outputFile: "snapshots/custom.md",
       includes: [
         "packages/server/{src,docs}/**/*.{ts,md}",
         ".github/workflows/**/*.{yaml,yml}",
@@ -33,59 +33,59 @@ describe("deveIncluirArquivo", () => {
     };
 
     assertEquals(
-      deveIncluirArquivo("packages/server/src/main.ts", config,),
+      shouldIncludeFile("packages/server/src/main.ts", config,),
       true,
     );
     assertEquals(
-      deveIncluirArquivo("packages/server/docs/arquitetura.md", config,),
+      shouldIncludeFile("packages/server/docs/architecture.md", config,),
       true,
     );
     assertEquals(
-      deveIncluirArquivo(".github/workflows/deploy.yml", config,),
+      shouldIncludeFile(".github/workflows/deploy.yml", config,),
       true,
     );
   });
 
-  it("deve BLOQUEAR caminhos contemplados pelo padrão excludes", () => {
+  it("should BLOCK paths matching excludes pattern", () => {
     const config: ExportConfig = {
-      arquivoSaida: "snapshots/custom.md",
+      outputFile: "snapshots/custom.md",
       includes: ["packages/server/src/**/*.{ts,tsx}",],
       excludes: ["**/*.test.ts", "**/dist/**",],
     };
 
     assertEquals(
-      deveIncluirArquivo("packages/server/src/main.ts", config,),
+      shouldIncludeFile("packages/server/src/main.ts", config,),
       true,
     );
     assertEquals(
-      deveIncluirArquivo("packages/server/src/main.test.ts", config,),
+      shouldIncludeFile("packages/server/src/main.test.ts", config,),
       false,
     );
     assertEquals(
-      deveIncluirArquivo("packages/server/src/dist/bundle.ts", config,),
+      shouldIncludeFile("packages/server/src/dist/bundle.ts", config,),
       false,
     );
   });
 
-  it("deve BLOQUEAR arquivos fora dos padrões includes", () => {
+  it("should BLOCK files outside includes patterns", () => {
     const config: ExportConfig = {
-      arquivoSaida: "snapshots/custom.md",
+      outputFile: "snapshots/custom.md",
       includes: ["packages/server/src/**/*.{ts,tsx}",],
     };
 
     assertEquals(
-      deveIncluirArquivo("packages/ui/src/app.tsx", config,),
+      shouldIncludeFile("packages/ui/src/app.tsx", config,),
       false,
     );
     assertEquals(
-      deveIncluirArquivo("docs/readme.md", config,),
+      shouldIncludeFile("docs/readme.md", config,),
       false,
     );
   });
 });
 
-describe("coletarArquivosParaExportacao (expandGlob)", () => {
-  it("deve coletar arquivos usando brace expansion e respeitar excludes de forma ordenada", async () => {
+describe("collectFilesForExport (expandGlob)", () => {
+  it("should collect files using brace expansion and respect excludes in sorted order", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src",);
     const testDir = join(tempDir, "tests",);
@@ -101,7 +101,7 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
     await Deno.writeTextFile(join(testDir, "suite.test.ts",), "test",);
 
     const config: ExportConfig = {
-      arquivoSaida: "snapshots/out.md",
+      outputFile: "snapshots/out.md",
       includes: [
         "src/**/*.{ts,tsx}",
       ],
@@ -110,9 +110,9 @@ describe("coletarArquivosParaExportacao (expandGlob)", () => {
       ],
     };
 
-    const arquivos = await coletarArquivosParaExportacao(config, tempDir,);
+    const files = await collectFilesForExport(config, tempDir,);
 
-    assertEquals(arquivos, [
+    assertEquals(files, [
       "src/app.tsx",
       "src/index.ts",
     ],);

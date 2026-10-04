@@ -17,7 +17,7 @@ import {
 import { withTempDenoJsonc, } from "../helpers/fixtures.ts";
 
 describe("parseVersion", () => {
-  describe("casos válidos", () => {
+  describe("valid cases", () => {
     const validCases = [
       { input: "1.2.3", expected: { major: 1, minor: 2, patch: 3, }, },
       { input: "0.0.0", expected: { major: 0, minor: 0, patch: 0, }, },
@@ -34,25 +34,25 @@ describe("parseVersion", () => {
       },
     ];
     for (const { input, expected, } of validCases) {
-      it(`parseia "${input}" corretamente`, () => {
+      it(`parses "${input}" correctly`, () => {
         assertEquals(parseVersion(input,), expected,);
       });
     }
   });
-  describe("casos inválidos", () => {
+  describe("invalid cases", () => {
     const invalidCases = [
-      { input: "", desc: "string vazia", },
-      { input: "1.2", desc: "apenas 2 partes", },
-      { input: "1.2.3.4", desc: "4 partes", },
-      { input: "a.b.c", desc: "letras", },
-      { input: "1.abc.3", desc: "parte não numérica", },
-      { input: "v1.2.3", desc: "prefixo v", },
-      { input: "1.2.3#", desc: "cardinal sem hash", },
-      { input: " 1.2.3", desc: "espaço antes", },
-      { input: "1.2.3 ", desc: "espaço depois", },
+      { input: "", desc: "empty string", },
+      { input: "1.2", desc: "only 2 parts", },
+      { input: "1.2.3.4", desc: "4 parts", },
+      { input: "a.b.c", desc: "letters", },
+      { input: "1.abc.3", desc: "non-numeric part", },
+      { input: "v1.2.3", desc: "v prefix", },
+      { input: "1.2.3#", desc: "hash without value", },
+      { input: " 1.2.3", desc: "leading space", },
+      { input: "1.2.3 ", desc: "trailing space", },
     ];
     for (const { input, desc, } of invalidCases) {
-      it(`lança erro para ${desc} ("${input}")`, () => {
+      it(`throws error for ${desc} ("${input}")`, () => {
         assertThrows(() => parseVersion(input,), Error,);
       });
     }
@@ -60,31 +60,31 @@ describe("parseVersion", () => {
 });
 
 describe("formatVersion", () => {
-  it("formata com hash fornecido", () => {
+  it("formats with provided hash", () => {
     assertEquals(formatVersion(1, 2, 3, "abc",), "1.2.3#abc",);
   });
-  it("gera hash automático quando não fornecido", () => {
+  it("generates automatic hash when not provided", () => {
     const result = formatVersion(0, 2, 149,);
     assertStringIncludes(result, "0.2.149#",);
-    // Hash deve ter pelo menos alguns caracteres
+    // Hash should have at least some characters
     const hash = result.split("#",)[1];
-    // 🔥 CORREÇÃO: Tratamento explícito de undefined (noUncheckedIndexedAccess)
+    // 🔥 FIX: Explicit undefined handling (noUncheckedIndexedAccess)
     assertEquals(hash !== undefined && hash.length > 0, true,);
   });
-  it("usa o mesmo hash em chamadas com mesmo parâmetro", () => {
+  it("uses the same hash in calls with same parameters", () => {
     const hash = "fixedhash";
     assertEquals(
       formatVersion(1, 0, 0, hash,),
       formatVersion(1, 0, 0, hash,),
     );
   });
-  it("lida com números grandes", () => {
+  it("handles large numbers", () => {
     assertEquals(formatVersion(999, 999, 999, "x",), "999.999.999#x",);
   });
 });
 
 describe("replaceVersionInContent", () => {
-  it("substitui versão preservando o resto", () => {
+  it("replaces version preserving the rest", () => {
     const content = `{
       "name": "@buildit/app",
       "version": "1.0.0-old",
@@ -95,16 +95,16 @@ describe("replaceVersionInContent", () => {
     assertStringIncludes(result, `"name": "@buildit/app"`,);
     assertStringIncludes(result, `"imports"`,);
   });
-  it("substitui apenas a primeira ocorrência", () => {
+  it("replaces only the first occurrence", () => {
     const content = `{ "version": "1.0.0", "other": "version": "2.0.0" }`;
     const result = replaceVersionInContent(content, "3.0.0",);
-    // A primeira deve ser substituída
+    // The first one should be replaced
     assertStringIncludes(result, `"version": "3.0.0"`,);
   });
 });
 
-describe("readProjectVersion (integração)", () => {
-  it("lê versão de arquivo existente", async () => {
+describe("readProjectVersion (integration)", () => {
+  it("reads version from existing file", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.2.3-abc",);
     try {
       const version = await readProjectVersion(path,);
@@ -113,24 +113,24 @@ describe("readProjectVersion (integração)", () => {
       await cleanup();
     }
   });
-  it("lança erro quando arquivo não existe", async () => {
+  it("throws error when file does not exist", async () => {
     await assertRejects(
-      () => readProjectVersion("/caminho/que/nao/existe/deno.jsonc",),
+      () => readProjectVersion("/path/that/does/not/exist/deno.jsonc",),
       Error,
-      "obrigatório não encontrado",
+      'Required "version" field not found',
     );
   });
-  it("lança erro quando versão não está no arquivo", async () => {
+  it("throws error when version is not in the file", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.0.0", {
       version: undefined,
     },);
     try {
-      // Reescreve sem version
+      // Rewrite without version
       await Deno.writeTextFile(path, `{ "name": "buildit" }`,);
       await assertRejects(
         () => readProjectVersion(path,),
         Error,
-        "obrigatório não encontrado",
+        'Required "version" field not found',
       );
     } finally {
       await cleanup();
@@ -138,8 +138,8 @@ describe("readProjectVersion (integração)", () => {
   });
 });
 
-describe("updateProjectVersion (integração)", () => {
-  it("incrementa patch e atualiza arquivo", async () => {
+describe("updateProjectVersion (integration)", () => {
+  it("increments patch and updates file", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.2.3",);
     try {
       const newVersion = await updateProjectVersion({
@@ -155,7 +155,7 @@ describe("updateProjectVersion (integração)", () => {
       await cleanup();
     }
   });
-  it("preserva outras propriedades do JSON", async () => {
+  it("preserves other JSON properties", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("0.0.1", {
       name: "@buildit/app",
       imports: { preact: "https://esm.sh/preact", },
@@ -174,7 +174,7 @@ describe("updateProjectVersion (integração)", () => {
       await cleanup();
     }
   });
-  it("incrementa múltiplas vezes", async () => {
+  it("increments multiple times", async () => {
     const { path, cleanup, } = await withTempDenoJsonc("1.0.0",);
     try {
       const v1 = await updateProjectVersion({

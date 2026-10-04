@@ -1,10 +1,10 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
 import { parseArgs, } from "../../src/tools/cli-flags.ts";
-import { resolverOrdemTargets, } from "../../src/tools/targets.ts";
+import { resolveTargetOrder, } from "../../src/tools/targets.ts";
 import type { GlobalTargetConfig, } from "../../src/tools/interfaces.ts";
 
-describe("parseArgs e resolverOrdemTargets", () => {
+describe("parseArgs and resolveTargetOrder", () => {
   const config: GlobalTargetConfig = {
     ui: {
       entryPoints: ["main.tsx",],
@@ -26,21 +26,21 @@ describe("parseArgs e resolverOrdemTargets", () => {
     },
   };
 
-  it("parseArgs deve extrair rawTargets e detectar noversion", () => {
+  it("parseArgs should extract rawTargets and detect noversion", () => {
     const res = parseArgs(["noversion", "ui",],);
     assertEquals(res.targets, ["ui",],);
     assertEquals(res.globalNoVersion, true,);
   });
 
-  it("resolverOrdemTargets deve usar alvos padrão se nenhum for especificado", () => {
+  it("resolveTargetOrder should use default targets if none are specified", () => {
     const { targets, } = parseArgs([],);
-    const resolved = resolverOrdemTargets(config, targets,);
+    const resolved = resolveTargetOrder(config, targets,);
     assertEquals(resolved, ["ui", "worker",],);
   });
 
-  it("resolverOrdemTargets deve respeitar a ordem do config independente da ordem dos args", () => {
+  it("resolveTargetOrder should respect config order regardless of args order", () => {
     const { targets, } = parseArgs(["sw", "ui",],);
-    const resolved = resolverOrdemTargets(config, targets,);
+    const resolved = resolveTargetOrder(config, targets,);
     assertEquals(resolved, ["ui", "sw",],);
   });
 });

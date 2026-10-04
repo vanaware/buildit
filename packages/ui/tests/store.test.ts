@@ -1,6 +1,6 @@
 /**
  * @file store.test.ts
- * @description Testes unitários para os signals e ações do store da UI.
+ * @description Unit tests for UI store signals and actions.
  */
 
 import { describe, it, } from "@std/testing/bdd";
@@ -20,7 +20,7 @@ import {
 } from "../src/stores/app.ts";
 
 describe("UI Store - Signals & Actions", () => {
-  it("deve alternar abas ativas reativamente", () => {
+  it("should switch active tabs reactively", () => {
     activeTab.value = "overview";
     assertEquals(activeTab.value, "overview",);
 
@@ -37,7 +37,7 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(activeTab.value, "api",);
   });
 
-  it("deve alternar ferramentas selecionadas reativamente", () => {
+  it("should switch selected tools reactively", () => {
     selectedTool.value = "esbuild";
     assertEquals(selectedTool.value, "esbuild",);
 
@@ -54,7 +54,7 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(selectedTool.value, "versioning",);
   });
 
-  it("deve alternar modo de tema claro/escuro", () => {
+  it("should toggle light/dark theme mode", () => {
     themeMode.value = "dark";
     toggleTheme();
     assertEquals(themeMode.value, "light",);
@@ -62,7 +62,7 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(themeMode.value, "dark",);
   });
 
-  it("deve filtrar comandos CLI com base no searchQuery computado", () => {
+  it("should filter CLI commands based on computed searchQuery", () => {
     searchQuery.value = "";
     assertEquals(filteredCliCommands.value.length, CLI_COMMANDS.length,);
 
@@ -79,13 +79,13 @@ describe("UI Store - Signals & Actions", () => {
       true,
     );
 
-    searchQuery.value = "termo_completamente_inexistente_12345";
+    searchQuery.value = "completely_nonexistent_search_term_12345";
     assertEquals(filteredCliCommands.value.length, 0,);
 
     searchQuery.value = "";
   });
 
-  it("deve alternar arquivos de configuração selecionados", () => {
+  it("should switch selected configuration files", () => {
     selectedConfig.value = "esbuild.jsonc";
     assertEquals(selectedConfig.value, "esbuild.jsonc",);
 
@@ -93,7 +93,7 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(selectedConfig.value, "export.jsonc",);
   });
 
-  it("deve atualizar copiedId via copyToClipboard", async () => {
+  it("should update copiedId via copyToClipboard", async () => {
     copiedId.value = null;
     await copyToClipboard(
       "deno run -A jsr:@vanaware/buildit/cli/esbuild",
@@ -102,7 +102,7 @@ describe("UI Store - Signals & Actions", () => {
     assertEquals(copiedId.value, "test-cmd",);
   });
 
-  it("deve conter metadados consistentes de ferramentas", () => {
+  it("should contain consistent tool metadata", () => {
     assertEquals(TOOLS.length, 5,);
     const ids = TOOLS.map((t,) => t.id);
     assertEquals(ids.includes("esbuild",), true,);

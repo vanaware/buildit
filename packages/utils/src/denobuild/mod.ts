@@ -1,15 +1,15 @@
 /**
  * @module @vanaware/buildit/denobuild
- * @description Orquestrador e biblioteca de compilação utilizando a API nativa `Deno.bundle` (--unstable-bundle).
+ * @description Orchestrator and compilation library using the native `Deno.bundle` API (--unstable-bundle).
  *
- * Suporta configuração declarativa externa via `denobuild.jsonc`, pré e pós-processamento,
- * injeção de defines em memória, cópia de ativos e geração de bundles ESM de alta performance.
+ * Supports external declarative configuration via `denobuild.jsonc`, pre and post-processing,
+ * in-memory define injection, asset copying, and high-performance ESM bundle generation.
  *
  * @example
  * ```typescript
  * import { denoBuild } from "jsr:@vanaware/buildit";
  *
- * const resultados = await denoBuild({
+ * const results = await denoBuild({
  *   config: {
  *     ui: {
  *       entryPoints: ["main.tsx"],
@@ -26,7 +26,7 @@ export { denoBuild, } from "./engine.ts";
 
 export { 
   DENOBUILD_CONFIG_EXAMPLE as denobuildExample, 
-  carregarConfigDenoBuild
+  loadDenoBuildConfig
 } from "./config.ts";
 
 export type {

@@ -10,8 +10,8 @@ import {
   withFileStructure,
 } from "../helpers/fixtures.ts";
 
-describe("processTarget (integração)", () => {
-  it("executa pipeline completo: clean, copy, build", async () => {
+describe("processTarget (integration)", () => {
+  it("executes complete pipeline: clean, copy, build", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "index.html": "<html></html>",
       "dummy.ts": "// dummy",
@@ -37,24 +37,24 @@ describe("processTarget (integração)", () => {
       };
       // Mock esbuild.build
       const mockBuild = (options: Record<string, unknown>,) => {
-        // Simula escrita do arquivo de saída
+        // Simulate writing the output file
         const outFile = (options.outfile as string) ||
           join(options.outdir as string, "output.js",);
         Deno.writeTextFileSync(outFile, "// bundled code",);
         return Promise.resolve({ metafile: null, errors: [], warnings: [], },);
       };
       await processTarget("ui", config, "2.0.0", mockBuild,);
-      // Arquivo antigo foi removido (clean: ["."])
+      // Old file was removed (clean: ["*"])
       assertEquals(await fileExists(join(distDir, "old-file.js",),), false,);
-      // Arquivos estáticos foram copiados
+      // Static files were copied
       assertEquals(await fileExists(join(distDir, "index.html",),), true,);
       assertEquals(await fileExists(join(distDir, "manifest.json",),), true,);
-      // manifest.json foi atualizado
+      // manifest.json was updated
       const manifest = JSON.parse(
         await readText(join(distDir, "manifest.json",),),
       );
       assertEquals(manifest.version, "2.0.0",);
-      // Bundle foi gerado
+      // Bundle was generated
       assertEquals(await fileExists(join(distDir, "output.js",),), true,);
     } finally {
       await cleanupSrc();
@@ -63,7 +63,7 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("salva metafile quando gerado", async () => {
+  it("saves metafile when generated", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "dummy.ts": "// dummy",
     },);
@@ -97,7 +97,7 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("não salva metafile quando metafile é false", async () => {
+  it("does not save metafile when metafile is false", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "dummy.ts": "// dummy",
     },);
@@ -126,7 +126,7 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("propaga erro do esbuild.build", async () => {
+  it("propagates error from esbuild.build", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "dummy.ts": "// dummy",
     },);
@@ -156,7 +156,7 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("usa outfile quando especificado", async () => {
+  it("uses outfile when specified", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "dummy.ts": "// dummy",
     },);
@@ -185,7 +185,7 @@ describe("processTarget (integração)", () => {
     }
   });
 
-  it("lida com defineAssetsString injetando assets no arquivo final pós-build", async () => {
+  it("handles defineAssetsString injecting assets into final file post-build", async () => {
     const { dir: srcDir, cleanup: cleanupSrc, } = await withFileStructure({
       "sw.ts": "// sw",
     },);
@@ -205,7 +205,7 @@ describe("processTarget (integração)", () => {
       let capturedDefine: Record<string, string> = {};
       const mockBuild = (options: Record<string, unknown>,) => {
         capturedDefine = options.define as Record<string, string>;
-        // Simula o comportamento do esbuild: substitui defines e escreve o arquivo
+        // Simulate esbuild behavior: substitute defines and write file
         const finalContent = "const cache = " +
           capturedDefine["__GENERATED_ASSETS__"] + ";";
         return Deno.writeTextFile(

@@ -17,12 +17,12 @@ import type {
 } from "./interfaces.ts";
 
 // ============================================================================
-// 🛡️ VALIDAÇÃO DE PATHS E GLOBS (pura, testável)
+// 🛡️ PATH AND GLOB VALIDATION (pure, testable)
 // ============================================================================
 /**
- * Verifica se um caminho é seguro (evita path traversal e caminhos absolutos).
- * @param cleanPath Caminho a ser verificado
- * @returns True se for seguro
+ * Checks if a path is safe (prevents path traversal and absolute paths).
+ * @param cleanPath Path to be checked
+ * @returns True if safe
  */
 export function isSafePath(cleanPath: string,): boolean {
   if (cleanPath.includes("..",)) return false;
@@ -31,11 +31,11 @@ export function isSafePath(cleanPath: string,): boolean {
 }
 
 /**
- * Resolve um caminho relativo adicionando o baseDir caso fornecido e não seja caminho absoluto.
+ * Resolves a relative path by adding baseDir if provided and not an absolute path.
  *
- * @param pathStr Caminho a ser resolvido
- * @param baseDir Diretório base geral
- * @returns Caminho resolvido com baseDir
+ * @param pathStr Path to be resolved
+ * @param baseDir General base directory
+ * @returns Resolved path with baseDir
  */
 export function resolveWithBase(
   pathStr: string | undefined,
@@ -47,71 +47,71 @@ export function resolveWithBase(
 }
 
 /**
- * Testa se um caminho relativo corresponde a algum dos padrões glob fornecidos.
+ * Tests if a relative path matches any of the provided glob patterns.
  *
- * @param caminho Caminho relativo a ser testado
- * @param padroes Lista de padrões glob (suporta brace expansion e globstar)
- * @returns True se o caminho casar com ao menos um padrão
+ * @param path Relative path to be tested
+ * @param patterns List of glob patterns (supports brace expansion and globstar)
+ * @returns True if the path matches at least one pattern
  */
-export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
-  const caminhoNormalizado = caminho.replace(/\\/g, "/",);
-  for (const padrao of padroes) {
+export function matchesGlobs(path: string, patterns: string[],): boolean {
+  const normalizedPath = path.replace(/\\/g, "/",);
+  for (const pattern of patterns) {
     try {
-      const reg = globToRegExp(padrao, {
+      const reg = globToRegExp(pattern, {
         globstar: true,
         caseInsensitive: true,
       },);
-      if (reg.test(caminhoNormalizado,) || reg.test(caminho,)) {
+      if (reg.test(normalizedPath,) || reg.test(path,)) {
         return true;
       }
     } catch {
-      // Ignora padrão inválido
+      // Ignore invalid pattern
     }
   }
   return false;
 }
 
 // ============================================================================
-// 📍 RESOLUÇÃO DE OUTPUT PATHS (outfile relativo ao distdir)
+// 📍 OUTPUT PATHS RESOLUTION (outfile relative to distdir)
 // ============================================================================
 /**
- * Resolve os caminhos de saída (outfile/outdir) baseado na configuração.
+ * Resolves output paths (outfile/outdir) based on configuration.
  *
- * Regras:
- * 1. Se 'outfile' e 'distdir' existem: outfile é RELATIVO ao distdir → join(distdir, outfile)
- * 2. Se apenas 'outfile' existe (sem distdir): outfile é ABSOLUTO
- * 3. Se apenas 'distdir' existe (sem outfile): distdir é usado como outdir
- * 4. Se nenhum existe: retorna objeto vazio (não deveria acontecer se validateTargetConfig foi chamado)
+ * Rules:
+ * 1. If 'outfile' and 'distdir' exist: outfile is RELATIVE to distdir → join(distdir, outfile)
+ * 2. If only 'outfile' exists (no distdir): outfile is ABSOLUTE
+ * 3. If only 'distdir' exists (no outfile): distdir is used as outdir
+ * 4. If none exists: returns empty object (should not happen if validateTargetConfig was called)
  *
- * @returns Objeto com 'outfile' ou 'outdir' resolvidos (nunca ambos)
+ * @returns Object with resolved 'outfile' or 'outdir' (never both)
  */
 export function resolveOutputPaths(
   config: TargetConfig | DenoBundleTargetConfig,
 ): { outfile?: string; outdir?: string } {
   if (config.outfile) {
     if (config.distdir) {
-      // outfile relativo ao distdir
+      // outfile relative to distdir
       return { outfile: join(config.distdir, config.outfile,), };
     }
-    // outfile absoluto (sem distdir)
+    // absolute outfile (no distdir)
     return { outfile: config.outfile, };
   }
-  // Sem outfile, usa distdir como outdir
+  // No outfile, use distdir as outdir
   if (config.distdir) {
     return { outdir: config.distdir, };
   }
-  // Nem outfile nem distdir (não deveria chegar aqui se validateTargetConfig foi chamado)
+  // Neither outfile nor distdir (should not get here if validateTargetConfig was called)
   return {};
 }
 
 // ============================================================================
-// 🎯 RESOLUÇÃO DE ENTRYPOINTS (relativo ao srcdir quando disponível)
+// 🎯 ENTRYPOINTS RESOLUTION (relative to srcdir when available)
 // ============================================================================
 /**
- * Resolve os entrypoints relativos ao srcdir (se disponível) e valida sua existência no disco.
- * Lança um erro claro e didático se algum arquivo não for encontrado.
+ * Resolves entrypoints relative to srcdir (if available) and validates their existence on disk.
+ * Throws a clear and educational error if any file is not found.
  *
- * Se srcdir não está configurado, trata todos os entrypoints como absolutos.
+ * If srcdir is not configured, treats all entrypoints as absolute.
  */
 export function resolveEntryPoints(
   srcdir: string | undefined,
@@ -121,10 +121,10 @@ export function resolveEntryPoints(
     let resolvedPath: string;
 
     if (srcdir && !isAbsolute(entry,)) {
-      // srcdir existe e entry é relativo → faz join
+      // srcdir exists and entry is relative → perform join
       resolvedPath = join(srcdir, entry,);
     } else {
-      // srcdir não existe OU entry já é absoluto → usa como está
+      // srcdir doesn't exist OR entry is already absolute → use as is
       resolvedPath = entry;
     }
 
@@ -132,11 +132,11 @@ export function resolveEntryPoints(
       Deno.statSync(resolvedPath,);
     } catch {
       throw new Error(
-        `❌ Entrypoint não encontrado em: "${resolvedPath}"\n` +
-          `   Origem configurada: "${entry}"\n` +
+        `❌ Entrypoint not found at: "${resolvedPath}"\n` +
+          `   Configured source: "${entry}"\n` +
           (srcdir
-            ? `   Verifique se o caminho está correto em relação ao srcdir: "${srcdir}".`
-            : `   Verifique se o caminho absoluto está correto.`),
+            ? `   Check if the path is correct relative to srcdir: "${srcdir}".`
+            : `   Check if the absolute path is correct.`),
       );
     }
 
@@ -145,8 +145,8 @@ export function resolveEntryPoints(
 }
 
 /**
- * Garante que o diretório pai de um arquivo existe.
- * @param filePath Caminho do arquivo
+ * Ensures the parent directory of a file exists.
+ * @param filePath Path of the file
  */
 export async function ensureDirForFile(filePath: string,): Promise<void> {
   const dir = dirname(filePath,);
@@ -156,18 +156,18 @@ export async function ensureDirForFile(filePath: string,): Promise<void> {
 }
 
 // ============================================================================
-// 📂 FUNÇÕES DE FILESYSTEM
+// 📂 FILESYSTEM FUNCTIONS
 // ============================================================================
 /**
- * Limpa os diretórios/arquivos configurados no alvo.
- * Suporta globs e brace expansion através de { includes, excludes } ou array de caminhos.
+ * Cleans the directories/files configured in the target.
+ * Supports globs and brace expansion through { includes, excludes } or path array.
  *
- * Regras:
- * 0. Includes e excludes são sempre relativos ao distdir. Não permite que nenhum arquivo nível acima ao distdir seja deletado.
- * 1. Para excluir tudo do distdir usa-se includes: ["*"] (ou legado ["."]).
+ * Rules:
+ * 0. Includes and excludes are always relative to distdir. No file above distdir can be deleted.
+ * 1. To empty everything in distdir, use includes: ["*"] (or legacy ["."]).
  *
- * @param distDir Diretório de saída
- * @param cleanConfig Configuração de limpeza ({ includes, excludes }) ou lista de caminhos
+ * @param distDir Output directory
+ * @param cleanConfig Cleanup configuration ({ includes, excludes }) or path list
  */
 export async function cleanTarget(
   distDir: string,
@@ -178,22 +178,22 @@ export async function cleanTarget(
     const stat = await Deno.stat(distDir,);
     if (!stat.isDirectory) return;
   } catch {
-    // Diretório de saída ainda não existe no disco
+    // Output directory does not yet exist on disk
     return;
   }
 
-  // Normaliza CleanConfig
+  // Normalize CleanConfig
   const config: CleanConfig = Array.isArray(cleanConfig,)
     ? { includes: cleanConfig, }
     : cleanConfig;
 
   if (!config || !config.includes || config.includes.length === 0) return;
 
-  console.log(`🧹 Limpando em ${distDir}...`,);
+  console.log(`🧹 Cleaning at ${distDir}...`,);
   const includes = config.includes;
   const excludes = config.excludes ?? [];
 
-  // Otimização: Se includes for ["*"] e excludes vazio, esvazia diretamente o distDir
+  // Optimization: If includes is ["*"] and excludes empty, empty distDir directly
   if (
     includes.length === 1 &&
     includes[0] === "*" &&
@@ -201,27 +201,27 @@ export async function cleanTarget(
   ) {
     try {
       await emptyDir(distDir,);
-      console.log(`   ✅ Diretório esvaziado: ${distDir}`,);
+      console.log(`   ✅ Directory emptied: ${distDir}`,);
       return;
     } catch (error) {
-      console.warn(`   ⚠️ Falha ao esvaziar ${distDir}:`, error,);
+      console.warn(`   ⚠️ Failed to empty ${distDir}:`, error,);
       return;
     }
   }
 
-  // Limpeza via globs / brace expansion
-  for (const padrao of includes) {
-    // Proteção direta contra caminhos com traversal ou absolutos no padrão
-    if (!isSafePath(padrao,)) {
+  // Cleanup via globs / brace expansion
+  for (const pattern of includes) {
+    // Direct protection against paths with traversal or absolute in pattern
+    if (!isSafePath(pattern,)) {
       console.warn(
-        `   ⚠️ Path perigoso ignorado (traversal/absoluto): "${padrao}"`,
+        `   ⚠️ Dangerous path ignored (traversal/absolute): "${pattern}"`,
       );
       continue;
     }
 
     try {
       for await (
-        const entry of expandGlob(padrao, {
+        const entry of expandGlob(pattern, {
           root: distDir,
           exclude: excludes,
           includeDirs: true,
@@ -229,31 +229,31 @@ export async function cleanTarget(
       ) {
         const rel = relative(distDir, entry.path,).replace(/\\/g, "/",);
 
-        // 🔒 Regra 0: Proteção estrita contra path traversal / nível acima ao distdir
+        // 🔒 Rule 0: Strict protection against path traversal / level above distdir
         if (
           rel.startsWith("..",) || isAbsolute(rel,) || rel === "" || rel === "."
         ) {
           console.warn(
-            `   ⚠️ Path perigoso ignorado (fora do distdir): "${entry.path}"`,
+            `   ⚠️ Dangerous path ignored (outside distdir): "${entry.path}"`,
           );
           continue;
         }
 
-        // Verifica excludes
-        if (excludes.length > 0 && correspondeGlobs(rel, excludes,)) {
+        // Check excludes
+        if (excludes.length > 0 && matchesGlobs(rel, excludes,)) {
           continue;
         }
 
         try {
           await Deno.remove(entry.path, { recursive: true, },);
-          console.log(`   ✅ Removido: ${rel}`,);
+          console.log(`   ✅ Removed: ${rel}`,);
         } catch {
-          // pode já ter sido removido recursivamente por pasta pai
+          // might have been removed recursively by parent folder already
         }
       }
     } catch (err) {
       console.warn(
-        `   ⚠️ Erro ao avaliar limpeza com padrão '${padrao}':`,
+        `   ⚠️ Error evaluating cleanup with pattern '${pattern}':`,
         err,
       );
     }
@@ -261,19 +261,19 @@ export async function cleanTarget(
 }
 
 /**
- * Lista todos os assets gerados no distdir para cache do Service Worker.
- * @param distDir Diretório de saída
- * @param excludeFiles Lista de arquivos para ignorar
- * @returns Lista de caminhos relativos
+ * Lists all generated assets in distdir for Service Worker cache.
+ * @param distDir Output directory
+ * @param excludeFiles List of files to ignore
+ * @returns List of relative paths
  */
 export async function listAssetsForCache(
   distDir: string,
   excludeFiles: string[] = [],
 ): Promise<string[]> {
-  // 🔥 CORREÇÃO: Verifica se distDir foi fornecido antes de tentar caminhar
+  // 🔥 CORRECTION: Check if distDir was provided before walking
   if (!distDir) {
     console.warn(
-      `⚠️ 'listAssetsForCache' chamado sem 'distDir'. Retornando array vazio.`,
+      `⚠️ 'listAssetsForCache' called without 'distDir'. Returning empty array.`,
     );
     return [];
   }
@@ -301,21 +301,21 @@ export async function listAssetsForCache(
 }
 
 /**
- * Copia arquivos estáticos para o distdir seguindo as regras de copyFiles.
+ * Copies static files to distdir following copyFiles rules.
  *
- * Regras:
- * 0. Será feito join de item.basedir com generalBaseDir
- * 1. Se basedir informado, includes e excludes são relativos ao basedir e preserva a árvore de diretórios relativas ao basedir
- * 2. Se basedir informado e includes inexistente, vazio ou "*", copia tudo do diretório basedir, respeitando excludes
- * 3. Se basedir inexistente, includes e excludes são relativos ao generalBaseDir e árvore NÃO é preservada (arquivos copiados diretamente no distdir)
- * 4. copyFiles é um array
- * 5. index.html é copiado usando essa configuração
- * 6. se o arquivo copiado for manifest.json continua injetando a versão, e se for index.html informa no console.log
+ * Rules:
+ * 0. item.basedir will be joined with generalBaseDir
+ * 1. If basedir provided, includes and excludes are relative to basedir and directory tree is preserved
+ * 2. If basedir provided and includes is missing, empty or "*", copies everything from basedir, respecting excludes
+ * 3. If basedir missing, includes and excludes are relative to generalBaseDir and tree is NOT preserved (files copied directly to distdir)
+ * 4. copyFiles is an array
+ * 5. index.html is copied using this configuration
+ * 6. if the copied file is manifest.json, continues version injection; if index.html, reports in console.log
  *
- * @param copyFiles Lista de configurações de cópia
- * @param distDir Diretório de saída final (já resolvido)
- * @param appVersion Versão da aplicação para injeção no manifest.json
- * @param generalBaseDir Diretório base geral da execução (padrão ".")
+ * @param copyFiles Copy configuration list
+ * @param distDir Final resolved output directory
+ * @param appVersion Application version for manifest.json injection
+ * @param generalBaseDir Execution general base directory (default ".")
  */
 export async function copyTargetFiles(
   copyFiles: CopyFileConfig[] | undefined,
@@ -326,7 +326,7 @@ export async function copyTargetFiles(
   if (!copyFiles || copyFiles.length === 0) return;
   if (!distDir) {
     console.warn(
-      `⚠️ 'copyFiles' configurado mas 'distdir' ausente. Pulando cópia.`,
+      `⚠️ 'copyFiles' configured but 'distdir' missing. Skipping copy.`,
     );
     return;
   }
@@ -336,7 +336,7 @@ export async function copyTargetFiles(
   for (const item of copyFiles) {
     const hasItemBase = typeof item.basedir === "string" &&
       item.basedir.trim().length > 0;
-    // 0. Será feito join deste basedir com o "basedir geral"
+    // 0. Perform join of this basedir with the "general basedir"
     const effectiveBaseDir = hasItemBase
       ? (generalBaseDir && generalBaseDir !== "." && !isAbsolute(item.basedir!,)
         ? join(generalBaseDir, item.basedir!,)
@@ -344,8 +344,8 @@ export async function copyTargetFiles(
       : (generalBaseDir ?? ".");
 
     if (hasItemBase) {
-      // 1. se basedir informado, includes e excludes são relativos ao basedir e é preservada a árvore
-      // 2. se basedir informado e includes inexistente, vazio ou "*", copia tudo do basedir respeitando excludes
+      // 1. if basedir provided, includes and excludes are relative to basedir and tree is preserved
+      // 2. if basedir provided and includes is missing, empty or "*", copies everything from basedir respecting excludes
       const isAll = !item.includes ||
         item.includes.length === 0 ||
         (item.includes.length === 1 && item.includes[0] === "*");
@@ -356,21 +356,21 @@ export async function copyTargetFiles(
         const stat = await Deno.stat(effectiveBaseDir,);
         if (!stat.isDirectory) {
           console.warn(
-            `⚠️ '${effectiveBaseDir}' não é um diretório, pulando cópia.`,
+            `⚠️ '${effectiveBaseDir}' is not a directory, skipping copy.`,
           );
           continue;
         }
       } catch {
         console.warn(
-          `⚠️ Pasta ${effectiveBaseDir} não encontrada, pulando cópia.`,
+          `⚠️ Folder ${effectiveBaseDir} not found, skipping copy.`,
         );
         continue;
       }
 
-      for (const padrao of patterns) {
+      for (const pattern of patterns) {
         try {
           for await (
-            const entry of expandGlob(padrao, {
+            const entry of expandGlob(pattern, {
               root: effectiveBaseDir,
               exclude: item.excludes,
               includeDirs: false,
@@ -383,7 +383,7 @@ export async function copyTargetFiles(
               );
 
               if (item.excludes && item.excludes.length > 0) {
-                if (correspondeGlobs(relPath, item.excludes,)) {
+                if (matchesGlobs(relPath, item.excludes,)) {
                   continue;
                 }
               }
@@ -395,7 +395,7 @@ export async function copyTargetFiles(
               const fileName = basename(entry.path,).toLowerCase();
               if (fileName === "index.html") {
                 console.log(
-                  `📄 index.html copiado de ${effectiveBaseDir} para ${destPath}`,
+                  `📄 index.html copied from ${effectiveBaseDir} to ${destPath}`,
                 );
               }
               if (fileName === "manifest.json") {
@@ -408,34 +408,34 @@ export async function copyTargetFiles(
                     JSON.stringify(manifestObj, null, 2,),
                   );
                   console.log(
-                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                    `📱 Version v${appVersion} injected into manifest.json`,
                   );
                 } catch {
-                  // manifest não é JSON válido
+                  // manifest is not valid JSON
                 }
               }
             }
           }
         } catch (err) {
           console.warn(
-            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
             err,
           );
         }
       }
       console.log(
-        `📁 Arquivos de ${effectiveBaseDir} copiados para ${distDir}`,
+        `📁 Files from ${effectiveBaseDir} copied to ${distDir}`,
       );
     } else {
-      // 3. se basedir inexistente, includes e excludes são relativos ao "basedir geral"
-      // e árvore de diretórios não é preservada na cópia e arquivos são copiados diretamente no distdir
+      // 3. if basedir missing, includes and excludes are relative to "general basedir"
+      // and directory tree is NOT preserved in copy and files are copied directly to distdir
       const patterns = item.includes && item.includes.length > 0
         ? item.includes
         : [];
-      for (const padrao of patterns) {
+      for (const pattern of patterns) {
         try {
           for await (
-            const entry of expandGlob(padrao, {
+            const entry of expandGlob(pattern, {
               root: effectiveBaseDir,
               exclude: item.excludes,
               includeDirs: false,
@@ -447,7 +447,7 @@ export async function copyTargetFiles(
                 "/",
               );
               if (item.excludes && item.excludes.length > 0) {
-                if (correspondeGlobs(relPath, item.excludes,)) {
+                if (matchesGlobs(relPath, item.excludes,)) {
                   continue;
                 }
               }
@@ -458,7 +458,7 @@ export async function copyTargetFiles(
               await copy(entry.path, destPath, { overwrite: true, },);
 
               if (fileName.toLowerCase() === "index.html") {
-                console.log(`📄 index.html copiado para ${destPath}`,);
+                console.log(`📄 index.html copied to ${destPath}`,);
               }
               if (fileName.toLowerCase() === "manifest.json") {
                 try {
@@ -470,17 +470,17 @@ export async function copyTargetFiles(
                     JSON.stringify(manifestObj, null, 2,),
                   );
                   console.log(
-                    `📱 Versão v${appVersion} injetada em manifest.json`,
+                    `📱 Version v${appVersion} injected into manifest.json`,
                   );
                 } catch {
-                  // manifest não é JSON válido
+                  // manifest is not valid JSON
                 }
               }
             }
           }
         } catch (err) {
           console.warn(
-            `⚠️ Erro ao expandir glob '${padrao}' em '${effectiveBaseDir}':`,
+            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
             err,
           );
         }
@@ -490,11 +490,11 @@ export async function copyTargetFiles(
 }
 
 /**
- * Copia arquivos estáticos para o distdir usando a configuração copyFiles.
- * @param config Configuração do alvo
- * @param appVersion Versão da aplicação para injeção no manifest
- * @param generalBaseDir Diretório base geral da execução (padrão ".")
- * @param distDir Diretório de saída opcional já resolvido
+ * Copies static files to distdir using copyFiles configuration.
+ * @param config Target configuration
+ * @param appVersion Application version for manifest injection
+ * @param generalBaseDir Execution general base directory (default ".")
+ * @param distDir Optional already resolved output directory
  *
  * @example
  * ```typescript
@@ -523,13 +523,13 @@ export async function copyStaticFiles(
   if (!effectiveDistDir) {
     if (config.copyFiles) {
       console.warn(
-        `⚠️ Arquivos estáticos configurados mas 'distdir' ausente. Pulando cópia.`,
+        `⚠️ Static files configured but 'distdir' missing. Skipping copy.`,
       );
     }
     return;
   }
 
-  // Caso use o sistema de copyFiles
+  // Use copyFiles system
   if (config.copyFiles && config.copyFiles.length > 0) {
     await copyTargetFiles(
       config.copyFiles,
@@ -541,11 +541,11 @@ export async function copyStaticFiles(
 }
 
 /**
- * Aplica substituição de definições (defines) em uma string de código em memória.
+ * Applies definition substitutions (defines) in a memory code string.
  *
- * @param text Conteúdo original do código-fonte
- * @param defines Mapa de identificadores e valores substitutos
- * @returns Código com as substituições aplicadas
+ * @param text Original source code content
+ * @param defines Map of identifiers and replacement values
+ * @returns Code with applied substitutions
  *
  * @example
  * ```typescript
@@ -566,16 +566,16 @@ export function applyDefines(
 }
 
 /**
- * Processa uma lista de arquivos aplicando substituições de definições (defines).
- * Útil para injetar variáveis em arquivos estáticos pós-cópia ou arquivos de configuração.
+ * Processes a list of files applying definition substitutions (defines).
+ * Useful for injecting variables into post-copy static files or configuration files.
  *
- * @param filePaths Lista de caminhos de arquivos para processar
- * @param defines Mapa de identificadores e valores substitutos
- * @returns Lista de caminhos de arquivos que foram processados com sucesso
+ * @param filePaths List of file paths to process
+ * @param defines Map of identifiers and replacement values
+ * @returns List of file paths successfully processed
  *
  * @example
  * ```typescript
- * await processFilesWithDefines(["./dist/config.js"], { "__API_URL__": '"https://api.exemplo.com"' });
+ * await processFilesWithDefines(["./dist/config.js"], { "__API_URL__": '"https://api.example.com"' });
  * ```
  */
 export async function processFilesWithDefines(
@@ -600,7 +600,7 @@ export async function processFilesWithDefines(
       }
     } catch (err) {
       console.warn(
-        `⚠️ Falha ao processar defines no arquivo '${filePath}':`,
+        `⚠️ Failed to process defines in file '${filePath}':`,
         err,
       );
     }
@@ -610,22 +610,51 @@ export async function processFilesWithDefines(
 }
 
 /**
- * Procura por deno.json ou deno.jsonc no diretório "./" (cwd).
- * Retorna o caminho absoluto do primeiro encontrado, ou null.
- * Prioriza deno.json sobre deno.jsonc (mesma ordem do Deno).
+ * Searches for deno.json or deno.jsonc climbing the directory tree.
+ * The search stops upon finding the file or reaching a project root marker (e.g., .git).
+ *
+ * @param startDir Initial directory for search (default: CWD)
+ * @returns Absolute path of the first one found, or null.
  */
-export function findDenoConfig(): string | null {
+export function findDenoConfig(startDir?: string,): string | null {
+  let currentDir: string;
+  try {
+    currentDir = startDir
+      ? (isAbsolute(startDir,) ? startDir : Deno.realPathSync(startDir,))
+      : Deno.cwd();
+  } catch {
+    return null;
+  }
+
   const candidates = ["deno.json", "deno.jsonc",];
 
-  for (const name of candidates) {
-    try {
-      const stat = Deno.statSync(name,); // relativo ao cwd
-      if (stat.isFile) return name;
-    } catch (err) {
-      if (err instanceof Deno.errors.NotFound) continue;
-      if (err instanceof Deno.errors.PermissionDenied) continue;
-      throw err;
+  while (true) {
+    // 1. Try to find candidates in the current directory
+    for (const name of candidates) {
+      const fullPath = join(currentDir, name,);
+      try {
+        const stat = Deno.statSync(fullPath,);
+        if (stat.isFile) return fullPath;
+      } catch (err) {
+        if (err instanceof Deno.errors.NotFound) continue;
+        if (err instanceof Deno.errors.PermissionDenied) continue;
+        throw err;
+      }
     }
+
+    // 2. Check project root markers to stop climbing
+    try {
+      const gitDir = join(currentDir, ".git",);
+      const stat = Deno.statSync(gitDir,);
+      if (stat.isDirectory) break;
+    } catch {
+      // continue climbing
+    }
+
+    // 3. Climb one level
+    const parentDir = dirname(currentDir,);
+    if (parentDir === currentDir || currentDir === "/") break;
+    currentDir = parentDir;
   }
 
   return null;

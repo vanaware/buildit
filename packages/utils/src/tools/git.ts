@@ -1,10 +1,10 @@
 /**
  * @module @vanaware/buildit/tools/git
- * @description Utilitários para execução de comandos git.
+ * @description Utilities for executing git commands.
  */
 
 /**
- * Interface para o resultado da execução de um comando git.
+ * Interface for the result of a git command execution.
  */
 export interface GitResult {
   success: boolean;
@@ -14,11 +14,11 @@ export interface GitResult {
 }
 
 /**
- * Executa um comando git capturando stdout, stderr e código de saída.
+ * Executes a git command capturing stdout, stderr and exit code.
  *
- * @param args Argumentos do comando git
- * @param cwd Diretório de trabalho (opcional)
- * @returns Promessa com o resultado da execução
+ * @param args Git command arguments
+ * @param cwd Working directory (optional)
+ * @returns Promise with the execution result
  *
  * @example
  * ```typescript

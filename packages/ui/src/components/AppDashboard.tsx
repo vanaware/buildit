@@ -20,7 +20,7 @@ export const AppDashboard = () => {
   return (
     <div class="padding">
       {/* ================================================================== */}
-      {/* ABA: VISÃO GERAL (OVERVIEW) */}
+      {/* TAB: OVERVIEW */}
       {/* ================================================================== */}
       {activeTab.value === "overview" && (
         <section class="space-y">
@@ -38,9 +38,9 @@ export const AppDashboard = () => {
                 <p
                   class="secondary-text no-margin wrap"
                   style="overflow-wrap: anywhere; word-break: normal;">
-                  Suite de utilitários em TypeScript para orquestração de
-                  compilação, bundling de alta performance e exportação de
-                  contexto para Inteligência Artificial em ecossistemas Deno.
+                  TypeScript utility suite for build orchestration,
+                  high-performance bundling, and AI context exportation in Deno
+                  ecosystems.
                 </p>
               </div>
               <div class="row wrap">
@@ -52,7 +52,7 @@ export const AppDashboard = () => {
                     terminal
                   </i>
                   <span>
-                    Comandos CLI
+                    CLI Commands
                   </span>
                 </a>
                 <a
@@ -63,7 +63,7 @@ export const AppDashboard = () => {
                     tune
                   </i>
                   <span>
-                    Configurações
+                    Configurations
                   </span>
                 </a>
               </div>
@@ -74,7 +74,7 @@ export const AppDashboard = () => {
           </div>
 
           <h5 class="bold">
-            Pilares da Biblioteca
+            Library Pillars
           </h5>
           <div class="grid">
             {TOOLS.map((tool,) => (
@@ -124,7 +124,7 @@ export const AppDashboard = () => {
 
           <article class="border padding surface-container-highest">
             <h6 class="bold">
-              Filosofia Deno &amp; Zero Bloat
+              Deno &amp; Zero Bloat Philosophy
             </h6>
             <div class="grid">
               <div class="s12">
@@ -134,17 +134,18 @@ export const AppDashboard = () => {
                   </i>
                   <div>
                     <div class="bold">
-                      Sem node_modules
+                      Zero node_modules
                     </div>
                     <div class="small-text secondary-text wrap">
-                      Dependências resolvidas via URLs, specifiers{" "}
+                      Dependencies resolved via URLs,{" "}
                       <code>
                         npm:
                       </code>{" "}
-                      e{" "}
+                      and{" "}
                       <code>
                         jsr:
-                      </code>.
+                      </code>{" "}
+                      specifiers.
                     </div>
                   </div>
                 </div>
@@ -156,11 +157,11 @@ export const AppDashboard = () => {
                   </i>
                   <div>
                     <div class="bold">
-                      Fail-Fast &amp; Explícito
+                      Fail-Fast &amp; Explicit
                     </div>
                     <div class="small-text secondary-text wrap">
-                      Erros didáticos com exemplos de configuração em vez de
-                      fallbacks silenciosos.
+                      Educational errors with configuration examples instead of
+                      silent fallbacks.
                     </div>
                   </div>
                 </div>
@@ -172,11 +173,10 @@ export const AppDashboard = () => {
                   </i>
                   <div>
                     <div class="bold">
-                      Anti-Concorrência
+                      Anti-Concurrency
                     </div>
                     <div class="small-text secondary-text wrap">
-                      Mecanismo de Lock em disco (PID) para evitar rebuilds
-                      concorrentes.
+                      Disk Lock mechanism (PID) to prevent concurrent rebuilds.
                     </div>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export const AppDashboard = () => {
       )}
 
       {/* ================================================================== */}
-      {/* ABA: FERRAMENTAS (TOOLS) */}
+      {/* TAB: TOOLS */}
       {/* ================================================================== */}
       {activeTab.value === "tools" && (
         <section>
@@ -231,7 +231,7 @@ export const AppDashboard = () => {
               </div>
               <div class="row gap">
                 <span class="small-text secondary-text">
-                  Configuração:
+                  Configuration:
                 </span>
                 <button
                   type="button"
@@ -262,7 +262,7 @@ export const AppDashboard = () => {
             </div>
 
             <h6 class="bold">
-              Comando CLI Canônico
+              Canonical CLI Command
             </h6>
             <div class="field border padding surface-container-highest round row">
               <i class="primary-text">
@@ -288,8 +288,8 @@ export const AppDashboard = () => {
                 </i>
                 <span>
                   {copiedId.value === `tool-${currentTool.id}`
-                    ? "Copiado!"
-                    : "Copiar"}
+                    ? "Copied!"
+                    : "Copy"}
                 </span>
               </button>
             </div>
@@ -298,7 +298,7 @@ export const AppDashboard = () => {
             </div>
 
             <h6 class="bold">
-              Recursos e Capacidades
+              Features &amp; Capabilities
             </h6>
             <div class="grid">
               {currentTool.features.map((feat, idx,) => (
@@ -319,18 +319,18 @@ export const AppDashboard = () => {
       )}
 
       {/* ================================================================== */}
-      {/* ABA: CLI & SCRIPTS */}
+      {/* TAB: CLI & SCRIPTS */}
       {/* ================================================================== */}
       {activeTab.value === "cli" && (
         <section>
           <div class="row space wrap gap">
             <div>
               <h5 class="bold no-margin">
-                Referência de Comandos CLI
+                CLI Command Reference
               </h5>
               <div class="small-text secondary-text">
-                Todos os utilitários são executáveis diretamente pelo Deno via
-                JSR ou arquivos locais.
+                All utilities can be executed directly via Deno via JSR or local
+                files.
               </div>
             </div>
             <div
@@ -341,7 +341,7 @@ export const AppDashboard = () => {
               </i>
               <input
                 type="text"
-                placeholder="Filtrar comandos..."
+                placeholder="Filter commands..."
                 value={searchQuery.value}
                 onInput={(e,) =>
                   searchQuery.value = (e.target as HTMLInputElement).value} />
@@ -373,9 +373,7 @@ export const AppDashboard = () => {
                       {copiedId.value === item.id ? "check" : "content_copy"}
                     </i>
                     <span>
-                      {copiedId.value === item.id
-                        ? "Copiado!"
-                        : "Copiar Comando"}
+                      {copiedId.value === item.id ? "Copied!" : "Copy Command"}
                     </span>
                   </button>
                 </div>
@@ -402,7 +400,7 @@ export const AppDashboard = () => {
             {filteredCliCommands.value.length === 0 && (
               <div class="center-align padding">
                 <p class="secondary-text">
-                  Nenhum comando encontrado para o termo pesquisado.
+                  No commands found matching the search term.
                 </p>
               </div>
             )}
@@ -411,18 +409,18 @@ export const AppDashboard = () => {
       )}
 
       {/* ================================================================== */}
-      {/* ABA: CONFIGURAÇÕES (.JSONC) */}
+      {/* TAB: CONFIGURATIONS (.JSONC) */}
       {/* ================================================================== */}
       {activeTab.value === "configs" && (
         <section>
           <div class="row space wrap gap">
             <div>
               <h5 class="bold no-margin">
-                Arquivos de Configuração (.jsonc)
+                Configuration Files (.jsonc)
               </h5>
               <div class="small-text secondary-text">
-                O BuildIt utiliza JSON com comentários (JSONC) para uma
-                declaração tipada e legível.
+                BuildIt uses JSON with comments (JSONC) for a typed and
+                human-readable declaration.
               </div>
             </div>
             <div class="row gap wrap">
@@ -473,8 +471,8 @@ export const AppDashboard = () => {
                 </i>
                 <span>
                   {copiedId.value === selectedConfig.value
-                    ? "Copiado!"
-                    : "Copiar JSON"}
+                    ? "Copied!"
+                    : "Copy JSON"}
                 </span>
               </button>
             </div>
@@ -489,17 +487,17 @@ export const AppDashboard = () => {
       )}
 
       {/* ================================================================== */}
-      {/* ABA: API DENO (PROGRAMÁTICA) */}
+      {/* TAB: DENO API (PROGRAMMATIC) */}
       {/* ================================================================== */}
       {activeTab.value === "api" && (
         <section>
           <div>
             <h5 class="bold no-margin">
-              API Programática em TypeScript
+              TypeScript Programmatic API
             </h5>
             <div class="small-text secondary-text">
-              Como importar e orquestrar as ferramentas diretamente em código
-              TypeScript/Deno.
+              How to import and orchestrate tools directly inside
+              TypeScript/Deno code.
             </div>
           </div>
 
@@ -515,7 +513,7 @@ export const AppDashboard = () => {
                       bolt
                     </i>
                     <span class="bold">
-                      Motor esbuild (esBuild)
+                      esbuild Engine (esBuild)
                     </span>
                   </div>
                   <button
@@ -532,7 +530,7 @@ export const AppDashboard = () => {
                         : "content_copy"}
                     </i>
                     <span>
-                      {copiedId.value === "api-esbuild" ? "Copiado!" : "Copiar"}
+                      {copiedId.value === "api-esbuild" ? "Copied!" : "Copy"}
                     </span>
                   </button>
                 </div>
@@ -552,7 +550,7 @@ export const AppDashboard = () => {
                       visibility
                     </i>
                     <span class="bold">
-                      Motor Watch (watchEngine)
+                      Watch Engine (watchEngine)
                     </span>
                   </div>
                   <button
@@ -566,7 +564,7 @@ export const AppDashboard = () => {
                         : "content_copy"}
                     </i>
                     <span>
-                      {copiedId.value === "api-watch" ? "Copiado!" : "Copiar"}
+                      {copiedId.value === "api-watch" ? "Copied!" : "Copy"}
                     </span>
                   </button>
                 </div>
@@ -586,7 +584,7 @@ export const AppDashboard = () => {
                       smart_toy
                     </i>
                     <span class="bold">
-                      Motor de Exportação IA (exportEngine)
+                      AI Export Engine (exportEngine)
                     </span>
                   </div>
                   <button
@@ -600,7 +598,7 @@ export const AppDashboard = () => {
                         : "content_copy"}
                     </i>
                     <span>
-                      {copiedId.value === "api-export" ? "Copiado!" : "Copiar"}
+                      {copiedId.value === "api-export" ? "Copied!" : "Copy"}
                     </span>
                   </button>
                 </div>

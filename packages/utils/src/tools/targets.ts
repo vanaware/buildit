@@ -1,24 +1,24 @@
 /**
  * @module @vanaware/buildit/tools/targets
- * @description Resolução determinística e garantia da ordem de execução de alvos baseada na configuração.
+ * @description Deterministic resolution and execution order guarantee for targets based on configuration.
  */
 
 /**
- * Resolve e preserva estritamente a ordem de execução dos alvos conforme declarados
- * no arquivo de configuração do projeto (única fonte da verdade).
+ * Resolves and strictly preserves the execution order of targets as declared
+ * in the project configuration file (single source of truth).
  *
- * @param config Objeto de configuração contendo as chaves na ordem desejada
- * @param requestedTargets Lista opcional de alvos solicitados pelo usuário (ex: via CLI)
- * @returns Lista de alvos filtrados respeitando a ordem original da configuração
+ * @param config Configuration object containing keys in the desired order
+ * @param requestedTargets Optional list of targets requested by the user (e.g., via CLI)
+ * @returns List of filtered targets respecting the original configuration order
  */
-export function resolverOrdemTargets<T extends object,>(
+export function resolveTargetOrder<T extends object,>(
   config: T,
   requestedTargets?: string[],
 ): string[] {
   const configKeys = Object.keys(config,);
 
   if (!requestedTargets || requestedTargets.length === 0) {
-    // Retorna todos os alvos que não possuem default: false
+    // Returns all targets that do not have default: false
     return configKeys.filter((key,) => {
       const targetConfig = (config as Record<string, unknown>)[key];
       if (targetConfig && typeof targetConfig === "object") {
@@ -28,10 +28,10 @@ export function resolverOrdemTargets<T extends object,>(
     },);
   }
 
-  // Normaliza os alvos solicitados para comparação case-insensitive
+  // Normalize requested targets for case-insensitive comparison
   const normalizedRequested = requestedTargets.map((t,) => t.toLowerCase());
 
-  // Preserva estritamente a ordem das chaves do objeto de configuração
+  // Strictly preserves the order of keys from the configuration object
   return configKeys.filter((key,) =>
     normalizedRequested.includes(key.toLowerCase(),)
   );

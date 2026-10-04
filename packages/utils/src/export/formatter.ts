@@ -1,66 +1,66 @@
 /**
  * @module @vanaware/buildit/export/formatter
- * @description Funções utilitárias puras para normalização de caminhos,
- * mapeamento de extensões, avaliação de padrões glob e formatação Markdown com proteção contra crases.
+ * @description Pure utility functions for path normalization, extension mapping,
+ * glob pattern evaluation, and Markdown formatting with backtick protection.
  */
 
 import { globToRegExp, } from "@std/path";
 import type { ExportConfig, } from "../tools/interfaces.ts";
 
 /**
- * Normaliza um caminho de arquivo para comparação consistente entre sistemas operacionais.
- * - Converte barras invertidas Windows (\) em barras normais (/)
- * - Converte todos os caracteres para minúsculas
+ * Normalizes a file path for consistent comparison across operating systems.
+ * - Converts Windows backslashes (\) to forward slashes (/)
+ * - Converts all characters to lowercase
  *
- * @param caminho Caminho relativo ou absoluto a ser normalizado
- * @returns Caminho normalizado em minúsculas com barras normais
+ * @param path Relative or absolute path to be normalized
+ * @returns Lowercase normalized path with forward slashes
  *
  * @example
  * ```typescript
- * normalizarCaminho("src\\components\\App.tsx"); // "src/components/app.tsx"
+ * normalizePath("src\\components\\App.tsx"); // "src/components/app.tsx"
  * ```
  */
-export function normalizarCaminho(caminho: string,): string {
-  return caminho.replace(/\\/g, "/",).toLowerCase();
+export function normalizePath(path: string,): string {
+  return path.replace(/\\/g, "/",).toLowerCase();
 }
 
 /**
- * Calcula a quantidade mínima de crases necessárias para envolver um texto
- * em um bloco de código markdown, evitando conflitos quando o próprio conteúdo
- * possui crases consecutivas.
+ * Calculates the minimum number of backticks required to wrap text
+ * in a markdown code block, avoiding conflicts when the content itself
+ * contains consecutive backticks.
  *
- * @param texto Conteúdo textual do arquivo
- * @returns String contendo 3 ou mais crases (ex: "```", "````")
+ * @param text File text content
+ * @returns String containing 3 or more backticks (e.g., "```", "````")
  *
  * @example
  * ```typescript
- * calcularCraseWrapper("console.log('oi');"); // "```"
- * calcularCraseWrapper("```markdown```"); // "````"
+ * calculateBacktickWrapper("console.log('hi');"); // "```"
+ * calculateBacktickWrapper("```markdown```"); // "````"
  * ```
  */
-export function calcularCraseWrapper(texto: string,): string {
-  const matches = texto.match(/`+/g,);
+export function calculateBacktickWrapper(text: string,): string {
+  const matches = text.match(/`+/g,);
   if (!matches) return "```";
-  const maiorSequencia = Math.max(...matches.map((m,) => m.length),);
-  const tamanhoNecessario = Math.max(3, maiorSequencia + 1,);
-  return "`".repeat(tamanhoNecessario,);
+  const largestSequence = Math.max(...matches.map((m,) => m.length),);
+  const requiredSize = Math.max(3, largestSequence + 1,);
+  return "`".repeat(requiredSize,);
 }
 
 /**
- * Mapeia extensões de arquivo para a sintaxe de highlight correspondente do Markdown.
+ * Maps file extensions to the corresponding Markdown syntax highlight language.
  *
- * @param caminhoRelativo Caminho relativo do arquivo
- * @returns Nome da linguagem para bloco de código Markdown (ex: "json", "bash")
+ * @param relativePath Relative file path
+ * @returns Language name for Markdown code block (e.g., "json", "bash")
  *
  * @example
  * ```typescript
- * mapearExtensao("deno.jsonc"); // "json"
- * mapearExtensao("script.sh"); // "bash"
+ * mapExtension("deno.jsonc"); // "json"
+ * mapExtension("script.sh"); // "bash"
  * ```
  */
-export function mapearExtensao(caminhoRelativo: string,): string {
-  const ext = caminhoRelativo.split(".",).pop()?.toLowerCase() || "";
-  const mapa: Record<string, string> = {
+export function mapExtension(relativePath: string,): string {
+  const ext = relativePath.split(".",).pop()?.toLowerCase() || "";
+  const map: Record<string, string> = {
     manifest: "json",
     jsonc: "json",
     yml: "yaml",
@@ -68,125 +68,125 @@ export function mapearExtensao(caminhoRelativo: string,): string {
     env: "properties",
   };
 
-  if (caminhoRelativo.includes(".env",)) return "properties";
+  if (relativePath.includes(".env",)) return "properties";
 
-  return mapa[ext] || ext;
+  return map[ext] || ext;
 }
 
 /**
- * Testa se um caminho corresponde a algum dos padrões glob fornecidos.
+ * Tests if a path matches any of the provided glob patterns.
  *
- * @param caminho Caminho relativo normalizado a ser testado
- * @param padroes Lista de padrões glob (suporta brace expansion e globstar)
- * @returns True se o caminho casar com ao menos um padrão
+ * @param path Normalized relative path to be tested
+ * @param patterns List of glob patterns (supports brace expansion and globstar)
+ * @returns True if the path matches at least one pattern
  */
-export function correspondeGlobs(caminho: string, padroes: string[],): boolean {
-  const caminhoNormalizado = caminho.replace(/\\/g, "/",);
-  for (const padrao of padroes) {
+export function matchesGlobs(path: string, patterns: string[],): boolean {
+  const normalizedPath = path.replace(/\\/g, "/",);
+  for (const pattern of patterns) {
     try {
-      const reg = globToRegExp(padrao, {
+      const reg = globToRegExp(pattern, {
         globstar: true,
         caseInsensitive: true,
       },);
-      if (reg.test(caminhoNormalizado,) || reg.test(caminho,)) {
+      if (reg.test(normalizedPath,) || reg.test(path,)) {
         return true;
       }
     } catch {
-      // Ignora padrão inválido
+      // Ignore invalid pattern
     }
   }
   return false;
 }
 
 /**
- * Determina se um determinado arquivo deve ser incluído no snapshot baseado na configuração do modo.
- * Utiliza a sintaxe baseada em `includes` / `excludes` (globs).
+ * Determines if a given file should be included in the snapshot based on mode configuration.
+ * Uses `includes` / `excludes` (globs) syntax.
  *
- * Regras aplicadas:
- * 1. Proteção anti-loop: sempre exclui arquivos dentro de pastas `exports/` ou `snapshots/`.
- * 2. Se casar com qualquer padrão de `excludes`, retorna `false`.
- * 3. Se casar com qualquer padrão de `includes`, retorna `true`.
+ * Applied Rules:
+ * 1. Anti-loop protection: always excludes files inside `exports/` or `snapshots/` folders.
+ * 2. If it matches any `excludes` pattern, returns `false`.
+ * 3. If it matches any `includes` pattern, returns `true`.
  *
- * @param caminhoRelativo Caminho relativo do arquivo no repositório
- * @param config Configuração do modo de exportação
- * @returns True se o arquivo deve ser adicionado ao snapshot, false caso contrário
+ * @param relativePath Relative file path in the repository
+ * @param config Export mode configuration
+ * @returns True if the file should be added to the snapshot, false otherwise
  *
  * @example
  * ```typescript
- * deveIncluirArquivo("packages/ui/src/main.tsx", config); // true
+ * shouldIncludeFile("packages/ui/src/main.tsx", config); // true
  * ```
  */
-export function deveIncluirArquivo(
-  caminhoRelativo: string,
+export function shouldIncludeFile(
+  relativePath: string,
   config: ExportConfig,
 ): boolean {
-  const caminhoNormalizado = normalizarCaminho(caminhoRelativo,);
+  const normalizedPath = normalizePath(relativePath,);
 
-  // 🔒 Proteção anti-loop: nunca inclui arquivos gerados de exportação
+  // 🔒 Anti-loop protection: never includes generated export files
   if (
-    caminhoNormalizado.startsWith("exports/",) ||
-    caminhoNormalizado.startsWith("snapshots/",)
+    normalizedPath.startsWith("exports/",) ||
+    normalizedPath.startsWith("snapshots/",)
   ) {
     return false;
   }
 
-  // 🌟 MODO MODERNO: Padrões `includes` e `excludes` (globs com brace expansion)
+  // 🌟 MODERN MODE: `includes` and `excludes` patterns (globs with brace expansion)
   if (config.excludes && config.excludes.length > 0) {
-    if (correspondeGlobs(caminhoRelativo, config.excludes,)) {
+    if (matchesGlobs(relativePath, config.excludes,)) {
       return false;
     }
   }
 
   if (config.includes && config.includes.length > 0) {
-    return correspondeGlobs(caminhoRelativo, config.includes,);
+    return matchesGlobs(relativePath, config.includes,);
   }
 
   return false;
 }
 
 /**
- * Gera o cabeçalho estruturado do snapshot Markdown contendo metadados e diretrizes para a IA.
+ * Generates the structured header for the Markdown snapshot containing metadata and AI guidelines.
  *
- * @param config Configuração do modo
- * @param modo Nome identificador do modo
- * @param versaoApp Versão semântica atual do projeto
- * @param defineVersionString Identificador da constante para substituição da versão (padrão: "__APP_VERSION__")
- * @returns Cabeçalho formatado em Markdown
+ * @param config Mode configuration
+ * @param mode Mode identifier name
+ * @param appVersion Current project semantic version
+ * @param defineVersionString Constant identifier for version replacement (default: "__APP_VERSION__")
+ * @returns Formatted Markdown header
  *
  * @example
  * ```typescript
- * const header = gerarCabecalho(config, "ui", "0.3.1", "__APP_VERSION__");
+ * const header = generateHeader(config, "ui", "0.3.1", "__APP_VERSION__");
  * ```
  */
-export function gerarCabecalho(
+export function generateHeader(
   config: ExportConfig,
-  modo: string,
-  versaoApp: string,
+  mode: string,
+  appVersion: string,
   defineVersionString: string = "__APP_VERSION__",
 ): string {
-  const versaoDisplay = config.incluiVersao ? `[v${versaoApp}] ` : "";
+  const versionDisplay = config.includeVersion ? `[v${appVersion}] ` : "";
   const targetDefine = defineVersionString || "__APP_VERSION__";
 
-  const instrucao = (config.instrucaoCustomizada ?? "Contexto do projeto.")
-    .replaceAll(targetDefine, versaoApp,);
+  const instruction = (config.customInstruction ?? "Project context.")
+    .replaceAll(targetDefine, appVersion,);
 
-  const projeto = config.projeto ?? "BuildIt";
+  const project = config.project ?? "BuildIt";
 
-  const padraoCabecalho =
-    `> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: \`## Arquivo: src/main.ts\`).\n> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.`;
+  const defaultHeader =
+    `> Each file starts with a title indicating its exact relative path (e.g., \`## File: src/main.ts\`).\n> Whenever suggesting changes, clearly indicate which file should be modified based on these paths and provide the complete new code for the file.`;
 
-  const cabecalho = (config.cabecalho ?? padraoCabecalho).trim()
-    .replaceAll(targetDefine, versaoApp,);
+  const header = (config.header ?? defaultHeader).trim()
+    .replaceAll(targetDefine, appVersion,);
 
-  return `> **INSTRUÇÃO PARA A IA:** 
-> ${instrucao}
-${cabecalho}
+  return `> **AI INSTRUCTION:** 
+> ${instruction}
+${header}
 
 ---
 
-# Contexto Exportado do Projeto ${projeto} ${versaoDisplay}- Modo: ${modo.toUpperCase()}
+# Exported Context from Project ${project} ${versionDisplay}- Mode: ${mode.toUpperCase()}
 
-Gerado automaticamente em: ${new Date().toISOString()}
+Automatically generated at: ${new Date().toISOString()}
 
 ---
 
@@ -194,28 +194,28 @@ Gerado automaticamente em: ${new Date().toISOString()}
 }
 
 /**
- * Formata um arquivo individual com caminho relativo e bloco de código Markdown seguro.
+ * Formats an individual file with a relative path and secure Markdown code block.
  *
- * @param caminhoRelativo Caminho relativo do arquivo a ser exibido
- * @param conteudo Conteúdo de texto original do arquivo
- * @returns Bloco de código Markdown formatado com separador
+ * @param relativePath Relative path of the file to display
+ * @param content Original file text content
+ * @returns Formatted Markdown code block with separator
  *
  * @example
  * ```typescript
- * formatarArquivoMarkdown("src/index.ts", "console.log('oi');");
+ * formatMarkdownFile("src/index.ts", "console.log('hi');");
  * ```
  */
-export function formatarArquivoMarkdown(
-  caminhoRelativo: string,
-  conteudo: string,
+export function formatMarkdownFile(
+  relativePath: string,
+  content: string,
 ): string {
-  const extensaoMarkdown = mapearExtensao(caminhoRelativo,);
-  const wrapperCrasis = calcularCraseWrapper(conteudo,);
+  const markdownExtension = mapExtension(relativePath,);
+  const backtickWrapper = calculateBacktickWrapper(content,);
 
-  let resultado = `## Arquivo: \`${caminhoRelativo}\`\n\n`;
-  resultado += `${wrapperCrasis}${extensaoMarkdown}\n`;
-  resultado += conteudo;
-  resultado += `\n${wrapperCrasis}\n\n---\n\n`;
+  let result = `## File: \`${relativePath}\`\n\n`;
+  result += `${backtickWrapper}${markdownExtension}\n`;
+  result += content;
+  result += `\n${backtickWrapper}\n\n---\n\n`;
 
-  return resultado;
+  return result;
 }

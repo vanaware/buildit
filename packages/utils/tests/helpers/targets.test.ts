@@ -2,9 +2,9 @@
 
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, } from "@std/assert";
-import { resolverOrdemTargets, } from "../../src/tools/targets.ts";
+import { resolveTargetOrder, } from "../../src/tools/targets.ts";
 
-describe("resolverOrdemTargets", () => {
+describe("resolveTargetOrder", () => {
   const config = {
     server: { default: true, },
     ui: { default: true, },
@@ -13,34 +13,34 @@ describe("resolverOrdemTargets", () => {
     docs: { default: false, },
   };
 
-  it("retorna alvos padrão na ordem exata de definição do config quando nenhum solicitado", () => {
-    const targets = resolverOrdemTargets(config,);
+  it("returns default targets in exact definition order when none are requested", () => {
+    const targets = resolveTargetOrder(config,);
     assertEquals(targets, ["server", "ui", "sw",],);
   });
 
-  it("garante a ordem do config mesmo se o chamador passar alvos invertidos ou desordenados", () => {
-    // Passado ["docs", "ui", "server"] -> deve resolver para ["server", "ui", "docs"]
-    const targets = resolverOrdemTargets(config, ["docs", "ui", "server",],);
+  it("ensures config order even if caller passes inverted or disordered targets", () => {
+    // Passed ["docs", "ui", "server"] -> should resolve to ["server", "ui", "docs"]
+    const targets = resolveTargetOrder(config, ["docs", "ui", "server",],);
     assertEquals(targets, ["server", "ui", "docs",],);
   });
 
-  it("lida de forma case-insensitive preservando as chaves originais do config", () => {
-    const targets = resolverOrdemTargets(config, ["SW", "SERVER",],);
+  it("handles case-insensitivity preserving original config keys", () => {
+    const targets = resolveTargetOrder(config, ["SW", "SERVER",],);
     assertEquals(targets, ["server", "sw",],);
   });
 
-  it("permite incluir alvos com default: false quando solicitados explicitamente", () => {
-    const targets = resolverOrdemTargets(config, ["admin",],);
+  it("allows including targets with default: false when explicitly requested", () => {
+    const targets = resolveTargetOrder(config, ["admin",],);
     assertEquals(targets, ["admin",],);
   });
 
-  it("retorna vazio se os alvos solicitados não existirem no config", () => {
-    const targets = resolverOrdemTargets(config, ["inexistente", "fantasma",],);
+  it("returns empty if requested targets do not exist in config", () => {
+    const targets = resolveTargetOrder(config, ["nonexistent", "ghost",],);
     assertEquals(targets, [],);
   });
 
-  it("retorna array vazio quando config está vazio", () => {
-    const targets = resolverOrdemTargets({}, ["ui",],);
+  it("returns empty array when config is empty", () => {
+    const targets = resolveTargetOrder({}, ["ui",],);
     assertEquals(targets, [],);
   });
 });

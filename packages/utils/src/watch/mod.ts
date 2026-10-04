@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/watch
- * @description Módulo de desenvolvimento contínuo (Watch) para Deno e Preact.
+ * @description Continuous development module (Watch) for Deno and Preact.
  *
  * @example
  * ```typescript
@@ -22,7 +22,7 @@ export { watchEngine, } from "./engine.ts";
 
 export { 
   WATCH_CONFIG_EXAMPLE as watchExample, 
-  carregarConfigWatch
+  loadWatchConfig
 } from "./config.ts";
 
 export type {

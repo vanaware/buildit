@@ -182,3 +182,11 @@ Explicação:
 **TODO LIST 6 (ajustes)**
 - [x] continua tendo a função extractVersion sendo que era para usarmos somente readProjectVersion. quem esta usando é tag-version e rotinas de testes que podem ser alteradas
 - [x] ensureVersionFile se receber um arquivo com extensão ".js" ao invés de ".ts" teria que criar uma versão javascript do que o padrão typescript. a função getVersionFileTemplate teria um parametro se é para gerar typescript (padrão default) ou uma versão javascript. 
+
+**TODO LIST 7 (Internacionalização dos Testes, JSDoc & Conformidade JSR)**
+- [x] Tradução integral para inglês de todas as suítes de testes em `packages/utils/tests/` (BDD descriptions, assertions e fixtures).
+- [x] Cobertura de JSDoc em 100% dos símbolos, interfaces e tipos públicos em `packages/utils/src/tools/interfaces.ts`.
+- [x] Validação rigorosa do linter de documentação `deno task lint:doc` (`deno doc --lint`) cobrindo todos os 7 pontos de entrada públicos (0 erros e 0 warnings).
+- [x] Formatação padrão Deno executada em todo o repositório (`deno task fmt:check` passando 100%).
+- [x] Suíte completa de validação (`deno task tests`: check, lint, fmt:check, test) executada com sucesso (50 testes, 321 steps, 0 falhas).
+- [x] Build de produção (`npm run build`) executado e sincronizado com sucesso. 

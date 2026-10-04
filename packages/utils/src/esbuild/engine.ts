@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join, } from "@std/path";
 import { parse as parseJsonc, } from "@std/jsonc";
 
 // ============================================================================
-// 📦 TIPOS
+// 📦 TYPES
 // ============================================================================
 import type {
   DenoBundleGlobalConfig,
@@ -29,17 +29,17 @@ import {
 import { validateTargetConfig, } from "../tools/validate.ts";
 
 // ============================================================================
-// 🔢 FUNÇÕES DE VERSÃO (re-exportadas de config/version.ts)
+// 🔢 VERSION FUNCTIONS (re-exported from config/version.ts)
 // ============================================================================
 import {
   updateProjectVersion,
 } from "../tools/version.ts";
-import { resolverOrdemTargets, } from "../tools/targets.ts";
+import { resolveTargetOrder, } from "../tools/targets.ts";
 import * as esbuild from "esbuild";
 import { denoPlugin, } from "@deno/esbuild-plugin";
 
 /**
- * Injeta o Deno Plugin nas opções do esbuild.
+ * Injects the Deno Plugin into esbuild options.
  */
 export const buildWithDenoPlugin = (
   // deno-lint-ignore no-explicit-any
@@ -55,10 +55,10 @@ export const buildWithDenoPlugin = (
 };
 
 /**
- * Executa programaticamente a compilação com esbuild para os alvos configurados.
+ * Programmatically executes the esbuild compilation for configured targets.
  *
- * @param opcoes Opções completas de execução (incluindo configuração já parseada)
- * @returns Lista de resultados obtidos por alvo
+ * @param opcoes Full execution options (including already parsed configuration)
+ * @returns List of results obtained per target
  *
  * @example
  * ```typescript
@@ -92,21 +92,21 @@ export async function esBuild(
     defineVersionString: opcoes.defineVersionString,
   },);
 
-  // Garante estritamente que a ordem de execução siga a declaração na configuração
-  const targetsParaExecutar = resolverOrdemTargets(configs, targets,);
+  // Strictly ensures that the execution order follows the declaration in the configuration
+  const targetsToExecute = resolveTargetOrder(configs, targets,);
 
-  if (targetsParaExecutar.length === 0) {
+  if (targetsToExecute.length === 0) {
     return [];
   }
 
   const resultados: EsbuildResult[] = [];
 
   try {
-    for (const targetName of targetsParaExecutar) {
+    for (const targetName of targetsToExecute) {
       const targetConfig = configs[targetName];
       if (!targetConfig) {
         console.warn(
-          `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+          `⚠️ Target '${targetName}' not found in configuration. Skipping.`,
         );
         continue;
       }
@@ -131,11 +131,11 @@ export async function esBuild(
       },);
     }
   } finally {
-    // ✨ GARANTIA DE ENCERRAMENTO: No Deno, o processo do esbuild (npm) precisa ser parado explicitamente
+    // ✨ TERMINATION GUARANTEE: In Deno, the esbuild process (npm) needs to be explicitly stopped
     try {
       await esbuild.stop();
     } catch {
-      // Ignora erros no stop()
+      // Ignore errors in stop()
     }
   }
 
@@ -143,13 +143,13 @@ export async function esBuild(
 }
 
 /**
- * Processa a compilação de um alvo do esbuild.
- * @param targetName Nome do alvo
- * @param config Configuração do alvo
- * @param appVersion Versão da aplicação
- * @param esbuildBuildFn Função de build do esbuild (com plugins injetados)
- * @param listAssetsFn Função opcional para listar assets
- * @param baseDir Diretório base do projeto para resolução de caminhos
+ * Processes the compilation of an esbuild target.
+ * @param targetName Target name
+ * @param config Target configuration
+ * @param appVersion Application version
+ * @param esbuildBuildFn esbuild build function (with plugins injected)
+ * @param listAssetsFn Optional function to list assets
+ * @param baseDir Project base directory for path resolution
  */
 export async function processTarget(
   targetName: string,
@@ -167,20 +167,20 @@ export async function processTarget(
     distdir: resolveWithBase(config.distdir, baseDir,),
   };
 
-  // 🔥 VALIDAÇÃO FAIL-FAST: Verifica configuração ANTES de qualquer operação
+  // 🔥 FAIL-FAST VALIDATION: Check configuration BEFORE any operation
   validateTargetConfig(targetName, resolvedConfig,);
 
   console.log(`\n${"=".repeat(60,)}`,);
-  console.log(`🎯 PROCESSANDO ALVO: ${targetName.toUpperCase()}`,);
+  console.log(`🎯 PROCESSING TARGET: ${targetName.toUpperCase()}`,);
   console.log(`${"=".repeat(60,)}`,);
 
   if (resolvedConfig.clean) {
-    // 🔥 CORREÇÃO: Só limpa se distdir existe
+    // 🔥 CORRECTION: Only clean if distdir exists
     if (resolvedConfig.distdir) {
       await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     } else {
       console.warn(
-        `⚠️ 'clean' configurado mas 'distdir' ausente. Pulando limpeza.`,
+        `⚠️ 'clean' configured but 'distdir' missing. Skipping cleanup.`,
       );
     }
   }
@@ -200,15 +200,15 @@ export async function processTarget(
     defineVersionString,
   );
 
-  console.log(`🔨 Compilando com esbuild...`,);
+  console.log(`🔨 Compiling with esbuild...`,);
   const startTime = performance.now();
 
   try {
     const result = await esbuildBuildFn(esbuildOptions,);
     const duration = (performance.now() - startTime).toFixed(0,);
-    console.log(`✅ [${targetName}] Build concluído em ${duration}ms`,);
+    console.log(`✅ [${targetName}] Build completed in ${duration}ms`,);
 
-    // 🔥 CORREÇÃO: Só salva metafile se distdir existe
+    // 🔥 CORRECTION: Only save metafile if distdir exists
     if (resolvedConfig.metafile && result.metafile && resolvedConfig.distdir) {
       const metafilePath = join(
         resolvedConfig.distdir,
@@ -218,15 +218,15 @@ export async function processTarget(
         metafilePath,
         JSON.stringify(result.metafile, null, 2,),
       );
-      console.log(`📊 Metafile gerado: ${metafilePath}`,);
+      console.log(`📊 Metafile generated: ${metafilePath}`,);
     }
 
-    // 🔥 ANALYZE REPORT: Se solicitado, imprime o relatório no console
+    // 🔥 ANALYZE REPORT: If requested, print report to console
     if (config.analyze) {
       const analyzeResult = await esbuild.analyzeMetafile(result.metafile, {
         verbose: config.analyze === "verbose",
       });
-      console.log(`\n📊 RELATÓRIO DE ANÁLISE [${targetName}]:\n`);
+      console.log(`\n📊 ANALYSIS REPORT [${targetName}]:\n`);
       console.log(analyzeResult);
     }
   } catch (error) {
@@ -235,31 +235,31 @@ export async function processTarget(
       (error as unknown as { message?: string }).message?.includes("unref",)
     ) {
       console.error(
-        `❌ Erro fatal no build [${targetName}]: Falha ao iniciar processo do esbuild.`,
+        `❌ Fatal error in build [${targetName}]: Failed to start esbuild process.`,
       );
       console.error(
-        `💡 DICA: O esbuild (npm) no Deno requer a permissão '--allow-run'.`,
+        `💡 TIP: esbuild (npm) in Deno requires the '--allow-run' permission.`,
       );
       console.error(
-        `👉 Tente executar 'deno task build' ou adicione '--allow-run' ao seu comando.`,
+        `👉 Try running 'deno task build' or add '--allow-run' to your command.`,
       );
     } else {
-      console.error(`❌ Erro fatal no build [${targetName}]:`, error,);
+      console.error(`❌ Fatal error in build [${targetName}]:`, error,);
     }
     throw error;
   }
 }
 
 // ============================================================================
-// 🛠️ FUNÇÕES DE ESBUILD
+// 🛠️ ESBUILD FUNCTIONS
 // ============================================================================
 /**
- * Constrói as opções de build para o esbuild.
- * @param targetName Nome do alvo
- * @param config Configuração do alvo
- * @param appVersion Versão da aplicação
- * @param listAssetsFn Função para listar assets
- * @returns Opções do esbuild
+ * Builds build options for esbuild.
+ * @param targetName Target name
+ * @param config Target configuration
+ * @param appVersion Application version
+ * @param listAssetsFn Function to list assets
+ * @returns esbuild options
  */
 export async function buildEsbuildOptions(
   _targetName: string,
@@ -276,21 +276,21 @@ export async function buildEsbuildOptions(
     [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
   };
 
-  // 🔥 INJEÇÃO DE ASSETS DEFINES: Padrão unificado
+  // 🔥 ASSETS DEFINES INJECTION: Unified pattern
   if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && listAssetsFn && config.distdir) {
     const assets = await listAssetsFn(config.distdir,);
 
     finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listados para define '${config.defineAssetsString}'`,);
+    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
   }
 
-  // 🔥 RESOLUÇÃO DE ENTRYPOINTS (srcdir opcional)
+  // 🔥 ENTRYPOINTS RESOLUTION (optional srcdir)
   const resolvedEntryPoints = resolveEntryPoints(
     config.srcdir,
     config.entryPoints,
   );
 
-  // 🔥 RESOLUÇÃO DE OUTPUT PATHS (outfile relativo ao distdir)
+  // 🔥 OUTPUT PATHS RESOLUTION (outfile relative to distdir)
   const { outfile, outdir, } = resolveOutputPaths(config,);
 
   // deno-lint-ignore no-explicit-any
@@ -298,7 +298,7 @@ export async function buildEsbuildOptions(
     entryPoints: resolvedEntryPoints,
   };
 
-  // 🔥 CORREÇÃO: Usa outfile resolvido ou outdir
+  // 🔥 CORRECTION: Use resolved outfile or outdir
   if (outfile) {
     options.outfile = outfile;
   } else if (outdir) {
@@ -361,12 +361,12 @@ export async function buildEsbuildOptions(
     }
   }
 
-  // 🔥 REQUISITO: Para usar analyze, o esbuild precisa gerar o metafile
+  // 🔥 REQUIREMENT: To use analyze, esbuild needs to generate the metafile
   if (config.analyze) {
     options.metafile = true;
   }
 
-  // 🔥 TRATAMENTO ESPECIAL: mangleProps e reserveProps devem ser RegExp no JS API
+  // 🔥 SPECIAL TREATMENT: mangleProps and reserveProps must be RegExp in JS API
   const regexProps = ["mangleProps", "reserveProps"];
   for (const propName of regexProps) {
     const val = (config as any)[propName];
@@ -386,7 +386,7 @@ export async function buildEsbuildOptions(
     }
   }
 
-  // 🔥 CORREÇÃO: Construção segura de banner com defineVersionKey
+  // 🔥 CORRECTION: Secure banner construction with defineVersionKey
   if (config.banner !== undefined) {
     const banner: { js?: string; css?: string } = {};
     if (config.banner.js !== undefined) {
@@ -404,7 +404,7 @@ export async function buildEsbuildOptions(
     }
   }
 
-  // 🔥 CORREÇÃO: Construção segura de footer com defineVersionKey
+  // 🔥 CORRECTION: Secure footer construction with defineVersionKey
   if (config.footer !== undefined) {
     const footer: { js?: string; css?: string } = {};
     if (config.footer.js !== undefined) {

@@ -1,9 +1,9 @@
 {
   "$schema": "./packages/utils/schema/export.json",
-  "projeto": "BuildIt",
-  "modos": {
+  "project": "BuildIt",
+  "modes": {
     "ui": {
-      "arquivoSaida": "snapshots/ui.md",
+      "outputFile": "snapshots/ui.md",
       "includes": [
         "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
         "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
@@ -12,23 +12,23 @@
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": true,
-      "instrucaoCustomizada": "O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).",
+      "includeVersion": true,
+      "customInstruction": "The text below contains the main SOURCE CODE files for the example application (UI).",
       "default": true
     },
     "docs": {
-      "arquivoSaida": "snapshots/docs.md",
+      "outputFile": "snapshots/docs.md",
       "includes": [
         "docs/**/*.{md,txt}",
         "{readme.md,readme,license,license.md,license.txt,.tool-versions}"
       ],
       "excludes": [],
-      "incluiVersao": false,
-      "instrucaoCustomizada": "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
+      "includeVersion": false,
+      "customInstruction": "The text below contains the DOCUMENTATION and architectural guidelines of the project.",
       "default": true
     },
     "server": {
-      "arquivoSaida": "snapshots/server.md",
+      "outputFile": "snapshots/server.md",
       "includes": [
         "packages/server/{src,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,json,jsonc,yaml,yml,md}",
         "packages/server/{deno.json,deno.jsonc,readme.md}",
@@ -38,12 +38,12 @@
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": false,
-      "instrucaoCustomizada": "O texto abaixo contém os arquivos de configuração e execução do SERVIDOR @vanaware/server e CI/CD.",
+      "includeVersion": false,
+      "customInstruction": "The text below contains the configuration and execution files for the SERVER @vanaware/server and CI/CD.",
       "default": true
     },
     "utils": {
-      "arquivoSaida": "snapshots/utils.md",
+      "outputFile": "snapshots/utils.md",
       "includes": [
         "packages/utils/{src,tests,docs}/**/*.{tsx,jsx,js,ts,json,jsonc,md}",
         "packages/utils/{deno.json,deno.jsonc,readme.md}",
@@ -53,8 +53,8 @@
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": false,
-      "instrucaoCustomizada": "O texto abaixo contém o código e testes da biblioteca @vanaware/buildit",
+      "includeVersion": false,
+      "customInstruction": "The text below contains the code and tests for the @vanaware/buildit library",
       "default": true
     }
   }

@@ -6,7 +6,7 @@ import { join, } from "@std/path";
 import { syncWorkspaces, } from "../../src/tools/version.ts";
 
 describe("syncWorkspaces", () => {
-  it("deve sincronizar a versão já existente no deno.jsonc raiz para os pacotes do workspace", async () => {
+  it("should synchronize the existing version in root deno.jsonc to workspace packages", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const rootConfig = {
@@ -33,7 +33,7 @@ describe("syncWorkspaces", () => {
         JSON.stringify({ name: "pkg-b", version: "0.0.2", }, null, 2,),
       );
 
-      // Executa syncWorkspaces apenas com baseDir (deve ler a versão do deno.jsonc raiz)
+      // Runs syncWorkspaces with only baseDir (should read version from root deno.jsonc)
       const syncedVersion = await syncWorkspaces({ baseDir: tempDir, },);
       assertEquals(syncedVersion, "1.2.3#xyz",);
 
@@ -49,7 +49,7 @@ describe("syncWorkspaces", () => {
     }
   });
 
-  it("deve aceitar denoJsonPath explícito e sobrescrever com currentVersion se fornecido", async () => {
+  it("should accept explicit denoJsonPath and override with currentVersion if provided", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const rootConfig = {

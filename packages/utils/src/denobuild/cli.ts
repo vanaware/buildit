@@ -1,48 +1,48 @@
 /**
  * @module @vanaware/buildit/denobuild/cli
- * @description Ponto de entrada CLI para o orquestrador denobuild baseado em Deno.bundle API.
+ * @description CLI entry point for the denobuild orchestrator based on Deno.bundle API.
  */
 
 import { Command, } from "@cliffy/command";
 import { readProjectVersion, } from "../tools/version.ts";
-import { carregarConfigDenoBuild, } from "./config.ts";
+import { loadDenoBuildConfig, } from "./config.ts";
 import { denoBuild, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
 import { parseArgs, } from "../tools/cli-flags.ts";
 
 /**
- * Executa o CLI do orquestrador de build baseado em Deno.bundle.
+ * Executes the Deno.bundle-based build orchestrator CLI.
  */
 export function denoBuildCli(): Command<any> {
   return new Command()
     .name("denobuild",)
     .description("BuildIt Deno.bundle Orchestrator",)
     .version(APP_VERSION,)
-    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Configuration file", {
       env: { prefix: "DENOBUILD_", },
     },)
-    .option("-b, --base-dir [dir:string]", "Diretório Base", {
+    .option("-b, --base-dir [dir:string]", "Base Directory", {
       default: "./",
       env: true,
     },)
-    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
+    .option("-d, --deno-config [file:string]", "Deno Configuration", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     },)
     .option(
       "-n, --noversion",
-      "Desabilita o incremento automático de versão",
+      "Disable automatic version increment",
       {
         default: false,
       },
     )
-    .arguments("[targets...:string]", ["Alvos de build",],)
+    .arguments("[targets...:string]", ["Build targets",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
       const baseDir = options.baseDir as string || ".";
       const configPath = options.appConfig as string;
-      const loaded = await carregarConfigDenoBuild(configPath, baseDir,);
+      const loaded = await loadDenoBuildConfig(configPath, baseDir,);
       const configs = loaded.targets;
 
       const { targets, globalNoVersion, } = parseArgs(
@@ -51,9 +51,9 @@ export function denoBuildCli(): Command<any> {
       );
 
       console.log(
-        "\n🚀 Iniciando Orquestrador de Build BuildIt (denobuild / Deno.bundle API)",
+        "\n🚀 Starting BuildIt Build Orchestrator (denobuild / Deno.bundle API)",
       );
-      console.log(`   📦 Motor: Deno.bundle (nativo, --unstable-bundle)`,);
+      console.log(`   📦 Engine: Deno.bundle (native, --unstable-bundle)`,);
       console.log(`🔒 Noversion: ${globalNoVersion}\n`,);
 
       try {
@@ -69,14 +69,14 @@ export function denoBuildCli(): Command<any> {
         },);
 
         console.log(`\n${"=".repeat(60,)}`,);
-        console.log(`🎉 ORQUESTRAÇÃO DENOBUILD CONCLUÍDA COM SUCESSO!`,);
+        console.log(`🎉 DENOBUILD ORCHESTRATION COMPLETED SUCCESSFULLY!`,);
         console.log(`${"=".repeat(60,)}`,);
       } catch (error) {
-        console.error("\n🛑 Pipeline de build falhou:", error,);
+        console.error("\n🛑 Build pipeline failed:", error,);
         Deno.exit(1,);
       } finally {
         const elapsed = (performance.now() - startTime).toFixed(0,);
-        console.log(`\n⏱️ Tempo total: ${elapsed}ms\n`,);
+        console.log(`\n⏱️ Total time: ${elapsed}ms\n`,);
       }
     },);
 }

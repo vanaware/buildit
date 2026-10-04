@@ -1,30 +1,30 @@
 /**
  * @module @vanaware/buildit/watch/cli
- * @description Ponto de entrada CLI para o monitoramento e recarregamento contínuo (Watch).
+ * @description CLI entry point for continuous monitoring and rebuilding (Watch).
  */
 
 import { Command, } from "@cliffy/command";
-import { carregarConfigWatch, } from "./config.ts";
+import { loadWatchConfig, } from "./config.ts";
 import { watchEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
 
 /**
- * Cria a instância do comando CLI para o modo watch.
+ * Creates the CLI command instance for watch mode.
  */
 export function watchCli(): Command<any> {
   return new Command()
     .name("watch",)
-    .description("BuildIt Watch Orchestrator (Desenvolvimento Contínuo)",)
+    .description("BuildIt Watch Orchestrator (Continuous Development)",)
     .version(APP_VERSION,)
-    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Configuration file", {
       env: { prefix: "WATCH_", },
     },)
-    .option("-b, --base-dir [dir:string]", "Diretório Base", {
+    .option("-b, --base-dir [dir:string]", "Base Directory", {
       default: "./",
       env: true,
     },)
-    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
+    .option("-d, --deno-config [file:string]", "Deno Configuration", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     },)
@@ -32,13 +32,13 @@ export function watchCli(): Command<any> {
     .action(async function (options, target?: string,): Promise<void> {
       const baseDir = (options.baseDir as string) || ".";
       const configPath = options.appConfig as string;
-      const loaded = await carregarConfigWatch(configPath, baseDir,);
+      const loaded = await loadWatchConfig(configPath, baseDir,);
       const configs = loaded.targets;
 
       const denoConfigPath = (options.denoConfig as string) || "deno.jsonc";
 
       console.log(
-        "\n👀 Iniciando Orquestrador de Watch BuildIt (esbuild context + @deno/esbuild-plugin)",
+        "\n👀 Starting BuildIt Watch Orchestrator (esbuild context + @deno/esbuild-plugin)",
       );
 
       try {
@@ -49,19 +49,19 @@ export function watchCli(): Command<any> {
           versionPaths: loaded.versionPaths,
           defineVersionString: loaded.defineVersionString,
           denoJsoncPath: denoConfigPath,
-          silencioso: false,
+          silent: false,
         },);
 
         if (handles.length === 0) {
-          console.log("ℹ️ Nenhum processo watch ativo.",);
+          console.log("ℹ️ No active watch processes.",);
           return;
         }
 
-        console.log("\n💡 Pressione Ctrl+C para encerrar o monitoramento.\n",);
+        console.log("\n💡 Press Ctrl+C to terminate monitoring.\n",);
 
-        // Tratamento gracioso de sinais de encerramento
+        // Graceful termination signal handling
         const onSignal = async () => {
-          console.log("\n🛑 Encerrando modo watch...",);
+          console.log("\n🛑 Terminating watch mode...",);
           for (const handle of handles) {
             await handle.close();
           }
@@ -72,16 +72,16 @@ export function watchCli(): Command<any> {
           Deno.addSignalListener("SIGINT", onSignal,);
           Deno.addSignalListener("SIGTERM", onSignal,);
         } catch {
-          // Ignora se o runtime não suportar SignalListener
+          // Ignore if runtime doesn't support SignalListener
         }
 
-        // Manter o processo vivo
+        // Keep process alive
         await new Promise(() => {},);
       } catch (error) {
-        const mensagem = error instanceof Error
+        const message = error instanceof Error
           ? error.message
           : String(error,);
-        console.error(`\n🛑 Falha na inicialização do Watch:\n${mensagem}`,);
+        console.error(`\n🛑 Watch initialization failed:\n${message}`,);
         Deno.exit(1,);
       }
     },);

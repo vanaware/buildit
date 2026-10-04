@@ -1,6 +1,6 @@
 /**
  * @file esbuild.test.ts
- * @description Testes unitários BDD para a lógica de configuração e utilitários do esbuild.
+ * @description BDD unit tests for esbuild configuration logic and utilities.
  */
 
 import { describe, it, } from "@std/testing/bdd";
@@ -10,27 +10,27 @@ import { isSafePath, resolveOutputPaths, } from "../../src/tools/paths.ts";
 import { ESBUILD_CONFIG_EXAMPLE, } from "../../src/esbuild/config.ts";
 
 describe("esbuild - versioning", () => {
-  it("deve parsear versão semântica com hash", () => {
+  it("should parse semantic version with hash", () => {
     const v = parseVersion("1.2.3#hash",);
     assertEquals(v.major, 1,);
     assertEquals(v.minor, 2,);
     assertEquals(v.patch, 3,);
   });
 
-  it("deve formatar versão corretamente", () => {
+  it("should format version correctly", () => {
     const v = formatVersion(0, 3, 8, "test",);
     assertEquals(v, "0.3.8#test",);
   });
 });
 
 describe("esbuild - paths", () => {
-  it("deve validar caminhos seguros", () => {
+  it("should validate safe paths", () => {
     assert(isSafePath("dist/output.js",),);
     assert(!isSafePath("../secret.js",),);
     assert(!isSafePath("/etc/passwd",),);
   });
 
-  it("deve resolver caminhos de saída corretamente", () => {
+  it("should resolve output paths correctly", () => {
     const config = {
       outfile: "bundle.js",
       distdir: "dist",
@@ -42,7 +42,7 @@ describe("esbuild - paths", () => {
 });
 
 describe("esbuild - config", () => {
-  it("deve ter exemplo de configuração válido", () => {
+  it("should have a valid configuration example", () => {
     assert(ESBUILD_CONFIG_EXAMPLE.ui !== undefined,);
     assertEquals(ESBUILD_CONFIG_EXAMPLE.ui!.default, true,);
   });

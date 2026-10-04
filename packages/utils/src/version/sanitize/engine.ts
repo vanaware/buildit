@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/version/sanitize/engine
- * @description Motor de sanitização de versão semântica em arquivos deno.json e deno.jsonc.
+ * @description Semantic version sanitization engine for deno.json and deno.jsonc files.
  */
 
 import {
@@ -15,11 +15,11 @@ import type {
 } from "../../tools/interfaces.ts";
 
 /**
- * Normaliza o campo "version" de um arquivo deno.json[c] para o formato semver estrito (MAJOR.MINOR.PATCH).
- * Se o campo "version" não existir, injeta `"version": "0.0.0"` no início do arquivo.
+ * Normalizes the "version" field of a deno.json[c] file to strict semver format (MAJOR.MINOR.PATCH).
+ * If the "version" field does not exist, injects `"version": "0.0.0"` at the beginning of the file.
  *
- * @param options Opções de execução da sanitização
- * @returns Objeto com o resultado da sanitização
+ * @param options Sanitization execution options
+ * @returns Object with the sanitization result
  *
  * @example
  * ```typescript
@@ -37,23 +37,23 @@ export async function sanitizeVersionFile(
     try {
       const stat = await Deno.stat(targetPath,);
       if (!stat.isFile) {
-        throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
+        throw new Error(`❌ Error: File '${targetPath}' not found.`,);
       }
     } catch {
-      throw new Error(`❌ Erro: Arquivo '${targetPath}' não encontrado.`,);
+      throw new Error(`❌ Error: File '${targetPath}' not found.`,);
     }
   } else {
     const found = findDenoFile(baseDir,);
     if (!found) {
       throw new Error(
-        `❌ Erro: Nenhum deno.json[c] encontrado a partir de ${baseDir}`,
+        `❌ Error: No deno.json[c] found starting from ${baseDir}`,
       );
     }
     targetPath = found;
   }
 
-  if (!options.silencioso) {
-    console.log(`🔍 Buscando versão em: ${targetPath}`,);
+  if (!options.silent) {
+    console.log(`🔍 Searching version in: ${targetPath}`,);
   }
 
   let rawVersion: string | null = null;
@@ -65,15 +65,15 @@ export async function sanitizeVersionFile(
   let content = await Deno.readTextFile(targetPath,);
 
   if (rawVersion === null) {
-    if (!options.silencioso) {
+    if (!options.silent) {
       console.log(
-        `⚠️  Nenhum campo 'version' encontrado. Inserindo "0.0.0"...`,
+        `⚠️  No 'version' field found. Inserting "0.0.0"...`,
       );
     }
     const braceIndex = content.indexOf("{",);
     if (braceIndex === -1) {
       throw new Error(
-        `❌ Arquivo ${targetPath} não contém JSON/JSONC válido.`,
+        `❌ File ${targetPath} does not contain valid JSON/JSONC.`,
       );
     }
     content = content.slice(0, braceIndex + 1,) + '\n  "version": "0.0.0",' +
@@ -82,13 +82,13 @@ export async function sanitizeVersionFile(
     await Deno.writeTextFile(targetPath, content,);
   }
 
-  if (!options.silencioso) {
-    console.log(`📌 Versão original: ${rawVersion}`,);
+  if (!options.silent) {
+    console.log(`📌 Original version: ${rawVersion}`,);
   }
 
   const sanitizedVersion = sanitizeVersion(rawVersion,);
-  if (!options.silencioso) {
-    console.log(`✅ Versão sanitizada: ${sanitizedVersion}`,);
+  if (!options.silent) {
+    console.log(`✅ Sanitized version: ${sanitizedVersion}`,);
   }
 
   let updated = false;
@@ -96,14 +96,14 @@ export async function sanitizeVersionFile(
     const updatedContent = replaceVersionInContent(content, sanitizedVersion,);
     await Deno.writeTextFile(targetPath, updatedContent,);
     updated = true;
-    if (!options.silencioso) {
+    if (!options.silent) {
       console.log(
-        `📝 Arquivo atualizado: ${rawVersion} → ${sanitizedVersion}`,
+        `📝 File updated: ${rawVersion} → ${sanitizedVersion}`,
       );
     }
   } else {
-    if (!options.silencioso) {
-      console.log(`✨ Já estava no formato semver correto.`,);
+    if (!options.silent) {
+      console.log(`✨ Already in correct semver format.`,);
     }
   }
 

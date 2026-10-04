@@ -2,18 +2,18 @@ import { parse as parseJsonc, } from "@std/jsonc";
 import { dirname, fromFileUrl, join, } from "@std/path";
 
 /**
- * Carrega e faz o parse de um arquivo JSON ou JSONC de forma segura.
- * Tenta carregar o arquivo especificado ou busca por alternativas padrão.
+ * Loads and parses a JSON or JSONC file safely.
+ * Tries to load the specified file or looks for default alternatives.
  *
- * Prioridade de busca:
- * 1. Caminho explícito (se fornecido)
- * 2. Diretório do script em execução (Deno.mainModule)
- * 3. Diretório base informado (baseDir)
+ * Search Priority:
+ * 1. Explicit path (if provided)
+ * 2. Directory of the executing script (Deno.mainModule)
+ * 3. Base directory provided (baseDir)
  *
- * @param fileName Nome base do arquivo (ex: "denobuild")
- * @param explicitPath Caminho explícito fornecido pelo usuário (opcional)
- * @param baseDir Diretório base para busca (default: ".")
- * @returns O objeto parseado ou null se não encontrado/inválido
+ * @param fileName Base file name (e.g., "denobuild")
+ * @param explicitPath Optional explicit path provided by the user
+ * @param baseDir Base directory for searching (default: ".")
+ * @returns The parsed object or null if not found/invalid
  */
 export async function loadConfig<T,>(
   fileName: string,
@@ -27,7 +27,7 @@ export async function loadConfig<T,>(
     candidates.push(join(baseDir, explicitPath,),);
     candidates.push(join(baseDir, "scripts", explicitPath,),);
   } else {
-    // 1. Tentar diretório do script principal (se for um arquivo local)
+    // 1. Try main script directory (if it's a local file)
     try {
       if (Deno.mainModule && Deno.mainModule.startsWith("file://",)) {
         const scriptDir = dirname(fromFileUrl(Deno.mainModule,),);
@@ -35,22 +35,22 @@ export async function loadConfig<T,>(
         candidates.push(join(scriptDir, `${fileName}.json`,),);
       }
     } catch {
-      // Ignora erros de URL/Path no mainModule
+      // Ignore URL/Path errors in mainModule
     }
 
-    // 2. Tentar subpasta scripts/ dentro de baseDir
+    // 2. Try scripts/ subfolder inside baseDir
     candidates.push(join(baseDir, "scripts", `${fileName}.jsonc`,),);
     candidates.push(join(baseDir, "scripts", `${fileName}.json`,),);
 
-    // 3. Tentar diretório base (normalmente o CWD ou raiz do projeto)
+    // 3. Try base directory (usually CWD or project root)
     candidates.push(join(baseDir, `${fileName}.jsonc`,),);
     candidates.push(join(baseDir, `${fileName}.json`,),);
   }
 
-  // Remover duplicatas mantendo a ordem
+  // Remove duplicates while maintaining order
   const uniqueCandidates = [...new Set(candidates),];
 
-  // console.debug(`🔍 Buscando config '${fileName}' em:`, uniqueCandidates);
+  // console.debug(`🔍 Searching config '${fileName}' in:`, uniqueCandidates);
 
   for (const path of uniqueCandidates) {
     try {
@@ -58,13 +58,13 @@ export async function loadConfig<T,>(
       const parsed = parseJsonc(content,);
 
       if (parsed && typeof parsed === "object") {
-        // console.debug(`✅ Config encontrada em: ${path}`);
+        // console.debug(`✅ Config found at: ${path}`);
         return parsed as T;
       }
     } catch (error) {
       if (explicitPath && !(error instanceof Deno.errors.NotFound)) {
         console.warn(
-          `⚠️ Erro ao ler arquivo de configuração em ${path}:`,
+          `⚠️ Error reading configuration file at ${path}:`,
           error,
         );
       }

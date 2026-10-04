@@ -5,7 +5,7 @@ import { assertEquals, } from "@std/assert";
 import { isSafePath, } from "../../src/tools/paths.ts";
 
 describe("isSafePath", () => {
-  describe("paths seguros", () => {
+  describe("safe paths", () => {
     const safePaths = [
       "arquivo.js",
       "pasta/arquivo.js",
@@ -20,13 +20,13 @@ describe("isSafePath", () => {
     ];
 
     for (const path of safePaths) {
-      it(`aceita "${path}"`, () => {
+      it(`accepts "${path}"`, () => {
         assertEquals(isSafePath(path,), true,);
       });
     }
   });
 
-  describe("paths bloqueados (path traversal)", () => {
+  describe("blocked paths (path traversal)", () => {
     const traversalPaths = [
       "..",
       "../file.js",
@@ -38,13 +38,13 @@ describe("isSafePath", () => {
     ];
 
     for (const path of traversalPaths) {
-      it(`bloqueia "${path}"`, () => {
+      it(`blocks "${path}"`, () => {
         assertEquals(isSafePath(path,), false,);
       });
     }
   });
 
-  describe("paths bloqueados (absolutos Unix)", () => {
+  describe("blocked paths (Unix absolute)", () => {
     const absolutePaths = [
       "/etc/passwd",
       "/home/user",
@@ -53,22 +53,22 @@ describe("isSafePath", () => {
     ];
 
     for (const path of absolutePaths) {
-      it(`bloqueia "${path}"`, () => {
+      it(`blocks "${path}"`, () => {
         assertEquals(isSafePath(path,), false,);
       });
     }
   });
 
   describe("edge cases", () => {
-    it("string vazia é considerada segura (não é traversal nem absoluta)", () => {
+    it("empty string is considered safe (neither traversal nor absolute)", () => {
       assertEquals(isSafePath("",), true,);
     });
 
-    it("path com apenas espaços é seguro", () => {
+    it("path with whitespace only is safe", () => {
       assertEquals(isSafePath("   ",), true,);
     });
 
-    it("path com caracteres especiais é seguro", () => {
+    it("path with special characters is safe", () => {
       assertEquals(isSafePath("file@name.js",), true,);
       assertEquals(isSafePath("file+name.js",), true,);
     });

@@ -1,15 +1,15 @@
 import type { ParsedArgs, } from "./interfaces.ts";
 
 // ============================================================================
-// 🎯 PARSING DE ARGUMENTOS CLI (pura, testável)
+// 🎯 CLI ARGUMENTS PARSING (pure, testable)
 // ============================================================================
 /**
- * Parseia os argumentos de linha de comando extraindo os alvos solicitados e detectando a flag 'noversion'.
- * A resolução final dos alvos e padrão (default) é realizada pelo engine via `resolverOrdemTargets`.
+ * Parses command line arguments by extracting the requested targets and detecting the 'noversion' flag.
+ * Final target resolution and default handling is performed by the engine via `resolveTargetOrder`.
  *
- * @param args Lista de argumentos recebidos via linha de comando
- * @param options Opções do CLI (ex: { noversion?: boolean })
- * @returns Argumentos parseados contendo alvos informados e flag globalNoVersion
+ * @param args List of arguments received via command line
+ * @param options CLI options (e.g., { noversion?: boolean })
+ * @returns Parsed arguments containing informed targets and globalNoVersion flag
  */
 export function parseArgs(
   args: string[],

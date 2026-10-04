@@ -1,5 +1,5 @@
 /**
- * Exemplo de extensões de arquivo que podem ser incluídas em snapshots.
+ * Example file extensions that can be included in snapshots.
  */
 export const EXTENSIONS_EXAMPLE: string[] = [
   ".tsx",
@@ -21,31 +21,44 @@ export const EXTENSIONS_EXAMPLE: string[] = [
   ".md",
 ];
 
-/** Versão semântica parseada. */
+/** Parsed semantic version. */
 export interface ParsedVersion {
+  /** Major version component. */
   major: number;
+  /** Minor version component. */
   minor: number;
+  /** Patch version component. */
   patch: number;
 }
 
-/** Argumentos de linha de comando parseados. */
+/** Parsed command line arguments. */
 export interface ParsedArgs {
+  /** Target identifiers specified on the command line. */
   targets: string[];
+  /** Whether the --noversion or noversion positional flag was set. */
   globalNoVersion: boolean;
 }
 
+/** Target platform for esbuild compilation. */
 export type EsbuildPlatform = "browser" | "node" | "neutral";
+/** Output format for esbuild bundle. */
 export type EsbuildFormat = "esm" | "iife" | "cjs";
+/** Sourcemap generation strategy for esbuild. */
 export type EsbuildSourcemap = boolean | "linked" | "inline" | "external";
+/** JSX transformation mode for esbuild. */
 export type EsbuildJsx = "automatic" | "transform" | "preserve";
+/** Legal comments handling strategy for esbuild. */
 export type EsbuildLegalComments =
   | "none"
   | "inline"
   | "eof"
   | "linked"
   | "external";
+/** Drop directives for eliminating debug statements in esbuild. */
 export type EsbuildDrop = "console" | "debugger";
+/** Output character set encoding for esbuild. */
 export type EsbuildCharset = "ascii" | "utf8";
+/** Log level severity for esbuild console output. */
 export type EsbuildLogLevel =
   | "verbose"
   | "debug"
@@ -53,6 +66,7 @@ export type EsbuildLogLevel =
   | "warning"
   | "error"
   | "silent";
+/** File loader types supported by esbuild. */
 export type EsbuildLoader =
   | "js"
   | "jsx"
@@ -68,498 +82,629 @@ export type EsbuildLoader =
   | "empty"
   | "copy";
 
-/** Configuração de um conjunto de arquivos estáticos a serem copiados. */
+/** Configuration for a set of static files to be copied. */
 export interface CopyFileConfig {
   /**
-   * Diretório base opcional. Se informado, os caminhos em includes e excludes
-   * são relativos a este diretório e a estrutura de pastas é preservada no destino.
-   * Se não informado, os arquivos são copiados diretamente para o distdir raiz.
+   * Optional base directory. If provided, paths in includes and excludes
+   * are relative to this directory and the folder structure is preserved in the destination.
+   * If not provided, files are copied directly to the root distdir.
    */
   basedir?: string;
-  /** Padrões glob de inclusão (ex: ["**\/*.html", "assets\/**\/*"]). */
+  /** Glob patterns for inclusion (e.g., ["**\/*.html", "assets\/**\/*"]). */
   includes?: string[];
-  /** Padrões glob de exclusão. */
+  /** Glob patterns for exclusion. */
   excludes?: string[];
 }
 
-/** Configuração de limpeza prévia de arquivos e pastas no diretório de saída. */
+/** Configuration for pre-build cleanup of files and folders in the output directory. */
 export interface CleanConfig {
-  /** Padrões glob de arquivos/pastas para remover. Use ["*"] para limpar tudo. */
+  /** Glob patterns of files/folders to remove. Use ["*"] to clean everything. */
   includes?: string[];
-  /** Padrões glob para preservar durante a limpeza. */
+  /** Glob patterns to preserve during cleanup. */
   excludes?: string[];
 }
 
-/** Configuração de um alvo de build (esbuild). */
+/** Configuration for a build target (esbuild). */
 export interface TargetConfig {
-  /** Diretório base dos fontes (padrão: "."). */
+  /** Base directory for sources (default: "."). */
   srcdir?: string;
-  /** Diretório de saída final (padrão: "."). */
+  /** Final output directory (default: "."). */
   distdir?: string;
   /**
-   * Regras de limpeza pré-build.
-   * Pode ser um objeto { includes, excludes } ou um array simples de globs.
+   * Pre-build cleanup rules.
+   * Can be a { includes, excludes } object or a simple array of globs.
    */
   clean?: CleanConfig | string[];
-  /** Lista de conjuntos de regras para cópia de arquivos estáticos. */
+  /** List of rule sets for copying static files. */
   copyFiles?: CopyFileConfig[];
-  /** Se deve ser executado automaticamente quando nenhum alvo é passado via CLI. */
+  /** Whether it should be executed automatically when no target is passed via CLI. */
   default?: boolean;
-  /** Arquivos de entrada relativos ao srcdir. */
+  /** Entry point files relative to srcdir. */
   entryPoints: string[];
-  /** Plataforma alvo (browser, node ou neutral). */
+  /** Target platform (browser, node or neutral). */
   platform?: EsbuildPlatform;
-  /** Formato de saída (esm, iife ou cjs). */
+  /** Output format (esm, iife or cjs). */
   format?: EsbuildFormat;
-  /** Se deve agrupar dependências em um único arquivo. */
+  /** Whether to bundle dependencies into a single file. */
   bundle?: boolean;
-  /** Se deve minificar o código. */
+  /** Whether to minify the code. */
   minify?: boolean;
-  /** Estratégia de sourcemap. */
+  /** Sourcemap strategy. */
   sourcemap?: EsbuildSourcemap;
-  /** Transformação JSX (automatic, transform ou preserve). */
+  /** JSX transformation (automatic, transform or preserve). */
   jsx?: EsbuildJsx;
-  /** Pacote runtime para JSX automático (ex: "preact"). */
+  /** Runtime package for automatic JSX (e.g., "preact"). */
   jsxImportSource?: string;
-  /** Condições de resolução de exports. */
+  /** Export resolution conditions. */
   conditions?: string[];
-  /** Injeção de constantes globais (ex: { "DEBUG": "true" }). */
+  /** Global constants injection (e.g., { "DEBUG": "true" }). */
   define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). Se omitido ou vazio, não injeta. */
+  /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). If omitted or empty, does not inject. */
   defineAssetsString?: string;
+  /** Directives for removing calls to console or debugger. */
   drop?: EsbuildDrop[];
+  /** Modules or packages to be treated as external during bundling. */
   external?: string[];
+  /** Whether to generate a JSON metadata file with bundle analysis. */
   metafile?: boolean;
+  /** Whether esbuild writes the bundle output directly to the filesystem. */
   write?: boolean;
-  /** Se habilita a eliminação de código morto (dead code elimination). Aceita 'ignore' para desativar explicitamente. */
+  /** Whether dead code elimination is enabled. Accepts 'ignore' to explicitly disable. */
   treeShaking?: boolean | "ignore";
-  /** Fábrica JSX customizada (ex: "h", "React.createElement"). */
+  /** Custom JSX factory (e.g., "h", "React.createElement"). */
   jsxFactory?: string;
-  /** Fragmento JSX customizado (ex: "Fragment", "React.Fragment"). */
+  /** Custom JSX fragment (e.g., "Fragment", "React.Fragment"). */
   jsxFragment?: string;
-  /** Gera um relatório analítico do bundle no console após o build. */
+  /** Generates an analytical bundle report in the console after build. */
   analyze?: boolean | "verbose";
-  /** Expressão regular para propriedades a serem preservadas durante o mangling (ex: "/^_.+/"). */
+  /** Regular expression for properties to be preserved during mangling (e.g., "/^_.+/"). */
   reserveProps?: string;
-  /** Informa ao esbuild se o código deve ser tratado como tendo efeitos colaterais para fins de tree-shaking. */
+  /** Informs esbuild if the code should be treated as having side effects for tree-shaking purposes. */
   sideEffects?: boolean;
-  /** Preservação e posicionamento de comentários de licença e copyright. */
+  /** Preservation and positioning of license and copyright comments. */
   legalComments?: EsbuildLegalComments;
-  /** Preserva os nomes originais de funções e classes mesmo quando minificado. */
+  /** Preserves original function and class names even when minified. */
   keepNames?: boolean;
-  /** Caminho do arquivo de saída consolidado (relativo ao distdir quando este for fornecido). */
+  /** Path of the consolidated output file (relative to distdir when provided). */
   outfile?: string;
-  /** Habilita a divisão de código (code splitting) para carregamento dinâmico em ESM. */
+  /** Enables code splitting for dynamic loading in ESM. */
   splitting?: boolean;
-  /** Mapeamento de loaders por extensão de arquivo. */
+  /** Mapping of loaders by file extension. */
   loader?: Record<string, EsbuildLoader>;
-  /** Aliases de módulos ou caminhos de importação. */
+  /** Module aliases or import paths. */
   alias?: Record<string, string>;
-  /** Arquivos para injetar no topo do bundle antes dos entrypoints. */
+  /** Files to inject at the top of the bundle before entry points. */
   inject?: string[];
-  /** Comentários ou trechos de código adicionados no início do arquivo gerado. Suporta __APP_VERSION__. */
+  /** Comments or code snippets added at the beginning of the generated file. Supports __APP_VERSION__. */
   banner?: { js?: string; css?: string };
-  /** Comentários ou trechos de código adicionados no final do arquivo gerado. Suporta __APP_VERSION__. */
+  /** Comments or code snippets added at the end of the generated file. Supports __APP_VERSION__. */
   footer?: { js?: string; css?: string };
-  /** Ambiente alvo JavaScript/ECMAScript (ex: 'es2022', 'chrome100', 'esnext'). */
+  /** Target JavaScript/ECMAScript environment (e.g., 'es2022', 'chrome100', 'esnext'). */
   target?: string | string[];
-  /** Conjunto de caracteres dos arquivos gerados. */
+  /** Character set of the generated files. */
   charset?: EsbuildCharset;
-  /** Nível de detalhamento dos logs gerados pelo esbuild. */
+  /** Detail level of logs generated by esbuild. */
   logLevel?: EsbuildLogLevel;
-  /** Limite máximo de mensagens de log. */
+  /** Maximum limit of log messages. */
   logLimit?: number;
-  /** Sobrescrita de nível de log por identificador de mensagem. */
+  /** Log level override by message identifier. */
   logOverride?: Record<string, EsbuildLogLevel>;
-  /** Padrão de nome para arquivos de entrada. */
+  /** Name pattern for input files. */
   entryNames?: string;
-  /** Padrão de nome para chunks gerados. */
+  /** Name pattern for generated chunks. */
   chunkNames?: string;
-  /** Padrão de nome para assets gerados. */
+  /** Name pattern for generated assets. */
   assetNames?: string;
-  /** Caminho público base para carregar chunks e assets. */
+  /** Base public path for loading chunks and assets. */
   publicPath?: string;
-  /** Identificadores tratados como puros para remoção se não utilizados (ex: ['console.log']). */
+  /** Identifiers treated as pure for removal if not used (e.g., ['console.log']). */
   pure?: string[];
-  /** Nome da variável global para exposição do bundle no formato IIFE. */
+  /** Global variable name for exposing the bundle in IIFE format. */
   globalName?: string;
-  /** Caminho para um arquivo de configuração TypeScript (tsconfig.json) customizado. */
+  /** Path to a custom TypeScript configuration file (tsconfig.json). */
   tsconfig?: string;
-  /** Conteúdo bruto de configuração TypeScript (string JSON ou objeto). */
+  /** Raw TypeScript configuration content (JSON string or object). */
   tsconfigRaw?: string | Record<string, unknown>;
-  /** Mapeamento de extensões de saída (ex: { ".js": ".mjs" }). */
+  /** Mapping of output extensions (e.g., { ".js": ".mjs" }). */
   outExtension?: Record<string, string>;
-  /** Define suporte explícito para recursos de linguagem (ex: { "dynamic-import": false }). */
+  /** Defines explicit support for language features (e.g., { "dynamic-import": false }). */
   supported?: Record<string, boolean>;
-  /** Se deve incluir o conteúdo original dos arquivos fonte dentro dos sourcemaps. */
+  /** Whether to include original source file content within sourcemaps. */
   sourcesContent?: boolean;
-  /** Se deve ignorar anotações de pureza como "@__PURE__" durante a minificação. */
+  /** Whether to ignore purity annotations like "@__PURE__" during minification. */
   ignoreAnnotations?: boolean;
-  /** Minificação granular: remove espaços em branco extras. */
+  /** Granular minification: removes extra whitespace. */
   minifyWhitespace?: boolean;
-  /** Minificação granular: renomeia identificadores para nomes curtos. */
+  /** Granular minification: renames identifiers to short names. */
   minifyIdentifiers?: boolean;
-  /** Minificação granular: reescreve sintaxe para formas mais compactas. */
+  /** Granular minification: rewrites syntax into more compact forms. */
   minifySyntax?: boolean;
-  /** Expressão regular para mangling de propriedades de objetos (ex: "/^_.+/"). */
+  /** Regular expression for mangling of object properties (e.g., "/^_.+/"). */
   mangleProps?: string;
-  /** Se deve aplicar mangling em propriedades de objetos que estão entre aspas. */
+  /** Whether to apply mangling to object properties that are quoted. */
   mangleQuoted?: boolean;
-  /** Cache para persistência de nomes de mangling entre builds. */
+  /** Cache for persistence of mangling names between builds. */
   mangleCache?: Record<string, string | false>;
-  /** Lista de plugins customizados do esbuild. */
+  /** List of custom esbuild plugins. */
   plugins?: unknown[];
 }
 
+/** Dictionary mapping target names to their build configuration. */
 export interface GlobalTargetConfig {
+  /** Build configuration indexed by target name. */
   [targetName: string]: TargetConfig;
 }
 
+/** Alias for TargetConfig for esbuild builds. */
 export type EsbuildTargetConfig = TargetConfig;
+/** Alias for GlobalTargetConfig for esbuild builds. */
 export type EsbuildGlobalConfig = GlobalTargetConfig;
 
+/** Programmatic options for executing esbuild builds. */
 export interface EsbuildOptions {
+  /** Target configurations dictionary. */
   config: GlobalTargetConfig;
+  /** Subset of targets to build. If omitted, builds default targets. */
   targets?: string[];
+  /** If true, skips reading or updating project versions. */
   noversion?: boolean;
+  /** Paths to version files to ensure before build. */
   versionPaths?: string[];
+  /** Whether to enforce package versions in workspace packages. */
   forcepackagesversion?: boolean;
+  /** Global define variable name for application version (e.g., "__APP_VERSION__"). */
   defineVersionString?: string;
+  /** Project base directory. */
   baseDir?: string;
+  /** Path to root deno.jsonc file. */
   denoJsoncPath?: string;
-  silencioso?: boolean;
+  /** If true, suppresses console output. */
+  silent?: boolean;
 }
 
+/** Target configuration extended with watch-specific settings. */
 export interface WatchTargetConfig extends TargetConfig {
-  /** Se habilitado, o watch também monitora o arquivo de configuração para recarregamento automático (não implementado). */
+  /** If enabled, watch also monitors the configuration file for automatic reloading (not implemented). */
   watchConfig?: boolean;
 }
 
+/** Dictionary mapping target names to their watch target configuration. */
 export interface WatchGlobalConfig {
+  /** Watch target configuration indexed by target name. */
   [targetName: string]: WatchTargetConfig;
 }
 
+/** Raw watch configuration file (watch.jsonc). */
 export interface WatchConfigFile {
+  /** Optional JSON schema URI. */
   $schema?: string;
+  /** Dictionary of watch targets. */
   targets?: WatchGlobalConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
+  /** Additional custom options. */
   [key: string]: unknown;
 }
 
+/** Result of loading watch configuration file. */
 export interface WatchConfigResult {
+  /** Dictionary of loaded watch targets. */
   targets: WatchGlobalConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
 }
 
+/** Programmatic options for running continuous watch. */
 export interface WatchOptions {
+  /** Watch target configurations dictionary. */
   config: WatchGlobalConfig;
+  /** Specific target to watch. */
   target?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Project base directory. */
   baseDir?: string;
+  /** Custom path to the concurrency lock file. */
   lockFile?: string;
+  /** Path to root deno.jsonc file. */
   denoJsoncPath?: string;
-  silencioso?: boolean;
+  /** If true, suppresses console output. */
+  silent?: boolean;
 }
 
+/** Handle to an active watch process for clean termination. */
 export interface WatchHandle {
+  /** Name of the watched target. */
   target: string;
+  /** Closes and cleans up the active watch watcher and concurrency lock. */
   close: () => Promise<void>;
 }
 
-/** Configuração de um modo de exportação de snapshot. */
+/** Configuration for a snapshot export mode. */
 export interface ExportConfig {
-  /** Caminho do arquivo de saída Markdown gerado. */
-  arquivoSaida: string;
-  /** Padrões glob de arquivos a serem incluídos. */
+  /** Path of the generated Markdown output file. */
+  outputFile: string;
+  /** Glob patterns of files to be included. */
   includes?: string[];
-  /** Padrões glob de arquivos a serem excluídos. */
+  /** Glob patterns of files to be excluded. */
   excludes?: string[];
-  /** Se deve incluir a versão da aplicação no cabeçalho. */
-  incluiVersao?: boolean;
-  /** Instrução personalizada para a IA. */
-  instrucaoCustomizada?: string;
-  /** Texto ou instruções customizadas para o bloco de cabeçalho da IA. */
-  cabecalho?: string;
-  /** Nome do projeto exibido no cabeçalho (padrão: "BuildIt"). */
-  projeto?: string;
-  /** Se o modo deve ser executado por padrão quando nenhum modo for especificado. */
+  /** Whether to include the application version in the header. */
+  includeVersion?: boolean;
+  /** Custom instruction for the AI. */
+  customInstruction?: string;
+  /** Custom text or instructions for the AI header block. */
+  header?: string;
+  /** Project name displayed in the header (default: "BuildIt"). */
+  project?: string;
+  /** Whether the mode should be executed by default when no mode is specified. */
   default?: boolean;
 }
 
+/** Target execution platform for Deno native bundle. */
 export type DenoBundlePlatform = "browser" | "deno";
+/** Output format for Deno native bundle. */
 export type DenoBundleFormat = "esm" | "cjs" | "iife";
+/** Sourcemap generation strategy for Deno native bundle. */
 export type DenoBundleSourceMap = "linked" | "inline" | "external";
+/** External package handling mode for Deno native bundle. */
 export type DenoBundlePackageHandling = "bundle" | "external";
 
+/** Configuration options for a Deno native bundle target. */
 export interface DenoBundleTargetConfig {
-  /** Diretório base dos fontes (padrão: "."). */
+  /** Base directory for sources (default: "."). */
   srcdir?: string;
-  /** Diretório de saída final (padrão: "."). */
+  /** Final output directory (default: "."). */
   distdir?: string;
-  /** Regras de limpeza pré-build. */
+  /** Pre-build cleanup rules. */
   clean?: CleanConfig | string[];
-  /** Lista de conjuntos de regras para cópia de arquivos estáticos. */
+  /** List of rule sets for copying static files. */
   copyFiles?: CopyFileConfig[];
-  /** Se deve ser executado automaticamente quando nenhum alvo é passado via CLI. */
+  /** Whether it should be executed automatically when no target is passed via CLI. */
   default?: boolean;
-  /** Arquivos de entrada TypeScript, JavaScript ou HTML a serem empacotados. */
+  /** TypeScript, JavaScript, or HTML entry points to be bundled. */
   entryPoints: string[];
-  /** Formato de saída do bundle (padrão: "esm"). */
+  /** Bundle output format (default: "esm"). */
   format?: DenoBundleFormat;
-  /** Plataforma alvo de execução (padrão: "browser"). */
+  /** Target execution platform (default: "browser"). */
   platform?: DenoBundlePlatform;
-  /** Se deve minificar o código gerado. */
+  /** Whether to minify the generated code. */
   minify?: boolean;
-  /** Se deve preservar nomes originais de funções e classes. */
+  /** Whether to preserve original function and class names. */
   keepNames?: boolean;
-  /** Estratégia de geração de mapa de fontes. */
+  /** Sourcemap generation strategy. */
   sourcemap?: DenoBundleSourceMap;
-  /** Habilita a divisão de código em múltiplos arquivos. */
+  /** Enables code splitting into multiple files. */
   codeSplitting?: boolean;
-  /** Se deve embutir imports dinâmicos diretamente no bundle. */
+  /** Whether to inline dynamic imports directly into the bundle. */
   inlineImports?: boolean;
-  /** Como lidar com pacotes externos (padrão: "bundle"). */
+  /** How to handle external packages (default: "bundle"). */
   packages?: DenoBundlePackageHandling;
-  /** Lista de módulos a serem tratados como externos. */
+  /** List of modules to be treated as external. */
   external?: string[];
-  /** Mapeamento de constantes substituídas em memória após o build. */
+  /** Mapping of constants replaced in memory after build. */
   define?: Record<string, string>;
-  /** Identificador da constante para injeção da lista de assets gerados (ex: "__GENERATED_ASSETS__"). */
+  /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). */
   defineAssetsString?: string;
-  /** Nome do arquivo de saída consolidado (relativo ao distdir). */
+  /** Path of the consolidated output file (relative to distdir). */
   outfile?: string;
-  /** Se true, o Deno.bundle gravará diretamente no disco (padrão: false no BuildIt para permitir pós-processamento). */
+  /** If true, Deno.bundle will write directly to disk (default: false in BuildIt to allow post-processing). */
   write?: boolean;
-  /** Nome da variável global para exposição do bundle no formato IIFE (implementado via pós-processamento). */
+  /** Global variable name for exposing the bundle in IIFE format (implemented via post-processing). */
   globalName?: string;
-  /** Trechos de código injetados no início do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  /** Code snippets injected at the beginning of the generated file (implemented via post-processing). Supports __APP_VERSION__. */
   banner?: { js?: string; css?: string };
-  /** Trechos de código injetados no final do arquivo gerado (implementado via pós-processamento). Suporta __APP_VERSION__. */
+  /** Code snippets injected at the end of the generated file (implemented via post-processing). Supports __APP_VERSION__. */
   footer?: { js?: string; css?: string };
-  /** Modo de transformação JSX (automatic, transform ou preserve). Lido do deno.json pelo Deno.bundle. */
+  /** JSX transformation mode (automatic, transform or preserve). Read from deno.json by Deno.bundle. */
   jsx?: string;
-  /** Fábrica JSX customizada (ex: "h"). Lido do deno.json pelo Deno.bundle. */
+  /** Custom JSX factory (e.g., "h"). Read from deno.json by Deno.bundle. */
   jsxFactory?: string;
-  /** Fragmento JSX customizado (ex: "Fragment"). Lido do deno.json pelo Deno.bundle. */
+  /** Custom JSX fragment (e.g., "Fragment"). Read from deno.json by Deno.bundle. */
   jsxFragment?: string;
-  /** Pacote para runtime automático do JSX. Lido do deno.json pelo Deno.bundle. */
+  /** Package for automatic JSX runtime. Read from deno.json by Deno.bundle. */
   jsxImportSource?: string;
 }
 
+/** Raw configuration file for Deno native bundler (denobuild.jsonc). */
 export interface DenoBuildConfigFile {
+  /** Optional JSON schema URI. */
   $schema?: string;
+  /** Dictionary of build targets. */
   targets?: DenoBundleGlobalConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
+  /** Additional custom options. */
   [key: string]: unknown;
 }
 
+/** Result of a target build execution in Deno native bundler. */
 export interface DenoBuildResult {
+  /** Name of the built target. */
   target: string;
+  /** Whether the build succeeded. */
   success: boolean;
+  /** Execution duration in milliseconds. */
   durationMs: number;
+  /** List of generated output file paths. */
   outputFiles: string[];
 }
 
+/** Result of loading Deno native bundler configuration file. */
 export interface DenoBuildConfigResult {
+  /** Dictionary of loaded build targets. */
   targets: DenoBundleGlobalConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
 }
 
+/** Dictionary mapping target names to Deno native bundle configurations. */
 export interface DenoBundleGlobalConfig {
+  /** Target configuration indexed by target name. */
   [targetName: string]: DenoBundleTargetConfig;
 }
 
+/** Programmatic options for running Deno native bundler. */
 export interface DenoBuildOptions {
+  /** Target configurations dictionary. */
   config: DenoBundleGlobalConfig;
+  /** Subset of targets to build. If omitted, builds default targets. */
   targets?: string[];
+  /** If true, skips reading or updating project versions. */
   noversion?: boolean;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Whether to enforce package versions in workspace packages. */
   forcepackagesversion?: boolean;
+  /** Global define variable name for application version. */
   defineVersionString?: string;
+  /** Project base directory. */
   baseDir?: string;
+  /** Path to root deno.jsonc file. */
   denoJsoncPath?: string;
-  silencioso?: boolean;
+  /** If true, suppresses console output. */
+  silent?: boolean;
 }
 
-/** Arquivo de configuração de exportação (export.jsonc). */
+/** Export configuration file (export.jsonc). */
 export interface ExportConfigFile {
-  /** Schema JSON opcional. */
+  /** Optional JSON schema. */
   $schema?: string;
-  /** Nome global do projeto (padrão: "BuildIt"). */
-  projeto?: string;
-  /** Bloco global de cabeçalho customizado para IA. */
-  cabecalho?: string;
-  /** Identificador customizado da versão global (padrão: "__APP_VERSION__"). */
+  /** Global project name (default: "BuildIt"). */
+  project?: string;
+  /** Global custom header block for AI. */
+  header?: string;
+  /** Custom identifier for global version (default: "__APP_VERSION__"). */
   defineVersionString?: string;
-  /** Dicionário de modos de exportação. */
-  modos: Record<string, ExportConfig>;
+  /** Dictionary of export modes. */
+  modes: Record<string, ExportConfig>;
 }
 
+/** Result of loading export configuration file. */
 export interface ExportConfigResult {
-  modos: Record<string, ExportConfig>;
-  projeto?: string;
-  cabecalho?: string;
+  /** Dictionary of configured export modes. */
+  modes: Record<string, ExportConfig>;
+  /** Global project name. */
+  project?: string;
+  /** Global custom header block for AI. */
+  header?: string;
+  /** Custom identifier for global version define. */
   defineVersionString?: string;
 }
 
+/** Result of a single mode execution in AI context exporter. */
 export interface ExportResult {
-  modo: string;
-  arquivos: number;
-  arquivoSaida: string;
+  /** Name of the exported mode. */
+  mode: string;
+  /** Number of files included in the export. */
+  files: number;
+  /** Path of the generated Markdown file. */
+  outputFile: string;
+  /** Size of generated output in bytes. */
   bytes: number;
 }
 
+/** Programmatic options for running the AI context exporter. */
 export interface ExportOptions {
+  /** Dictionary of export mode configurations. */
   config: Record<string, ExportConfig>;
-  modos?: string[];
+  /** Specific export modes to run. If omitted, runs default modes. */
+  modes?: string[];
+  /** Base directory for scanning files. */
   baseDir?: string;
-  versaoApp?: string;
+  /** Application version to inject into the header. */
+  appVersion?: string;
+  /** Path to root deno.jsonc file. */
   denoJsoncPath?: string;
+  /** Custom identifier for version define. */
   defineVersionString?: string;
-  silencioso?: boolean;
+  /** If true, suppresses console output. */
+  silent?: boolean;
 }
 
+/** Common CLI flags parsed across build tools. */
 export interface CommonCliFlags {
+  /** Path to custom config file. */
   configPath?: string;
+  /** Whether version flag was passed. */
   showVersion: boolean;
+  /** Whether help flag was passed. */
   showHelp: boolean;
+  /** Whether noversion flag was passed. */
   noversion: boolean;
+  /** Whether to enforce workspace package versions. */
   forcepackagesversion: boolean;
+  /** Custom version file paths. */
   versionPaths?: string[];
+  /** Positional arguments passed to CLI. */
   positional: string[];
 }
 
-/** Opções para sincronização de workspaces. */
+/** Options for workspace synchronization. */
 export interface SyncWorkspacesOptions {
-  /** Diretório base de resolução (padrão: "."). */
+  /** Base directory for resolution (default: "."). */
   baseDir?: string;
-  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  /** Path of the root configuration file (deno.jsonc or deno.json). */
   denoJsonPath?: string;
-  /** Versão atual a ser propagada. Se omitida, lê do deno.jsonc raiz. */
+  /** Current version to be propagated. If omitted, reads from the root deno.jsonc. */
   currentVersion?: string;
-  /** Alias para currentVersion. */
+  /** Alias for currentVersion. */
   version?: string;
 }
 
-/** Opções para incremento de versão do projeto. */
+/** Options for project version increment. */
 export interface IncrementVersionOptions {
-  /** Diretório base de resolução (padrão: "."). */
+  /** Base directory for resolution (default: "."). */
   baseDir?: string;
-  /** Caminho do arquivo de configuração raiz (deno.jsonc ou deno.json). */
+  /** Path of the root configuration file (deno.jsonc or deno.json). */
   denoJsonPath?: string;
-  /** Versão atual base. Se omitida, lê diretamente do arquivo deno.json[c]. */
+  /** Base current version. If omitted, reads directly from the deno.json[c] file. */
   currentVersion?: string;
-  /** Hash de build customizado a ser anexado (ex: "abc1234"). */
+  /** Custom build hash to be appended (e.g., "abc1234"). */
   buildHash?: string;
 }
 
+/** Options for updating project versions. */
 export interface VersionUpdateOptions {
+  /** Current version string. */
   currentVersion?: string;
+  /** Path to root deno.jsonc file. */
   denoJsonPath?: string;
+  /** Project base directory. */
   baseDir?: string;
+  /** If true, skips version operations. */
   noversion?: boolean;
+  /** Paths to version files to update. */
   versionPaths?: string[];
+  /** Enforce versions on workspace packages. */
   forcepackagesversion?: boolean;
+  /** Global define variable name for version. */
   defineVersionString?: string;
+  /** Custom build hash to append. */
   buildHash?: string;
 }
 
+/** Raw esbuild configuration file (esbuild.jsonc). */
 export interface EsbuildConfigFile {
+  /** Optional JSON schema URI. */
   $schema?: string;
+  /** Dictionary of build targets. */
   targets?: GlobalTargetConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
+  /** Additional custom options. */
   [key: string]: unknown;
 }
 
+/** Result of loading esbuild configuration file. */
 export interface EsbuildConfigResult {
+  /** Dictionary of loaded build targets. */
   targets: GlobalTargetConfig;
+  /** Custom global define string for version injection. */
   defineVersionString?: string;
+  /** Version file paths to ensure. */
   versionPaths?: string[];
+  /** Enforce workspace packages version sync. */
   forcepackagesversion?: boolean;
 }
 
+/** Result of a target build execution in esbuild. */
 export interface EsbuildResult {
+  /** Name of the built target. */
   target: string;
+  /** Whether the build succeeded. */
   success: boolean;
+  /** Execution duration in milliseconds. */
   durationMs: number;
 }
 
-/** Opções para execução de sanitização de versão em arquivos deno.json[c]. */
+/** Options for executing version sanitization in deno.json[c] files. */
 export interface SanitizeVersionOptions {
-  /** Caminho do arquivo a ser sanitizado. Se omitido, busca recursivamente pelo mais próximo. */
+  /** Path of the file to be sanitized. If omitted, searches recursively for the nearest one. */
   filePath?: string;
-  /** Diretório base de busca caso filePath não seja especificado. */
+  /** Base directory for searching if filePath is not specified. */
   baseDir?: string;
-  /** Se true, não emite logs no console durante a execução. */
-  silencioso?: boolean;
+  /** If true, does not emit logs to the console during execution. */
+  silent?: boolean;
 }
 
-/** Resultado da operação de sanitização de versão. */
+/** Result of the version sanitization operation. */
 export interface SanitizeVersionResult {
-  /** Caminho do arquivo processado. */
+  /** Path of the processed file. */
   filePath: string;
-  /** Versão original encontrada no arquivo. */
+  /** Original version found in the file. */
   rawVersion: string;
-  /** Versão sanitizada no formato semver canônico (MAJOR.MINOR.PATCH). */
+  /** Sanitized version in canonical semver format (MAJOR.MINOR.PATCH). */
   sanitizedVersion: string;
-  /** Indica se o arquivo em disco foi modificado. */
+  /** Indicates if the file on disk was modified. */
   updated: boolean;
 }
 
-/** Opções para criação e publicação de tags git baseadas na versão. */
+/** Options for creating and publishing git tags based on version. */
 export interface TagVersionOptions {
-  /** Caminho do arquivo deno.json[c]. Se omitido, busca automaticamente. */
+  /** Path of the deno.json[c] file. If omitted, searches automatically. */
   file?: string;
-  /** Mensagem customizada do commit. Padrão: "Versão vMAJOR.MINOR". */
+  /** Custom commit message. Default: "Version vMAJOR.MINOR". */
   message?: string;
-  /** Se true, executa a sanitização do arquivo deno.json[c] em disco antes de comitar. */
+  /** If true, performs sanitization of the deno.json[c] file on disk before committing. */
   sanitize?: boolean;
-  /** Se true, apenas simula as operações do git sem persistir commits ou tags. */
+  /** If true, only simulates git operations without persisting commits or tags. */
   dryRun?: boolean;
-  /** Se true, gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag. */
+  /** If true, generates or updates the CHANGELOG.md file with changes since the last tag. */
   changelog?: boolean;
-  /** Se true, atualiza a seção de últimas atualizações no README.md. (Requer changelog: true) */
+  /** If true, updates the latest updates section in README.md. (Requires changelog: true) */
   updateReadme?: boolean;
-  /** Diretório base de execução. */
+  /** Execution base directory. */
   baseDir?: string;
-  /** Se true, não emite logs no console durante a execução. */
-  silencioso?: boolean;
+  /** If true, does not emit logs to the console during execution. */
+  silent?: boolean;
 }
 
-/** Resultado da operação de tag git. */
+/** Result of the git tag operation. */
 export interface TagVersionResult {
-  /** Nome da tag gerada (ex: "v0.3"). */
+  /** Name of the generated tag (e.g., "v0.3"). */
   tagName: string;
-  /** Versão original bruta. */
+  /** Original raw version. */
   rawVersion: string;
-  /** Versão semver sanitizada. */
+  /** Sanitized semver version. */
   sanitizedVersion: string;
-  /** Mensagem utilizada no commit. */
+  /** Message used in the commit. */
   message: string;
-  /** Se o repositório foi alterado e comitado. */
+  /** Whether the repository was modified and committed. */
   committed: boolean;
-  /** Se a tag foi criada e publicada. */
+  /** Whether the tag was created and published. */
   tagged: boolean;
 }
 
+/** Data stored in the concurrency lock file during active watch sessions. */
 export interface WatchLockData {
-  /** PID do processo Deno ativo */
+  /** PID of the active Deno process */
   pid: number;
-  /** Nome do alvo em monitoramento */
+  /** Name of the target under monitoring */
   target: string;
-  /** Timestamp ISO do início do processo */
+  /** ISO timestamp of process start */
   startedAt: string;
-  /** Diretório base de execução */
+  /** Execution base directory */
   baseDir?: string;
 }

@@ -4,14 +4,14 @@ import { sanitizeVersionFile, } from "../../src/version/sanitize/engine.ts";
 import { sanitizeVersionCli, } from "../../src/version/sanitize/cli.ts";
 import { join, } from "@std/path";
 
-describe("sanitize-version - Motor e CLI", () => {
+describe("sanitize-version - Engine and CLI", () => {
   describe("sanitizeVersionFile", () => {
-    it("não altera arquivo que já possui versão semver válida", async () => {
+    it("does not change file that already has a valid semver version", async () => {
       const tempDir = await Deno.makeTempDir();
       const filePath = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(filePath, '{\n  "version": "1.2.3"\n}',);
 
-      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      const res = await sanitizeVersionFile({ filePath, silent: true, },);
       assertEquals(res.rawVersion, "1.2.3",);
       assertEquals(res.sanitizedVersion, "1.2.3",);
       assertEquals(res.updated, false,);
@@ -21,15 +21,15 @@ describe("sanitize-version - Motor e CLI", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("sanitiza versão com hash no arquivo", async () => {
+    it("sanitizes version with hash in the file", async () => {
       const tempDir = await Deno.makeTempDir();
       const filePath = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
         filePath,
-        '{\n  "name": "teste",\n  "version": "0.3.14#muesu7z0",\n  "license": "MIT"\n}',
+        '{\n  "name": "test",\n  "version": "0.3.14#muesu7z0",\n  "license": "MIT"\n}',
       );
 
-      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      const res = await sanitizeVersionFile({ filePath, silent: true, },);
       assertEquals(res.rawVersion, "0.3.14#muesu7z0",);
       assertEquals(res.sanitizedVersion, "0.3.14",);
       assertEquals(res.updated, true,);
@@ -40,12 +40,12 @@ describe("sanitize-version - Motor e CLI", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("injeta version: 0.0.0 quando o campo version estiver ausente", async () => {
+    it("injects version: 0.0.0 when the version field is missing", async () => {
       const tempDir = await Deno.makeTempDir();
       const filePath = join(tempDir, "deno.jsonc",);
-      await Deno.writeTextFile(filePath, '{\n  "name": "sem-versao"\n}',);
+      await Deno.writeTextFile(filePath, '{\n  "name": "no-version"\n}',);
 
-      const res = await sanitizeVersionFile({ filePath, silencioso: true, },);
+      const res = await sanitizeVersionFile({ filePath, silent: true, },);
       assertEquals(res.rawVersion, "0.0.0",);
       assertEquals(res.sanitizedVersion, "0.0.0",);
       assertEquals(res.updated, false,);
@@ -55,21 +55,21 @@ describe("sanitize-version - Motor e CLI", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("falha quando arquivo explícito não existe", async () => {
+    it("fails when explicit file does not exist", async () => {
       await assertRejects(
         () =>
           sanitizeVersionFile({
-            filePath: "/caminho/ficticio/deno.jsonc",
-            silencioso: true,
+            filePath: "/fictional/path/deno.jsonc",
+            silent: true,
           },),
         Error,
-        "não encontrado",
+        "not found",
       );
     });
   });
 
   describe("sanitizeVersionCli", () => {
-    it("instancia o comando Cliffy com definições corretas", () => {
+    it("instantiates Cliffy command with correct definitions", () => {
       const cmd = sanitizeVersionCli();
       assertEquals(cmd.getName(), "sanitize-version",);
     });

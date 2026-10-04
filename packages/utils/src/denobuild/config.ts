@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/denobuild/config
- * @description Carregamento de configurações externas a partir de `denobuild.jsonc`.
+ * @description Loading external configurations from `denobuild.jsonc`.
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
@@ -11,7 +11,7 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Exemplo de configuração para o motor Deno.bundle no projeto BuildIt.
+ * Example configuration for the Deno.bundle engine in the BuildIt project.
  */
 export const DENOBUILD_CONFIG_EXAMPLE: DenoBundleGlobalConfig = {
   ui: {
@@ -38,30 +38,30 @@ export const DENOBUILD_CONFIG_EXAMPLE: DenoBundleGlobalConfig = {
 };
 
 /**
- * Carrega as configurações de alvos para o motor Deno.bundle a partir de um arquivo JSONC externo
- * (ex: `denobuild.jsonc` ou `denobuild.json`).
+ * Loads target configurations for the Deno.bundle engine from an external JSONC file
+ * (e.g., `denobuild.jsonc` or `denobuild.json`).
  *
- * Se o arquivo não for encontrado, a execução é interrompida com uma mensagem de exemplo.
+ * If the file is not found, execution is interrupted with an example message.
  *
- * @param caminhoConfig Caminho opcional do arquivo de configuração
- * @param baseDir Diretório base para resolução de arquivos relativos
- * @returns Configuração carregada com alvos e opções globais
+ * @param configPath Optional path to the configuration file
+ * @param baseDir Base directory for relative file resolution
+ * @returns Loaded configuration with targets and global options
  */
-export async function carregarConfigDenoBuild(
-  caminhoConfig?: string,
+export async function loadDenoBuildConfig(
+  configPath?: string,
   baseDir: string = ".",
 ): Promise<DenoBuildConfigResult> {
   const parsed = await loadConfig<DenoBuildConfigFile>(
     "denobuild",
-    caminhoConfig,
+    configPath,
     baseDir,
   );
 
   if (!parsed) {
-    throw new Error(`❌ Arquivo de configuração "denobuild.jsonc" não encontrado na raiz do projeto.
-O BuildIt agora exige uma declaração explícita de alvos.
+    throw new Error(`❌ Configuration file "denobuild.jsonc" not found in the project root.
+BuildIt now requires an explicit target declaration.
 
-Exemplo de arquivo "denobuild.jsonc" mínimo:
+Minimum "denobuild.jsonc" file example:
 {
   "targets": {
     "app": {
@@ -84,7 +84,7 @@ Exemplo de arquivo "denobuild.jsonc" mínimo:
   if (parsed.targets && typeof parsed.targets === "object") {
     result.targets = parsed.targets;
   } else {
-    throw new Error(`❌ Chave "targets" não encontrada no arquivo de configuração denobuild.`);
+    throw new Error(`❌ Key "targets" not found in the denobuild configuration file.`);
   }
 
   return result;

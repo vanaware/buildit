@@ -1,404 +1,404 @@
 import { describe, it, } from "@std/testing/bdd";
 import { assertEquals, assertStringIncludes, } from "@std/assert";
 import {
-  calcularCraseWrapper,
-  correspondeGlobs,
-  deveIncluirArquivo,
-  formatarArquivoMarkdown,
-  gerarCabecalho,
-  mapearExtensao,
-  normalizarCaminho,
+  calculateBacktickWrapper,
+  formatMarkdownFile,
+  generateHeader,
+  mapExtension,
+  matchesGlobs,
+  normalizePath,
+  shouldIncludeFile,
 } from "../../src/export/formatter.ts";
 import type { ExportConfig, } from "../../src/tools/interfaces.ts";
 
-// Helper para criar config customizada em testes
+// Helper to create custom config in tests
 function makeConfig(overrides: Partial<ExportConfig> = {},): ExportConfig {
   return {
-    arquivoSaida: "snapshot.md",
+    outputFile: "snapshot.md",
     includes: ["**/*",],
-    incluiVersao: false,
-    instrucaoCustomizada: "Teste",
+    includeVersion: false,
+    customInstruction: "Test",
     ...overrides,
   };
 }
 
 // ============================================================================
-// 🛠️ FUNÇÕES UTILITÁRIAS
+// 🛠️ UTILITY FUNCTIONS
 // ============================================================================
 
-describe("normalizarCaminho", () => {
-  it("converte barras invertidas em barras normais", () => {
-    assertEquals(normalizarCaminho("a\\b\\c",), "a/b/c",);
+describe("normalizePath", () => {
+  it("converts backslashes to normal slashes", () => {
+    assertEquals(normalizePath("a\\b\\c",), "a/b/c",);
   });
 
-  it("converte para minúsculas", () => {
-    assertEquals(normalizarCaminho("ABC/DEF",), "abc/def",);
+  it("converts to lowercase", () => {
+    assertEquals(normalizePath("ABC/DEF",), "abc/def",);
   });
 
-  it("lida com ambos simultaneamente", () => {
-    assertEquals(normalizarCaminho("A\\B\\C/DEF",), "a/b/c/def",);
+  it("handles both simultaneously", () => {
+    assertEquals(normalizePath("A\\B\\C/DEF",), "a/b/c/def",);
   });
 
-  it("preserva caminho já normalizado", () => {
-    assertEquals(normalizarCaminho("a/b/c",), "a/b/c",);
+  it("preserves already normalized path", () => {
+    assertEquals(normalizePath("a/b/c",), "a/b/c",);
   });
 
-  it("lida com string vazia", () => {
-    assertEquals(normalizarCaminho("",), "",);
+  it("handles empty string", () => {
+    assertEquals(normalizePath("",), "",);
   });
 });
 
-describe("calcularCraseWrapper", () => {
-  it("retorna ``` para texto sem crases", () => {
-    assertEquals(calcularCraseWrapper("texto normal",), "```",);
+describe("calculateBacktickWrapper", () => {
+  it("returns ``` for text without backticks", () => {
+    assertEquals(calculateBacktickWrapper("normal text",), "```",);
   });
 
-  it("retorna ```` para texto com ```", () => {
-    assertEquals(calcularCraseWrapper("código com ```",), "````",);
+  it("returns ```` for text with ```", () => {
+    assertEquals(calculateBacktickWrapper("code with ```",), "````",);
   });
 
-  it("retorna 6 crases para texto com `````", () => {
-    assertEquals(calcularCraseWrapper("texto `````",), "``````",);
+  it("returns 6 backticks for text with `````", () => {
+    assertEquals(calculateBacktickWrapper("text `````",), "``````",);
   });
 
-  it("usa no mínimo 3 crases", () => {
-    assertEquals(calcularCraseWrapper("com ` uma crase",), "```",);
-    assertEquals(calcularCraseWrapper("com `` duas",), "```",);
+  it("uses at least 3 backticks", () => {
+    assertEquals(calculateBacktickWrapper("with ` one backtick",), "```",);
+    assertEquals(calculateBacktickWrapper("with `` two",), "```",);
   });
 
-  it("lida com múltiplas sequências (usa a maior)", () => {
+  it("handles multiple sequences (uses the largest)", () => {
     assertEquals(
-      calcularCraseWrapper("com ` e ``` e ``",),
+      calculateBacktickWrapper("with ` and ``` and ``",),
       "````",
     );
   });
 
-  it("lida com string vazia", () => {
-    assertEquals(calcularCraseWrapper("",), "```",);
+  it("handles empty string", () => {
+    assertEquals(calculateBacktickWrapper("",), "```",);
   });
 });
 
-describe("mapearExtensao", () => {
-  it("mapeia .manifest para json", () => {
-    assertEquals(mapearExtensao("manifest.manifest",), "json",);
+describe("mapExtension", () => {
+  it("maps .manifest to json", () => {
+    assertEquals(mapExtension("manifest.manifest",), "json",);
   });
 
-  it("mapeia .jsonc para json", () => {
-    assertEquals(mapearExtensao("config.jsonc",), "json",);
+  it("maps .jsonc to json", () => {
+    assertEquals(mapExtension("config.jsonc",), "json",);
   });
 
-  it("mapeia .yml para yaml", () => {
-    assertEquals(mapearExtensao("workflow.yml",), "yaml",);
+  it("maps .yml to yaml", () => {
+    assertEquals(mapExtension("workflow.yml",), "yaml",);
   });
 
-  it("mapeia .sh para bash", () => {
-    assertEquals(mapearExtensao("deploy.sh",), "bash",);
+  it("maps .sh to bash", () => {
+    assertEquals(mapExtension("deploy.sh",), "bash",);
   });
 
-  it("mapeia .env* para properties", () => {
-    assertEquals(mapearExtensao(".env",), "properties",);
-    assertEquals(mapearExtensao(".env.example",), "properties",);
-    assertEquals(mapearExtensao(".env.local",), "properties",);
+  it("maps .env* to properties", () => {
+    assertEquals(mapExtension(".env",), "properties",);
+    assertEquals(mapExtension(".env.example",), "properties",);
+    assertEquals(mapExtension(".env.local",), "properties",);
   });
 
-  it("retorna a extensão como está para casos não mapeados", () => {
-    assertEquals(mapearExtensao("arquivo.ts",), "ts",);
-    assertEquals(mapearExtensao("arquivo.tsx",), "tsx",);
-    assertEquals(mapearExtensao("arquivo.md",), "md",);
+  it("returns extension as is for unmapped cases", () => {
+    assertEquals(mapExtension("file.ts",), "ts",);
+    assertEquals(mapExtension("file.tsx",), "tsx",);
+    assertEquals(mapExtension("file.md",), "md",);
   });
 
-  it("é case insensitive", () => {
-    assertEquals(mapearExtensao("arquivo.JSONC",), "json",);
-    assertEquals(mapearExtensao("arquivo.YML",), "yaml",);
+  it("is case insensitive", () => {
+    assertEquals(mapExtension("file.JSONC",), "json",);
+    assertEquals(mapExtension("file.YML",), "yaml",);
   });
 });
 
-describe("correspondeGlobs", () => {
-  it("deve corresponder com wildcards simples", () => {
-    assertEquals(correspondeGlobs("src/main.ts", ["src/*.ts",],), true,);
-    assertEquals(correspondeGlobs("src/main.js", ["src/*.ts",],), false,);
+describe("matchesGlobs", () => {
+  it("should match with simple wildcards", () => {
+    assertEquals(matchesGlobs("src/main.ts", ["src/*.ts",],), true,);
+    assertEquals(matchesGlobs("src/main.js", ["src/*.ts",],), false,);
   });
 
-  it("deve corresponder com globstar recursivo", () => {
+  it("should match with recursive globstar", () => {
     assertEquals(
-      correspondeGlobs("packages/ui/src/app.tsx", ["packages/ui/**",],),
+      matchesGlobs("packages/ui/src/app.tsx", ["packages/ui/**",],),
       true,
     );
   });
 
-  it("deve corresponder com brace expansion", () => {
+  it("should match with brace expansion", () => {
     assertEquals(
-      correspondeGlobs("src/main.tsx", ["src/**/*.{ts,tsx}",],),
+      matchesGlobs("src/main.tsx", ["src/**/*.{ts,tsx}",],),
       true,
     );
     assertEquals(
-      correspondeGlobs("src/main.ts", ["src/**/*.{ts,tsx}",],),
+      matchesGlobs("src/main.ts", ["src/**/*.{ts,tsx}",],),
       true,
     );
     assertEquals(
-      correspondeGlobs("src/main.css", ["src/**/*.{ts,tsx}",],),
+      matchesGlobs("src/main.css", ["src/**/*.{ts,tsx}",],),
       false,
     );
   });
 });
 
 // ============================================================================
-// 🎯 LÓGICA DE FILTRAGEM
+// 🎯 FILTERING LOGIC
 // ============================================================================
 
-describe("deveIncluirArquivo", () => {
-  describe("proteção anti-loop", () => {
-    it("bloqueia qualquer arquivo dentro de exports/", () => {
+describe("shouldIncludeFile", () => {
+  describe("anti-loop protection", () => {
+    it("blocks any file inside exports/", () => {
       const config = makeConfig({
         includes: ["**/*",],
       },);
-      assertEquals(deveIncluirArquivo("exports/server.md", config,), false,);
-      assertEquals(deveIncluirArquivo("exports/sub/file.ts", config,), false,);
+      assertEquals(shouldIncludeFile("exports/server.md", config,), false,);
+      assertEquals(shouldIncludeFile("exports/sub/file.ts", config,), false,);
     });
 
-    it("bloqueia mesmo com extensão válida", () => {
+    it("blocks even with valid extension", () => {
       const config = makeConfig({
         includes: ["**/*.{md,ts}",],
       },);
-      assertEquals(deveIncluirArquivo("exports/qualquer.ts", config,), false,);
+      assertEquals(shouldIncludeFile("exports/any.ts", config,), false,);
     });
   });
 
-  describe("modo moderno includes / excludes", () => {
-    it("permite arquivo que casa com includes e não casa com excludes", () => {
+  describe("modern mode includes / excludes", () => {
+    it("allows file matching includes and not matching excludes", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["src/**/*.{ts,tsx}",],
         excludes: ["**/*.test.ts",],
       };
-      assertEquals(deveIncluirArquivo("src/app.tsx", config,), true,);
-      assertEquals(deveIncluirArquivo("src/app.test.ts", config,), false,);
+      assertEquals(shouldIncludeFile("src/app.tsx", config,), true,);
+      assertEquals(shouldIncludeFile("src/app.test.ts", config,), false,);
     });
   });
 
-  describe("caminhos adicionais e arquivos raiz via glob", () => {
-    it("permite caminho adicional com extensão válida", () => {
+  describe("additional paths and root files via glob", () => {
+    it("allows additional path with valid extension", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["src/**/*.{ts,tsx}", ".github/workflows/*.{yml,yaml}",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/deploy.yml", config,),
+        shouldIncludeFile(".github/workflows/deploy.yml", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo(".github/workflows/ci.yaml", config,),
+        shouldIncludeFile(".github/workflows/ci.yaml", config,),
         true,
       );
     });
 
-    it("bloqueia caminho com extensão que não casa com glob", () => {
+    it("blocks path with extension not matching glob", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: [".github/workflows/*.yml",],
       };
       assertEquals(
-        deveIncluirArquivo(".github/workflows/segredo.png", config,),
+        shouldIncludeFile(".github/workflows/secret.png", config,),
         false,
       );
     });
 
-    it("permite arquivo exato no caminho adicional", () => {
+    it("allows exact file in additional path", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["README.md",],
       };
-      assertEquals(deveIncluirArquivo("README.md", config,), true,);
+      assertEquals(shouldIncludeFile("README.md", config,), true,);
     });
   });
 
-  describe("pastas e subpastas via glob", () => {
-    it("permite arquivo dentro de subpasta permitida", () => {
+  describe("folders and subfolders via glob", () => {
+    it("allows file inside permitted subfolder", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["monorepo/server/{src,docs}/**/*.{ts,md}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/src/main.ts", config,),
+        shouldIncludeFile("monorepo/server/src/main.ts", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/docs/arquitetura.md", config,),
+        shouldIncludeFile("monorepo/server/docs/architecture.md", config,),
         true,
       );
     });
 
-    it("bloqueia arquivo fora das pastas incluídas", () => {
+    it("blocks file outside included folders", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["monorepo/server/src/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/ui/src/app.tsx", config,),
+        shouldIncludeFile("monorepo/ui/src/app.tsx", config,),
         false,
       );
     });
 
-    it("bloqueia arquivo em subpasta excluída", () => {
+    it("blocks file in excluded subfolder", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["monorepo/server/**/*",],
         excludes: ["monorepo/server/dist/**/*",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/dist/bundle.js", config,),
+        shouldIncludeFile("monorepo/server/dist/bundle.js", config,),
         false,
       );
     });
   });
 
-  describe("arquivos raiz via glob", () => {
-    it("permite arquivos raiz explicitamente configurados", () => {
+  describe("root files via glob", () => {
+    it("allows explicitly configured root files", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["monorepo/server/{deno.json,deploy.sh}",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deno.json", config,),
+        shouldIncludeFile("monorepo/server/deno.json", config,),
         true,
       );
       assertEquals(
-        deveIncluirArquivo("monorepo/server/deploy.sh", config,),
+        shouldIncludeFile("monorepo/server/deploy.sh", config,),
         true,
       );
     });
 
-    it("bloqueia arquivos raiz não configurados", () => {
+    it("blocks unconfigured root files", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["monorepo/server/deno.json",],
       };
       assertEquals(
-        deveIncluirArquivo("monorepo/server/package.json", config,),
+        shouldIncludeFile("monorepo/server/package.json", config,),
         false,
       );
     });
   });
 
-  describe("configuração tipo docs via glob", () => {
-    it("captura raiz e subpasta docs", () => {
+  describe("docs type configuration via glob", () => {
+    it("captures root and docs subfolder", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["readme.md", "docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("readme.md", config,), true,);
-      assertEquals(deveIncluirArquivo("docs/arquitetura.md", config,), true,);
+      assertEquals(shouldIncludeFile("readme.md", config,), true,);
+      assertEquals(shouldIncludeFile("docs/architecture.md", config,), true,);
     });
 
-    it("bloqueia código fonte fora de docs", () => {
+    it("blocks source code outside docs", () => {
       const config: ExportConfig = {
-        arquivoSaida: "snapshot.md",
+        outputFile: "snapshot.md",
         includes: ["docs/**/*.md",],
       };
-      assertEquals(deveIncluirArquivo("src/main.ts", config,), false,);
+      assertEquals(shouldIncludeFile("src/main.ts", config,), false,);
     });
   });
 });
 
 // ============================================================================
-// 📝 GERAÇÃO DE CONTEÚDO
+// 📝 CONTENT GENERATION
 // ============================================================================
 
-describe("gerarCabecalho", () => {
-  it("inclui instrução customizada", () => {
+describe("generateHeader", () => {
+  it("includes custom instruction", () => {
     const config = makeConfig({
-      instrucaoCustomizada: "Este é um código de TESTE.",
+      customInstruction: "This is a TEST code.",
     },);
-    const resultado = gerarCabecalho(config, "test", "1.0.0",);
-    assertStringIncludes(resultado, "código de TESTE",);
+    const result = generateHeader(config, "test", "1.0.0",);
+    assertStringIncludes(result, "TEST code",);
   });
 
-  it("inclui versão quando incluiVersao é true", () => {
-    const config = makeConfig({ incluiVersao: true, },);
-    const resultado = gerarCabecalho(config, "ui", "1.2.3",);
-    assertStringIncludes(resultado, "[v1.2.3]",);
-    assertStringIncludes(resultado, "BuildIt [v1.2.3]",);
+  it("includes version when includeVersion is true", () => {
+    const config = makeConfig({ includeVersion: true, },);
+    const result = generateHeader(config, "ui", "1.2.3",);
+    assertStringIncludes(result, "[v1.2.3]",);
+    assertStringIncludes(result, "BuildIt [v1.2.3]",);
   });
 
-  it("não inclui versão quando incluiVersao é false", () => {
-    const config = makeConfig({ incluiVersao: false, },);
-    const resultado = gerarCabecalho(config, "server", "1.2.3",);
-    assertEquals(resultado.includes("[v1.2.3]",), false,);
+  it("does not include version when includeVersion is false", () => {
+    const config = makeConfig({ includeVersion: false, },);
+    const result = generateHeader(config, "server", "1.2.3",);
+    assertEquals(result.includes("[v1.2.3]",), false,);
   });
 
-  it("inclui nome do modo em maiúsculas", () => {
+  it("includes mode name in uppercase", () => {
     const config = makeConfig();
-    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
-    assertStringIncludes(resultado, "Modo: UI",);
+    const result = generateHeader(config, "ui", "1.0.0",);
+    assertStringIncludes(result, "Mode: UI",);
   });
 
-  it("inclui timestamp de geração", () => {
+  it("includes generation timestamp", () => {
     const config = makeConfig();
-    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
-    assertStringIncludes(resultado, "Gerado automaticamente em:",);
+    const result = generateHeader(config, "ui", "1.0.0",);
+    assertStringIncludes(result, "Automatically generated at:",);
   });
 
-  it("usa cabeçalho padrão com diretrizes de arquivo quando cabecalho não for fornecido", () => {
+  it("uses default header with file guidelines when header is not provided", () => {
     const config = makeConfig();
-    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+    const result = generateHeader(config, "ui", "1.0.0",);
     assertStringIncludes(
-      resultado,
-      "> Cada arquivo começa com um título indicando seu caminho relativo exato (ex: `## Arquivo: src/main.ts`).",
+      result,
+      "> Each file starts with a title indicating its exact relative path (e.g., `## File: src/main.ts`).",
     );
     assertStringIncludes(
-      resultado,
-      "> Sempre que sugerir alterações, indique claramente qual arquivo deve ser modificado com base nesses caminhos e forneça o novo código completo do arquivo.",
+      result,
+      "> Whenever suggesting changes, clearly indicate which file should be modified based on these paths and provide the complete new code for the file.",
     );
   });
 
-  it("permite substituir o cabeçalho através da opção cabecalho", () => {
-    const customCabecalho = "> Diretriz especial e única para este projeto.";
-    const config = makeConfig({ cabecalho: customCabecalho, },);
-    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
-    assertStringIncludes(resultado, customCabecalho,);
+  it("allows replacing header via header option", () => {
+    const customHeader = "> Special and unique guideline for this project.";
+    const config = makeConfig({ header: customHeader, },);
+    const result = generateHeader(config, "ui", "1.0.0",);
+    assertStringIncludes(result, customHeader,);
     assertEquals(
-      resultado.includes(
-        "Cada arquivo começa com um título indicando seu caminho relativo exato",
+      result.includes(
+        "Each file starts with a title indicating its exact relative path",
       ),
       false,
     );
   });
 
-  it("permite customizar o nome do projeto via opção projeto", () => {
-    const config = makeConfig({ projeto: "MeuSuperApp", },);
-    const resultado = gerarCabecalho(config, "ui", "1.0.0",);
+  it("allows customizing project name via project option", () => {
+    const config = makeConfig({ project: "MySuperApp", },);
+    const result = generateHeader(config, "ui", "1.0.0",);
     assertStringIncludes(
-      resultado,
-      "# Contexto Exportado do Projeto MeuSuperApp - Modo: UI",
+      result,
+      "# Exported Context from Project MySuperApp - Mode: UI",
     );
   });
 });
 
-describe("formatarArquivoMarkdown", () => {
-  it("formata arquivo com caminho e conteúdo", () => {
-    const resultado = formatarArquivoMarkdown(
+describe("formatMarkdownFile", () => {
+  it("formats file with path and content", () => {
+    const result = formatMarkdownFile(
       "src/main.ts",
       "console.log('hello');",
     );
-    assertStringIncludes(resultado, "## Arquivo: `src/main.ts`",);
-    assertStringIncludes(resultado, "```ts",);
-    assertStringIncludes(resultado, "console.log('hello');",);
+    assertStringIncludes(result, "## File: `src/main.ts`",);
+    assertStringIncludes(result, "```ts",);
+    assertStringIncludes(result, "console.log('hello');",);
   });
 
-  it("usa extensão mapeada para highlight", () => {
-    const resultado = formatarArquivoMarkdown("config.jsonc", "{}",);
-    assertStringIncludes(resultado, "```json",);
+  it("uses mapped extension for highlight", () => {
+    const result = formatMarkdownFile("config.jsonc", "{}",);
+    assertStringIncludes(result, "```json",);
   });
 
-  it("aumenta crases quando conteúdo tem ```", () => {
-    const conteudo = "código com ```\nmais código";
-    const resultado = formatarArquivoMarkdown("arquivo.md", conteudo,);
-    assertStringIncludes(resultado, "````md",);
-    assertStringIncludes(resultado, "````",);
+  it("increases backticks when content has ```", () => {
+    const content = "code with ```\nmore code";
+    const result = formatMarkdownFile("file.md", content,);
+    assertStringIncludes(result, "````md",);
+    assertStringIncludes(result, "````",);
   });
 
-  it("inclui separador no final", () => {
-    const resultado = formatarArquivoMarkdown("src/main.ts", "code",);
-    assertStringIncludes(resultado, "---",);
+  it("includes separator at the end", () => {
+    const result = formatMarkdownFile("src/main.ts", "code",);
+    assertStringIncludes(result, "---",);
   });
 });

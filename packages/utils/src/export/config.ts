@@ -1,17 +1,17 @@
 /**
  * @module @vanaware/buildit/export/config
- * @description Carregamento de configurações externas a partir de `export.jsonc`.
+ * @description Loading external configurations from `export.jsonc`.
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
 import type { ExportConfig, ExportConfigFile, ExportConfigResult, } from "../tools/interfaces.ts";
 
 /**
- * Exemplo com as configurações dos modos de exportação do BuildIt.
+ * Example with BuildIt export mode configurations.
  */
 export const EXPORT_CONFIG_EXAMPLE: Record<string, ExportConfig> = {
   ui: {
-    arquivoSaida: "snapshots/ui.md",
+    outputFile: "snapshots/ui.md",
     includes: [
       "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
       "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}",
@@ -20,54 +20,54 @@ export const EXPORT_CONFIG_EXAMPLE: Record<string, ExportConfig> = {
       "**/node_modules/**",
       "**/.git/**",
     ],
-    incluiVersao: true,
-    instrucaoCustomizada:
-      "O texto abaixo contém os arquivos de CÓDIGO FONTE principais da aplicação exemplo (UI).",
+    includeVersion: true,
+    customInstruction:
+      "The text below contains the main SOURCE CODE files for the example application (UI).",
     default: true,
   },
   docs: {
-    arquivoSaida: "snapshots/docs.md",
+    outputFile: "snapshots/docs.md",
     includes: [
       "docs/**/*.{md,txt}",
       "{readme.md,readme,license,license.md,license.txt,.tool-versions}",
     ],
     excludes: [],
-    incluiVersao: false,
-    instrucaoCustomizada:
-      "O texto abaixo contém a DOCUMENTAÇÃO e diretrizes arquiteturais do projeto.",
+    includeVersion: false,
+    customInstruction:
+      "The text below contains the DOCUMENTATION and architectural guidelines of the project.",
     default: false,
   },
 };
 
 /**
- * Carrega a configuração de exportação a partir de um arquivo JSONC externo
- * (ex: `export.jsonc` ou `export.json`).
+ * Loads the export configuration from an external JSONC file
+ * (e.g., `export.jsonc` or `export.json`).
  *
- * Se o arquivo não for encontrado, a execução é interrompida com uma mensagem de exemplo.
+ * If the file is not found, execution is interrupted with an example message.
  *
- * @param caminhoConfig Caminho opcional para o arquivo de configuração
- * @param baseDir Diretório base para resolução do arquivo relativo
- * @returns Configurações de exportação carregadas com modos e opções globais
+ * @param configPath Optional path to the configuration file
+ * @param baseDir Base directory for relative file resolution
+ * @returns Loaded export configurations with modes and global options
  */
-export async function carregarConfigExport(
-  caminhoConfig?: string,
+export async function loadExportConfig(
+  configPath?: string,
   baseDir: string = ".",
 ): Promise<ExportConfigResult> {
   const parsed = await loadConfig<ExportConfigFile>(
     "export",
-    caminhoConfig,
+    configPath,
     baseDir,
   );
 
   if (!parsed) {
-    throw new Error(`❌ Arquivo de configuração "export.jsonc" não encontrado na raiz do projeto.
-O BuildIt agora exige uma declaração explícita de modos de exportação.
+    throw new Error(`❌ Configuration file "export.jsonc" not found in the project root.
+BuildIt now requires an explicit declaration of export modes.
 
-Exemplo de arquivo "export.jsonc" mínimo:
+Minimum "export.jsonc" file example:
 {
-  "modos": {
+  "modes": {
     "src": {
-      "arquivoSaida": "snapshots/src.md",
+      "outputFile": "snapshots/src.md",
       "includes": ["src/**/*.ts"]
     }
   }
@@ -75,36 +75,36 @@ Exemplo de arquivo "export.jsonc" mínimo:
   }
 
   if (
-    "modos" in parsed &&
-    typeof (parsed as ExportConfigFile).modos === "object"
+    "modes" in parsed &&
+    typeof (parsed as ExportConfigFile).modes === "object"
   ) {
-    const rootProjeto = (parsed as ExportConfigFile).projeto;
-    const rootCabecalho = (parsed as ExportConfigFile).cabecalho;
+    const rootProject = (parsed as ExportConfigFile).project;
+    const rootHeader = (parsed as ExportConfigFile).header;
     const rootDefineVersionString = (parsed as ExportConfigFile).defineVersionString;
-    const modos = (parsed as ExportConfigFile).modos;
+    const modes = (parsed as ExportConfigFile).modes;
 
-    if (rootProjeto !== undefined || rootCabecalho !== undefined) {
-      for (const [modoKey, modoConfig,] of Object.entries(modos,)) {
-        modos[modoKey] = {
-          ...(rootProjeto !== undefined && modoConfig.projeto === undefined
-            ? { projeto: rootProjeto, }
+    if (rootProject !== undefined || rootHeader !== undefined) {
+      for (const [modeKey, modeConfig,] of Object.entries(modes,)) {
+        modes[modeKey] = {
+          ...(rootProject !== undefined && modeConfig.project === undefined
+            ? { project: rootProject, }
             : {}),
-          ...(rootCabecalho !== undefined &&
-              modoConfig.cabecalho === undefined
-            ? { cabecalho: rootCabecalho, }
+          ...(rootHeader !== undefined &&
+              modeConfig.header === undefined
+            ? { header: rootHeader, }
             : {}),
-          ...modoConfig,
+          ...modeConfig,
         };
       }
     }
 
     return {
-      modos,
-      projeto: rootProjeto,
-      cabecalho: rootCabecalho,
+      modes: modes,
+      project: rootProject,
+      header: rootHeader,
       defineVersionString: rootDefineVersionString,
     };
   }
 
-  throw new Error(`❌ Chave "modos" não encontrada no arquivo de configuração export.`);
+  throw new Error(`❌ Key "modes" not found in the export configuration file.`);
 }

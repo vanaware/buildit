@@ -1,10 +1,10 @@
-# Topologia de Execução: `esbuild` (Orquestrador de Build)
+# Execution Topology: `esbuild` (Build Orchestrator)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`esbuild`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`esbuild`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -13,80 +13,80 @@ Este documento descreve a topologia completa de execução de funções do utili
 esBuildCli() (packages/utils/src/esbuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigEsbuild(caminhoConfig, baseDir)
+       ├──► carregarConfigEsbuild(configPath, baseDir)
        │       │
-       │       └──► loadConfig<EsbuildConfigFile>("esbuild", caminhoConfig, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │       └──► loadConfig<EsbuildConfigFile>("esbuild", configPath, baseDir)
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        ├──► parseArgs(args, configs)
        │
        ▼
-esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
+esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
        │
        ├──► updateProjectVersion({ denoJsonPath, baseDir, noversion, versionPaths, forcepackagesversion })
        │       │
        │       ├──► readProjectVersion(denoJsonPath, baseDir)
        │       │       └──► parseVersion(rawVersion)
-       │       ├──► incrementProjectVersion({ baseDir, denoJsonPath, currentVersion, buildHash }) [Se noversion=false]
+       │       ├──► incrementProjectVersion({ baseDir, denoJsonPath, currentVersion, buildHash }) [If noversion=false]
        │       │       ├──► readProjectVersion(...)
        │       │       ├──► parseVersion(...) / formatVersion(...)
        │       │       └──► replaceVersionInContent(...) -> Deno.writeTextFile(...)
-       │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [Se forcepackagesversion=true]
-       │               └──► [Itera workspaces] -> syncWorkspaceDir(...)
+       │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [If forcepackagesversion=true]
+       │               └──► [Iterate workspaces] -> syncWorkspaceDir(...)
        │
        ├──► resolverOrdemTargets(configs, targets)
        │
-       └──► [Loop para cada Target Selecionado]
+       └──► [Loop for each Selected Target]
                │
                ▼
        processTarget(targetName, targetConfig, appVersion, esbuildBuildFn, listAssetsFn)
                │
                ├──► validateTargetConfig(targetName, config)
                │
-               ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► [Itera config.clean.includes/excludes]
+               ├──► cleanTarget(config.distdir, config.clean) [if configured]
+               │       └──► [Iterate config.clean.includes/excludes]
                │               └──► Deno.remove(...) / emptyDir(...)
                │
                ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
                │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │               ├──► expandGlob(includes, { root: basedir, exclude: excludes })
                │               ├──► replaceVersionInFile(manifest.json, appVersion)
-               │               └──► Log "index.html copiado" [se index.html detectado]
+               │               └──► Log "index.html copied" [if index.html detected]
                │
                ├──► buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)
-               │       ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
+               │       ├──► listAssetsForCache(config.distdir) [if defineAssetsString configured]
                │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
                │       ├──► resolveOutputPaths(config)
-               │       └──► [Mapeia opções avançadas: jsx, minify, mangle, analyze, etc.]
+               │       └──► [Maps advanced options: jsx, minify, mangle, analyze, etc.]
                │
                ├──► esbuildBuildFn(esbuildOptions) -> buildWithDenoPlugin(options, denoJsoncPath)
                │       ├──► denoPlugin({ configPath: denoJsoncPath })
                │       └──► esbuild.build(options)
                │
-               ├──► Deno.writeTextFile(metafilePath, ...) [se metafile: true ou analyze configurado]
+               ├──► Deno.writeTextFile(metafilePath, ...) [if metafile: true or analyze configured]
                │
-               └──► esbuild.analyzeMetafile(result.metafile) [se analyze: true ou "verbose"]
+               └──► esbuild.analyzeMetafile(result.metafile) [if analyze: true or "verbose"]
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `esBuildCli()`
-* **Arquivo**: `packages/utils/src/esbuild/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
-* **Ações**:
-  1. `findDenoConfig()`: Procura `deno.jsonc` ou `deno.json` nos diretórios raiz/parentes.
-  2. `carregarConfigEsbuild(caminhoConfig, baseDir)`: Carrega e valida o arquivo de configuração (ou devolve `CONFIGURACOES_PADRAO`).
-  3. `parseArgs(args, configs)`: Filtra os alvos solicitados pelo usuário contra as chaves declaradas na configuração.
-  4. Chama `esBuild(opcoes)`.
+### Step 1: CLI Initialization
+* **Function**: `esBuildCli()`
+* **File**: `packages/utils/src/esbuild/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
+* **Actions**:
+  1. `findDenoConfig()`: Looks for `deno.jsonc` or `deno.json` in root/parent directories.
+  2. `carregarConfigEsbuild(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
+  3. `parseArgs(args, configs)`: Filters targets requested by the user against those declared in the config.
+  4. Calls `esBuild(options)`.
 
-### Passo 2: Orquestração Principal do Engine
-* **Função**: `esBuild(opcoes: EsbuildOptions)`
-* **Arquivo**: `packages/utils/src/esbuild/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Main Engine Orchestration
+* **Function**: `esBuild(options: EsbuildOptions)`
+* **File**: `packages/utils/src/esbuild/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: GlobalTargetConfig;
     targets?: string[];
     baseDir?: string;
@@ -96,71 +96,71 @@ esBuild(opcoes: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
     forcepackagesversion?: boolean;
   }
   ```
-* **Ações**:
+* **Actions**:
   1. `updateProjectVersion(...)`:
-     - Lê a versão de `deno.jsonc`.
-     - Invoca `incrementProjectVersion(...)` para elevar a versão de patch (se `noversion === false`).
-     - Invoca `syncWorkspaces(...)` para propagar a versão em pacotes do workspace (se `forcepackagesversion === true`).
-     - Sincroniza a nova versão em arquivos adicionais (`versionPaths`).
-     - Retorna a `finalVersion` (string semântica, ex: `"0.3.14"`).
+     - Reads the version from `deno.jsonc`.
+     - Invokes `incrementProjectVersion(...)` to bump the patch version (if `noversion === false`).
+     - Invokes `syncWorkspaces(...)` to propagate the version across workspace packages (if `forcepackagesversion === true`).
+     - Synchronizes the new version in additional files (`versionPaths`).
+     - Returns `finalVersion` (semantic string, e.g., `"0.3.14"`).
   2. `resolverOrdemTargets(configs, targets)`:
-     - Garante estritamente que a ordem de execução dos alvos respeite a ordem de declaração no arquivo de configuração, ignorando alvos inexistentes e selecionando os alvos com `default !== false` caso nenhum tenha sido explicitado na CLI.
-  3. Itera sobre cada alvo resolvido e invoca `processTarget(...)`.
+     - Strictly ensures target execution order respects the configuration file declaration, ignoring non-existent targets and selecting those with `default !== false` if none were specified via CLI.
+  3. Iterates over each resolved target and invokes `processTarget(...)`.
 
-### Passo 3: Processamento do Alvo Individual
-* **Função**: `processTarget(targetName, config, appVersion, esbuildBuildFn, listAssetsFn)`
-* **Arquivo**: `packages/utils/src/esbuild/engine.ts`
-* **Parâmetros de Entrada**:
-  - `targetName: string` (ex: `"ui"`, `"sw"`)
-  - `config: TargetConfig` (opções do alvo específico)
-  - `appVersion: string` (ex: `"0.3.14"`)
-  - `esbuildBuildFn: (options) => Promise<any>` (closure com `buildWithDenoPlugin`)
-  - `listAssetsFn: (distDir) => Promise<string[]>` (utilitário `listAssetsForCache`)
-* **Ações e Subfunções**:
+### Step 3: Individual Target Processing
+* **Function**: `processTarget(targetName, config, appVersion, esbuildBuildFn, listAssetsFn)`
+* **File**: `packages/utils/src/esbuild/engine.ts`
+* **Input Parameters**:
+  - `targetName: string` (e.g., `"ui"`, `"sw"`)
+  - `config: TargetConfig` (specific target options)
+  - `appVersion: string` (e.g., `"0.3.14"`)
+  - `esbuildBuildFn: (options) => Promise<any>` (closure with `buildWithDenoPlugin`)
+  - `listAssetsFn: (distDir) => Promise<string[]>` (`listAssetsForCache` utility)
+* **Actions and Sub-functions**:
   1. `validateTargetConfig(targetName, config)` (`packages/utils/src/tools/validate.ts`):
-     - Valida campos obrigatórios (`entryPoints`, regras de `outfile`/`outdir`).
-     - Lança erro imediato (fail-fast) se a configuração for inválida.
+     - Validates required fields (`entryPoints`, `outfile`/`outdir` rules).
+     - Throws immediate error (fail-fast) if the configuration is invalid.
   2. `cleanTarget(config.distdir, config.clean)` (`packages/utils/src/tools/paths.ts`):
-     - Esvazia ou remove caminhos especificados em `config.clean.includes` e `config.clean.excludes` dentro de `distdir`.
+     - Empties or removes paths specified in `config.clean.includes` and `config.clean.excludes` within `distdir`.
   3. `copyStaticFiles(config, appVersion, baseDir, distDir)` (`packages/utils/src/tools/paths.ts`):
-     - Executa a cópia recursiva de arquivos baseada no array `config.copyFiles`.
-     - Utiliza `expandGlob` com suporte a `includes`, `excludes` e `basedir` personalizado.
-     - Se o arquivo for `manifest.json`, injeta a versão da aplicação.
-     - Detecta `index.html` para log de console.
+     - Executes recursive file copying based on the `config.copyFiles` array.
+     - Uses `expandGlob` with support for `includes`, `excludes`, and custom `basedir`.
+     - If the file is `manifest.json`, injects the application version.
+     - Detects `index.html` for console logging.
   4. `buildEsbuildOptions(targetName, config, appVersion, listAssetsFn)`:
-     - Monta o dicionário de `define` com `__APP_VERSION__`.
-     - Se `config.defineAssetsString` estiver configurado, executa `listAssetsFn(distdir)` e injeta a constante correspondente. Esta constante contém um array JSON com todos os caminhos de arquivos presentes no diretório de saída (incluindo arquivos estáticos copiados no passo anterior), sendo ideal para automatizar a lista de pré-cache em Service Workers.
-     - `resolveEntryPoints(srcdir, entryPoints)`: Garante resolução de caminho seguro e existência dos arquivos de entrada.
-     - `resolveOutputPaths(config)`: Resolve `outfile` / `outdir` relativos a `distdir`.
-      - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
-     - Formata `banner` e `footer` com substituição de versão.
+     - Assembles the `define` dictionary with `__APP_VERSION__`.
+     - If `config.defineAssetsString` is set, executes `listAssetsFn(distdir)` and injects the corresponding constant. This constant contains a JSON array with all file paths in the output directory (including static files copied in the previous step), ideal for automating the pre-cache list in Service Workers.
+     - `resolveEntryPoints(srcdir, entryPoints)`: Ensures safe path resolution and existence of entry files.
+     - `resolveOutputPaths(config)`: Resolves `outfile` / `outdir` relative to `distdir`.
+     - Maps advanced options (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
+     - Formats `banner` and `footer` with version substitution.
   5. `buildWithDenoPlugin(esbuildOptions, denoJsoncPath)`:
-     - Anexa a instância do `@deno/esbuild-plugin`.
-     - Chama `esbuild.build(options)` nativo.
-  6. Se `config.metafile === true` ou `config.analyze` estiver ativado, salva o arquivo `${targetName}-metafile.json` no disco.
-  7. Se `config.analyze` estiver ativado, gera e imprime o relatório `analyzeMetafile` no console.
+     - Attaches the `@deno/esbuild-plugin` instance.
+     - Calls native `esbuild.build(options)`.
+  6. If `config.metafile === true` or `config.analyze` is enabled, saves the `${targetName}-metafile.json` file to disk.
+  7. If `config.analyze` is enabled, generates and prints the `analyzeMetafile` report to the console.
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `esBuildCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Leitura de CLI e saída no stdout |
-| `carregarConfigEsbuild()` | `esBuildCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | Leitura do sistema de arquivos (`esbuild.jsonc`) |
-| `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (alvos válidos) | Puro (sem I/O) |
-| `esBuild()` | `esBuildCli` / API | `opcoes: EsbuildOptions` | `Promise<EsbuildResult[]>` | Atualiza versões, compila alvos |
-| `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Grava novas versões em `deno.jsonc` e pacotes |
-| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `solicitados?: string[]` | `string[]` | Puro (ordenação e filtragem) |
-| `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Limpa pastas, copia static, compila bundle |
-| `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (lança erro se inválido) | Validação estrita (fail-fast) |
-| `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Leitura opcional de distdir para SW |
-| `buildWithDenoPlugin()` | `processTarget` | `options: any`, `denoJsoncPath: string` | `Promise<esbuild.BuildResult>` | Execução de compilação esbuild em memória/disco |
+| `esBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI reading and stdout output |
+| `carregarConfigEsbuild()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
+| `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (valid targets) | Pure (no I/O) |
+| `esBuild()` | `esBuildCli` / API | `options: EsbuildOptions` | `Promise<EsbuildResult[]>` | Updates versions, compiles targets |
+| `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Writes new versions to `deno.jsonc` and packages |
+| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
+| `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Cleans folders, copies static, compiles bundle |
+| `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (throws if invalid) | Strict validation (fail-fast) |
+| `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Optional reading of distdir for SW |
+| `buildWithDenoPlugin()` | `processTarget` | `options: any`, `denoJsoncPath: string` | `Promise<esbuild.BuildResult>` | Esbuild compilation execution |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Separação de Build do SW**: Como o Service Worker necessita da lista de assets gerados pelo alvo `ui`, a ordenação dos alvos na configuração é crítica (`ui` deve sempre rodar antes de `sw`).
-2. **Tipagem Unificada de Plugins**: O array `plugins` no `BuildOptions` atualmente aceita `any[]` para contornar variações de tipo entre `@deno/esbuild-plugin` e o typeset do esbuild.
-3. **Paralelização de Alvos Independentes**: Alvos que não compartilham dependência de assets poderiam ser executados em paralelo com `Promise.all` caso não haja conflito de escrita em `distdir`.
+1. **SW Build Separation**: Since the Service Worker needs the asset list generated by the `ui` target, target ordering in the configuration is critical (`ui` must always run before `sw`).
+2. **Unified Plugin Typing**: The `plugins` array in `BuildOptions` currently accepts `any[]` to bypass type variations between `@deno/esbuild-plugin` and esbuild's typeset.
+3. **Independent Target Parallelization**: Targets that do not share asset dependencies could be executed in parallel using `Promise.all` if there is no disk writing conflict in `distdir`.

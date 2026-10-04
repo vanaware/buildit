@@ -6,8 +6,8 @@ import { validateTargetConfig, } from "../../src/tools/validate.ts";
 import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 
 describe("validateTargetConfig", () => {
-  describe("distdir obrigatório", () => {
-    it("lança erro quando copyFiles existe mas distdir não", () => {
+  describe("required distdir", () => {
+    it("throws error when copyFiles exists but distdir does not", () => {
       const config: TargetConfig = {
         srcdir: "src",
         copyFiles: [{ basedir: "public", },],
@@ -19,7 +19,7 @@ describe("validateTargetConfig", () => {
         "'distdir'",
       );
     });
-    it("lança erro quando outfile não existe e distdir não", () => {
+    it("throws error when outfile does not exist and distdir does not", () => {
       const config: TargetConfig = {
         srcdir: "src",
         entryPoints: ["app.tsx",],
@@ -30,16 +30,16 @@ describe("validateTargetConfig", () => {
         "'distdir'",
       );
     });
-    it("NÃO lança erro quando outfile existe mas distdir não", () => {
+    it("DOES NOT throw error when outfile exists but distdir does not", () => {
       const config: TargetConfig = {
         srcdir: "src",
         outfile: "/absolute/path/app.js",
         entryPoints: ["app.tsx",],
       };
-      // Não deve lançar
+      // Should not throw
       validateTargetConfig("ui", config,);
     });
-    it("NÃO lança erro quando distdir existe", () => {
+    it("DOES NOT throw error when distdir exists", () => {
       const config: TargetConfig = {
         srcdir: "src",
         distdir: "dist",
@@ -49,8 +49,8 @@ describe("validateTargetConfig", () => {
     });
   });
 
-  describe("mensagens de erro didáticas", () => {
-    it("lista todos os motivos quando múltiplas condições falham", () => {
+  describe("educational error messages", () => {
+    it("lists all reasons when multiple conditions fail", () => {
       const config: TargetConfig = {
         srcdir: "src",
         copyFiles: [{ basedir: "public", },],
@@ -60,16 +60,16 @@ describe("validateTargetConfig", () => {
         validateTargetConfig("ui", config,);
       } catch (e) {
         const msg = (e as Error).message;
-        assertStringIncludes(msg, "'copyFiles' está configurado",);
-        assertStringIncludes(msg, "'outfile' não está configurado",);
+        assertStringIncludes(msg, "'copyFiles' is configured",);
+        assertStringIncludes(msg, "'outfile' is not configured",);
       }
     });
   });
 });
 
 describe("resolveOutputPaths", () => {
-  describe("outfile relativo ao distdir", () => {
-    it("faz join quando ambos existem", () => {
+  describe("outfile relative to distdir", () => {
+    it("performs join when both exist", () => {
       const config: TargetConfig = {
         srcdir: "src",
         distdir: "monorepo/server/build/dist",
@@ -80,7 +80,7 @@ describe("resolveOutputPaths", () => {
       assertEquals(result.outfile, "monorepo/server/build/dist/app.js",);
       assertEquals(result.outdir, undefined,);
     });
-    it("faz join com subdiretórios", () => {
+    it("performs join with subdirectories", () => {
       const config: TargetConfig = {
         srcdir: "src",
         distdir: "dist",
@@ -92,8 +92,8 @@ describe("resolveOutputPaths", () => {
     });
   });
 
-  describe("outfile absoluto (sem distdir)", () => {
-    it("mantém outfile como está quando distdir não existe", () => {
+  describe("absolute outfile (without distdir)", () => {
+    it("keeps outfile as is when distdir does not exist", () => {
       const config: TargetConfig = {
         srcdir: "src",
         outfile: "/absolute/path/app.js",
@@ -105,8 +105,8 @@ describe("resolveOutputPaths", () => {
     });
   });
 
-  describe("distdir como outdir (sem outfile)", () => {
-    it("usa distdir como outdir quando outfile não existe", () => {
+  describe("distdir as outdir (without outfile)", () => {
+    it("uses distdir as outdir when outfile does not exist", () => {
       const config: TargetConfig = {
         srcdir: "src",
         distdir: "dist",
@@ -118,8 +118,8 @@ describe("resolveOutputPaths", () => {
     });
   });
 
-  describe("nenhum configurado", () => {
-    it("retorna objeto vazio", () => {
+  describe("none configured", () => {
+    it("returns empty object", () => {
       const config: TargetConfig = {
         srcdir: "src",
         entryPoints: ["app.tsx",],

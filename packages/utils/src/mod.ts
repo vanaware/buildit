@@ -1,16 +1,16 @@
 /**
  * @module @vanaware/buildit
- * @description Suite de utilitários em TypeScript para orquestração de compilação (esbuild e Deno.bundle),
- * desenvolvimento contínuo (watch), exportação de contexto para IA e automação SemVer.
+ * @description TypeScript utility suite for build orchestration (esbuild and Deno.bundle),
+ * continuous development (watch), AI context export, and SemVer automation.
  *
- * Todos os motores e utilitários programáticos são exportados diretamente a partir deste módulo raiz:
+ * All programmatic engines and utilities are exported directly from this root module:
  *
  * @example
  * ```typescript
  * // @ts-nocheck
  * import { esBuild, watchEngine, denoBuild, exportEngine } from "jsr:@vanaware/buildit";
  *
- * // Executar compilação de produção com esbuild
+ * // Run production compilation with esbuild
  * await esBuild({
  *   config: {
  *     ui: {
@@ -21,7 +21,7 @@
  *   noversion: true,
  * });
  *
- * // Iniciar watch contínuo com esbuild.context e trava anti-concorrência
+ * // Start continuous watch with esbuild.context and concurrency lock
  * const handles = await watchEngine({
  *   config: {
  *     ui: {
@@ -32,11 +32,11 @@
  *   target: "ui",
  * });
  *
- * // Gerar snapshot de contexto para LLMs
+ * // Generate AI context snapshot for LLMs
  * await exportEngine({
  *   config: {
  *     ui: {
- *       arquivoSaida: "snapshots/ui.md",
+ *       outputFile: "snapshots/ui.md",
  *       includes: ["src/main.ts"],
  *     },
  *   },

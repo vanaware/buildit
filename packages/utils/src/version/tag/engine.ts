@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/version/tag/engine
- * @description Motor de criação e publicação automatizada de tags git baseado na versão do deno.json[c].
+ * @description Engine for automated git tag creation and publication based on deno.json[c] version.
  */
 
 import {
@@ -21,10 +21,10 @@ import type {
 } from "../../tools/interfaces.ts";
 
 /**
- * Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR).
+ * Creates and publishes a git tag based on the deno.json[c] version (vMAJOR.MINOR).
  *
- * @param options Opções de configuração da tag
- * @returns Resultado da operação
+ * @param options Tag configuration options
+ * @returns Result of the operation
  *
  * @example
  * ```typescript
@@ -37,45 +37,45 @@ export async function tagVersionEngine(
 ): Promise<TagVersionResult> {
   const baseDir = options.baseDir ?? ".";
   const dryRun = options.dryRun ?? false;
-  const silencioso = options.silencioso ?? false;
+  const silent = options.silent ?? false;
 
   let targetFile = options.file;
   if (!targetFile) {
     const found = findDenoFile(baseDir,);
     if (!found) {
-      throw new Error(`❌ deno.json[c] não encontrado a partir de ${baseDir}`,);
+      throw new Error(`❌ deno.json[c] not found starting from ${baseDir}`,);
     }
     targetFile = found;
   }
 
-  // Sanitiza em disco se solicitado
+  // Sanitize on disk if requested
   if (options.sanitize) {
-    if (!silencioso) {
-      console.log(`🧼 Sanitizando ${targetFile} antes do commit...`,);
+    if (!silent) {
+      console.log(`🧼 Sanitizing ${targetFile} before commit...`,);
     }
     await sanitizeVersionFile({
       filePath: targetFile,
       baseDir,
-      silencioso,
+      silent,
     },);
   }
 
-  // Extrai e sanitiza versão em memória
+  // Extract and sanitize version in memory
   const rawVersion = await readProjectVersion(targetFile, baseDir,);
   if (!rawVersion) {
-    throw new Error(`❌ Campo "version" ausente em ${targetFile}`,);
+    throw new Error(`❌ "version" field missing in ${targetFile}`,);
   }
 
   const sanitizedVersion = sanitizeVersion(rawVersion,);
   const [major = "0", minor = "0",] = sanitizedVersion.split(".",);
   const tagName = `v${major}.${minor}`;
-  const message = options.message || `Versão ${tagName}`;
+  const message = options.message || `Version ${tagName}`;
 
-  // Geração de Changelog se solicitado
+  // Changelog generation if requested
   let changelogContent = "";
   if (options.changelog && !dryRun) {
-    if (!silencioso) {
-      console.log(`📝 Gerando changelog para ${tagName}...`,);
+    if (!silent) {
+      console.log(`📝 Generating changelog for ${tagName}...`,);
     }
     changelogContent = await generateChangelogContent(tagName, baseDir,);
     await updateChangelogFile(changelogContent, baseDir,);
@@ -84,33 +84,33 @@ export async function tagVersionEngine(
     }
   }
 
-  if (!silencioso) {
+  if (!silent) {
     console.log(
       "============================================================",
     );
-    console.log("🚀 INICIANDO TAG VERSION BUMP",);
+    console.log("🚀 STARTING TAG VERSION BUMP",);
     console.log(
       "============================================================",
     );
-    console.log(`📌 Versão original:    ${rawVersion}`,);
-    console.log(`🧼 Versão sanitizada:  ${sanitizedVersion}`,);
-    console.log(`🏷️  Tag alvo:           ${tagName}`,);
-    console.log(`📝 Mensagem de commit: ${message}`,);
+    console.log(`📌 Original version:   ${rawVersion}`,);
+    console.log(`🧼 Sanitized version:  ${sanitizedVersion}`,);
+    console.log(`🏷️  Target tag:         ${tagName}`,);
+    console.log(`📝 Commit message:     ${message}`,);
     if (dryRun) {
-      console.log("🔍 MODO DRY-RUN: Nenhuma alteração git será persistida.",);
+      console.log("🔍 DRY-RUN MODE: No git changes will be persisted.",);
     }
     console.log(
       "============================================================",
     );
   }
 
-  // Sanidade: repositório git?
+  // Sanity check: git repository?
   const isGit = await runGit(["rev-parse", "--is-inside-work-tree",], baseDir,);
   if (!isGit.success) {
     if (dryRun) {
-      if (!silencioso) {
+      if (!silent) {
         console.warn(
-          "⚠️ Aviso: Diretório não é um repositório git ativo (dry-run prossegue).",
+          "⚠️ Warning: Directory is not an active git repository (dry-run proceeds).",
         );
       }
       return {
@@ -122,19 +122,19 @@ export async function tagVersionEngine(
         tagged: false,
       };
     }
-    throw new Error("❌ Não está dentro de um repositório git.",);
+    throw new Error("❌ Not inside a git repository.",);
   }
 
   if (dryRun) {
-    if (!silencioso) {
-      console.log(`\n📦 [Dry-Run] 1/3 - Simularia git add -A, commit e push`,);
+    if (!silent) {
+      console.log(`\n📦 [Dry-Run] 1/3 - Would simulate git add -A, commit and push`,);
       console.log(
-        `🧹 [Dry-Run] 2/3 - Simularia limpeza de tag antiga (${tagName})`,
+        `🧹 [Dry-Run] 2/3 - Would simulate cleaning old tag (${tagName})`,
       );
       console.log(
-        `🏷️  [Dry-Run] 3/3 - Simularia criação e push de ${tagName}`,
+        `🏷️  [Dry-Run] 3/3 - Would simulate creation and push of ${tagName}`,
       );
-      console.log("\n✅ [Dry-Run] Concluído com sucesso.",);
+      console.log("\n✅ [Dry-Run] Successfully completed.",);
       console.log(
         "============================================================",
       );
@@ -149,9 +149,9 @@ export async function tagVersionEngine(
     };
   }
 
-  // 1/3 - Empacotando e enviando código fonte
-  if (!silencioso) {
-    console.log("\n📦 1/3 - Empacotando e enviando código fonte...",);
+  // 1/3 - Bundling and sending source code
+  if (!silent) {
+    console.log("\n📦 1/3 - Bundling and sending source code...",);
   }
   await runGit(["add", "-A",], baseDir,);
 
@@ -160,57 +160,57 @@ export async function tagVersionEngine(
   if (diffCached.code !== 0) {
     const commitResult = await runGit(["commit", "-m", message,], baseDir,);
     if (!commitResult.success) {
-      throw new Error(`❌ Falha no commit git: ${commitResult.stderr}`,);
+      throw new Error(`❌ Git commit failed: ${commitResult.stderr}`,);
     }
     committed = true;
   } else {
-    if (!silencioso) {
-      console.log("ℹ️  Nada para comitar.",);
+    if (!silent) {
+      console.log("ℹ️  Nothing to commit.",);
     }
   }
 
   const pushResult = await runGit(["push",], baseDir,);
-  if (!pushResult.success && !silencioso) {
+  if (!pushResult.success && !silent) {
     console.warn(
-      `⚠️ Aviso no push do código (pode não haver remote configurado): ${pushResult.stderr}`,
+      `⚠️ Warning on code push (remote might not be configured): ${pushResult.stderr}`,
     );
   }
 
-  // 2/3 - Limpando tag antiga
-  if (!silencioso) {
-    console.log(`\n🧹 2/3 - Limpando tag antiga (${tagName})...`,);
+  // 2/3 - Cleaning old tag
+  if (!silent) {
+    console.log(`\n🧹 2/3 - Cleaning old tag (${tagName})...`,);
   }
   await runGit(["push", "origin", "--delete", tagName,], baseDir,);
   await runGit(["tag", "-d", tagName,], baseDir,);
 
-  // 3/3 - Publicando nova tag
-  if (!silencioso) {
-    console.log("\n🏷️  3/3 - Publicando nova tag...",);
+  // 3/3 - Publishing new tag
+  if (!silent) {
+    console.log("\n🏷️  3/3 - Publishing new tag...",);
   }
   const tagCreate = await runGit([
     "tag",
     "-a",
     "-m",
-    `Versão ${tagName}`,
+    `Version ${tagName}`,
     tagName,
   ], baseDir,);
   if (!tagCreate.success) {
-    throw new Error(`❌ Falha ao criar tag git: ${tagCreate.stderr}`,);
+    throw new Error(`❌ Failed to create git tag: ${tagCreate.stderr}`,);
   }
 
   const tagPush = await runGit(
     ["push", "--force", "origin", tagName,],
     baseDir,
   );
-  if (!tagPush.success && !silencioso) {
+  if (!tagPush.success && !silent) {
     console.warn(
-      `⚠️ Aviso no push da tag origin ${tagName}: ${tagPush.stderr}`,
+      `⚠️ Warning on tag origin push ${tagName}: ${tagPush.stderr}`,
     );
   }
 
-  if (!silencioso) {
-    console.log("\n✅ NOVA TAG ADICIONADA COM SUCESSO!",);
-    console.log("Acompanhe o andamento na aba Actions do seu repositório.",);
+  if (!silent) {
+    console.log("\n✅ NEW TAG ADDED SUCCESSFULLY!",);
+    console.log("Track progress in the Actions tab of your repository.",);
     console.log(
       "============================================================",
     );

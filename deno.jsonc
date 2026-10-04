@@ -1,12 +1,12 @@
 {
-  "version": "0.4.9#muq2nrcc",
+  "version": "0.4.15#muu2wzgk",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "workspace": [
     "./packages/server",
     "./packages/ui",
     "./packages/utils"
   ],
-  // ⚙️ Configurações Rigorosas do Compilador TypeScript (FASE 4)
+  // ⚙️ Rigorous TypeScript Compiler Settings (PHASE 4)
   "compilerOptions": {
     "lib": [
       "deno.window",
@@ -16,7 +16,7 @@
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": true
   },
-  // 📦 Gerenciamento de Dependências
+  // 📦 Dependency Management
   "minimumDependencyAge": 60,
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",
@@ -26,7 +26,7 @@
     "esbuild": "^0.28.2"
   },
   "allowScripts": ["npm:esbuild@0.28.2"],
-  // 🛠️ Scripts de Automação
+  // 🛠️ Automation Scripts
   "tasks": {
     "test": "deno test --no-check --unstable-bundle -P",
     "lint": "deno lint",

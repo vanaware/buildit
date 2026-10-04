@@ -6,31 +6,31 @@ import {
   cleanTarget,
   copyStaticFiles,
   copyTargetFiles,
-  correspondeGlobs,
+  matchesGlobs,
   processFilesWithDefines,
   resolveWithBase,
 } from "../../src/tools/paths.ts";
 
-describe("paths.ts - Utilitários e novas funcionalidades", () => {
-  describe("correspondeGlobs", () => {
-    it("deve validar padrões glob simples e extensões", () => {
-      assertEquals(correspondeGlobs("src/main.ts", ["**/*.ts",],), true,);
-      assertEquals(correspondeGlobs("src/main.ts", ["**/*.js",],), false,);
+describe("paths.ts - Utilities and features", () => {
+  describe("matchesGlobs", () => {
+    it("should validate simple glob patterns and extensions", () => {
+      assertEquals(matchesGlobs("src/main.ts", ["**/*.ts",],), true,);
+      assertEquals(matchesGlobs("src/main.ts", ["**/*.js",],), false,);
       assertEquals(
-        correspondeGlobs("dist/app.min.js", ["*.js", "**/*.js",],),
+        matchesGlobs("dist/app.min.js", ["*.js", "**/*.js",],),
         true,
       );
     });
 
-    it("deve suportar brace expansion", () => {
-      assertEquals(correspondeGlobs("file.jpg", ["*.{png,jpg,gif}",],), true,);
-      assertEquals(correspondeGlobs("file.svg", ["*.{png,jpg,gif}",],), false,);
-      assertEquals(correspondeGlobs("file.png", ["*.{png,jpg,gif}",],), true,);
+    it("should support brace expansion", () => {
+      assertEquals(matchesGlobs("file.jpg", ["*.{png,jpg,gif}",],), true,);
+      assertEquals(matchesGlobs("file.svg", ["*.{png,jpg,gif}",],), false,);
+      assertEquals(matchesGlobs("file.png", ["*.{png,jpg,gif}",],), true,);
     });
   });
 
   describe("resolveWithBase", () => {
-    it("deve juntar baseDir quando o caminho for relativo e baseDir for diferente de .", () => {
+    it("should join baseDir when path is relative and baseDir is different from .", () => {
       assertEquals(
         resolveWithBase("src", "packages/ui",),
         join("packages/ui", "src",),
@@ -39,14 +39,14 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       assertEquals(resolveWithBase(undefined, "packages/ui",), undefined,);
     });
 
-    it("não deve modificar caminhos já absolutos", () => {
+    it("should not modify already absolute paths", () => {
       const absPath = "/absolute/path";
       assertEquals(resolveWithBase(absPath, "packages/ui",), absPath,);
     });
   });
 
   describe("cleanTarget", () => {
-    it("deve limpar arquivos correspondentes ao glob respeitando excludes", async () => {
+    it("should clean files matching glob while respecting excludes", async () => {
       const tempDir = await Deno.makeTempDir({
         prefix: "buildit_test_clean_",
       },);
@@ -61,7 +61,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
           excludes: ["keep.tmp",],
         },);
 
-        // file1.tmp e file2.tmp devem ter sido deletados
+        // file1.tmp and file2.tmp should have been deleted
         let file1Exists = true;
         try {
           await Deno.stat(join(tempDir, "file1.tmp",),);
@@ -70,7 +70,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
         }
         assertEquals(file1Exists, false,);
 
-        // keep.tmp e data.json devem permanecer
+        // keep.tmp and data.json should remain
         const keepStat = await Deno.stat(join(tempDir, "keep.tmp",),);
         assert(keepStat.isFile,);
         const dataStat = await Deno.stat(join(tempDir, "data.json",),);
@@ -80,7 +80,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       }
     });
 
-    it("deve limpar todo o diretório com includes: ['*']", async () => {
+    it("should clean the entire directory with includes: ['*']", async () => {
       const tempDir = await Deno.makeTempDir({
         prefix: "buildit_test_clean_all_",
       },);
@@ -103,7 +103,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
   });
 
   describe("copyTargetFiles", () => {
-    it("deve preservar árvore relativa ao basedir quando basedir for especificado", async () => {
+    it("should preserve tree relative to basedir when basedir is specified", async () => {
       const tempSrc = await Deno.makeTempDir({ prefix: "buildit_test_src_", },);
       const tempDist = await Deno.makeTempDir({
         prefix: "buildit_test_dist_",
@@ -123,13 +123,13 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
           "1.2.3",
         );
 
-        // Verifica integridade da árvore preservada
+        // Verify integrity of preserved tree
         const copiedIcon = await Deno.readTextFile(
           join(tempDist, "icons", "icon.png",),
         );
         assertEquals(copiedIcon, "image",);
 
-        // Verifica injeção da versão no manifest.json
+        // Verify version injection into manifest.json
         const copiedManifest = JSON.parse(
           await Deno.readTextFile(join(tempDist, "manifest.json",),),
         );
@@ -140,7 +140,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       }
     });
 
-    it("deve copiar arquivos diretamente na raiz do distdir quando basedir não for informado", async () => {
+    it("should copy files directly to distdir root when basedir is not provided", async () => {
       const tempRoot = await Deno.makeTempDir({
         prefix: "buildit_test_root_",
       },);
@@ -164,7 +164,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
           tempRoot,
         );
 
-        // Quando basedir não é informado, arquivo é colocado diretamente no distdir
+        // When basedir is not provided, file is placed directly in distdir
         const fileContent = await Deno.readTextFile(
           join(tempDist, "style.css",),
         );
@@ -177,7 +177,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
   });
 
   describe("applyDefines", () => {
-    it("deve substituir identificadores definidos corretamente", () => {
+    it("should substitute defined identifiers correctly", () => {
       const code =
         "const v = __APP_VERSION__; const assets = __GENERATED_ASSETS__;";
       const result = applyDefines(code, {
@@ -191,7 +191,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
       );
     });
 
-    it("deve suportar chaves customizadas de define", () => {
+    it("should support custom define keys", () => {
       const code = "const ver = MY_CUSTOM_VERSION;";
       const result = applyDefines(code, {
         "MY_CUSTOM_VERSION": '"2.5.0"',
@@ -202,7 +202,7 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
   });
 
   describe("processFilesWithDefines", () => {
-    it("deve alterar o conteúdo dos arquivos e retornar a lista de processados", async () => {
+    it("should change file content and return processed list", async () => {
       const tempDir = await Deno.makeTempDir({
         prefix: "buildit_test_process_defines_",
       },);
@@ -226,13 +226,13 @@ describe("paths.ts - Utilitários e novas funcionalidades", () => {
           file3,
         ], defines,);
 
-        // Apenas file1 e file2 devem estar na lista pois foram alterados
+        // Only file1 and file2 should be in list since they were changed
         assertEquals(processed.length, 2,);
         assert(processed.includes(file1,),);
         assert(processed.includes(file2,),);
         assert(!processed.includes(file3,),);
 
-        // Verifica o conteúdo alterado
+        // Verify changed content
         const content1 = await Deno.readTextFile(file1,);
         assertEquals(content1, 'const url = "https://api.test";',);
         const content2 = await Deno.readTextFile(file2,);

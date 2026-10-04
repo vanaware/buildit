@@ -1,6 +1,6 @@
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.9#muq2nrcc",
+  "version": "0.4.15#muu2wzgk",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -23,7 +23,7 @@
     "check": "deno check src/**/*.{ts,tsx} tests/**/*.ts",
     "fmt:check": "deno fmt --check",
     "lint:fix": "deno lint --fix",
-    "lint:doc": "deno doc --lint src/mod.ts src/esbuild/cli.ts src/watch/cli.ts src/export/cli.ts  src/denobuild/cli.ts src/version/sanitize/cli.ts",
+    "lint:doc": "deno doc --lint src/mod.ts src/esbuild/cli.ts src/watch/cli.ts src/export/cli.ts src/denobuild/cli.ts src/version/sanitize/cli.ts src/version/tag/cli.ts",
     "tests": "deno task check && deno task lint && deno task fmt:check && deno task test"
   },
   "exports": {

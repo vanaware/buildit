@@ -1,8 +1,8 @@
 import { assertEquals, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
-import { resolverOrdemTargets, } from "../../src/tools/targets.ts";
+import { resolveTargetOrder, } from "../../src/tools/targets.ts";
 
-describe("resolverOrdemTargets", () => {
+describe("resolveTargetOrder", () => {
   const config = {
     first: { default: true, },
     second: { default: true, },
@@ -10,31 +10,31 @@ describe("resolverOrdemTargets", () => {
     fourth: { default: true, },
   };
 
-  it("deve retornar todos os alvos com default !== false na ordem exata da configuração", () => {
-    const ordenados = resolverOrdemTargets(config,);
-    assertEquals(ordenados, ["first", "second", "fourth",],);
+  it("should return all targets with default !== false in the exact order of the configuration", () => {
+    const ordered = resolveTargetOrder(config,);
+    assertEquals(ordered, ["first", "second", "fourth",],);
   });
 
-  it("deve preservar a ordem da configuração mesmo se os alvos forem passados fora de ordem", () => {
-    const ordenados = resolverOrdemTargets(config, [
+  it("should preserve the configuration order even if targets are passed out of order", () => {
+    const ordered = resolveTargetOrder(config, [
       "fourth",
       "first",
       "third",
     ],);
-    assertEquals(ordenados, ["first", "third", "fourth",],);
+    assertEquals(ordered, ["first", "third", "fourth",],);
   });
 
-  it("deve suportar alvos solicitados em maiúsculas ou minúsculas", () => {
-    const ordenados = resolverOrdemTargets(config, ["FOURTH", "First",],);
-    assertEquals(ordenados, ["first", "fourth",],);
+  it("should support requested targets in uppercase or lowercase", () => {
+    const ordered = resolveTargetOrder(config, ["FOURTH", "First",],);
+    assertEquals(ordered, ["first", "fourth",],);
   });
 
-  it("deve ignorar alvos solicitados inexistentes mantendo os válidos ordenados", () => {
-    const ordenados = resolverOrdemTargets(config, [
-      "inexistente",
+  it("should ignore requested non-existent targets keeping valid ones sorted", () => {
+    const ordered = resolveTargetOrder(config, [
+      "nonexistent",
       "second",
       "first",
     ],);
-    assertEquals(ordenados, ["first", "second",],);
+    assertEquals(ordered, ["first", "second",],);
   });
 });

@@ -1,7 +1,7 @@
 /**
  * @module @vanaware/buildit/config/version
- * @description Gerenciamento centralizado de versões semânticas e sincronização
- * de workspaces para Deno projects e snapshots.
+ * @description Centralized semantic version management and workspace synchronization
+ * for Deno projects and snapshots.
  */
 
 import { dirname, isAbsolute, join, } from "@std/path";
@@ -15,13 +15,14 @@ import type {
 } from "./interfaces.ts";
 
 import { loadConfig, } from "./jsonc.ts";
+import { findDenoConfig, } from "./paths.ts";
 
 /**
- * Lê a versão semântica do projeto a partir do arquivo deno.jsonc ou deno.json raiz.
+ * Reads the project semantic version from the root deno.jsonc or deno.json file.
  *
- * @param denoJsonPath Caminho opcional para o arquivo de configuração
- * @param baseDir Diretório base caso denoJsonPath não seja absoluto
- * @returns Versão lida do projeto
+ * @param denoJsonPath Optional path to the configuration file
+ * @param baseDir Base directory if denoJsonPath is not absolute
+ * @returns Read project version
  */
 export async function readProjectVersion(
   denoJsonPath?: string,
@@ -37,8 +38,8 @@ export async function readProjectVersion(
     return parsed.version;
   }
 
-  throw new Error(`❌ Campo "version" obrigatório não encontrado no deno.jsonc.
-Exemplo de configuração necessária:
+  throw new Error(`❌ Required "version" field not found in deno.jsonc.
+Necessary configuration example:
 {
   "name": "@buildit/app",
   "version": "1.0.0"
@@ -46,7 +47,7 @@ Exemplo de configuração necessária:
 }
 
 /**
- * Sincroniza a versão em um diretório de workspace (deno.jsonc ou deno.json).
+ * Synchronizes the version in a workspace directory (deno.jsonc or deno.json).
  */
 export async function syncWorkspaceDir(
   wsPath: string,
@@ -59,22 +60,22 @@ export async function syncWorkspaceDir(
       const content = await Deno.readTextFile(configPath,);
       const updated = replaceVersionInContent(content, newVersion,);
       await Deno.writeTextFile(configPath, updated,);
-      console.log(`   ✅ Sincronizado: ${join(wsRelPath, fileName,)}`,);
-      return; // Sucesso, para de procurar neste workspace
+      console.log(`   ✅ Synchronized: ${join(wsRelPath, fileName,)}`,);
+      return; // Success, stop searching in this workspace
     } catch (err) {
       if (!(err instanceof Deno.errors.NotFound)) {
-        console.warn(`   ⚠️ Erro ao sincronizar ${configPath}:`, err,);
+        console.warn(`   ⚠️ Error synchronizing ${configPath}:`, err,);
       }
     }
   }
 }
 
 /**
- * Sincroniza a versão definida no deno.jsonc raiz com todos os workspaces configurados.
- * Se nenhuma versão for fornecida nas options, lê diretamente a versão existente no deno.jsonc raiz.
+ * Synchronizes the version defined in the root deno.jsonc with all configured workspaces.
+ * If no version is provided in options, reads directly from the root deno.jsonc version.
  *
- * @param options Opções contendo baseDir, denoJsonPath e versão opcional
- * @returns Versão sincronizada nos workspaces
+ * @param options Options containing baseDir, denoJsonPath, and optional version
+ * @returns Version synchronized in workspaces
  */
 export async function syncWorkspaces(
   options: SyncWorkspacesOptions = {},
@@ -102,44 +103,44 @@ export async function syncWorkspaces(
     const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
 
     if (parsed.workspace && Array.isArray(parsed.workspace,)) {
-      console.log(`📦 Sincronizando workspaces para v${version}...`,);
+      console.log(`📦 Synchronizing workspaces for v${version}...`,);
       for (const ws of parsed.workspace) {
         const wsPath = isAbsolute(ws,) ? ws : join(rootDir, ws,);
         await syncWorkspaceDir(wsPath, version, ws,);
       }
     }
   } catch (err) {
-    console.warn(`⚠️ Falha ao sincronizar workspaces em ${denoJsonPath}:`, err,);
+    console.warn(`⚠️ Failed to synchronize workspaces in ${denoJsonPath}:`, err,);
   }
 
   return version;
 }
 
 /**
- * Exemplo de caminhos onde o arquivo version.ts pode ser sincronizado.
+ * Example paths where the version.ts file can be synchronized.
  */
 export const VERSION_PATHS_EXAMPLE: string[] = [
   "packages/utils/src/version.ts",
 ];
 
 /**
- * Parseia uma string de versão no formato major.minor.patch[#hash].
+ * Parses a version string in major.minor.patch[#hash] format.
  *
- * @param version String de versão
- * @returns Objeto ParsedVersion com major, minor e patch numéricos
+ * @param version Version string
+ * @returns ParsedVersion object with numeric major, minor, and patch
  */
 export function parseVersion(version: string,): ParsedVersion {
   const trimmed = version.trim();
   if (trimmed !== version) {
-    throw new Error(`❌ Versão não pode ter espaços: ${version}`,);
+    throw new Error(`❌ Version cannot have spaces: ${version}`,);
   }
   const versionWithoutHash = version.split("#",)[0] ?? "";
   if (version.includes("#",) && version.endsWith("#",)) {
-    throw new Error(`❌ Formato de versão inválido (# sem hash): ${version}`,);
+    throw new Error(`❌ Invalid version format (# without hash): ${version}`,);
   }
   const parts = versionWithoutHash.split(".",);
   if (parts.length !== 3) {
-    throw new Error(`❌ Formato de versão inválido: ${version}`,);
+    throw new Error(`❌ Invalid version format: ${version}`,);
   }
   const majorStr = parts[0];
   const minorStr = parts[1];
@@ -147,19 +148,19 @@ export function parseVersion(version: string,): ParsedVersion {
   if (
     majorStr === undefined || minorStr === undefined || patchStr === undefined
   ) {
-    throw new Error(`❌ Formato de versão inválido: ${version}`,);
+    throw new Error(`❌ Invalid version format: ${version}`,);
   }
   const major = parseInt(majorStr, 10,);
   const minor = parseInt(minorStr, 10,);
   const patch = parseInt(patchStr, 10,);
   if (isNaN(major,) || isNaN(minor,) || isNaN(patch,)) {
-    throw new Error(`❌ Versão contém valores não numéricos: ${version}`,);
+    throw new Error(`❌ Version contains non-numeric values: ${version}`,);
   }
   return { major, minor, patch, };
 }
 
 /**
- * Formata os componentes da versão em uma string padronizada.
+ * Formats version components into a standardized string.
  */
 export function formatVersion(
   major: number,
@@ -172,7 +173,7 @@ export function formatVersion(
 }
 
 /**
- * Substitui a versão no conteúdo textual fornecido.
+ * Replaces the version in the provided text content.
  */
 export function replaceVersionInContent(
   content: string,
@@ -185,10 +186,10 @@ export function replaceVersionInContent(
 }
 
 /**
- * Gera o template padrão para arquivos version.ts/.js com a constante customizada.
+ * Generates the default template for version.ts/.js files with the custom constant.
  *
- * @param defineVersionString Identificador da constante
- * @param isTypeScript Se deve gerar versão TypeScript (default: true)
+ * @param defineVersionString Constant identifier
+ * @param isTypeScript Whether to generate TypeScript version (default: true)
  */
 export function getVersionFileTemplate(
   defineVersionString: string = "__APP_VERSION__",
@@ -221,14 +222,14 @@ export const APP_VERSION = typeof ${defineVersionString} !== "undefined"
 }
 
 /**
- * Garante a existência do arquivo version.ts no caminho ou diretório especificado.
- * Se o arquivo já existir, NÃO o sobrescreve a cada execução.
- * Se o arquivo não existir, cria o arquivo com o template usando a palavra-chave defineVersionString.
+ * Ensures the existence of the version.ts file at the specified path or directory.
+ * If the file already exists, it is NOT overwritten on every execution.
+ * If the file does not exist, it creates the file with the template using defineVersionString.
  *
- * @param targetPathOrDir Caminho do arquivo ou diretório
- * @param baseDir Diretório base opcional (padrão: ".")
- * @param defineVersionString Identificador customizado da constante (padrão: "__APP_VERSION__")
- * @returns true se o arquivo foi criado, false se já existia
+ * @param targetPathOrDir File or directory path
+ * @param baseDir Optional base directory (default: ".")
+ * @param defineVersionString Custom constant identifier (default: "__APP_VERSION__")
+ * @returns true if the file was created, false if it already existed
  */
 export async function ensureVersionFile(
   targetPathOrDir: string,
@@ -265,7 +266,7 @@ export async function ensureVersionFile(
     try {
       await Deno.mkdir(dir, { recursive: true, },);
     } catch {
-      // diretório já existe ou sem permissão
+      // directory already exists or no permission
     }
   }
 
@@ -277,13 +278,13 @@ export async function ensureVersionFile(
 }
 
 /**
- * Garante a existência dos arquivos declarados em versionPaths antes do build/bundle.
- * Verifica previamente a existência de cada arquivo e não o sobrescreve caso já exista.
+ * Ensures the existence of files declared in versionPaths before build/bundle.
+ * Previously checks for file existence and does not overwrite if it already exists.
  *
- * @param versionPaths Lista de caminhos de arquivos version.ts
- * @param baseDir Diretório base opcional (padrão: ".")
- * @param defineVersionString Identificador customizado da constante (padrão: "__APP_VERSION__")
- * @returns Lista de caminhos processados
+ * @param versionPaths List of version.ts file paths
+ * @param baseDir Optional base directory (default: ".")
+ * @param defineVersionString Custom constant identifier (default: "__APP_VERSION__")
+ * @returns List of processed paths
  */
 export async function ensureVersionFiles(
   versionPaths: string[] = [],
@@ -301,14 +302,14 @@ export async function ensureVersionFiles(
       );
       if (created) {
         console.log(
-          `📝 Arquivo de versão criado com template ${defineVersionString} em: ${vPath}`,
+          `📝 Version file created with template ${defineVersionString} at: ${vPath}`,
         );
       } else {
-        console.log(`ℹ️ Arquivo de versão existente mantido: ${vPath}`,);
+        console.log(`ℹ️ Existing version file kept: ${vPath}`,);
       }
       processed.push(vPath,);
     } catch (err) {
-      console.warn(`⚠️ Aviso ao verificar/criar version em ${vPath}:`, err,);
+      console.warn(`⚠️ Warning checking/creating version at ${vPath}:`, err,);
     }
   }
 
@@ -316,8 +317,8 @@ export async function ensureVersionFiles(
 }
 
 /**
- * Grava ou assegura a existência do arquivo version.ts no caminho ou diretório especificado.
- * Mantido para compatibilidade.
+ * Writes or ensures the existence of the version.ts file at the specified path or directory.
+ * Kept for compatibility.
  */
 export async function writeVersionFile(
   targetPathOrDir: string,
@@ -327,11 +328,11 @@ export async function writeVersionFile(
 }
 
 /**
- * Sincroniza a versão do projeto em arquivos de configuração e código sem incrementar.
- * Útil para garantir que todos os pacotes e arquivos de versão estejam alinhados.
+ * Synchronizes project version in configuration files and code without incrementing.
+ * Useful to ensure all packages and version files are aligned.
  *
- * @param options Opções de sincronização
- * @returns Versão sincronizada
+ * @param options Synchronization options
+ * @returns Synchronized version
  *
  * @example
  * ```typescript
@@ -356,7 +357,7 @@ export async function syncVersion(
     finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
   }
 
-  // Sincroniza workspaces se solicitado
+  // Synchronize workspaces if requested
   if (forcePackages) {
     await syncWorkspaces({
       baseDir,
@@ -365,25 +366,25 @@ export async function syncVersion(
     },);
   }
 
-  // Garante a existência dos arquivos version.ts sem sobrescrever caso já existam
+  // Ensure existence of version.ts files without overwriting if they already exist
   if (versionPaths.length > 0) {
     await ensureVersionFiles(versionPaths, baseDir, defineVersionString,);
   } else if (!forcePackages) {
     console.warn(
-      `⚠️ Nenhum caminho de versão (versionPaths) foi especificado para sincronização.`,
+      `⚠️ No version paths (versionPaths) specified for synchronization.`,
     );
-    console.log(`Exemplo de uso: syncVersion({ versionPaths: ["src/version.ts"] })`,);
+    console.log(`Usage example: syncVersion({ versionPaths: ["src/version.ts"] })`,);
   }
 
   return finalVersion;
 }
 
 /**
- * Lê a versão atual do projeto (se não fornecida), incrementa a versão patch (+1),
- * formata com buildHash e grava a nova versão de volta no deno.jsonc raiz.
+ * Reads the current project version (if not provided), increments the patch version (+1),
+ * formats with buildHash, and writes the new version back to the root deno.jsonc.
  *
- * @param options Opções contendo baseDir, denoJsonPath, currentVersion e buildHash
- * @returns Nova versão incrementada aplicada no arquivo
+ * @param options Options containing baseDir, denoJsonPath, currentVersion, and buildHash
+ * @returns New incremented version applied to the file
  *
  * @example
  * ```typescript
@@ -408,7 +409,7 @@ export async function incrementProjectVersion(
   const { major, minor, patch, } = parseVersion(currentVer,);
   const finalVersion = formatVersion(major, minor, patch + 1, options.buildHash,);
 
-  // Atualiza deno.jsonc raiz
+  // Update root deno.jsonc
   try {
     let actualDenoJsonPath = denoJsonPath;
     let rootContent = "";
@@ -420,7 +421,7 @@ export async function incrementProjectVersion(
         rootContent = await Deno.readTextFile(alt,);
         actualDenoJsonPath = alt;
       } else {
-        throw new Deno.errors.NotFound(`Arquivo ${denoJsonPath} não encontrado`);
+        throw new Deno.errors.NotFound(`File ${denoJsonPath} not found`);
       }
     }
 
@@ -429,19 +430,19 @@ export async function incrementProjectVersion(
       finalVersion,
     );
     await Deno.writeTextFile(actualDenoJsonPath, updatedRootContent,);
-    console.log(`📈 Versão incrementada para: v${finalVersion}`,);
+    console.log(`📈 Version incremented to: v${finalVersion}`,);
   } catch (err) {
-    console.warn(`⚠️ Erro ao atualizar versão no ${denoJsonPath}:`, err,);
+    console.warn(`⚠️ Error updating version in ${denoJsonPath}:`, err,);
   }
 
   return finalVersion;
 }
 
 /**
- * Incrementa a versão patch e sincroniza o projeto.
+ * Increments the patch version and synchronizes the project.
  *
- * @param options Opções de atualização
- * @returns Versão final aplicada
+ * @param options Update options
+ * @returns Final applied version
  *
  * @example
  * ```typescript
@@ -472,10 +473,10 @@ export async function updateProjectVersion(
     if (!finalVersion) {
       finalVersion = await readProjectVersion(denoJsonPath, baseDir,);
     }
-    console.log(`📌 Versão mantida (noversion): v${finalVersion}`,);
+    console.log(`📌 Version kept (noversion): v${finalVersion}`,);
   }
 
-  // Sincroniza arquivos e subpacotes
+  // Synchronize files and sub-packages
   return await syncVersion({
     ...options,
     currentVersion: finalVersion,
@@ -483,60 +484,33 @@ export async function updateProjectVersion(
 }
 
 /**
- * Procura deno.jsonc (preferido) ou deno.json subindo a árvore de diretórios a partir de startDir.
- * Equivalente TypeScript para a função `find_deno_file` de `lib-version.sh`.
+ * Searches for deno.jsonc (preferred) or deno.json climbing the directory tree from startDir.
+ * Unified utility delegated to paths.ts.
  *
- * @param startDir Diretório inicial para busca (padrão: ".")
- * @returns Caminho do arquivo encontrado ou null caso não encontre
+ * @param startDir Initial directory for search (default: ".")
+ * @returns Path of the found file or null if not found
  */
 export function findDenoFile(startDir: string = ".",): string | null {
-  try {
-    let current = isAbsolute(startDir,)
-      ? startDir
-      : Deno.realPathSync(startDir,);
-    while (current && current !== "/") {
-      const jsonc = join(current, "deno.jsonc",);
-      try {
-        if (Deno.statSync(jsonc,).isFile) return jsonc;
-      } catch {
-        // tenta próximo
-      }
-
-      const json = join(current, "deno.json",);
-      try {
-        if (Deno.statSync(json,).isFile) return json;
-      } catch {
-        // tenta próximo
-      }
-
-      const parent = dirname(current,);
-      if (parent === current) break;
-      current = parent;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  return findDenoConfig(startDir,);
 }
 
 /**
- * Normaliza qualquer string de versão para o formato semver canônico estrito "MAJOR.MINOR.PATCH".
- * Remove prefixos como "v", metadados de build (+build), identificadores de pre-release (-alpha)
- * e sufixos de commit hash (#hash), garantindo exatamente 3 componentes numéricos.
- * Equivalente TypeScript para a função `sanitize_version` de `lib-version.sh`.
+ * Normalizes any version string to canonical strict semver "MAJOR.MINOR.PATCH" format.
+ * Removes prefixes like "v", build metadata (+build), pre-release identifiers (-alpha),
+ * and commit hash suffixes (#hash), ensuring exactly 3 numeric components.
  *
- * @param raw Versão original bruta (ex: "v1.2.3-beta+exp.sha.5114f85", "0.3.14#muesu7z0")
- * @returns Versão semver sanitizada (ex: "1.2.3", "0.3.14")
+ * @param raw Original raw version string (e.g., "v1.2.3-beta+exp.sha.5114f85", "0.3.14#muesu7z0")
+ * @returns Sanitized semver version (e.g., "1.2.3", "0.3.14")
  */
 export function sanitizeVersion(raw: string,): string {
   if (!raw) return "0.0.0";
-  // Remove caracteres não-numéricos no início (ex: "v")
+  // Remove non-numeric characters at the beginning (e.g., "v")
   let clean = raw.replace(/^[^0-9]+/, "",);
-  // Remove sufixos iniciados por '-', '+', ou '#'
+  // Remove suffixes starting with '-', '+', or '#'
   clean = clean.replace(/[-+#].*$/, "",);
-  // Remove tudo exceto dígitos e pontos
+  // Remove everything except digits and dots
   clean = clean.replace(/[^0-9.]/g, "",);
-  // Remove múltiplos pontos seguidos e pontos nas pontas
+  // Remove multiple dots and dots at the ends
   clean = clean.replace(/\.+/g, ".",).replace(/^\./, "",).replace(/\.$/, "",);
 
   const parts = clean.split(".",);

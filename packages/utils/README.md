@@ -142,11 +142,11 @@ const handles = await watchEngine({
 await exportEngine({
   config: {
     ui: {
-      arquivoSaida: "snapshots/ui.md",
+      outputFile: "snapshots/ui.md",
       includes: ["packages/ui/{src,public}/**/*.{ts,tsx,html,css}",],
       excludes: ["**/*.test.ts",],
-      incluiVersao: true,
-      instrucaoCustomizada: "Contexto UI",
+      includeVersion: true,
+      customInstruction: "UI Context",
     },
   },
 },);

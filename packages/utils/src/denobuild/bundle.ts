@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/denobuild/bundle
- * @description Funções utilitárias e geradores de opções para a API nativa Deno.bundle.
+ * @description Utility functions and option generators for the native Deno.bundle API.
  */
 
 import {
@@ -12,10 +12,10 @@ import type { DenoBundleTargetConfig, } from "../tools/interfaces.ts";
 
 
 /**
- * Constrói o objeto de opções aceito pela API `Deno.bundle`.
+ * Builds the options object accepted by the `Deno.bundle` API.
  *
- * @param config Configuração do alvo de compilação
- * @returns Objeto `Deno.bundle.Options` pronto para execução
+ * @param config Compilation target configuration
+ * @returns `Deno.bundle.Options` object ready for execution
  *
  * @example
  * ```typescript
@@ -57,7 +57,7 @@ export function buildBundleOptions(
   if (config.packages !== undefined) options.packages = config.packages;
   if (config.external !== undefined) options.external = config.external;
 
-  // Opções estendidas que podem ser suportadas por versões futuras do Deno.bundle
+  // Extended options that might be supported by future Deno.bundle versions
   const extendedOptions = options as any;
   if (config.jsx !== undefined) extendedOptions.jsx = config.jsx;
   if (config.jsxFactory !== undefined) extendedOptions.jsxFactory = config.jsxFactory;

@@ -1,10 +1,10 @@
-# Topologia de Execução: `sanitize-version`
+# Execution Topology: `sanitize-version`
 
-Este documento descreve a topologia de execução do utilitário **`sanitize-version`**, responsável por normalizar a versão no arquivo `deno.jsonc` para o formato estrito SemVer (`MAJOR.MINOR.PATCH`).
+This document describes the execution topology of the **`sanitize-version`** utility, responsible for normalizing the version in the `deno.jsonc` file to strict SemVer format (`MAJOR.MINOR.PATCH`).
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -15,12 +15,12 @@ sanitizeVersionCli() (packages/utils/src/version/sanitize/cli.ts)
        ├──► findDenoConfig()
        │
        ▼
-sanitizeVersion(opcoes: SanitizeOptions) (packages/utils/src/version/sanitize/mod.ts)
+sanitizeVersionFile(options: SanitizeOptions) (packages/utils/src/version/sanitize/engine.ts)
        │
        ├──► Deno.readTextFile(denoJsonPath)
        ├──► parseJsonc(content)
        │
-       ├──► [Se version ausente]
+       ├──► [If version is missing]
        │       └──► version = "0.0.0"
        │
        ├──► parseVersion(version) (packages/utils/src/tools/version.ts)
@@ -37,35 +37,35 @@ sanitizeVersion(opcoes: SanitizeOptions) (packages/utils/src/version/sanitize/mo
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `sanitizeVersionCli()`
-* **Arquivo**: `packages/utils/src/version/sanitize/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`[path:string]`).
-* **Ações**:
-  1. Resolve o caminho do `deno.jsonc` (padrão: `./deno.jsonc`).
-  2. Chama `sanitizeVersion({ denoJsonPath })`.
-  3. Exibe mensagem de sucesso com a versão normalizada.
+### Step 1: CLI Initialization
+* **Function**: `sanitizeVersionCli()`
+* **File**: `packages/utils/src/version/sanitize/cli.ts`
+* **Input**: CLI arguments via Cliffy (`[path:string]`).
+* **Actions**:
+  1. Resolves the `deno.jsonc` path (default: automatic search via `findDenoConfig`).
+  2. Calls `sanitizeVersionFile({ filePath })`.
+  3. Displays a success message with the normalized version.
 
-### Passo 2: Normalização da Versão
-* **Função**: `sanitizeVersion(opcoes)`
-* **Arquivo**: `packages/utils/src/version/sanitize/mod.ts`
-* **Ações**:
-  1. Lê o conteúdo do arquivo `deno.jsonc`.
-  2. Extrai o campo `version` atual.
-  3. Utiliza `parseVersion` para capturar apenas os componentes numéricos (ignorando sufixos git ou pré-release).
-  4. Formata a nova string de versão.
-  5. Substitui a versão no conteúdo original (preservando comentários e formatação JSONC).
-  6. Grava o arquivo de volta no disco.
+### Step 2: Version Normalization
+* **Function**: `sanitizeVersionFile(options)`
+* **File**: `packages/utils/src/version/sanitize/engine.ts`
+* **Actions**:
+  1. Reads the `deno.jsonc` file content.
+  2. Extracts the current `version` field.
+  3. Uses `parseVersion` to capture only numeric components (ignoring git suffixes or pre-releases).
+  4. Formats the new version string.
+  5. Replaces the version in the original content (preserving JSONC comments and formatting).
+  6. Writes the file back to disk.
 
 ---
 
-## 3. Tabela Resumo
+## 3. Summary Table
 
-| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+| Function | Caller | Input | Return | Side Effect |
 |---|---|---|---|---|
-| `sanitizeVersionCli()` | Deno CLI | `Deno.args` | `void` | Log de console |
-| `sanitizeVersion()` | CLI / API | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
-| `parseVersion()` | `sanitizeVersion` | `string` | `ParsedVersion` | Puro |
-| `formatVersion()` | `sanitizeVersion` | `ParsedVersion` | `string` | Puro |
+| `sanitizeVersionCli()` | Deno CLI | `Deno.args` | `void` | Console log |
+| `sanitizeVersionFile()` | CLI / API | `SanitizeOptions` | `Promise<string>` | `deno.jsonc` writing |
+| `parseVersion()` | `sanitizeVersionFile` | `string` | `ParsedVersion` | Pure |
+| `formatVersion()` | `sanitizeVersionFile` | `ParsedVersion` | `string` | Pure |

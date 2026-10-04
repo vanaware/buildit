@@ -1,18 +1,18 @@
 /**
  * @module @vanaware/buildit/watch/lock
- * @description Mecanismo de controle de concorrência e Lock para evitar instâncias simultâneas do modo Watch.
+ * @description Concurrency control and Lock mechanism to prevent simultaneous Watch mode instances.
  */
 
 import { join, } from "@std/path";
 
-/** Estrutura armazenada no arquivo de lock do Watch */
+/** Data structure stored in the Watch lock file */
 import { WatchLockData, } from "../tools/interfaces.ts";
 
 /**
- * Verifica se um processo com o PID fornecido ainda está em execução no sistema operacional.
+ * Checks if a process with the given PID is still running in the operating system.
  *
- * @param pid ID do processo a verificar
- * @returns `true` se o processo estiver ativo, `false` caso contrário
+ * @param pid Process ID to check
+ * @returns `true` if the process is active, `false` otherwise
  */
 export function isProcessRunning(pid: number,): boolean {
   if (pid <= 0) return false;
@@ -41,13 +41,13 @@ export function isProcessRunning(pid: number,): boolean {
 }
 
 /**
- * Tenta adquirir o Lock exclusivo para execução do Watch.
- * Lança um erro se já houver outro processo watch ativo.
+ * Tries to acquire an exclusive lock for Watch execution.
+ * Throws an error if another watch process is already active.
  *
- * @param baseDir Diretório base do projeto
- * @param target Nome do alvo que será executado
- * @param customLockPath Caminho opcional customizado para o arquivo de lock
- * @returns Função assíncrona para liberação do lock
+ * @param baseDir Project base directory
+ * @param target Name of the target being executed
+ * @param customLockPath Optional custom path for the lock file
+ * @returns Async function to release the lock
  */
 export async function acquireWatchLock(
   baseDir: string,
@@ -56,7 +56,7 @@ export async function acquireWatchLock(
 ): Promise<() => Promise<void>> {
   const lockPath = customLockPath ?? join(baseDir, ".buildit-watch.lock",);
 
-  // 1. Verificar se já existe um arquivo de lock
+  // 1. Check if a lock file already exists
   try {
     const existingContent = await Deno.readTextFile(lockPath,);
     const existingLock = JSON.parse(existingContent,) as WatchLockData;
@@ -64,28 +64,28 @@ export async function acquireWatchLock(
     if (existingLock && typeof existingLock.pid === "number") {
       if (isProcessRunning(existingLock.pid,)) {
         throw new Error(
-          `❌ Já existe uma instância do watch em execução (PID: ${existingLock.pid}, Alvo: "${existingLock.target}", Iniciada em: ${existingLock.startedAt}). Encerre o processo anterior para evitar conflitos.`,
+          `❌ A watch instance is already running (PID: ${existingLock.pid}, Target: "${existingLock.target}", Started at: ${existingLock.startedAt}). Terminate the previous process to avoid conflicts.`,
         );
       } else {
-        // O processo anterior morreu sem limpar o lock (órfão)
+        // Previous process died without cleaning the lock (orphan)
         try {
           await Deno.remove(lockPath,);
         } catch {
-          // Ignora erro se outro processo já removeu
+          // Ignore error if another process removed it already
         }
       }
     }
   } catch (err) {
     if (
       err instanceof Error &&
-      err.message.startsWith("❌ Já existe uma instância do watch",)
+      err.message.includes("A watch instance is already running",)
     ) {
       throw err;
     }
-    // Arquivo não existe ou JSON corrompido, pode prosseguir
+    // File doesn't exist or JSON is corrupted, can proceed
   }
 
-  // 2. Grava o novo lock
+  // 2. Write new lock
   const lockData: WatchLockData = {
     pid: Deno.pid,
     target,
@@ -95,7 +95,7 @@ export async function acquireWatchLock(
 
   await Deno.writeTextFile(lockPath, JSON.stringify(lockData, null, 2,),);
 
-  // 3. Prepara a liberação segura do lock
+  // 3. Prepare secure lock release
   let released = false;
   const release = async (): Promise<void> => {
     if (released) return;
@@ -107,11 +107,11 @@ export async function acquireWatchLock(
         await Deno.remove(lockPath,);
       }
     } catch {
-      // Ignora erros caso o arquivo já tenha sido removido
+      // Ignore errors if the file has already been removed
     }
   };
 
-  // Garante liberação na saída do processo
+  // Ensure release on process exit
   const unloadHandler = () => {
     try {
       const currentContent = Deno.readTextFileSync(lockPath,);
@@ -120,7 +120,7 @@ export async function acquireWatchLock(
         Deno.removeSync(lockPath,);
       }
     } catch {
-      // Ignora erros
+      // Ignore errors
     }
   };
 

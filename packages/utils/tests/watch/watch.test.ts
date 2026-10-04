@@ -2,27 +2,27 @@ import { assert, assertEquals, assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import { join, } from "@std/path";
 import {
-  carregarConfigWatch,
+  loadWatchConfig,
   WATCH_CONFIG_EXAMPLE,
 } from "../../src/watch/config.ts";
 import { watchEngine, } from "../../src/watch/engine.ts";
 import { watchCli, } from "../../src/watch/cli.ts";
 import type { WatchGlobalConfig, } from "../../src/tools/interfaces.ts";
 
-describe("carregarConfigWatch", () => {
-  it("deve retornar erro quando arquivo não for encontrado", async () => {
+describe("loadWatchConfig", () => {
+  it("should return error when file is not found", async () => {
     await assertRejects(
       () =>
-        carregarConfigWatch(
-          "arquivo_inexistente.jsonc",
+        loadWatchConfig(
+          "non_existent_file.jsonc",
           "/tmp",
         ),
       Error,
-      "não encontrado",
+      "not found",
     );
   });
 
-  it("deve carregar configuração de watch válida de um arquivo temporário", async () => {
+  it("should load valid watch configuration from a temporary file", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const configContent = JSON.stringify({
@@ -38,7 +38,7 @@ describe("carregarConfigWatch", () => {
       const configPath = `${tempDir}/watch.jsonc`;
       await Deno.writeTextFile(configPath, configContent,);
 
-      const result = await carregarConfigWatch(configPath, tempDir,);
+      const result = await loadWatchConfig(configPath, tempDir,);
       const app = result.targets["app"];
       assert(app !== undefined,);
       assertEquals(app.entryPoints, ["src/index.ts",],);
@@ -49,8 +49,8 @@ describe("carregarConfigWatch", () => {
   });
 });
 
-describe("watchCli Validação de Argumentos (Cliffy)", () => {
-  it("Cliffy deve rejeitar quando mais de 1 argumento posicional for passado", async () => {
+describe("watchCli Argument Validation (Cliffy)", () => {
+  it("Cliffy should reject when more than 1 positional argument is passed", async () => {
     const cli = watchCli().throwErrors();
     await assertRejects(
       async () => {
@@ -62,8 +62,8 @@ describe("watchCli Validação de Argumentos (Cliffy)", () => {
   });
 });
 
-describe("watchEngine Restrições de Alvos e Lock", () => {
-  it("deve aceitar target como string única", async () => {
+describe("watchEngine Target Restrictions and Lock", () => {
+  it("should accept target as a single string", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
@@ -90,7 +90,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         target: "first",
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
-        silencioso: true,
+        silent: true,
       },);
 
       assertEquals(handles.length, 1,);
@@ -101,7 +101,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
     }
   });
 
-  it("deve rejeitar se o alvo solicitado não existir", async () => {
+  it("should reject if the requested target does not exist", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       await Deno.writeTextFile(
@@ -121,21 +121,21 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         async () => {
           await watchEngine({
             config,
-            target: "inexistente",
+            target: "non-existent",
             baseDir: tempDir,
             lockFile: `${tempDir}/.watch.lock`,
-            silencioso: true,
+            silent: true,
           },);
         },
         Error,
-        "Alvo 'inexistente' não encontrado",
+        "Target 'non-existent' not found",
       );
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
-  it("deve selecionar apenas o primeiro alvo quando nenhum literal é fornecido e há múltiplos default: true", async () => {
+  it("should select only the first target when no literal is provided and there are multiple default: true", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
@@ -171,20 +171,20 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         config,
         baseDir: tempDir,
         lockFile: `${tempDir}/.watch.lock`,
-        silencioso: true,
+        silent: true,
       },);
 
       assertEquals(handles.length, 1,);
       assertEquals(handles[0]?.target, "first",);
 
-      // Encerra e limpa o lock
+      // Close and clean lock
       await handles[0]?.close();
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
-  it("deve impedir concorrência entre chamadas simultâneas via Lock", async () => {
+  it("should prevent concurrency between simultaneous calls via Lock", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       await Deno.mkdir(`${tempDir}/src`, { recursive: true, },);
@@ -212,7 +212,7 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
         target: "first",
         baseDir: tempDir,
         lockFile: lockPath,
-        silencioso: true,
+        silent: true,
       },);
 
       try {
@@ -223,11 +223,11 @@ describe("watchEngine Restrições de Alvos e Lock", () => {
               target: "first",
               baseDir: tempDir,
               lockFile: lockPath,
-              silencioso: true,
+              silent: true,
             },);
           },
           Error,
-          "Já existe uma instância do watch em execução",
+          "A watch instance is already running",
         );
       } finally {
         await handles[0]?.close();

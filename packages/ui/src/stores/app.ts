@@ -65,59 +65,59 @@ export const TOOLS: ToolInfo[] = [
   {
     id: "esbuild",
     name: "esbuild Pipeline",
-    badge: "Produção",
+    badge: "Production",
     icon: "bolt",
     colorClass: "primary-text",
     summary:
-      "Compilação de alta performance para produção com resolução Deno, JSR e NPM.",
+      "High-performance production compilation with Deno, JSR, and NPM resolution.",
     description:
-      "Empacota aplicações Preact/JSX, TypeScript e JavaScript com esbuild nativo e @deno/esbuild-plugin. Oferece injeção de versão semântica, cópia seletiva de assets (copyFiles) e limpeza com suporte a globs e excludes.",
+      "Bundles Preact/JSX, TypeScript, and JavaScript applications using native esbuild and @deno/esbuild-plugin. Features semantic version injection, flexible asset copying (copyFiles), and robust cleanup with glob patterns.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
     configFile: "esbuild.jsonc",
     features: [
-      "Plugin Deno para resolução transparente de imports remotos (https, jsr, npm)",
-      "Transformação JSX automática com jsxImportSource: preact",
-      "Injeção automática da constante __APP_VERSION__ em código e manifest.json",
-      "Limpeza robusta com clean (includes e excludes)",
-      "Cópia flexível com copyFiles mantendo estruturas baseadas em basedir",
+      "Deno plugin for transparent resolution of remote imports (https, jsr, npm)",
+      "Automatic JSX transform with jsxImportSource: preact",
+      "Automatic injection of __APP_VERSION__ constant in code and manifest.json",
+      "Robust directory cleanup with clean (includes and excludes)",
+      "Flexible copying with copyFiles preserving basedir directory trees",
     ],
   },
   {
     id: "denobuild",
-    name: "Deno.bundle Nativo",
-    badge: "Empacotador Nativo",
+    name: "Native Deno.bundle",
+    badge: "Native Bundler",
     icon: "package_2",
     colorClass: "secondary-text",
-    summary: "Geração de bundles autocontidos usando a API nativa Deno.bundle.",
+    summary: "Self-contained bundle generation using native Deno.bundle API.",
     description:
-      "Utiliza o compilador nativo do runtime Deno (--unstable-bundle) para gerar saídas limpas sem depender de binários esbuild externos. Ideal para ambientes restritos ou empacotamento puro de bibliotecas.",
+      "Uses Deno's native compiler runtime (--unstable-bundle) to generate clean outputs without external esbuild binaries. Ideal for constrained environments or pure library packaging.",
     cliCommand:
       "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
     configFile: "denobuild.jsonc",
     features: [
-      "Integração 100% nativa com o subsistema Deno 2.x",
-      "Geração de código ESM ou IIFE autocontido",
-      "Compatível com o mesmo esquema de alvos (targets) e copyFiles",
-      "Respeita opções de minificação e sourcemap do Deno",
+      "100% native integration with Deno 2.x subsystem",
+      "Self-contained ESM or IIFE code output",
+      "Compatible with the same target schemas and copyFiles",
+      "Respects Deno minification and sourcemap options",
     ],
   },
   {
     id: "watch",
     name: "Watch Dev Engine",
-    badge: "Desenvolvimento",
+    badge: "Development",
     icon: "visibility",
     colorClass: "tertiary-text",
     summary:
-      "Recompilação incremental ultrarrápida com esbuild.context e lockfile anti-concorrência.",
+      "Sub-millisecond incremental recompilation with esbuild.context and concurrency lock.",
     description:
-      "Monitora arquivos em srcdir e dispara rebuilds quase instantâneos. Possui trava de processo (buildit.lock) com verificação de PID ativo para evitar corridas entre servidores e watch concorrentes.",
+      "Watches files in srcdir and triggers near-instant rebuilds. Uses a process lockfile (.buildit-watch.lock) with active PID detection to prevent race conditions between servers and concurrent watch processes.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/watch",
     configFile: "watch.jsonc",
     features: [
-      "Recompilação incremental orientada a contexto (esbuild.context)",
-      "Mecanismo de Lockfile anti-concorrência baseado em PID ativo",
-      "Injeção de banners [DEV WATCH] para depuração em desenvolvimento",
-      "Sincronização imediata de arquivos estáticos em cada modificação",
+      "Context-oriented incremental recompilation (esbuild.context)",
+      "Lockfile anti-concurrency mechanism based on active PID",
+      "Optional banner injection for dev debugging",
+      "Immediate static file synchronization on each change",
     ],
   },
   {
@@ -127,16 +127,16 @@ export const TOOLS: ToolInfo[] = [
     icon: "smart_toy",
     colorClass: "primary-text",
     summary:
-      "Varredura de repositório e consolidação de código em Markdown para prompts e LLMs.",
+      "Repository scanning and code consolidation into Markdown for AI prompts and LLMs.",
     description:
-      "Varre workspaces Deno, filtra arquivos por globs e extensões permitidas, e formata o conteúdo em um snapshot legível e contextualizado para ser usado por agentes de IA e revisões de código.",
+      "Scans Deno workspaces, filters files by globs and allowed extensions, and formats content into a readable, contextual snapshot optimized for AI agents and code reviews.",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/export",
     configFile: "export.jsonc",
     features: [
-      "Filtro declarativo de arquivos via includes e excludes",
-      "Instruções contextuais customizadas por modo (ex: UI, Docs, Servidor)",
-      "Proteção automática contra inclusão acidental de snapshots recursivos",
-      "Cabeçalho estruturado com árvore de arquivos, versão e metadados",
+      "Declarative file filtering via includes and excludes (globs)",
+      "Custom contextual instructions per mode (e.g., UI, Docs, Server)",
+      "Automatic protection against recursive inclusion of snapshot folders",
+      "Structured headers with file tree, version, and metadata",
     ],
   },
   {
@@ -146,16 +146,16 @@ export const TOOLS: ToolInfo[] = [
     icon: "sell",
     colorClass: "secondary-text",
     summary:
-      "Sincronização de versões em workspaces e criação automatizada de releases Git.",
+      "Workspace version synchronization and automated Git release creation.",
     description:
-      "Padroniza a versão semântica de deno.jsonc (incluindo suporte a hashes e pré-releases), sincroniza múltiplos pacotes do workspace e gera tags de versão Git (vX.Y.Z) de forma determinística.",
+      "Standardizes semantic versions in deno.jsonc (including hash and pre-release support), synchronizes multiple workspace packages, and deterministically generates Git release tags (vX.Y).",
     cliCommand: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
     configFile: "deno.jsonc",
     features: [
-      "Sanitização de versões para formato semver rigoroso (MAJOR.MINOR.PATCH)",
-      "Sincronização em cascata para todos os membros do workspace",
-      "Submódulo tag-version para automação de tags e releases no GitHub",
-      "Geração de hash de commit curto para builds intermediários",
+      "Version sanitization to strict semver format (MAJOR.MINOR.PATCH)",
+      "Cascading synchronization across all workspace members",
+      "tag-version submodule for GitHub tags and releases automation",
+      "Short commit hash generation for intermediate builds",
     ],
   },
 ];
@@ -164,78 +164,79 @@ export const CLI_COMMANDS: CliCommandItem[] = [
   {
     id: "cmd-esbuild-all",
     tool: "esbuild",
-    title: "Build Geral (Todos os Alvos)",
+    title: "General Build (All Targets)",
     command: "deno run -A jsr:@vanaware/buildit/cli/esbuild",
     description:
-      "Executa todos os alvos configurados com default: true no esbuild.jsonc.",
+      "Executes all targets configured with default: true in esbuild.jsonc.",
     tag: "esbuild",
   },
   {
     id: "cmd-esbuild-target",
     tool: "esbuild",
-    title: "Build de Alvo Específico",
+    title: "Specific Target Build",
     command: "deno run -A jsr:@vanaware/buildit/cli/esbuild ui --noversion",
-    description: "Compila somente o alvo 'ui' ignorando incremento de versão.",
+    description:
+      "Compiles only the 'ui' target without incrementing the version.",
     tag: "esbuild",
   },
   {
     id: "cmd-watch",
     tool: "watch",
-    title: "Iniciar Modo Watch",
+    title: "Start Watch Mode",
     command: "deno run -A jsr:@vanaware/buildit/cli/watch",
     description:
-      "Inicia o monitoramento de alterações com recompilação incremental contínua.",
+      "Starts continuous file monitoring with incremental recompilation.",
     tag: "watch",
   },
   {
     id: "cmd-watch-target",
     tool: "watch",
-    title: "Watch em Alvo Específico",
+    title: "Watch Specific Target",
     command: "deno run -A jsr:@vanaware/buildit/cli/watch ui",
-    description: "Monitora exclusivamente o alvo 'ui'.",
+    description: "Monitors exclusively the 'ui' target.",
     tag: "watch",
   },
   {
     id: "cmd-denobuild",
     tool: "denobuild",
-    title: "Empacotar com Deno Nativo",
+    title: "Bundle with Native Deno",
     command:
       "deno run --unstable-bundle -A jsr:@vanaware/buildit/cli/denobuild ui",
-    description: "Gera o bundle usando o comando Deno.bundle nativo.",
+    description: "Generates bundle using native Deno.bundle runtime.",
     tag: "denobuild",
   },
   {
     id: "cmd-export-all",
     tool: "export",
-    title: "Exportar Contextos de IA",
+    title: "Export AI Contexts",
     command: "deno run -A jsr:@vanaware/buildit/cli/export",
     description:
-      "Gera snapshots de código em formato Markdown conforme export.jsonc.",
+      "Generates code snapshots in Markdown format as configured in export.jsonc.",
     tag: "export",
   },
   {
     id: "cmd-export-mode",
     tool: "export",
-    title: "Exportar Modo Específico",
+    title: "Export Specific Mode",
     command: "deno run -A jsr:@vanaware/buildit/cli/export ui docs",
-    description: "Gera apenas os arquivos de snapshot dos modos informados.",
+    description: "Generates snapshot files only for the specified modes.",
     tag: "export",
   },
   {
     id: "cmd-sanitize",
     tool: "versioning",
-    title: "Sanitizar Versão SemVer",
+    title: "Sanitize SemVer Version",
     command: "deno run -A jsr:@vanaware/buildit/cli/sanitize-version",
     description:
-      "Normaliza o campo 'version' do deno.jsonc para SemVer padrão.",
+      "Normalizes the 'version' field in deno.jsonc to standard SemVer.",
     tag: "version",
   },
   {
     id: "cmd-tag",
     tool: "versioning",
-    title: "Criar Tag Git Semântica",
+    title: "Create Semantic Git Tag",
     command: "deno run -A jsr:@vanaware/buildit/cli/tag-version",
-    description: "Cria e prepara a tag vX.Y baseada na versão do projeto.",
+    description: "Creates and pushes git tag vX.Y based on project version.",
     tag: "version",
   },
 ];
@@ -297,10 +298,10 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
 
   "export.jsonc": `{
   "$schema": "jsr:@vanaware/buildit/schema/export.json",
-  "projeto": "MeuProjeto",
-  "modos": {
+  "project": "MyProject",
+  "modes": {
     "ui": {
-      "arquivoSaida": "snapshots/ui.md",
+      "outputFile": "snapshots/ui.md",
       "includes": [
         "packages/ui/src/**/*.{tsx,ts,html,css}",
         "packages/ui/deno.jsonc"
@@ -309,12 +310,12 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": true,
-      "instrucaoCustomizada": "Arquivos do frontend Preact da aplicação.",
+      "includeVersion": true,
+      "customInstruction": "Frontend Preact application files.",
       "default": true
     },
     "docs": {
-      "arquivoSaida": "snapshots/docs.md",
+      "outputFile": "snapshots/docs.md",
       "includes": ["docs/**/*.md", "README.md"],
       "default": false
     }
@@ -325,15 +326,13 @@ export const CONFIG_SNIPPETS: Record<string, string> = {
   "$schema": "jsr:@vanaware/buildit/schema/denobuild.json",
   "targets": {
     "app": {
-      "mode": "build",
       "default": true,
       "srcdir": "src",
       "distdir": "dist",
       "entryPoints": ["main.ts"],
       "format": "esm",
       "minify": false,
-      "sourcemap": "linked",
-      "packages": "bundle"
+      "sourcemap": "linked"
     }
   }
 }`,
@@ -375,18 +374,18 @@ const handles = await watchEngine({
   target: "ui",
 });
 
-console.log("Servidor watch em execução. Pressione Ctrl+C para encerrar.");`,
+console.log("Watch server running. Press Ctrl+C to stop.");`,
 
   export: `import { exportEngine } from "jsr:@vanaware/buildit";
 
 await exportEngine({
   config: {
     ui: {
-      arquivoSaida: "snapshots/ui.md",
+      outputFile: "snapshots/ui.md",
       includes: ["packages/ui/src/**/*"],
     },
   },
-  modos: ["ui"],
+  modes: ["ui"],
 });`,
 };
 

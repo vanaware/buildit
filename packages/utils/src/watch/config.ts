@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/watch/config
- * @description Carregamento e validação de configurações para o modo de desenvolvimento contínuo (Watch).
+ * @description Loading and validation of configurations for the continuous development mode (Watch).
  */
 
 import { loadConfig, } from "../tools/jsonc.ts";
@@ -10,7 +10,7 @@ import type {
   WatchGlobalConfig,
 } from "../tools/interfaces.ts";
 
-/** Exemplo de configurações para o modo watch */
+/** Example configurations for watch mode */
 export const WATCH_CONFIG_EXAMPLE: WatchGlobalConfig = {
   ui: {
     default: true,
@@ -36,13 +36,13 @@ export const WATCH_CONFIG_EXAMPLE: WatchGlobalConfig = {
 };
 
 /**
- * Carrega e valida o arquivo de configuração do watch (watch.jsonc ou watch.json).
+ * Loads and validates the watch configuration file (watch.jsonc or watch.json).
  *
- * @param configPath Caminho explícito opcional para o arquivo
- * @param baseDir Diretório base do projeto (padrão: ".")
- * @returns Configuração resolvida de alvos do watch
+ * @param configPath Optional explicit path to the file
+ * @param baseDir Project base directory (default: ".")
+ * @returns Resolved watch target configuration
  */
-export async function carregarConfigWatch(
+export async function loadWatchConfig(
   configPath?: string,
   baseDir: string = ".",
 ): Promise<WatchConfigResult> {
@@ -53,10 +53,10 @@ export async function carregarConfigWatch(
   );
 
   if (!parsed) {
-    throw new Error(`❌ Arquivo de configuração "watch.jsonc" não encontrado na raiz do projeto.
-O BuildIt agora exige uma declaração explícita de alvos para o modo watch.
+    throw new Error(`❌ Configuration file "watch.jsonc" not found in the project root.
+BuildIt now requires an explicit target declaration for watch mode.
 
-Exemplo de arquivo "watch.jsonc" mínimo:
+Minimum "watch.jsonc" file example:
 {
   "targets": {
     "app": {
@@ -82,12 +82,12 @@ Exemplo de arquivo "watch.jsonc" mínimo:
     versionPaths = (parsed as WatchConfigFile).versionPaths;
     forcepackagesversion = (parsed as WatchConfigFile).forcepackagesversion;
   } else if (!("targets" in parsed) && Object.keys(parsed,).length > 0) {
-    // Tenta tratar o objeto raiz como os alvos
+    // Tries to treat the root object as the targets
     targets = parsed as WatchGlobalConfig;
   }
 
   if (Object.keys(targets,).length === 0) {
-    throw new Error(`❌ Nenhuma configuração de alvos encontrada no arquivo de configuração watch.`);
+    throw new Error(`❌ No target configuration found in the watch configuration file.`);
   }
 
   return {

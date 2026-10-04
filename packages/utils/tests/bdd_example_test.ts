@@ -1,20 +1,20 @@
 /**
  * @buildit/packages/utils/tests/bdd_example_test.ts
  *
- * Exemplo de uso do estilo BDD (describe/it) com @std/testing/bdd,
- * conforme definido na ADR 008.
+ * Example of BDD style usage (describe/it) with @std/testing/bdd,
+ * as defined in ADR 008.
  */
 
 import { assert, assertEquals, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 
 describe("bdd_example", () => {
-  it("deve passar com uma afirmação simples", () => {
+  it("should pass with a simple assertion", () => {
     assertEquals(1 + 1, 2,);
   });
 
-  it("deve falhar corretamente quando a condição não é atendida", () => {
-    // Este teste demonstra que o framework BDD funciona conforme esperado.
+  it("should fail correctly when condition is not met", () => {
+    // This test demonstrates that the BDD framework works as expected.
     const value = "buildit";
     assert(value.length > 0,);
   });

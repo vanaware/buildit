@@ -1,6 +1,6 @@
 /**
  * @file denobuild.test.ts
- * @description Testes unitários BDD para a lógica de configuração e utilitários do denobuild.
+ * @description BDD unit tests for denobuild configuration logic and utilities.
  */
 
 import { describe, it, } from "@std/testing/bdd";
@@ -12,21 +12,21 @@ import { DENOBUILD_CONFIG_EXAMPLE, } from "../../src/denobuild/config.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 
 describe("denobuild - applyDefines", () => {
-  it("deve substituir identificadores simples", () => {
+  it("should replace simple identifiers", () => {
     const code = "const version = __APP_VERSION__;";
     const defines = { "__APP_VERSION__": '"1.2.3"', };
     const result = applyDefines(code, defines,);
     assertEquals(result, 'const version = "1.2.3";',);
   });
 
-  it("deve substituir múltiplos identificadores", () => {
+  it("should replace multiple identifiers", () => {
     const code = "if (__DEBUG__) console.log(__MSG__);";
     const defines = { "__DEBUG__": "true", "__MSG__": '"hello"', };
     const result = applyDefines(code, defines,);
     assertEquals(result, 'if (true) console.log("hello");',);
   });
 
-  it("deve lidar com caracteres especiais em chaves", () => {
+  it("should handle special characters in keys", () => {
     const code = "process.env.NODE_ENV";
     const defines = { "process.env.NODE_ENV": '"production"', };
     const result = applyDefines(code, defines,);
@@ -35,7 +35,7 @@ describe("denobuild - applyDefines", () => {
 });
 
 describe("denobuild - buildBundleOptions", () => {
-  it("deve gerar opções básicas a partir da configuração", async () => {
+  it("should generate basic options from configuration", async () => {
     const { dir, cleanup, } = await withFileStructure({
       "src/main.tsx": "export const test = 1;",
     },);

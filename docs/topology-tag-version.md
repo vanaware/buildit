@@ -1,10 +1,10 @@
-# Topologia de Execução: `tag-version`
+# Execution Topology: `tag-version`
 
-Este documento descreve a topologia de execução do utilitário **`tag-version`**, que automatiza o ciclo de release git (commit, limpeza de tags e push).
+This document describes the execution topology of the **`tag-version`** utility, which automates the git release cycle (commit, tag cleanup, and push).
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -15,55 +15,55 @@ tagVersionCli() (packages/utils/src/version/tag/cli.ts)
        ├──► findDenoConfig()
        │
        ▼
-tagVersion(opcoes: TagOptions) (packages/utils/src/version/tag/mod.ts)
+tagVersionEngine(options: TagVersionOptions) (packages/utils/src/version/tag/engine.ts)
        │
-       ├──► [Se sanitize === true]
-       │       └──► sanitizeVersion({ denoJsonPath })
+       ├──► [If sanitize === true]
+       │       └──► sanitizeVersionFile({ filePath, baseDir })
        │
        ├──► readProjectVersion(denoJsonPath)
        │
        ├──► [Git Flow]
        │       ├──► git add -A
-       │       ├──► git commit -m "Versão vX.Y.Z"
+       │       ├──► git commit -m "Version vX.Y"
        │       ├──► git push
        │       │
        │       ├──► git tag -d vX.Y (local)
        │       ├──► git push origin :refs/tags/vX.Y (remote)
        │       │
-       │       ├──► git tag -a vX.Y -m "Release vX.Y.Z"
+       │       ├──► git tag -a vX.Y -m "Release vX.Y"
        │       └──► git push origin vX.Y
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `tagVersionCli()`
-* **Arquivo**: `packages/utils/src/version/tag/cli.ts`
-* **Entrada**: Argumentos CLI (`--no-sanitize`, `[path:string]`).
-* **Ações**:
-  1. Resolve o caminho do `deno.jsonc`.
-  2. Chama `tagVersion({ denoJsonPath, sanitize: true })`.
+### Step 1: CLI Initialization
+* **Function**: `tagVersionCli()`
+* **File**: `packages/utils/src/version/tag/cli.ts`
+* **Input**: CLI arguments (`-s/--sanitize`, `-m/--message`, etc.).
+* **Actions**:
+  1. Resolves the `deno.jsonc` path.
+  2. Calls `tagVersionEngine(options)`.
 
-### Passo 2: Orquestração do Release Git
-* **Função**: `tagVersion(opcoes)`
-* **Arquivo**: `packages/utils/src/version/tag/mod.ts`
-* **Ações**:
-  1. Opcionalmente normaliza a versão no disco via `sanitizeVersion`.
-  2. Lê a versão atual do `deno.jsonc`.
-  3. Executa uma sequência de comandos `git` usando `Deno.Command`:
-     - **Commit**: Adiciona todas as mudanças e cria um commit com a versão.
-     - **Push**: Envia o branch atual para o remoto.
-     - **Cleanup**: Remove tags anteriores do mesmo nível (MAJOR.MINOR) para garantir que a tag de release aponte sempre para o commit mais recente.
-     - **Tagging**: Cria uma nova tag anotada e envia para o origin com `--force`.
+### Step 2: Git Release Orchestration
+* **Function**: `tagVersionEngine(options)`
+* **File**: `packages/utils/src/version/tag/engine.ts`
+* **Actions**:
+  1. Optionally normalizes the version on disk via `sanitizeVersionFile`.
+  2. Reads the current version from `deno.jsonc`.
+  3. Executes a sequence of `git` commands using `runGit`:
+     - **Commit**: Adds all changes and creates a commit with the version.
+     - **Push**: Pushes the current branch to the remote.
+     - **Cleanup**: Removes previous tags at the same level (MAJOR.MINOR) to ensure the release tag always points to the latest commit.
+     - **Tagging**: Creates a new annotated tag and pushes it to origin with `--force`.
 
 ---
 
-## 3. Tabela Resumo
+## 3. Summary Table
 
-| Função | Chamador | Entrada | Retorno | Efeito Colateral |
+| Function | Caller | Input | Return | Side Effect |
 |---|---|---|---|---|
-| `tagVersionCli()` | Deno CLI | `Deno.args` | `void` | Execução de comandos Git |
-| `tagVersion()` | CLI / API | `TagOptions` | `Promise<void>` | Mutação de estado Git local/remoto |
-| `sanitizeVersion()` | `tagVersion` | `SanitizeOptions` | `Promise<string>` | Gravação no `deno.jsonc` |
+| `tagVersionCli()` | Deno CLI | `Deno.args` | `void` | Git command execution |
+| `tagVersionEngine()` | CLI / API | `TagVersionOptions` | `Promise<TagVersionResult>` | Local/remote Git state mutation |
+| `sanitizeVersionFile()` | `tagVersionEngine` | `SanitizeOptions` | `Promise<string>` | `deno.jsonc` writing |

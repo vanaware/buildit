@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/version/sanitize/cli
- * @description Ponto de entrada CLI para sanitização de versão via Cliffy.
+ * @description CLI entry point for version sanitization via Cliffy.
  */
 
 import { Command, } from "@cliffy/command";
@@ -8,19 +8,19 @@ import { APP_VERSION, } from "../../version.ts";
 import { sanitizeVersionFile, } from "./engine.ts";
 
 /**
- * Cria o comando CLI para sanitização de versão do deno.json[c].
+ * Creates the CLI command for deno.json[c] version sanitization.
  *
- * @returns Instância do comando Cliffy configurado
+ * @returns Configured Cliffy command instance
  */
 export function sanitizeVersionCli(): Command<any> {
   return new Command()
     .name("sanitize-version",)
     .description(
-      "Normaliza a versão do deno.json[c] para formato semver estrito (MAJOR.MINOR.PATCH)",
+      "Normalizes the deno.json[c] version to strict semver format (MAJOR.MINOR.PATCH)",
     )
     .version(APP_VERSION,)
     .arguments("[file:string]",)
-    .option("-b, --base-dir [dir:string]", "Diretório base de busca", {
+    .option("-b, --base-dir [dir:string]", "Base directory for search", {
       default: ".",
       env: { prefix: "BUILDIT_", },
     },)

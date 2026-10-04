@@ -6,7 +6,7 @@ import { buildEsbuildOptions, } from "../../src/esbuild/engine.ts";
 import type { TargetConfig, } from "../../src/tools/interfaces.ts";
 import { withFileStructure, } from "../helpers/fixtures.ts";
 
-// Helper para criar config mínima válida com paths que existem
+// Helper to create minimal valid config with existing paths
 function makeConfig(
   dir: string,
   overrides: Partial<TargetConfig> = {},
@@ -20,8 +20,8 @@ function makeConfig(
 }
 
 describe("buildEsbuildOptions", () => {
-  describe("configuração básica", () => {
-    it("usa outfile quando definido", async () => {
+  describe("basic configuration", () => {
+    it("uses outfile when defined", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -34,7 +34,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("usa distdir como outdir quando outfile não definido", async () => {
+    it("uses distdir as outdir when outfile is not defined", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -47,7 +47,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("entryPoints é sempre preservado", async () => {
+    it("entryPoints is always preserved", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/a.ts": "",
         "src/b.ts": "",
@@ -64,8 +64,8 @@ describe("buildEsbuildOptions", () => {
       }
     });
   });
-  describe("propriedades opcionais", () => {
-    it("inclui platform quando definido", async () => {
+  describe("optional properties", () => {
+    it("includes platform when defined", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -77,7 +77,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("omite propriedades undefined", async () => {
+    it("omits undefined properties", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -90,7 +90,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui todas as propriedades configuradas", async () => {
+    it("includes all configured properties", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -116,7 +116,7 @@ describe("buildEsbuildOptions", () => {
     });
   });
   describe("define", () => {
-    it("injeta __APP_VERSION__ com v", async () => {
+    it("injects __APP_VERSION__ with v prefix", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -128,7 +128,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("preserva defines customizados do config", async () => {
+    it("preserves custom defines from config", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -148,8 +148,8 @@ describe("buildEsbuildOptions", () => {
       }
     });
   });
-  describe("banner e footer", () => {
-    it("substitui __APP_VERSION__ no banner", async () => {
+  describe("banner and footer", () => {
+    it("replaces __APP_VERSION__ in banner", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -165,7 +165,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("substitui múltiplas ocorrências de __APP_VERSION__", async () => {
+    it("replaces multiple occurrences of __APP_VERSION__", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -181,7 +181,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("substitui __APP_VERSION__ no CSS também", async () => {
+    it("replaces __APP_VERSION__ in CSS too", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -197,7 +197,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("substitui __APP_VERSION__ no footer", async () => {
+    it("replaces __APP_VERSION__ in footer", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -213,7 +213,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("lida com banner sem js", async () => {
+    it("handles banner without js", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -229,8 +229,8 @@ describe("buildEsbuildOptions", () => {
       }
     });
   });
-  describe("lógica de defineVersionString e defineAssetsString", () => {
-    it("injeta define customizado de versão quando defineVersionString é informado como parâmetro global", async () => {
+  describe("defineVersionString and defineAssetsString logic", () => {
+    it("injects custom version define when defineVersionString is provided as global parameter", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -250,7 +250,7 @@ describe("buildEsbuildOptions", () => {
       }
     });
 
-    it("injeta __APP_VERSION__ por padrão quando defineVersionString não é informado", async () => {
+    it("injects __APP_VERSION__ by default when defineVersionString is not provided", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -267,7 +267,7 @@ describe("buildEsbuildOptions", () => {
       }
     });
 
-    it("injeta assets listados via listAssetsFn quando defineAssetsString é configurado", async () => {
+    it("injects assets listed via listAssetsFn when defineAssetsString is configured", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -292,8 +292,8 @@ describe("buildEsbuildOptions", () => {
       }
     });
   });
-  describe("novas opções (1-13)", () => {
-    it("inclui splitting", async () => {
+  describe("new options (1-13)", () => {
+    it("includes splitting", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -305,7 +305,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui loader customizado", async () => {
+    it("includes custom loader", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -319,7 +319,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui alias", async () => {
+    it("includes alias", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -334,7 +334,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui inject", async () => {
+    it("includes inject", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -348,7 +348,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui target como string", async () => {
+    it("includes target as string", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -360,7 +360,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui target como array", async () => {
+    it("includes target as array", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -372,7 +372,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui drop", async () => {
+    it("includes drop", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -384,7 +384,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui pure", async () => {
+    it("includes pure", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -396,7 +396,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui logLevel", async () => {
+    it("includes logLevel", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -408,7 +408,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui entryNames/chunkNames/assetNames", async () => {
+    it("includes entryNames/chunkNames/assetNames", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -428,7 +428,7 @@ describe("buildEsbuildOptions", () => {
     });
   });
   describe("plugins", () => {
-    it("inclui plugins quando definidos na config", async () => {
+    it("includes plugins when defined in config", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -443,7 +443,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("inclui múltiplos plugins na ordem definida", async () => {
+    it("includes multiple plugins in defined order", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -459,7 +459,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("omite plugins quando não definidos (undefined)", async () => {
+    it("omits plugins when not defined (undefined)", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -471,7 +471,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("omite plugins quando array vazio", async () => {
+    it("omits plugins when empty array", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);
@@ -483,7 +483,7 @@ describe("buildEsbuildOptions", () => {
         await cleanup();
       }
     });
-    it("plugins são independentes de outras opções", async () => {
+    it("plugins are independent of other options", async () => {
       const { dir, cleanup, } = await withFileStructure({
         "src/main.tsx": "",
       },);

@@ -1,10 +1,10 @@
 import { describe, it, } from "@std/testing/bdd";
-import { assertEquals, assertNotEquals, } from "@std/assert";
+import { assertEquals, } from "@std/assert";
 import { loadConfig, } from "../../src/tools/jsonc.ts";
 import { join, } from "@std/path";
 
-describe("loadConfig - Prioridades de busca", () => {
-  it("deve carregar o arquivo explicitPath se fornecido", async () => {
+describe("loadConfig - Search Priorities", () => {
+  it("should load explicitPath file if provided", async () => {
     const tempFile = await Deno.makeTempFile({ suffix: ".json", },);
     await Deno.writeTextFile(tempFile, JSON.stringify({ explicit: true, },),);
 
@@ -16,14 +16,14 @@ describe("loadConfig - Prioridades de busca", () => {
     }
   });
 
-  it("deve cair para o baseDir se o scriptDir não possuir o arquivo", async () => {
+  it("should fallback to baseDir if scriptDir does not have the file", async () => {
     const tempDir = await Deno.makeTempDir();
     const configPath = join(tempDir, "test.jsonc",);
     await Deno.writeTextFile(configPath, JSON.stringify({ baseDir: true, },),);
 
     try {
-      // Como não podemos mudar facilmente o Deno.mainModule em runtime de teste,
-      // verificamos apenas se ele encontra no baseDir passado.
+      // Since we cannot easily change Deno.mainModule at test runtime,
+      // we only check if it finds it in the passed baseDir.
       const config = await loadConfig<{ baseDir: boolean }>(
         "test",
         undefined,
@@ -35,7 +35,7 @@ describe("loadConfig - Prioridades de busca", () => {
     }
   });
 
-  it("deve encontrar configuração dentro da subpasta scripts do baseDir", async () => {
+  it("should find configuration inside scripts subfolder of baseDir", async () => {
     const tempDir = await Deno.makeTempDir();
     const scriptsDir = join(tempDir, "scripts",);
     await Deno.mkdir(scriptsDir,);
@@ -53,7 +53,7 @@ describe("loadConfig - Prioridades de busca", () => {
       );
       assertEquals(config?.inScripts, true,);
 
-      // Também com explicitPath relativo ao baseDir ou scripts
+      // Also with explicitPath relative to baseDir or scripts
       const configExplicit = await loadConfig<{ inScripts: boolean }>(
         "test",
         "test.jsonc",
@@ -65,11 +65,11 @@ describe("loadConfig - Prioridades de busca", () => {
     }
   });
 
-  it("deve retornar null se nenhum arquivo for encontrado", async () => {
+  it("should return null if no file is found", async () => {
     const config = await loadConfig(
-      "inexistente",
+      "nonexistent",
       undefined,
-      "/tmp/pasta-fantasma",
+      "/tmp/ghost-folder",
     );
     assertEquals(config, null,);
   });

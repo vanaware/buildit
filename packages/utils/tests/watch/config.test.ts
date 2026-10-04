@@ -3,19 +3,19 @@
 import { assertRejects, } from "@std/assert";
 import { describe, it, } from "@std/testing/bdd";
 import { assert, assertEquals, } from "@std/assert";
-import { carregarConfigWatch, } from "../../src/watch/config.ts";
+import { loadWatchConfig, } from "../../src/watch/config.ts";
 
 describe("watch/config", () => {
-  it("lança erro caso o arquivo de config não exista", async () => {
+  it("throws error if config file does not exist", async () => {
     await assertRejects(
-      () => carregarConfigWatch("inexistente.jsonc",),
+      () => loadWatchConfig("non-existent.jsonc",),
       Error,
-      'Arquivo de configuração "watch.jsonc" não encontrado',
+      'Configuration file "watch.jsonc" not found',
     );
   });
 
-  it("carrega configurações a partir do watch.jsonc real do projeto", async () => {
-    const config = await carregarConfigWatch("watch.jsonc", ".",);
+  it("loads configurations from the real project watch.jsonc", async () => {
+    const config = await loadWatchConfig("watch.jsonc", ".",);
     const ui = config.targets["ui"];
     assert(ui !== undefined,);
     assertEquals(ui.format, "esm",);

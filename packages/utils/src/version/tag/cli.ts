@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/version/tag/cli
- * @description Ponto de entrada CLI para publicação de tags git via Cliffy.
+ * @description CLI entry point for git tag publication via Cliffy.
  */
 
 import { Command, } from "@cliffy/command";
@@ -8,46 +8,46 @@ import { APP_VERSION, } from "../../version.ts";
 import { tagVersionEngine, } from "./engine.ts";
 
 /**
- * Cria o comando CLI para bump e publicação de tags git.
+ * Creates the CLI command for git tag bump and publication.
  *
- * @returns Instância do comando Cliffy configurado
+ * @returns Configured Cliffy command instance
  */
 export function tagVersionCli(): Command<any> {
   return new Command()
     .name("tag-version",)
     .description(
-      "Cria e publica uma tag git baseada na versão do deno.json[c] (vMAJOR.MINOR)",
+      "Creates and publishes a git tag based on the deno.json[c] version (vMAJOR.MINOR)",
     )
     .version(APP_VERSION,)
-    .option("-m, --message <msg:string>", "Mensagem personalizada do commit",)
+    .option("-m, --message <msg:string>", "Custom commit message",)
     .option(
       "-s, --sanitize",
-      "Sanitiza o arquivo deno.json[c] em disco antes do commit",
+      "Sanitizes the deno.json[c] file on disk before committing",
       {
         default: false,
       },
     )
-    .option("-f, --file <file:string>", "Caminho específico do deno.json[c]",)
-    .option("-b, --base-dir <dir:string>", "Diretório base de busca", {
+    .option("-f, --file <file:string>", "Specific path to deno.json[c]",)
+    .option("-b, --base-dir <dir:string>", "Base directory for search", {
       default: ".",
     },)
     .option(
       "--dry-run",
-      "Simula as operações git sem efetuar commits ou pushes",
+      "Simulates git operations without performing commits or pushes",
       {
         default: false,
       },
     )
     .option(
       "-c, --changelog",
-      "Gera ou atualiza o arquivo CHANGELOG.md com as mudanças desde a última tag",
+      "Generates or updates the CHANGELOG.md file with changes since the last tag",
       {
         default: false,
       },
     )
     .option(
       "--update-readme",
-      "Atualiza a seção de últimas atualizações no README.md (requer --changelog)",
+      "Updates the latest updates section in README.md (requires --changelog)",
       {
         default: false,
       },

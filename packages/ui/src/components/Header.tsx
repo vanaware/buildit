@@ -3,11 +3,11 @@ import { APP_VERSION, } from "../version.ts";
 
 export const Header = () => {
   const tabs: { key: TabKey; label: string; icon: string }[] = [
-    { key: "overview", label: "Visão Geral", icon: "dashboard", },
-    { key: "tools", label: "Ferramentas", icon: "construction", },
+    { key: "overview", label: "Overview", icon: "dashboard", },
+    { key: "tools", label: "Tools", icon: "construction", },
     { key: "cli", label: "CLI & Scripts", icon: "terminal", },
-    { key: "configs", label: "Configurações", icon: "tune", },
-    { key: "api", label: "API Deno", icon: "code", },
+    { key: "configs", label: "Configurations", icon: "tune", },
+    { key: "api", label: "Deno API", icon: "code", },
   ];
 
   return (
@@ -43,7 +43,7 @@ export const Header = () => {
           <div
             class="small-text secondary-text wrap"
             style="overflow-wrap: anywhere; word-break: normal;">
-            Orquestrador de Compilação &amp; Exportador de Contexto IA
+            Build Orchestrator &amp; AI Context Exporter
           </div>
         </div>
 
@@ -52,15 +52,15 @@ export const Header = () => {
           class="circle transparent wave no-margin"
           onClick={toggleTheme}
           title={themeMode.value === "dark"
-            ? "Mudar para tema claro"
-            : "Mudar para tema escuro"}>
+            ? "Switch to light theme"
+            : "Switch to dark theme"}>
           <i>
             {themeMode.value === "dark" ? "light_mode" : "dark_mode"}
           </i>
         </button>
       </nav>
 
-      {/* Abas de navegação responsivas */}
+      {/* Responsive navigation tabs */}
       <nav
         class="tabs left-align responsive scroll"
         style="max-width: 100%; width: 100%; min-width: 0; box-sizing: border-box;">

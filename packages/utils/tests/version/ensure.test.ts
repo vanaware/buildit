@@ -6,7 +6,7 @@ import { join, } from "@std/path";
 import { ensureVersionFile, } from "../../src/tools/version.ts";
 
 describe("ensureVersionFile", () => {
-  it("deve criar arquivo .ts por padrão com template TypeScript", async () => {
+  it("should create .ts file by default with TypeScript template", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const filePath = join(tempDir, "version.ts",);
@@ -22,7 +22,7 @@ describe("ensureVersionFile", () => {
     }
   });
 
-  it("deve criar arquivo .js com template JavaScript", async () => {
+  it("should create .js file with JavaScript template", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const filePath = join(tempDir, "version.js",);
@@ -30,7 +30,7 @@ describe("ensureVersionFile", () => {
 
       assertEquals(created, true,);
       const content = await Deno.readTextFile(filePath,);
-      // Não deve ter tipos nem declare const
+      // Should not have types or declare const
       assertEquals(content.includes("declare const",), false,);
       assertEquals(content.includes(": string",), false,);
       assertStringIncludes(content, "@type {string}",);
@@ -43,7 +43,7 @@ describe("ensureVersionFile", () => {
     }
   });
 
-  it("deve criar version.ts ao receber um diretório", async () => {
+  it("should create version.ts when receiving a directory", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const created = await ensureVersionFile(tempDir,);
@@ -57,7 +57,7 @@ describe("ensureVersionFile", () => {
     }
   });
 
-  it("deve respeitar defineVersionString customizado", async () => {
+  it("should respect customized defineVersionString", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const filePath = join(tempDir, "version.js",);

@@ -1,51 +1,51 @@
 /**
  * @module @vanaware/buildit/export/cli
- * @description Ponto de entrada para execução do exportador de contexto via linha de comando (CLI).
+ * @description Entry point for executing the context exporter via command line (CLI).
  */
 import { readProjectVersion, } from "../tools/version.ts";
 import { exportEngine, } from "./engine.ts";
 import { APP_VERSION, } from "../version.ts";
 import { findDenoConfig, } from "../tools/paths.ts";
-import { carregarConfigExport, } from "./config.ts";
+import { loadExportConfig, } from "./config.ts";
 import { Command, } from "@cliffy/command";
 
 /**
- * Executa o CLI do exportador de contexto a partir dos argumentos da linha de comando.
+ * Executes the context exporter CLI from command line arguments.
  */
 export function exportCli(): Command<any> {
   return new Command()
     .name("export",)
     .description("BuildIt Context Exporter",)
     .version(APP_VERSION,)
-    .option("-c, --app-config [file:string]", "Arquivo de configuração", {
+    .option("-c, --app-config [file:string]", "Configuration file", {
       env: { prefix: "EXPORT_", },
     },)
-    .option("-b, --base-dir [dir:string]", "Diretório Base", {
+    .option("-b, --base-dir [dir:string]", "Base Directory", {
       default: "./",
       env: true,
     },)
-    .option("-d, --deno-config [file:string]", "Configuração do Deno", {
+    .option("-d, --deno-config [file:string]", "Deno Configuration", {
       default: findDenoConfig() ?? "deno.jsonc",
       env: true,
     },)
-    .arguments("[modos...:string]", ["Modos de exportação",],)
+    .arguments("[modes...:string]", ["Export modes",],)
     .action(async function (options, ...args): Promise<void> {
       const startTime = performance.now();
       const baseDir = (options.baseDir as string) || ".";
-      const configResult = await carregarConfigExport(
+      const configResult = await loadExportConfig(
         options.appConfig as string,
         baseDir,
       );
-      const modos = args.length > 0 ? (args as string[]) : undefined;
+      const modes = args.length > 0 ? (args as string[]) : undefined;
 
-      console.log("\n🚀 Iniciando Exportação de Contexto BuildIt",);
+      console.log("\n🚀 Starting BuildIt Context Export",);
       try {
         await exportEngine({
-          config: configResult.modos,
-          modos,
+          config: configResult.modes,
+          modes: modes,
           baseDir,
           defineVersionString: configResult.defineVersionString,
-          versaoApp: await readProjectVersion(
+          appVersion: await readProjectVersion(
             options.denoConfig as string,
             baseDir,
           ),
@@ -54,11 +54,11 @@ export function exportCli(): Command<any> {
 
         const elapsed = (performance.now() - startTime).toFixed(0,);
         console.log(`\n${"=".repeat(60,)}`,);
-        console.log(`🎉 EXPORTAÇÃO CONCLUÍDA COM SUCESSO!`,);
-        console.log(`⏱️ Tempo total: ${elapsed}ms`,);
+        console.log(`🎉 EXPORT COMPLETED SUCCESSFULLY!`,);
+        console.log(`⏱️ Total time: ${elapsed}ms`,);
         console.log(`${"=".repeat(60,)}\n`,);
       } catch (error) {
-        console.error("\n🛑 Pipeline de exportação falhou:", error,);
+        console.error("\n🛑 Export pipeline failed:", error,);
         Deno.exit(1,);
       }
     },);

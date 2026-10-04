@@ -1,10 +1,10 @@
-# Topologia de Execução: `watch` (Desenvolvimento Contínuo)
+# Execution Topology: `watch` (Continuous Development)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`watch`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`watch`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -16,67 +16,67 @@ watchCli() (packages/utils/src/watch/cli.ts)
        ├──► carregarConfigWatch(configPath, baseDir) (packages/utils/src/watch/config.ts)
        │       │
        │       └──► loadConfig<WatchConfigFile>("watch", configPath, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        │
        ▼
-watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
+watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
        │
-       ├──► [Resolução de Alvo Único: opcoes.target ou Primeiro 'default: true']
+       ├──► [Single Target Resolution: options.target or first 'default: true']
        │
        ├──► validateTargetConfig(targetName, targetConfig)
        │
        ├──► acquireWatchLock(baseDir, targetName, lockFile) (packages/utils/src/watch/lock.ts)
        │       │
        │       ├──► isProcessRunning(pid)
-       │       ├──► [Remoção de Lock Órfão / Rejeição se Processo Ativo]
-       │       ├──► Deno.writeTextFile(caminhoLock, JSON.stringify(LockInfo))
-       │       └──► [Registro de listeners para SIGINT, SIGTERM, unload]
+       │       ├──► [Orphan Lock Removal / Rejection if Process Active]
+       │       ├──► Deno.writeTextFile(lockPath, JSON.stringify(LockInfo))
+       │       └──► [Register listeners for SIGINT, SIGTERM, unload]
        │
-       ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [se configurado]
-       │       └──► [Itera targetConfig.clean.includes/excludes]
+       ├──► cleanTarget(targetConfig.distdir, targetConfig.clean) [if configured]
+       │       └──► [Iterate targetConfig.clean.includes/excludes]
        │
        ├──► copyStaticFiles(targetConfig, version, baseDir, distDir)
        │       └──► [Loop targetConfig.copyFiles: { includes, excludes, basedir }]
        │
        ├──► buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)
        │       │
-       │       ├──► listAssetsForCache(targetConfig.distdir) [se defineAssetsString configurado]
+       │       ├──► listAssetsForCache(targetConfig.distdir) [if defineAssetsString configured]
        │       ├──► resolveEntryPoints(config.srcdir, config.entryPoints)
        │       └──► resolveOutputPaths(config)
        │
        ├──► denoPlugin({ configPath: denoJsoncPath })
        │
-       ├──► esbuild.context(esbuildOptions) [Criação do Contexto Persistente]
+       ├──► esbuild.context(esbuildOptions) [Persistent Context Creation]
        │
-       ├──► ctx.watch() [Início do Monitoramento em Tempo Real]
+       ├──► ctx.watch() [Real-time Monitoring Start]
        │
-       └──► Retorna [WatchHandle] com { target, close: async () => { ctx.dispose(); releaseLock(); } }
+       └──► Returns [WatchHandle] with { target, close: async () => { ctx.dispose(); releaseLock(); } }
 ```
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI e Validação do Argumento
-* **Função**: `watchCli()`
-* **Arquivo**: `packages/utils/src/watch/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[target:string]`).
-* **Ações**:
-  1. Configuração do comando Cliffy com `.arguments("[target:string]")`. O próprio Cliffy rejeita a passagem de múltiplos argumentos posicionais com erro nativo (`Too many arguments: ...`).
-  2. `findDenoConfig()`: Localiza o arquivo de configuração do Deno.
-  3. `carregarConfigWatch(configPath, baseDir)`: Lê `watch.jsonc` ou devolve `CONFIGURACOES_PADRAO_WATCH`.
-  4. Repassa `target: target || undefined` para `watchEngine(opcoes)`.
-  5. Configura `Deno.addSignalListener("SIGINT" | "SIGTERM")` para encerramento gracioso via `handle.close()`.
-  6. Mantém o processo ativo em espera contínua (`await new Promise(() => {})`).
+### Step 1: CLI Initialization and Argument Validation
+* **Function**: `watchCli()`
+* **File**: `packages/utils/src/watch/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[target:string]`).
+* **Actions**:
+  1. Configures Cliffy command with `.arguments("[target:string]")`. Cliffy rejects multiple positional arguments with a native error (`Too many arguments: ...`).
+  2. `findDenoConfig()`: Locates Deno configuration file.
+  3. `carregarConfigWatch(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
+  4. Passes `target: target || undefined` to `watchEngine(options)`.
+  5. Configures `Deno.addSignalListener("SIGINT" | "SIGTERM")` for graceful shutdown via `handle.close()`.
+  6. Keeps process active in continuous wait (`await new Promise(() => {})`).
 
-### Passo 2: Resolução de Alvo e Controle de Concorrência
-* **Função**: `watchEngine(opcoes: WatchOptions)`
-* **Arquivo**: `packages/utils/src/watch/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Target Resolution and Concurrency Control
+* **Function**: `watchEngine(options: WatchOptions)`
+* **File**: `packages/utils/src/watch/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: WatchGlobalConfig;
     target?: string;
     baseDir?: string;
@@ -85,54 +85,54 @@ watchEngine(opcoes: WatchOptions) (packages/utils/src/watch/engine.ts)
     silencioso?: boolean;
   }
   ```
-* **Ações e Subfunções**:
-  1. `readProjectVersion(denoJsoncPath, baseDir)`: Lê a versão sem modificá-la nem incrementá-la (comportamento estrito do watch).
-  2. **Resolução de Alvo**:
-     - Se `opcoes.target` foi informado, busca o nome correspondente (case-insensitive). Se não existir, lança erro `Alvo '<target>' não encontrado...`.
-     - Se nenhum alvo for informado, seleciona **apenas o primeiro** alvo com `default !== false`.
-  3. `validateTargetConfig(targetName, targetConfig)`: Valida a integridade da configuração.
+* **Actions and Sub-functions**:
+  1. `readProjectVersion(denoJsoncPath, baseDir)`: Reads version without modifying or incrementing it (strict watch behavior).
+  2. **Target Resolution**:
+     - If `options.target` was provided, looks for corresponding name (case-insensitive). If not found, throws `Target '<target>' not found...`.
+     - If no target provided, selects **only the first** target with `default !== false`.
+  3. `validateTargetConfig(targetName, targetConfig)`: Validates configuration integrity.
   4. `acquireWatchLock(baseDir, targetName, lockFile)` (`packages/utils/src/watch/lock.ts`):
-     - Verifica a existência do arquivo de lock (`.buildit-watch.lock`).
-     - Se existir, extrai o PID do lock anterior e chama `isProcessRunning(pid)`.
-     - Se o processo anterior estiver ativo, lança erro `Já existe uma instância do watch em execução...` bloqueando concorrência.
-     - Se o processo anterior estiver morto (lock órfão), descarta o arquivo e prossegue.
-     - Grava o novo lock com PID atual, timestamp, alvo e caminho.
-     - Retorna a função de limpeza `releaseLock()`.
+     - Checks for lock file existence (`.buildit-watch.lock`).
+     - If exists, extracts PID and calls `isProcessRunning(pid)`.
+     - If active, throws `A watch instance is already running...` blocking concurrency.
+     - If dead (orphan lock), discards file and proceeds.
+     - Writes new lock with current PID, timestamp, target, and path.
+     - Returns `releaseLock()` cleanup function.
 
-### Passo 3: Inicialização do Motor esbuild Context
-* **Função**: `buildWatchEsbuildOptions` & `esbuild.context`
-* **Arquivo**: `packages/utils/src/watch/engine.ts`
-* **Ações e Subfunções**:
-  1. `cleanTarget(distdir, clean)`: Limpa a pasta de saída baseada em `includes`/`excludes`.
-  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copia arquivos baseados em `copyFiles` (suporte a globs).
+### Step 3: esbuild Context Initialization
+* **Function**: `buildWatchEsbuildOptions` & `esbuild.context`
+* **File**: `packages/utils/src/watch/engine.ts`
+* **Actions and Sub-functions**:
+  1. `cleanTarget(distdir, clean)`: Cleans output folder based on `includes`/`excludes`.
+  2. `copyStaticFiles(targetConfig, version, baseDir, distDir)`: Copies files based on `copyFiles` (glob support).
   3. `buildWatchEsbuildOptions(targetName, targetConfig, version, listAssetsForCache)`:
-     - Define `__APP_VERSION__`.
-     - Coleta assets para cache se `defineAssetsString` estiver configurado (incluindo arquivos estáticos copiados no passo anterior).
-     - Resolve entry points e saídas com sourcemap `inline` padrão.
-     - Mapeia opções avançadas (`globalName`, `tsconfig`, `analyze`, `mangleProps`, `jsxFactory`, etc.).
-  4. Injeta `denoPlugin({ configPath: denoJsoncPath })`.
-  5. `esbuild.context(esbuildOptions)`: Instancia o contexto incremental do esbuild.
-  6. `ctx.watch()`: Dispara os observadores do sistema de arquivos e compilação contínua em segundo plano.
-  7. Retorna o handle com o método `close()` que fecha o contexto (`ctx.dispose()`) e libera o arquivo de lock (`releaseLock()`).
+     - Defines `__APP_VERSION__`.
+     - Collects assets for cache if `defineAssetsString` is configured.
+     - Resolves entry points and outputs with default `inline` sourcemap.
+     - Maps advanced options.
+  4. Injects `denoPlugin({ configPath: denoJsoncPath })`.
+  5. `esbuild.context(esbuildOptions)`: Instantiates incremental esbuild context.
+  6. `ctx.watch()`: Starts file system observers and background continuous compilation.
+  7. Returns handle with `close()` method that closes context (`ctx.dispose()`) and releases lock file (`releaseLock()`).
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `watchCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI, captura de sinais, loop de vida |
-| `carregarConfigWatch()` | `watchCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | Leitura de `watch.jsonc` no disco |
-| `watchEngine()` | `watchCli` / API | `opcoes: WatchOptions` | `Promise<WatchHandle[]>` | Criação do Lock, inicialização de watcher incremental |
-| `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Criação de arquivo `.buildit-watch.lock`, registro de listeners |
-| `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | Verificação de PID via sinal 0 no SO |
-| `buildWatchEsbuildOptions()` | `watchEngine` | `targetName`, `config`, `version`, `listAssetsFn?` | `Promise<esbuild.BuildOptions>` | Mapeamento de entrypoints, sourcemap inline e defines |
-| `handle.close()` | `watchCli` / Testes | Nenhuma | `Promise<void>` | `ctx.dispose()` e `releaseLock()` |
+| `watchCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing, signal capture, life loop |
+| `carregarConfigWatch()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
+| `watchEngine()` | `watchCli` / API | `options: WatchOptions` | `Promise<WatchHandle[]>` | Lock creation, incremental watcher initialization |
+| `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Lock file creation, listener registration |
+| `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | PID check via signal 0 |
+| `buildWatchEsbuildOptions()` | `watchEngine` | `targetName`, `config`, `version`, `listAssetsFn?` | `Promise<esbuild.BuildOptions>` | Entrypoint mapping, inline sourcemap, and defines |
+| `handle.close()` | `watchCli` / Tests | None | `Promise<void>` | `ctx.dispose()` and `releaseLock()` |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Recarregamento de Static Files (Hot Copy)**: Atualmente `copyStaticFiles` é executado na inicialização. Um watcher complementar para a pasta `publicdir` permitiria recopiar automaticamente imagens ou assets modificados durante a sessão de desenvolvimento.
-2. **Notificação de Rebuild / Callback Hook**: Adicionar suporte a callbacks de hook (ex: `onRebuild(result)`) nas opções do `watchEngine` para integração com servidores de desenvolvimento que queiram emitir SSE ou WebSocket de recarga para o navegador.
-3. **Suporte a Multi-Target Paralelo com Isolamento de Lock**: Caso no futuro seja desejado monitorar múltiplos alvos simultâneos (ex: `ui` e `server` em paralelo), o mecanismo de lock pode evoluir para locks nomeados por alvo (`.buildit-watch-<target>.lock`).
+1. **Static Files Reload (Hot Copy)**: Currently `copyStaticFiles` runs at initialization. A complementary watcher for the `publicdir` folder would allow auto-copying modified images or assets during dev session.
+2. **Rebuild Notification / Callback Hook**: Add support for hook callbacks (e.g., `onRebuild(result)`) in `watchEngine` options for integration with dev servers emitting SSE/WebSocket reloads.
+3. **Parallel Multi-Target with Lock Isolation**: If monitoring multiple simultaneous targets is desired (e.g., `ui` and `server`), the lock mechanism can evolve to per-target named locks (`.buildit-watch-<target>.lock`).

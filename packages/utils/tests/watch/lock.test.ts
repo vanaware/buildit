@@ -4,24 +4,24 @@ import { acquireWatchLock, isProcessRunning, } from "../../src/watch/lock.ts";
 
 import type { WatchLockData, } from "../../src/tools/interfaces.ts";
 describe("Watch Lock Mechanism", () => {
-  it("isProcessRunning deve identificar o processo atual como ativo", () => {
+  it("isProcessRunning should identify current process as active", () => {
     assertEquals(isProcessRunning(Deno.pid,), true,);
   });
 
-  it("isProcessRunning deve retornar false para PIDs inválidos ou inativos", () => {
+  it("isProcessRunning should return false for invalid or inactive PIDs", () => {
     assertEquals(isProcessRunning(-1,), false,);
     assertEquals(isProcessRunning(0,), false,);
-    // PID 9999999 improvável de existir
+    // PID 9999999 is unlikely to exist
     assertEquals(isProcessRunning(9999999,), false,);
   });
 
-  it("acquireWatchLock deve adquirir o lock e liberá-lo corretamente", async () => {
+  it("acquireWatchLock should acquire lock and release it correctly", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const lockPath = `${tempDir}/.buildit-watch.lock`;
       const release = await acquireWatchLock(tempDir, "ui", lockPath,);
 
-      // Lock deve existir no disco
+      // Lock should exist on disk
       const stat = await Deno.stat(lockPath,);
       assertEquals(stat.isFile, true,);
 
@@ -31,10 +31,10 @@ describe("Watch Lock Mechanism", () => {
       assertEquals(content.pid, Deno.pid,);
       assertEquals(content.target, "ui",);
 
-      // Libera o lock
+      // Release lock
       await release();
 
-      // Lock deve ter sido removido
+      // Lock should have been removed
       let exists = true;
       try {
         await Deno.stat(lockPath,);
@@ -47,7 +47,7 @@ describe("Watch Lock Mechanism", () => {
     }
   });
 
-  it("acquireWatchLock deve lançar erro se já houver lock ativo para processo em execução", async () => {
+  it("acquireWatchLock should throw error if active lock exists for running process", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const lockPath = `${tempDir}/.buildit-watch.lock`;
@@ -59,7 +59,7 @@ describe("Watch Lock Mechanism", () => {
             await acquireWatchLock(tempDir, "sw", lockPath,);
           },
           Error,
-          "Já existe uma instância do watch em execução",
+          "A watch instance is already running",
         );
       } finally {
         await release();
@@ -69,26 +69,26 @@ describe("Watch Lock Mechanism", () => {
     }
   });
 
-  it("acquireWatchLock deve descartar lock órfão de processo morto e prosseguir", async () => {
+  it("acquireWatchLock should discard orphan lock of dead process and proceed", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const lockPath = `${tempDir}/.buildit-watch.lock`;
       const orphanLock: WatchLockData = {
-        pid: 9999999, // PID inativo
-        target: "antigo",
+        pid: 9999999, // Inactive PID
+        target: "old",
         startedAt: "2026-01-01T00:00:00.000Z",
         baseDir: tempDir,
       };
       await Deno.writeTextFile(lockPath, JSON.stringify(orphanLock,),);
 
-      // Deve substituir o lock órfão com sucesso
-      const release = await acquireWatchLock(tempDir, "novo", lockPath,);
+      // Should replace orphan lock successfully
+      const release = await acquireWatchLock(tempDir, "new", lockPath,);
 
       const content = JSON.parse(
         await Deno.readTextFile(lockPath,),
       ) as WatchLockData;
       assertEquals(content.pid, Deno.pid,);
-      assertEquals(content.target, "novo",);
+      assertEquals(content.target, "new",);
 
       await release();
     } finally {

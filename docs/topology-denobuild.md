@@ -1,10 +1,10 @@
-# Topologia de Execução: `denobuild` (Orquestrador Deno.bundle)
+# Execution Topology: `denobuild` (Deno.bundle Orchestrator)
 
-Este documento descreve a topologia completa de execução de funções do utilitário **`denobuild`**, detalhando a árvore de chamadas, os parâmetros repassados entre cada camada, efeitos colaterais e pontos de extensão.
+This document describes the complete execution topology of the **`denobuild`** utility, detailing the call tree, parameters passed between each layer, side effects, and extension points.
 
 ---
 
-## 1. Diagrama de Chamadas (Call Graph)
+## 1. Call Graph
 
 ```
 [CLI / Terminal]
@@ -13,41 +13,41 @@ Este documento descreve a topologia completa de execução de funções do utili
 denoBuildCli() (packages/utils/src/denobuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigDenoBuild(caminhoConfig, baseDir)
+       ├──► carregarConfigDenoBuild(configPath, baseDir)
        │       │
-       │       └──► loadConfig<DenoBundleConfigFile>("denobuild", caminhoConfig, baseDir)
-       │               └──► readJsoncFile(caminhoCompleto) / parseJsonc
+       │       └──► loadConfig<DenoBundleConfigFile>("denobuild", configPath, baseDir)
+       │               └──► readJsoncFile(fullPath) / parseJsonc
        ├──► parseArgs(args, configs)
        │
        ▼
-denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
+denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
        │
        ├──► updateProjectVersion({ denoJsonPath, baseDir, noversion, versionPaths, forcepackagesversion })
        │       │
        │       ├──► readProjectVersion(denoJsonPath, baseDir)
        │       └──► syncVersion(...) / formatVersion(...)
        │
-       └──► [Loop para cada Target Selecionado]
+       └──► [Loop for each Selected Target]
                │
                ▼
        processBundleTarget(targetName, config, appVersion, listAssetsFn)
                │
                ├──► validateTargetConfig(targetName, config)
                │
-               ├──► cleanTarget(config.distdir, config.clean) [se configurado]
-               │       └──► [Itera config.clean.includes/excludes]
+               ├──► cleanTarget(config.distdir, config.clean) [if configured]
+               │       └──► [Iterate config.clean.includes/excludes]
                │
                ├──► copyStaticFiles(config, appVersion, baseDir, distDir)
                │       └──► [Loop config.copyFiles: { includes, excludes, basedir }]
                │
-               ├──► listAssetsForCache(config.distdir) [se defineAssetsString configurado]
+               ├──► listAssetsForCache(config.distdir) [if defineAssetsString configured]
                │
                ├──► buildBundleOptions(config) (packages/utils/src/denobuild/bundle.ts)
                │       └──► resolveEntryPoints(config.srcdir, config.entryPoints)
                │
-               ├──► Deno.bundle(bundleOptions) [API Nativa do Deno]
+               ├──► Deno.bundle(bundleOptions) [Native Deno API]
                │
-               └──► [Loop para cada arquivo em result.outputFiles]
+               └──► [Loop for each file in result.outputFiles]
                        │
                        ├──► ensureDirForFile(outputFile.path)
                        ├──► applyDefines(content, defines) (packages/utils/src/denobuild/bundle.ts)
@@ -56,24 +56,24 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 
 ---
 
-## 2. Mapeamento Passo a Passo de Execução
+## 2. Step-by-Step Execution Mapping
 
-### Passo 1: Inicialização do CLI
-* **Função**: `denoBuildCli()`
-* **Arquivo**: `packages/utils/src/denobuild/cli.ts`
-* **Entrada**: Argumentos CLI via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
-* **Ações**:
-  1. Localiza configuração do Deno via `findDenoConfig()`.
-  2. Executa `carregarConfigDenoBuild(caminhoConfig, baseDir)` para ler `denobuild.jsonc`.
-  3. Filtra argumentos com `parseArgs(args, configs)`.
-  4. Chama `denoBuild(opcoes)`.
+### Step 1: CLI Initialization
+* **Function**: `denoBuildCli()`
+* **File**: `packages/utils/src/denobuild/cli.ts`
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
+* **Actions**:
+  1. Locates Deno configuration via `findDenoConfig()`.
+  2. Executes `carregarConfigDenoBuild(configPath, baseDir)` to read `denobuild.jsonc`.
+  3. Filters arguments with `parseArgs(args, configs)`.
+  4. Calls `denoBuild(options)`.
 
-### Passo 2: Orquestração Principal do Engine
-* **Função**: `denoBuild(opcoes: DenoBuildOptions)`
-* **Arquivo**: `packages/utils/src/denobuild/engine.ts`
-* **Parâmetros de Entrada**:
+### Step 2: Main Engine Orchestration
+* **Function**: `denoBuild(options: DenoBuildOptions)`
+* **File**: `packages/utils/src/denobuild/engine.ts`
+* **Input Parameters**:
   ```typescript
-  opcoes: {
+  options: {
     config: DenoBundleGlobalConfig;
     targets?: string[];
     baseDir?: string;
@@ -83,56 +83,56 @@ denoBuild(opcoes: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
     forcepackagesversion?: boolean;
   }
   ```
-* **Ações**:
-  1. `updateProjectVersion(...)`: Atualiza ou mantém versão semântica e sincroniza pacotes.
-  2. Filtra a lista de alvos a serem compilados preservando a ordem declarada na configuração.
-  3. Itera sobre cada alvo executando `processBundleTarget(...)`.
-  4. Agrega e retorna a lista de `DenoBuildResult[]`.
+* **Actions**:
+  1. `updateProjectVersion(...)`: Updates or maintains semantic version and synchronizes packages.
+  2. Filters the list of targets to be compiled, preserving the order declared in the configuration.
+  3. Iterates over each target executing `processBundleTarget(...)`.
+  4. Aggregates and returns the list of `DenoBuildResult[]`.
 
-### Passo 3: Processamento e Pós-processamento do Alvo
-* **Função**: `processBundleTarget(targetName, config, appVersion, listAssetsFn)`
-* **Arquivo**: `packages/utils/src/denobuild/engine.ts`
-* **Parâmetros de Entrada**:
-  - `targetName: string`: Nome do alvo (ex: `"ui"`, `"sw"`)
-  - `config: DenoBundleTargetConfig`: Configuração específica do alvo
-  - `appVersion: string`: Versão semântica injetada
-  - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utilitário para coletar assets do cache
-* **Ações e Subfunções**:
-  1. `validateTargetConfig(targetName, config)`: Validação estrutural prévia.
-  2. `cleanTarget(distdir, clean)`: Limpeza de diretórios de saída baseada em `includes`/`excludes` antes do build.
-  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Cópia recursiva via `copyFiles` com suporte a globs e injeção de versão no `manifest.json`.
-  4. Preparação de constantes `defines` em memória:
+### Step 3: Target Processing and Post-processing
+* **Function**: `processBundleTarget(targetName, config, appVersion, listAssetsFn)`
+* **File**: `packages/utils/src/denobuild/engine.ts`
+* **Input Parameters**:
+  - `targetName: string`: Target name (e.g., `"ui"`, `"sw"`)
+  - `config: DenoBundleTargetConfig`: Specific target configuration
+  - `appVersion: string`: Injected semantic version
+  - `listAssetsFn?: (distDir: string) => Promise<string[]>`: Utility to collect cache assets
+* **Actions and Sub-functions**:
+  1. `validateTargetConfig(targetName, config)`: Structural validation.
+  2. `cleanTarget(distdir, clean)`: Cleanup of output directories based on `includes`/`excludes` before the build.
+  3. `copyStaticFiles(config, appVersion, baseDir, distDir)`: Recursive copy via `copyFiles` with glob support and version injection in `manifest.json`.
+  4. Memory preparation of `defines` constants:
      - `__APP_VERSION__ = JSON.stringify("v" + appVersion)`
-     - `defineAssetsString = JSON.stringify(assets)` (se configurado). Esta injeção permite que o Service Worker gerado tenha conhecimento dinâmico de todos os assets no `distdir` (incluindo arquivos estáticos copiados no passo anterior) para estratégias de caching offline.
+     - `defineAssetsString = JSON.stringify(assets)` (if configured). This injection allows the generated Service Worker to have dynamic knowledge of all assets in `distdir` (including static files copied in the previous step) for offline caching strategies.
   5. `buildBundleOptions(config)` (`packages/utils/src/denobuild/bundle.ts`):
-     - Monta o objeto de opções esperado pela API instável `Deno.bundle`.
-     - Mapeia entry points, target de plataforma (`browser`/`deno`), formato (`esm`/`cjs`/`iife`), sourcemap e minify.
+     - Builds the options object expected by the unstable `Deno.bundle` API.
+     - Maps entry points, platform target (`browser`/`deno`), format (`esm`/`cjs`/`iife`), sourcemap, and minify.
   6. `Deno.bundle(bundleOptions)`:
-     - Invoca o compilador nativo do Deno para gerar os arquivos empacotados em memória (`result.outputFiles`).
-     - Em caso de erros, exibe o traceback com linha/coluna e lança exceção.
-  7. Gravação e Injeção de Defines em Disco:
-     - Itera sobre cada `outputFile` gerado pelo bundle.
-     - `ensureDirForFile(outputFile.path)`: Cria pastas pai no disco.
-     - `applyDefines(content, defines)` (`packages/utils/src/denobuild/bundle.ts`): Realiza a substituição global via Regex das chaves literais (ex: `__APP_VERSION__`) pelo valor JSON.
-     - `Deno.writeTextFile(outputFile.path, content)`: Grava o arquivo final em disco.
+     - Invokes the native Deno compiler to generate bundled files in memory (`result.outputFiles`).
+     - In case of errors, displays traceback with line/column and throws an exception.
+  7. Disk Recording and Define Injection:
+     - Iterates over each `outputFile` generated by the bundle.
+     - `ensureDirForFile(outputFile.path)`: Creates parent folders on disk.
+     - `applyDefines(content, defines)` (`packages/utils/src/denobuild/bundle.ts`): Performs global regex substitution of literal keys (e.g., `__APP_VERSION__`) with JSON values.
+     - `Deno.writeTextFile(outputFile.path, content)`: Writes the final file to disk.
 
 ---
 
-## 3. Tabela Resumo de Parâmetros e Retornos
+## 3. Parameters and Returns Summary Table
 
-| Função | Chamador | Entrada / Parâmetros | Retorno | Efeito Colateral |
+| Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
-| `denoBuildCli()` | Runtime Deno CLI | `Deno.args` | `Command` instance | Processamento CLI e saída console |
-| `carregarConfigDenoBuild()` | `denoBuildCli` | `caminhoConfig?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | Leitura do sistema de arquivos (`denobuild.jsonc`) |
-| `denoBuild()` | `denoBuildCli` / API | `opcoes: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Atualização de versões e compilação de bundles |
-| `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Limpeza de dist, cópia estática, bundle, escrita no disco |
-| `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Resolução de caminhos e mapeamento de propriedades |
-| `applyDefines()` | `processBundleTarget` | `content: string`, `defines: Record<string, string>` | `string` | Substituição em memória de identificadores literais |
+| `denoBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
+| `carregarConfigDenoBuild()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
+| `denoBuild()` | `denoBuildCli` / API | `options: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Version updates and bundle compilation |
+| `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Cleanup, static copy, bundle, disk writing |
+| `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Path resolution and property mapping |
+| `applyDefines()` | `processBundleTarget` | `content: string`, `defines: Record<string, string>` | `string` | Memory substitution of literal identifiers |
 
 ---
 
-## 4. Oportunidades de Melhoria e Refatoração
+## 4. Opportunities for Improvement and Refactoring
 
-1. **Substituição de Defines por AST vs Regex**: O `applyDefines` opera via expressão regular textual. Para evitar falsos positivos dentro de strings literais ou comentários de código, pode-se avaliar substituição contextual ou tokenizada.
-2. **Dependência de API Unstable**: `Deno.bundle` é uma feature instável do Deno. A estrutura modular do engine isola essa dependência em `packages/utils/src/denobuild/bundle.ts`, facilitando futura migração ou compatibilização com versões Deno 2.x.
-3. **Reutilização de Utilitários de Ordenação**: Padronizar `resolverOrdemTargets` (utilizado no `esbuild`) também no `denoBuild` para manter exatamente o mesmo comportamento determinístico de alvos.
+1. **Defines Substitution via AST vs Regex**: `applyDefines` operates via textual regular expression. To avoid false positives within literal strings or code comments, contextual or tokenized substitution can be evaluated.
+2. **Unstable API Dependency**: `Deno.bundle` is an unstable Deno feature. The engine's modular structure isolates this dependency in `packages/utils/src/denobuild/bundle.ts`, facilitating future migration or compatibility with Deno 2.x versions.
+3. **Target Ordering Utility Reuse**: Standardize `resolverOrdemTargets` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.

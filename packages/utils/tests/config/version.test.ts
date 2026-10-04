@@ -12,18 +12,18 @@ import {
 } from "../../src/tools/version.ts";
 
 describe("version utils", () => {
-  describe("parseVersion e formatVersion", () => {
-    it("deve parsear versões semânticas válidas", () => {
+  describe("parseVersion and formatVersion", () => {
+    it("should parse valid semantic versions", () => {
       const parsed = parseVersion("1.2.3#abc",);
       assertEquals(parsed, { major: 1, minor: 2, patch: 3, },);
     });
 
-    it("deve formatar componentes em formato semântico", () => {
+    it("should format components into semantic format", () => {
       const formatted = formatVersion(1, 2, 4, "hash123",);
       assertEquals(formatted, "1.2.4#hash123",);
     });
 
-    it("deve rejeitar versões inválidas", () => {
+    it("should reject invalid versions", () => {
       assertThrows(() => {
         parseVersion("invalid",);
       },);
@@ -31,7 +31,7 @@ describe("version utils", () => {
   });
 
   describe("readProjectVersion", () => {
-    it("deve ler a versão do deno.jsonc raiz", async () => {
+    it("should read version from root deno.jsonc", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -46,8 +46,8 @@ describe("version utils", () => {
     });
   });
 
-  describe("ensureVersionFile e ensureVersionFiles", () => {
-    it("deve criar o arquivo com template __APP_VERSION__ se não existir", async () => {
+  describe("ensureVersionFile and ensureVersionFiles", () => {
+    it("should create file with __APP_VERSION__ template if not existing", async () => {
       const tempDir = await Deno.makeTempDir();
       const targetPath = join(tempDir, "pkg", "version.ts",);
 
@@ -60,7 +60,7 @@ describe("version utils", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("NÃO deve sobrescrever o arquivo se já existir", async () => {
+    it("should NOT overwrite file if it already exists", async () => {
       const tempDir = await Deno.makeTempDir();
       const targetPath = join(tempDir, "version.ts",);
 
@@ -76,8 +76,8 @@ describe("version utils", () => {
     });
   });
 
-  describe("updateProjectVersion e versionPaths", () => {
-    it("deve respeitar a opção noversion e garantir versionPaths", async () => {
+  describe("updateProjectVersion and versionPaths", () => {
+    it("should respect noversion option and ensure versionPaths", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -98,7 +98,7 @@ describe("version utils", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("deve incrementar a versão e criar múltiplos versionPaths se não existirem", async () => {
+    it("should increment version and create multiple versionPaths if not existing", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -107,7 +107,7 @@ describe("version utils", () => {
       );
 
       const path1 = join(tempDir, "pkg1", "version.ts",);
-      const path2 = join(tempDir, "pkg2",); // diretório
+      const path2 = join(tempDir, "pkg2",); // directory
 
       const ver = await updateProjectVersion({
         denoJsonPath: denoJsonc,
@@ -127,7 +127,7 @@ describe("version utils", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("deve propagar a versão nos workspaces quando forcepackagesversion for true", async () => {
+    it("should propagate version to workspaces when forcepackagesversion is true", async () => {
       const tempDir = await Deno.makeTempDir();
       const rootJson = join(tempDir, "deno.jsonc",);
       const subpkgDir = join(tempDir, "packages", "sub",);
@@ -163,7 +163,7 @@ describe("version utils", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("deve respeitar defineVersionString customizado ao criar version.ts", async () => {
+    it("should respect customized defineVersionString when creating version.ts", async () => {
       const tempDir = await Deno.makeTempDir();
       const targetPath = join(tempDir, "version.ts",);
 
@@ -178,7 +178,7 @@ describe("version utils", () => {
   });
 
   describe("incrementProjectVersion", () => {
-    it("deve ler do arquivo deno.jsonc, incrementar patch + 1 e salvar", async () => {
+    it("should read from deno.jsonc file, increment patch + 1 and save", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJsonc = join(tempDir, "deno.jsonc",);
       await Deno.writeTextFile(
@@ -199,7 +199,7 @@ describe("version utils", () => {
       await Deno.remove(tempDir, { recursive: true, },);
     });
 
-    it("deve respeitar currentVersion explicitamente fornecida e atualizar deno.json", async () => {
+    it("should respect explicitly provided currentVersion and update deno.json", async () => {
       const tempDir = await Deno.makeTempDir();
       const denoJson = join(tempDir, "deno.json",);
       await Deno.writeTextFile(

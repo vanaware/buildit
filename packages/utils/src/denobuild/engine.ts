@@ -1,8 +1,7 @@
 /**
  * @module @vanaware/buildit/denobuild/engine
- * @description Mecanismo central de compilação, injeção de defines e processamento de alvos com Deno.bundle.
+ * @description Core compilation mechanism, define injection, and target processing with Deno.bundle.
  */
-
 
 import { join, } from "@std/path";
 import { updateProjectVersion, } from "../tools/version.ts";
@@ -16,7 +15,7 @@ import {
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
-import { resolverOrdemTargets, } from "../tools/targets.ts";
+import { resolveTargetOrder, } from "../tools/targets.ts";
 
 import { buildBundleOptions, } from "./bundle.ts";
 import type {
@@ -27,21 +26,21 @@ import type {
 } from "../tools/interfaces.ts";
 
 /**
- * Processa a compilação de um alvo específico utilizando o motor Deno.bundle.
+ * Processes the compilation of a specific target using the Deno.bundle engine.
  *
- * Etapas executadas:
- * 1. Validação de consistência da configuração
- * 2. Limpeza prévia de diretórios de saída (clean)
- * 3. Cópia de arquivos estáticos e templates HTML
- * 4. Preparação de definições em tempo de compilação (defines)
- * 5. Invocação da API nativa `Deno.bundle`
- * 6. Injeção de variáveis em memória e gravação no disco
+ * Executed steps:
+ * 1. Configuration consistency validation
+ * 2. Pre-cleanup of output directories (clean)
+ * 3. Copying of static files and HTML templates
+ * 4. Preparation of compile-time definitions (defines)
+ * 5. Invocation of the native `Deno.bundle` API
+ * 6. Memory variable injection and disk writing
  *
- * @param targetName Nome identificador do alvo (ex: "ui")
- * @param config Objeto de configuração do alvo
- * @param appVersion Versão semântica atual da aplicação
- * @param listAssetsFn Função opcional para listar assets gerados para cache do Service Worker
- * @returns Resultado detalhado da compilação do alvo
+ * @param targetName Target identifier name (e.g., "ui")
+ * @param config Target configuration object
+ * @param appVersion Current application semantic version
+ * @param listAssetsFn Optional function to list generated assets for Service Worker cache
+ * @returns Detailed target compilation result
  *
  * @example
  * ```typescript
@@ -65,21 +64,21 @@ export async function processBundleTarget(
   validateTargetConfig(targetName, resolvedConfig,);
 
   console.log(`\n${"=".repeat(60,)}`,);
-  console.log(`🎯 PROCESSANDO ALVO: ${targetName.toUpperCase()}`,);
+  console.log(`🎯 PROCESSING TARGET: ${targetName.toUpperCase()}`,);
   console.log(`${"=".repeat(60,)}`,);
 
-  // 1. Limpar diretório de saída
+  // 1. Clean output directory
   if (resolvedConfig.clean) {
     if (resolvedConfig.distdir) {
       await cleanTarget(resolvedConfig.distdir, resolvedConfig.clean,);
     } else {
       console.warn(
-        `⚠️ 'clean' configurado mas 'distdir' ausente. Pulando limpeza.`,
+        `⚠️ 'clean' configured but 'distdir' missing. Skipping cleanup.`,
       );
     }
   }
 
-  // 2. Copiar arquivos estáticos
+  // 2. Copy static files
   await copyStaticFiles(
     resolvedConfig,
     appVersion,
@@ -87,7 +86,7 @@ export async function processBundleTarget(
     resolvedConfig.distdir,
   );
 
-  // 3. Preparar defines
+  // 3. Prepare defines
   // deno-lint-ignore no-explicit-any
   const defineVersionKey = defineVersionString || (resolvedConfig as any).defineVersionString || "__APP_VERSION__";
   const defines: Record<string, string> = {
@@ -103,18 +102,18 @@ export async function processBundleTarget(
   ) {
     const assets = await listAssetsFn(resolvedConfig.distdir,);
     defines[resolvedConfig.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listados para define '${resolvedConfig.defineAssetsString}'`,);
+    console.log(`📋 ${assets.length} assets listed for define '${resolvedConfig.defineAssetsString}'`,);
   }
 
-  // 4. Executar bundle
-  console.log(`🔨 Compilando com Deno.bundle...`,);
+  // 4. Run bundle
+  console.log(`🔨 Compiling with Deno.bundle...`,);
   const startTime = performance.now();
   const bundleOptions = buildBundleOptions(resolvedConfig,);
   const result = await Deno.bundle(bundleOptions,);
 
-  // 5. Verificar erros
+  // 5. Check for errors
   if (!result.success) {
-    console.error("❌ Erros de compilação:",);
+    console.error("❌ Compilation errors:",);
     for (const error of result.errors) {
       const loc = error.location
         ? ` (${error.location.file}:${error.location.line}:${error.location.column})`
@@ -124,10 +123,10 @@ export async function processBundleTarget(
         console.error(`      💡 ${note.text}`,);
       }
     }
-    throw new Error(`Bundle falhou para o alvo [${targetName}]`,);
+    throw new Error(`Bundle failed for target [${targetName}]`,);
   }
 
-  // 6. Exibir avisos (se houver)
+  // 6. Display warnings (if any)
   for (const warning of result.warnings) {
     const loc = warning.location
       ? ` (${warning.location.file}:${warning.location.line}:${warning.location.column})`
@@ -135,12 +134,12 @@ export async function processBundleTarget(
     console.warn(`   ⚠️ ${warning.text}${loc}`,);
   }
 
-  // 7. Processar arquivos gerados
+  // 7. Process generated files
   const outputFiles = result.outputFiles ?? [];
   const writtenPaths: string[] = [];
 
   if (outputFiles.length === 0) {
-    console.warn(`   ⚠️ Nenhum arquivo gerado pelo bundle [${targetName}]`,);
+    console.warn(`   ⚠️ No files generated by bundle [${targetName}]`,);
     return {
       target: targetName,
       success: true,
@@ -153,24 +152,24 @@ export async function processBundleTarget(
   const hasDefines = defineKeys.length > 0;
   if (hasDefines) {
     console.log(
-      `🔧 Injetando ${defineKeys.length} define(s): ${defineKeys.join(", ",)}`,
+      `🔧 Injecting ${defineKeys.length} define(s): ${defineKeys.join(", ",)}`,
     );
   }
 
   for (const outputFile of outputFiles) {
     let content = outputFile.text();
 
-    // 7.1 Injetar globalName se for IIFE e não houver suporte nativo (fallback manual)
+    // 7.1 Inject globalName if IIFE and no native support (manual fallback)
     if (resolvedConfig.format === "iife" && resolvedConfig.globalName && !content.includes(`var ${resolvedConfig.globalName}`)) {
       content = `var ${resolvedConfig.globalName} = (function() {\nvar exports = {};\n${content}\nreturn exports;\n})();`;
     }
 
-    // 7.2 Aplicar Defines
+    // 7.2 Apply Defines
     if (hasDefines) {
       content = applyDefines(content, defines,);
     }
 
-    // 7.3 Aplicar Banner (JS)
+    // 7.3 Apply Banner (JS)
     if (resolvedConfig.banner?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
       const banner = resolvedConfig.banner.js
         .replaceAll("__APP_VERSION__", appVersion)
@@ -178,7 +177,7 @@ export async function processBundleTarget(
       content = banner + "\n" + content;
     }
 
-    // 7.4 Aplicar Footer (JS)
+    // 7.4 Apply Footer (JS)
     if (resolvedConfig.footer?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
       const footer = resolvedConfig.footer.js
         .replaceAll("__APP_VERSION__", appVersion)
@@ -186,7 +185,7 @@ export async function processBundleTarget(
       content = content + "\n" + footer;
     }
 
-    // 7.5 Gravar no disco (se write não for explicitamente false)
+    // 7.5 Write to disk (unless write is explicitly false)
     if (resolvedConfig.write !== false) {
       await ensureDirForFile(outputFile.path,);
       await Deno.writeTextFile(outputFile.path, content,);
@@ -204,7 +203,7 @@ export async function processBundleTarget(
 
   const durationMs = Number((performance.now() - startTime).toFixed(0,),);
   console.log(
-    `✅ [${targetName}] Build concluído em ${durationMs}ms (${outputFiles.length} arquivo(s))`,
+    `✅ [${targetName}] Build completed in ${durationMs}ms (${outputFiles.length} file(s))`,
   );
 
   return {
@@ -216,15 +215,15 @@ export async function processBundleTarget(
 }
 
 /**
- * Executa programaticamente a compilação via Deno.bundle para os alvos configurados.
- * Aceita diretamente um objeto DenoBundleGlobalConfig em memória ou DenoBuildOptions.
+ * Programmatically executes compilation via Deno.bundle for configured targets.
+ * Accepts a DenoBundleGlobalConfig object directly in memory or DenoBuildOptions.
  *
- * @param configOuOpcoes Objeto DenoBundleGlobalConfig em memória ou opções completas de execução
- * @returns Lista de resultados obtidos por alvo
+ * @param configOuOpcoes Memory DenoBundleGlobalConfig object or full execution options
+ * @returns List of results obtained per target
  *
  * @example
  * ```typescript
- * const resultados = await denoBuild({
+ * const results = await denoBuild({
  *   config: {
  *     ui: { entryPoints: ["main.tsx"], distdir: "dist", srcdir: "src" }
  *   },
@@ -240,16 +239,16 @@ export async function denoBuild(
   const baseDir = opcoes.baseDir ?? ".";
   const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
-  // Garante estritamente que a ordem de execução siga a declaração na configuração
-  const targetsParaExecutar = resolverOrdemTargets(configs, opcoes.targets,);
+  // Strictly ensures that the execution order follows the declaration in the configuration
+  const targetsToExecute = resolveTargetOrder(configs, opcoes.targets,);
 
   console.log(
-    `📋 Alvos de build (ordem segura do CONFIG): ${
-      targetsParaExecutar.join(", ",) || "(nenhum)"
+    `📋 Build targets (safe CONFIG order): ${
+      targetsToExecute.join(", ",) || "(none)"
     }`,
   );
 
-  if (targetsParaExecutar.length === 0) {
+  if (targetsToExecute.length === 0) {
     return [];
   }
 
@@ -264,11 +263,11 @@ export async function denoBuild(
 
   const resultados: DenoBuildResult[] = [];
 
-  for (const targetName of targetsParaExecutar) {
+  for (const targetName of targetsToExecute) {
     const targetConfig = configs[targetName];
     if (!targetConfig) {
       console.warn(
-        `⚠️ Alvo '${targetName}' não encontrado na configuração. Pulando.`,
+        `⚠️ Target '${targetName}' not found in configuration. Skipping.`,
       );
       continue;
     }

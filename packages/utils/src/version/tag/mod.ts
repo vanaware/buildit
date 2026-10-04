@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/version/tag
- * @description Módulo de automação de tags git baseado na versão semântica.
+ * @description Git tag automation module based on semantic version.
  */
 
 export { tagVersionEngine, } from "./engine.ts";

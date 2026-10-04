@@ -11,16 +11,16 @@ import {
 import { runGit, } from "../../src/tools/git.ts";
 
 describe("changelog utility", () => {
-  it("deve gerar conteúdo de changelog a partir de um repositório git", async () => {
+  it("should generate changelog content from a git repository", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
-      // Inicializa repo git
+      // Initialize git repo
       await runGit(["init",], tempDir,);
       await runGit(["config", "user.email", "test@example.com",], tempDir,);
       await runGit(["config", "user.name", "Test User",], tempDir,);
       await runGit(["config", "commit.gpgsign", "false",], tempDir,);
 
-      // Primeiro commit e tag
+      // First commit and tag
       await Deno.writeTextFile(join(tempDir, "file1.txt",), "content 1",);
       await runGit(["add", ".",], tempDir,);
       const c1 = await runGit(
@@ -35,7 +35,7 @@ describe("changelog utility", () => {
       );
       if (!t1.success) console.warn("Tag 1 failed:", t1.stderr,);
 
-      // Segundo commit (será o log da nova versão)
+      // Second commit (will be the log for the new version)
       await Deno.writeTextFile(join(tempDir, "file2.txt",), "content 2",);
       await runGit(["add", ".",], tempDir,);
       const c2 = await runGit(["commit", "-m", "fix: bug fixed",], tempDir,);
@@ -45,14 +45,14 @@ describe("changelog utility", () => {
 
       assertStringIncludes(content, "## v0.2",);
       assertStringIncludes(content, "fix: bug fixed",);
-      // Não deve incluir o commit da tag v0.1 no range v0.1..HEAD
+      // Should not include the commit from tag v0.1 in the v0.1..HEAD range
       assertEquals(content.includes("feat: initial commit",), false,);
     } finally {
       await Deno.remove(tempDir, { recursive: true, },);
     }
   });
 
-  it("deve atualizar o arquivo CHANGELOG.md (prepend)", async () => {
+  it("should update the CHANGELOG.md file (prepend)", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const changelogPath = join(tempDir, "CHANGELOG.md",);
@@ -69,7 +69,7 @@ describe("changelog utility", () => {
     }
   });
 
-  it("deve atualizar o README.md usando os marcadores", async () => {
+  it("should update README.md using markers", async () => {
     const tempDir = await Deno.makeTempDir();
     try {
       const readmePath = join(tempDir, "README.md",);
@@ -83,7 +83,7 @@ describe("changelog utility", () => {
       );
 
       const content = await Deno.readTextFile(readmePath,);
-      assertStringIncludes(content, "### 📦 Últimas atualizações",);
+      assertStringIncludes(content, "### 📦 Latest updates",);
       assertStringIncludes(content, "- Line 1",);
       assertStringIncludes(content, "Footer",);
       assertEquals(content.includes("Old content",), false,);

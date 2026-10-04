@@ -52,15 +52,18 @@ buildit/
 │   ├── utils/          # 📦 @vanaware/buildit (Core library with all 4 engines, schemas & CLI runners)
 │   ├── ui/             # 🖥️ @buildit/ui (Reactive dashboard built with Preact, Signals & BeerCSS)
 │   └── server/         # 🌐 @buildit/server (High-performance static file server on port 3000)
+├── scripts/            # 🚀 CLI Scripts & Configurations
+│   ├── esbuild.ts      # CLI entrypoint for esbuild orchestration
+│   ├── esbuild.jsonc   # Configuration for esbuild production pipeline
+│   ├── watch.ts        # CLI entrypoint for continuous watching
+│   ├── watch.jsonc     # Configuration for continuous development watch engine
+│   ├── denobuild.ts    # CLI entrypoint for native denobuild
+│   ├── denobuild.jsonc # Configuration for Deno.bundle engine
+│   ├── export.ts       # CLI entrypoint for snapshot export
+│   └── export.jsonc    # Configuration for AI context export targets
 ├── snapshots/          # 📄 Generated Markdown AI context snapshots (ui.md, server.md, docs.md, utils.md)
-├── esbuild.jsonc       # ⚙️ Configuration for esbuild production pipeline
-├── watch.jsonc         # ⚙️ Configuration for continuous development watch engine
-├── denobuild.jsonc     # ⚙️ Configuration for Deno.bundle engine
-├── export.jsonc        # ⚙️ Configuration for AI context export targets
-├── esbuild.ts          # 🚀 CLI entrypoint for esbuild orchestration
-├── watch.ts            # 🚀 CLI entrypoint for continuous watching
-├── denobuild.ts        # 🚀 CLI entrypoint for native denobuild
-└── export.ts           # 🚀 CLI entrypoint for snapshot export
+├── deno.jsonc          # ⚙️ Root Deno configuration
+└── AGENTS.md           # 🤖 Instructions for AI Agents
 ```
 
 ---
@@ -118,12 +121,12 @@ BuildIt provides official JSON Schemas inside `packages/utils/schema/` for insta
 
 | Task | Command | Description |
 | :--- | :--- | :--- |
-| `deno task esbuild` | `deno run -A ./esbuild.ts` | Runs the production esbuild pipeline |
-| `deno task watch` | `deno run -A ./watch.ts` | Starts the real-time development watcher |
-| `deno task denobuild` | `deno run --unstable-bundle -A ./denobuild.ts` | Runs native Deno.bundle |
-| `deno task export` | `deno run -A ./export.ts` | Generates AI context snapshots |
-| `deno task sanitize-version` | `deno run -A ./sanitize-version.ts` | Normalizes project version to strict SemVer |
-| `deno task tag-version` | `deno run -A ./tag-version.ts` | Orchestrates Git commit and tag push |
+| `deno task esbuild` | `deno run -A ./scripts/esbuild.ts` | Runs the production esbuild pipeline |
+| `deno task watch` | `deno run -A ./scripts/watch.ts` | Starts the real-time development watcher |
+| `deno task denobuild` | `deno run --unstable-bundle -A ./scripts/denobuild.ts` | Runs native Deno.bundle |
+| `deno task export` | `deno run -A ./scripts/export.ts` | Generates AI context snapshots |
+| `deno task sanitize-version` | `deno run -A ./scripts/sanitize-version.ts` | Normalizes project version to strict SemVer |
+| `deno task tag-version` | `deno run -A ./scripts/tag-version.ts` | Orchestrates Git commit and tag push |
 | `deno task test` | `deno test -P` | Executes all BDD unit and integration tests |
 | `deno task check` | `deno check ...` | Validates TypeScript types across the codebase |
 | `deno task lint` | `deno lint` | Lints all packages and scripts |

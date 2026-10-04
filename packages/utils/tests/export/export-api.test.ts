@@ -4,67 +4,67 @@ import { join, } from "@std/path";
 import { exportEngine, } from "../../src/export/engine.ts";
 
 describe("exportEngine programmatic API", () => {
-  it("deve aceitar configuração baseada em includes/excludes e realizar streaming para o disco", async () => {
+  it("should accept configuration based on includes/excludes and perform streaming to disk", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src",);
     await Deno.mkdir(srcDir, { recursive: true, },);
 
-    // Cria deno.jsonc com versão customizada do projeto
+    // Create deno.jsonc with custom project version
     const denoJsonc = join(tempDir, "deno.jsonc",);
     await Deno.writeTextFile(
       denoJsonc,
       JSON.stringify({ version: "0.9.5", },),
     );
 
-    // Cria arquivos de teste
+    // Create test files
     await Deno.writeTextFile(
       join(srcDir, "sample.ts",),
       'export const hello = "world";',
     );
     await Deno.writeTextFile(join(srcDir, "ignore.test.ts",), "test",);
 
-    const configEmMemoria = {
+    const inMemoryConfig = {
       testMode: {
-        arquivoSaida: "snapshots/test-out.md",
+        outputFile: "snapshots/test-out.md",
         includes: ["src/**/*.{ts,tsx}",],
         excludes: ["**/*.test.ts",],
-        incluiVersao: true,
-        instrucaoCustomizada: "Snapshot de teste para IA",
+        includeVersion: true,
+        customInstruction: "Test snapshot for AI",
         default: true,
       },
     };
 
-    const resultados = await exportEngine({
-      config: configEmMemoria,
-      modos: ["testMode",],
+    const results = await exportEngine({
+      config: inMemoryConfig,
+      modes: ["testMode",],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
-      silencioso: true,
+      silent: true,
     },);
 
-    assertEquals(resultados.length, 1,);
-    assertEquals(resultados[0]?.modo, "testMode",);
-    assertEquals(resultados[0]?.arquivos, 1,);
-    assertEquals((resultados[0]?.bytes ?? 0) > 0, true,);
+    assertEquals(results.length, 1,);
+    assertEquals(results[0]?.mode, "testMode",);
+    assertEquals(results[0]?.files, 1,);
+    assertEquals((results[0]?.bytes ?? 0) > 0, true,);
 
-    const snapshotConteudo = await Deno.readTextFile(
+    const snapshotContent = await Deno.readTextFile(
       join(tempDir, "snapshots", "test-out.md",),
     );
-    assertEquals(snapshotConteudo.includes("[v0.9.5]",), true,);
+    assertEquals(snapshotContent.includes("[v0.9.5]",), true,);
     assertEquals(
-      snapshotConteudo.includes("Snapshot de teste para IA",),
+      snapshotContent.includes("Test snapshot for AI",),
       true,
     );
     assertEquals(
-      snapshotConteudo.includes('export const hello = "world";',),
+      snapshotContent.includes('export const hello = "world";',),
       true,
     );
-    assertEquals(snapshotConteudo.includes("ignore.test.ts",), false,);
+    assertEquals(snapshotContent.includes("ignore.test.ts",), false,);
 
     await Deno.remove(tempDir, { recursive: true, },);
   });
 
-  it("deve exportar com sucesso utilizando includes e globs", async () => {
+  it("should export successfully using includes and globs", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src",);
     await Deno.mkdir(srcDir, { recursive: true, },);
@@ -74,31 +74,31 @@ describe("exportEngine programmatic API", () => {
       'console.log("direct config");',
     );
 
-    // Adiciona deno.jsonc para evitar erro de versão obrigatória
+    // Add deno.jsonc to avoid required version error
     const denoJsonc = join(tempDir, "deno.jsonc",);
     await Deno.writeTextFile(
       denoJsonc,
       JSON.stringify({ version: "1.0.0", },),
     );
 
-    const resultados = await exportEngine({
+    const results = await exportEngine({
       config: {
-        direto: {
-          arquivoSaida: "direct.md",
+        direct: {
+          outputFile: "direct.md",
           includes: ["src/**/*.{ts,tsx}",],
-          incluiVersao: false,
-          instrucaoCustomizada: "Teste direto",
+          includeVersion: false,
+          customInstruction: "Direct test",
         },
       },
-      modos: ["direto",],
+      modes: ["direct",],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
-      silencioso: true,
+      silent: true,
     },);
 
-    assertEquals(resultados.length, 1,);
-    assertEquals(resultados[0]?.modo, "direto",);
-    assertEquals(resultados[0]?.arquivos, 1,);
+    assertEquals(results.length, 1,);
+    assertEquals(results[0]?.mode, "direct",);
+    assertEquals(results[0]?.files, 1,);
 
     const snapshot = await Deno.readTextFile(join(tempDir, "direct.md",),);
     assertEquals(snapshot.includes('console.log("direct config");',), true,);
@@ -106,7 +106,7 @@ describe("exportEngine programmatic API", () => {
     await Deno.remove(tempDir, { recursive: true, },);
   });
 
-  it("deve substituir defineVersionString customizado nas instruções e no cabeçalho", async () => {
+  it("should substitute customized defineVersionString in instructions and header", async () => {
     const tempDir = await Deno.makeTempDir();
     const srcDir = join(tempDir, "src",);
     await Deno.mkdir(srcDir, { recursive: true, },);
@@ -122,26 +122,26 @@ describe("exportEngine programmatic API", () => {
       JSON.stringify({ version: "2.5.0", },),
     );
 
-    const resultados = await exportEngine({
+    const results = await exportEngine({
       config: {
         versionTest: {
-          arquivoSaida: "version-out.md",
+          outputFile: "version-out.md",
           includes: ["src/**/*.ts",],
-          instrucaoCustomizada: "Versão da app: MY_CUSTOM_VER",
-          cabecalho: "Cabeçalho com MY_CUSTOM_VER",
+          customInstruction: "App version: MY_CUSTOM_VER",
+          header: "Header with MY_CUSTOM_VER",
         },
       },
       defineVersionString: "MY_CUSTOM_VER",
-      modos: ["versionTest",],
+      modes: ["versionTest",],
       baseDir: tempDir,
       denoJsoncPath: denoJsonc,
-      silencioso: true,
+      silent: true,
     },);
 
-    assertEquals(resultados.length, 1,);
+    assertEquals(results.length, 1,);
     const snapshot = await Deno.readTextFile(join(tempDir, "version-out.md",),);
-    assertEquals(snapshot.includes("Versão da app: 2.5.0",), true,);
-    assertEquals(snapshot.includes("Cabeçalho com 2.5.0",), true,);
+    assertEquals(snapshot.includes("App version: 2.5.0",), true,);
+    assertEquals(snapshot.includes("Header with 2.5.0",), true,);
 
     await Deno.remove(tempDir, { recursive: true, },);
   });

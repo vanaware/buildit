@@ -1,6 +1,6 @@
 /**
  * @module @vanaware/buildit/esbuild
- * @description Orquestrador de compilação e empacotamento com esbuild nativo e `@deno/esbuild-plugin`.
+ * @description Build and bundle orchestrator with native esbuild and `@deno/esbuild-plugin`.
  *
  * @example
  * ```typescript
@@ -19,13 +19,13 @@
  */
 
 // ============================================================================
-// 📦 RE-EXPORTS DE MÓDULOS ESPECÍFICOS
+// 📦 SPECIFIC MODULE RE-EXPORTS
 // ============================================================================
 export { esBuild, } from "./engine.ts";
 
 export { 
   ESBUILD_CONFIG_EXAMPLE as esbuildExample,
-  carregarConfigEsbuild
+  loadEsbuildConfig
  } from "./config.ts";
 
 export type {
