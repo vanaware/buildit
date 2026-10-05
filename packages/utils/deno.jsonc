@@ -1,6 +1,6 @@
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.22#muu6xhan",
+  "version": "0.5.0#muu6r04a",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -14,7 +14,8 @@
     "@std/fs": "jsr:@std/fs@^1.0.24",
     "@cliffy/command": "jsr:@cliffy/command@^1.3.1",
     "esbuild": "npm:esbuild@^0.28.2",
-    "@deno/esbuild-plugin": "jsr:@deno/esbuild-plugin@^1.2.1"
+    "@deno/esbuild-plugin": "jsr:@deno/esbuild-plugin@^1.2.1",
+    "@deno/doc": "jsr:@deno/doc@^0.165.0"
   },
   "tasks": {
     "test": "deno test -P",
@@ -33,7 +34,9 @@
     "./cli/export": "./src/export/cli.ts",
     "./cli/denobuild": "./src/denobuild/cli.ts",
     "./cli/sanitize-version": "./src/version/sanitize/cli.ts",
-    "./cli/tag-version": "./src/version/tag/cli.ts"
+    "./cli/tag-version": "./src/version/tag/cli.ts",
+    "./cli/docgen": "./src/docgen/cli.ts",
+    "./docgen": "./src/docgen/mod.ts"
   },
   "publish": {
     "include": [

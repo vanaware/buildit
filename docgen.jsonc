@@ -1,0 +1,19 @@
+{
+  "outDir": "packages/server/build/dist",
+  "reports": {
+    "apiSurface": true,
+    "coverage": true
+  },
+  "docsify": {
+    "enabled": true,
+    "title": "BuildIt Documentation",
+    "name": "BuildIt Engine",
+    "description": "Orchestration and documentation tools for Deno workspaces.",
+    "theme": "vue",
+    "search": true,
+    "pagination": true,
+    "copyCode": true,
+    "mermaid": true,
+    "darkModeToggle": true
+  }
+}
