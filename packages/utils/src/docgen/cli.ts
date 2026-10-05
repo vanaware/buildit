@@ -22,6 +22,10 @@ export function docgenCli(): Command<any> {
     .option("--docsify [enabled:boolean]", "Enable Docsify site generation",)
     .option("--docsify-title [title:string]", "Docsify site title",)
     .option("--check-threshold [threshold:number]", "Minimum coverage threshold to pass",)
+    .option("--verbosity [level:string]", "Log level (silent, info, verbose)", { default: "info" })
+    .option("--includes [patterns:string]", "Inclusion patterns (comma separated)",)
+    .option("--excludes [patterns:string]", "Exclusion patterns (comma separated)",)
+    .option("--static-files [patterns:string]", "Static files patterns (comma separated)",)
     .action(async (options,) => {
       const startTime = performance.now();
       const baseDir = options.baseDir as string || ".";
@@ -29,11 +33,21 @@ export function docgenCli(): Command<any> {
       // Load config from file
       const fileConfig = await loadDocgenConfig(options.config as string, baseDir,);
 
+      const verbosity = (options.verbosity as string) || fileConfig.verbosity || "info";
+      const logger = {
+        info: (msg: string) => verbosity !== "silent" && console.log(msg),
+        warn: (msg: string) => verbosity !== "silent" && console.warn(msg),
+        error: (msg: string) => verbosity !== "silent" && console.error(msg),
+        verbose: (msg: string) => verbosity === "verbose" && console.log(`[DEBUG] ${msg}`),
+      };
+
       // Merge CLI options with file config
       const mergedOptions = {
         ...fileConfig,
         outDir: (options.outDir as string) || fileConfig.outDir || "docs",
         baseDir,
+        verbosity: verbosity as any,
+        logger,
       };
 
       // Override with explicit CLI flags
@@ -47,6 +61,15 @@ export function docgenCli(): Command<any> {
       }
       if (options.checkThreshold !== undefined) {
         mergedOptions.checkThreshold = options.checkThreshold as number;
+      }
+      if (options.includes) {
+        mergedOptions.includes = (options.includes as string).split(",");
+      }
+      if (options.excludes) {
+        mergedOptions.excludes = (options.excludes as string).split(",");
+      }
+      if (options.staticFiles) {
+        mergedOptions.staticFiles = (options.staticFiles as string).split(",");
       }
 
       if (!mergedOptions.outDir) {

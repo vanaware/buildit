@@ -5,7 +5,7 @@
 
 import { doc, } from "@deno/doc";
 import { parse, } from "@std/jsonc";
-import { walk, } from "@std/fs";
+import { walk, expandGlob, } from "@std/fs";
 import {
   join,
   relative,
@@ -89,86 +89,117 @@ export async function runDocgen(
     throw new Error(`Failed to read/parse config at ${configPath}: ${err instanceof Error ? err.message : err}`,);
   }
 
-  const workspaceMembers: string[] = config.workspace ?? ["./"];
   const internalFiles = new Set<string>();
 
-  for (const member of workspaceMembers) {
-    const memberPath = resolve(dirname(configPath,), member,);
-    for await (
-      const entry of walk(memberPath, {
-        includeDirs: false,
-        exts: [".ts", ".tsx"],
-        skip: [
-          /node_modules/,
-          /\.git/,
-          /dist/,
-          /build/,
-          /coverage/,
-          /vendor/,
-          /\.deno/,
-          new RegExp(relative(baseDir, outDir,),),
-        ],
-      },)
-    ) {
-      internalFiles.add(toFileUrl(entry.path,).href,);
+  if (options.includes && options.includes.length > 0) {
+    for (const pattern of options.includes) {
+      try {
+        for await (
+          const entry of expandGlob(pattern, {
+            root: baseDir,
+            exclude: options.excludes,
+            includeDirs: false,
+          })
+        ) {
+          internalFiles.add(toFileUrl(entry.path).href);
+        }
+      } catch {
+        // Ignore patterns that find no paths
+      }
+    }
+  } else {
+    const workspaceMembers: string[] = config.workspace ?? ["./"];
+    for (const member of workspaceMembers) {
+      const memberPath = resolve(dirname(configPath,), member,);
+      for await (
+        const entry of walk(memberPath, {
+          includeDirs: false,
+          exts: [".ts", ".tsx"],
+          skip: [
+            /node_modules/,
+            /\.git/,
+            /dist/,
+            /build/,
+            /coverage/,
+            /vendor/,
+            /\.deno/,
+            new RegExp(relative(baseDir, outDir,),),
+          ],
+        },)
+      ) {
+        internalFiles.add(toFileUrl(entry.path,).href,);
+      }
     }
   }
 
   stats.filesInternal = internalFiles.size;
   logger.verbose(`Found ${stats.filesInternal} internal files to scan.`,);
+  if (stats.filesInternal === 0) {
+    logger.warn("No internal files found with the provided inclusion patterns.",);
+  }
 
   // 2. Extraction via @deno/doc
   let docNodes: Record<string, DocNode[]>;
 
   try {
-    // Try to use Deno CLI for extraction as it handles workspaces and imports perfectly
-    const cmd = new Deno.Command("deno", {
-      args: ["doc", "--json", ...Array.from(internalFiles)],
-    });
-    const { stdout, stderr, success } = await cmd.output();
-    if (!success) {
-      const error = new TextDecoder().decode(stderr);
-      throw new Error(`Deno doc CLI failed: ${error}`);
-    }
-    const json = new TextDecoder().decode(stdout);
-    const data = JSON.parse(json);
-    
-    // Group nodes by file
-    docNodes = {};
-    
-    if (data.version === 2) {
-      // Handle Deno 2.x v2 format
-      for (const [fileUrl, modData] of Object.entries(data.nodes) as [string, any][]) {
-        if (!docNodes[fileUrl]) docNodes[fileUrl] = [];
-        
-        if (modData.module_doc) {
-          docNodes[fileUrl].push({
-            kind: "moduleDoc" as any,
-            name: "",
-            location: { filename: fileUrl, line: 1, col: 1, byteIndex: 0 },
-            declarationKind: "private",
-            jsDoc: modData.module_doc,
-          } as any);
-        }
-        
-        if (modData.symbols) {
-          for (const sym of modData.symbols) {
-            for (const dec of sym.declarations) {
-              docNodes[fileUrl].push({
-                name: sym.name,
-                ...dec,
-              } as any);
+    if (internalFiles.size === 0) {
+      docNodes = {};
+    } else {
+      // Try to use Deno CLI for extraction as it handles workspaces and imports perfectly
+      const cmd = new Deno.Command("deno", {
+        args: [
+          "doc",
+          "--json",
+          "-c",
+          configPath,
+          ...Array.from(internalFiles),
+        ],
+      });
+      const { stdout, stderr, success } = await cmd.output();
+      if (!success) {
+        const error = new TextDecoder().decode(stderr);
+        throw new Error(`Deno doc CLI failed: ${error}`);
+      }
+      const json = new TextDecoder().decode(stdout);
+      const data = JSON.parse(json);
+      
+      // Group nodes by file
+      docNodes = {};
+      
+      if (data.version === 2) {
+        // Handle Deno 2.x v2 format
+        for (const [fileUrl, modData] of Object.entries(data.nodes) as [string, any][]) {
+          if (!docNodes[fileUrl]) docNodes[fileUrl] = [];
+          
+          if (modData.module_doc) {
+            docNodes[fileUrl].push({
+              kind: "moduleDoc" as any,
+              name: "",
+              location: { filename: fileUrl, line: 1, col: 1, byteIndex: 0 },
+              declarationKind: "private",
+              jsDoc: modData.module_doc,
+            } as any);
+          }
+          
+          if (modData.symbols) {
+            for (const sym of modData.symbols) {
+              for (const dec of sym.declarations) {
+                docNodes[fileUrl].push({
+                  name: sym.name,
+                  ...dec,
+                } as any);
+              }
             }
           }
         }
-      }
-    } else {
-      // Handle v1 format (array of nodes)
-      const nodes = Array.isArray(data) ? data : (data.nodes ? Object.values(data.nodes).flat() : []);
-      for (const node of nodes as DocNode[]) {
-        const file = node.location.filename;
-        if (!docNodes[file]) docNodes[file] = [];
-        docNodes[file].push(node);
+      } else {
+        // Handle v1 format (array of nodes)
+        const nodes = Array.isArray(data) ? data : (data.nodes ? Object.values(data.nodes).flat() : []);
+        for (const node of nodes as DocNode[]) {
+          const file = node.location.filename;
+          if (!docNodes[file]) docNodes[file] = [];
+          docNodes[file].push(node);
+        }
       }
     }
   } catch (err) {
@@ -304,6 +335,12 @@ export async function runDocgen(
   };
 
   await ensureDir(outDir);
+  // Clear api directory if it exists
+  try {
+    await Deno.remove(join(outDir, "api"), { recursive: true });
+  } catch {
+    // Ignore if not exists
+  }
   await ensureDir(join(outDir, "api"));
 
   // A) api/*.md
@@ -375,7 +412,33 @@ export async function runDocgen(
     }
   }
 
-  // 6. Docsify (Opt-in)
+  // 6. Copy static files
+  if (options.staticFiles && options.staticFiles.length > 0) {
+    for (const pattern of options.staticFiles) {
+      try {
+        for await (
+          const entry of expandGlob(pattern, {
+            root: baseDir,
+            includeDirs: false,
+          })
+        ) {
+          const rel = relative(baseDir, entry.path).replace(/\\/g, "/");
+          const dest = join(outDir, rel);
+          await ensureDir(dirname(dest));
+          await Deno.copyFile(entry.path, dest);
+          generated.push({
+            path: rel,
+            kind: "docsify-asset",
+            bytes: (await Deno.stat(entry.path)).size,
+          });
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+  }
+
+  // 7. Docsify (Opt-in)
   if (options.docsify?.enabled) {
     const htmlContent = generateDocsifyHtml(options.docsify);
     const htmlPath = join(outDir, "index.html");

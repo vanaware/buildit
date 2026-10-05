@@ -1,63 +1,52 @@
-/**
- * @module @vanaware/buildit/docgen/types
- * @description Type definitions for the Documentation Engine.
- */
+import type { DocNode, DocNodeKind, } from "@deno/doc";
 
-import type { DocNode, DocNodeKind, } from "jsr:@deno/doc@0.165.0";
-
-/**
- * Options for the documentation generation process.
- */
 export interface DocgenOptions {
-  /** Path to the root deno.jsonc/json file (default: "deno.jsonc" in cwd). */
+  /** Path to root deno.jsonc. */
   configPath?: string;
-  /** Output directory for the generated .md files (required). */
+  /** Output directory. */
   outDir: string;
-  /** Format of the content files. */
+  /** Content format. */
   format?: "markdown" | "mdx";
-  /** Whether to include symbols marked with @internal or @ignore. */
+  /** Include @internal symbols. */
   includePrivate?: boolean;
-  /** Whether to emit @example blocks. */
+  /** Include @example blocks. */
   includeExamples?: boolean;
-  /** Whether to generate a Mermaid diagram of internal dependencies. */
+  /** Generate Mermaid diagram. */
   includeArchitecture?: boolean;
-  /** Whether to generate a global sidebar/TOC. */
+  /** Generate sidebar. */
   includeSidebar?: boolean;
   /** Log level. */
   verbosity?: "silent" | "info" | "verbose";
-  /** Injected logger (default: no-op). */
-  logger?: Logger;
-  /** Base directory for the project (default: "."). */
+  /** Injected logger. */
+  logger?: any;
+  /** Base directory. */
   baseDir?: string;
-
-  /** ---- Source Links (P1.1) ---- */
+  /** Inclusion glob patterns. */
+  includes?: string[];
+  /** Exclusion glob patterns. */
+  excludes?: string[];
+  /** Static files to copy. */
+  staticFiles?: string[];
+  /** Source code links settings. */
   sourceLinks?: {
     provider: "github" | "gitlab" | "bitbucket" | "custom";
     baseUrl: string;
     branch?: string;
     lineTemplate?: string;
   };
-
-  /** ---- Reports (P0.2, P0.3, P2.2) ---- */
+  /** Reports generation settings. */
   reports?: {
-    /** Generate _api-surface.md (default: true). */
     apiSurface?: boolean;
-    /** Generate _coverage.md (default: true). */
     coverage?: boolean;
-    /** Generate _changelog.md (default: false). */
     changelog?: boolean;
   };
-
-  /** Path to the previous _api-surface.md for comparison (P2.2). */
+  /** Previous API surface path. */
   previousApiSurface?: string;
-
-  /** Minimum coverage threshold in % (P0.3). 0 = no threshold. */
+  /** Coverage check threshold. */
   checkThreshold?: number;
-
-  /** Enable "Run in Deno Playground" button in examples (P1.5). */
+  /** Deno Playground integration. */
   denoPlayground?: boolean;
-
-  /** ---- Docsify site configurations (optional) ---- */
+  /** Docsify site options. */
   docsify?: DocsifyOptions;
 }
 
@@ -67,37 +56,37 @@ export interface DocgenOptions {
 export interface DocsifyOptions {
   /** Enables static site generation. */
   enabled: boolean;
-  /** Title displayed in the navbar and <title>. */
+  /** Site title. */
   title: string;
-  /** Site name (used in header). */
+  /** Site name. */
   name?: string;
-  /** Description (meta description). */
+  /** Meta description. */
   description?: string;
-  /** Main content file name (default: "README.md"). */
+  /** Homepage file. */
   homepage?: string;
-  /** Sidebar file (default: "_sidebar.md"). */
+  /** Sidebar file. */
   sidebar?: string;
-  /** Navbar file (optional, default: "_navbar.md"). */
+  /** Navbar file. */
   navbar?: string;
-  /** Coverpage file (optional, default: "_coverpage.md"). */
+  /** Coverpage file. */
   coverpage?: string;
   /** Visual theme. */
   theme?: "vue" | "dark" | "buble" | "pure";
-  /** Enables text search (default: true). */
+  /** Enable search. */
   search?: boolean;
-  /** Enables pagination (prev/next) (default: true). */
+  /** Enable pagination. */
   pagination?: boolean;
-  /** Enables "copy code" button (default: true). */
+  /** Enable copy code button. */
   copyCode?: boolean;
-  /** Enables Mermaid support in .md files (default: false). */
+  /** Enable Mermaid. */
   mermaid?: boolean;
-  /** Enables dark mode toggle (default: true). */
+  /** Enable dark mode toggle. */
   darkModeToggle?: boolean;
-  /** Google Analytics ID (optional). */
+  /** Google Analytics ID. */
   ga?: string;
-  /** "Edit on GitHub" plugin (optional). */
+  /** Repository info. */
   repo?: { url: string; branch?: string; path?: string };
-  /** Subdirectory where extra assets will be saved (relative to outDir, default: "_assets"). */
+  /** Assets subdirectory. */
   assetsDir?: string;
 }
 
@@ -105,65 +94,31 @@ export interface DocsifyOptions {
  * Result of the documentation generation process.
  */
 export interface DocgenResult {
-  /** Generated files with metadata. */
+  /** Generated files. */
   generated: Array<{
     path: string;
-    kind:
-      | "readme"
-      | "api"
-      | "sidebar"
-      | "navbar"
-      | "coverpage"
-      | "architecture"
-      | "docsify-html"
-      | "docsify-asset"
-      | "api-surface"
-      | "coverage"
-      | "changelog"
-      | "search-index";
+    kind: string;
     bytes: number;
   }>;
-  /** Filtering stats. */
-  stats: {
-    filesScanned: number;
-    filesInternal: number;
-    nodesTotal: number;
-    nodesKept: number;
-    nodesDroppedExternal: number;
-    nodesDroppedInternal: number;
-    nodesDroppedNoDoc: number;
-    coverage: {
-      symbolsTotal: number;
-      symbolsDocumented: number;
-      percentage: number;
-    };
-    crossLinks: {
-      linksResolved: number;
-      linksFailed: number;
-    };
-  };
+  /** Generation statistics. */
+  stats: any;
   /** Non-fatal warnings. */
   warnings: string[];
-}
-
-/**
- * Injected logger interface.
- */
-export interface Logger {
-  info(message: string): void;
-  warn(message: string): void;
-  error(message: string): void;
-  verbose(message: string): void;
 }
 
 /**
  * Entry for the symbol index used for cross-linking.
  */
 export interface SymbolIndexEntry {
+  /** Symbol name. */
   name: string;
+  /** URL to the documentation file. */
   url: string;
+  /** Anchor ID within the file. */
   anchor: string;
+  /** Type of symbol. */
   kind: DocNodeKind;
+  /** Source file name. */
   fileName: string;
 }
 
@@ -171,6 +126,8 @@ export interface SymbolIndexEntry {
  * Global symbol index for cross-references.
  */
 export interface SymbolIndex {
+  /** Index by symbol name. */
   byName: Map<string, SymbolIndexEntry>;
+  /** Index by file URL. */
   byFile: Map<string, SymbolIndexEntry[]>;
 }

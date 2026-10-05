@@ -52,7 +52,7 @@
     "watch": "deno run -A ./scripts/watch.ts",
     "sanitize-version": "deno run -A ./scripts/sanitize-version.ts",
     "tag-version": "deno run -A ./scripts/tag-version.ts",
-    "docgen": "deno run -A ./scripts/docgen.ts",
+    "docgen": "deno run -A ./scripts/docgen.ts --config ./scripts/docgen.jsonc",
     "bump": "deno install --frozen=false && deno task build dist noversion && deno task tag-version"
   },
   "nodeModulesDir": "none",

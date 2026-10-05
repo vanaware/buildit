@@ -1,5 +1,15 @@
 {
   "outDir": "packages/server/build/dist",
+  "includes": [
+    "packages/utils/src/**/*.{ts,tsx}"
+  ],
+  "excludes": [
+    "**/tests/**",
+    "**/node_modules/**"
+  ],
+  "staticFiles": [
+    "packages/utils/schema/**/*.json"
+  ],
   "reports": {
     "apiSurface": true,
     "coverage": true
