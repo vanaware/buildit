@@ -407,3 +407,428 @@ A Engine **não deve** saber da existência do Cliffy.
 
 ---
 
+# Adendo ao Prompt: Funcionalidades Avançadas de Documentação (com Priorização)
+
+> **Como usar**: este adendo **complementa** o prompt anterior da Engine. Ele deve ser entregue à IA **junto** com o prompt principal. O prompt principal define a base (extração via `@deno/doc`, filtragem, geração Markdown + Docsify). Este adendo define **funcionalidades avançadas** que elevam a qualidade da documentação, com **priorização explícita** para orientar a ordem de implementação.
+
+---
+
+## 🎯 Objetivo do Adendo
+
+Adicionar à Engine um conjunto de funcionalidades inspiradas em ferramentas maduras do ecossistema (TypeDoc, Documentation.js, API Extractor, RSPress) que transformam a saída de "dump de JSDoc" em **documentação navegável, auditável e versionável**.
+
+As funcionalidades estão divididas em **três tiers de prioridade**:
+- **P0 (Must-have)**: implementar na v1 da Engine.
+- **P1 (Should-have)**: implementar logo após a v1 estabilizar.
+- **P2 (Nice-to-have)**: incrementos futuros, sem bloquear releases.
+
+Cada funcionalidade é descrita com: **o que é**, **por que importa**, **como implementar** e **critérios de aceite**.
+
+---
+
+## 🥇 Prioridade P0 — Implementar na v1
+
+Estas três funcionalidades têm o maior impacto na experiência de leitura e são o **diferencial** da Engine em relação a um simples gerador de Markdown.
+
+### P0.1 — Cross-Links Automáticos entre Símbolos Internos
+
+**O que é**: em assinaturas como `parseConfig(input: string): Config`, transformar `Config` em um link clicável para a própria definição, sempre que o símbolo for interno e público.
+
+**Por que importa**: é o recurso que mais melhora a leitura. Sem ele, o leitor precisa buscar manualmente cada tipo referenciado. Ferramentas como `rspress-plugin-api-extractor` fazem isso nativamente.
+
+**Como implementar**:
+1. **Construir um índice de símbolos** antes de renderizar qualquer Markdown:
+   ```ts
+   interface SymbolIndex {
+     byName: Map<string, { url: string; anchor: string; kind: DocNodeKind }>;
+     byFile: Map<string, SymbolIndexEntry[]>;
+   }
+   ```
+   Percorra todos os `DocNode`s mantidos após a filtragem e popule o mapa com chave = `node.name`.
+2. **Criar um renderizador de tipos**: função `renderTypeRef(typeRef, index): string` que, dado um tipo (via `node.functionDef.params[].tsType` ou `node.variableDef.tsType`), percorra recursivamente a estrutura e substitua nomes que existam no índice por `[`Nome`](url#anchor)`.
+3. **Aplicar em**:
+   - Bloco **Assinatura** de cada função/método.
+   - Tabela **Parâmetros** (coluna "Tipo").
+   - Campo **Retorno**.
+   - Campo **Lança** (`@throws`).
+   - Assinatura de propriedades de classes e interfaces.
+4. **Também aplicar dentro do texto do JSDoc**: detectar `{@link Nome}` e transformar em link; detectar `` `Nome` `` (código inline) quando `Nome` existir no índice — este último é opcional, mas muito útil.
+
+**Critérios de aceite**:
+- Dado `parseConfig(input: string): Config`, o `.md` gerado contém `[`Config`](api/types.md#config)`.
+- Tipos genéricos aninhados (`Promise<Config>`, `Record<string, Config>`) também são resolvidos.
+- Tipos externos (`string`, `Promise`, `Record`) **não** viram links.
+- Se um tipo for interno mas **não** estiver documentado (sem JSDoc), ainda vira link para a âncora (que mostrará "⚠️ Sem documentação").
+
+---
+
+### P0.2 — Relatório de Superfície de API (`_api-surface.md`)
+
+**O que é**: um arquivo Markdown que lista **apenas as assinaturas** de todos os símbolos públicos internos, em ordem determinística, sem descrições. Serve como "contrato visual" da API.
+
+**Por que importa**: inspirado no `api.md` do API Extractor da Microsoft. Commitado no Git, qualquer diff em PR sinaliza **possível breaking change**. É a defesa mais barata contra quebras acidentais.
+
+**Como implementar**:
+1. Novo módulo `markdown/api-surface.ts`.
+2. Estrutura do arquivo:
+   ```markdown
+   # Superfície de API
+
+   > **Aviso**: este arquivo é gerado automaticamente. Não edite manualmente.
+   > Diferenças neste arquivo entre commits indicam mudanças na API pública.
+   
+   Versão: 1.4.2
+   Gerado em: 2026-10-04T12:00:00Z
+   Hash do conteúdo: `abc123...`
+
+   ## `@meu-pacote/core`
+
+   ### Funções
+   - `parseConfig(input: string, options?: ParseOptions): Config`
+   - `resolvePath(base: string, ...segments: string[]): string`
+
+   ### Classes
+   - `class DocumentBuilder implements Builder`
+     - `constructor(options: BuilderOptions)`
+     - `build(): Document`
+     - `reset(): void`
+
+   ### Tipos
+   - `interface ParseOptions { strict: boolean; encoding: string }`
+   - `type Config = { name: string; version: string }`
+   ```
+3. **Determinismo absoluto**: ordenar por `kind` (ordem fixa), depois alfabético por nome, depois por assinatura.
+4. **Hash de conteúdo**: calcular SHA-256 do bloco de assinaturas e incluir no topo. Útil para detectar mudanças sem diff linha-a-linha.
+5. **Não incluir descrições, exemplos, ou tags** — apenas a superfície.
+
+**Critérios de aceite**:
+- O arquivo é gerado sempre que `runDocgen` é executado (a menos que `--no-api-surface` seja passado).
+- Rodar duas vezes produz o mesmo hash.
+- Adicionar um parâmetro em uma função pública muda o hash e gera diff visível.
+
+---
+
+### P0.3 — Relatório de Cobertura de Documentação (`_coverage.md`)
+
+**O que é**: um arquivo Markdown com uma tabela por módulo, mostrando quantos símbolos públicos internos possuem JSDoc completo.
+
+**Por que importa**: dá **visibilidade objetiva** do estado da doc. Permite priorizar onde escrever JSDoc. Em CI, pode falhar o build se a cobertura cair.
+
+**Como implementar**:
+1. Novo módulo `markdown/coverage.ts`.
+2. **Definição de "documentado"**: um símbolo é considerado documentado se:
+   - Tem `jsDoc.doc` não vazio, **e**
+   - Se for função/método, tem `@param` para cada parâmetro **e** `@returns` (quando o retorno não for `void`/`undefined`).
+3. **Cálculo por módulo**:
+   ```ts
+   interface CoverageRow {
+     module: string;      // caminho relativo
+     symbols: number;     // total público interno
+     documented: number;  // com JSDoc completo
+     percentage: number;  // documentado / total * 100
+   }
+   ```
+4. **Estrutura do `_coverage.md`**:
+   ```markdown
+   # Cobertura de Documentação
+
+   | Módulo | Símbolos | Documentados | Cobertura |
+   |--------|----------|--------------|-----------|
+   | api/core.ts | 12 | 10 | 🟢 83% |
+   | api/utils.ts | 8 | 3 | 🔴 37% |
+   | api/types.ts | 5 | 5 | 🟢 100% |
+   | **Total** | **25** | **18** | **🟢 72%** |
+
+   ## Símbolos sem documentação
+
+   - 🔴 `api/utils.ts` → `internalHelper`, `parseRaw`, ...
+   ```
+5. **Faixas de cor**:
+   - 🟢 ≥ 90%
+   - 🟡 70–89%
+   - 🟠 50–69%
+   - 🔴 < 50%
+6. **Modo `--check`**: se `options.checkThreshold` for definido (ex.: `80`), `runDocgen` lança erro tipado quando a cobertura total ficar abaixo. Exit code não-zero para CI.
+
+**Critérios de aceite**:
+- A tabela reflete corretamente os símbolos mantidos após a filtragem.
+- Símbolos com `@internal` **não** contam na cobertura (já são excluídos antes).
+- `--check --check-threshold 80` falha se cobertura < 80%.
+
+---
+
+## 🥈 Prioridade P1 — Implementar após v1
+
+Estas funcionalidades são incrementais e não bloqueiam a v1, mas agregam muito valor.
+
+### P1.1 — Links para o Código-Fonte
+
+**O que é**: cada símbolo ganha um link direto para a linha exata no GitHub/GitLab/Bitbucket.
+
+**Como implementar**:
+1. Adicionar `DocsifyOptions.repo` já prever `url`, `branch`, `path`.
+2. Estender `DocgenOptions` com:
+   ```ts
+   sourceLinks?: {
+     provider: "github" | "gitlab" | "bitbucket" | "custom";
+     baseUrl: string;   // ex.: "https://github.com/org/repo"
+     branch?: string;   // default: "main"
+     lineTemplate?: string; // default depende do provider
+   };
+   ```
+3. Templates padrão:
+   - GitHub: `{baseUrl}/blob/{branch}/{path}#L{line}`
+   - GitLab: `{baseUrl}/-/blob/{branch}/{path}#L{line}`
+   - Bitbucket: `{baseUrl}/src/{branch}/{path}#lines-{line}`
+4. Renderizar como: `[📄 ver código-fonte](url)` ao final do bloco de cada símbolo.
+
+**Critérios de aceite**:
+- Se `sourceLinks` estiver configurado, todo símbolo mantido tem link.
+- O link usa `location.filename` (convertido para caminho relativo à raiz do repo) e `location.line`.
+
+---
+
+### P1.2 — Badges de Status (`@since`, `@deprecated`, `@experimental`)
+
+**O que é**: transformar tags JSDoc em badges visuais no topo de cada símbolo.
+
+**Como implementar**:
+1. Extrair de `node.jsDoc.tags`: `@since`, `@deprecated`, `@experimental`, `@beta`, `@alpha`.
+2. Renderizar:
+   - `@since 1.2.0` → `> ![since](https://img.shields.io/badge/since-1.2.0-blue)`
+   - `@deprecated Use parseConfigV2 em vez disso` → `> ⚠️ **Depreciado**. Use [`parseConfigV2`](#parseconfigv2).` (detectar nomes de símbolos no texto via SymbolIndex e transformar em link)
+   - `@experimental` → `> 🧪 **Experimental** — API sujeita a mudanças.`
+   - `@beta` → `> 🔶 **Beta**`
+3. Ordem: badges em uma única linha no topo, antes da descrição.
+
+**Critérios de aceite**:
+- Símbolos marcados com essas tags mostram os badges correspondentes.
+- Texto do `@deprecated` passa pelo mesmo mecanismo de cross-links do P0.1.
+
+---
+
+### P1.3 — TOC Local por Página
+
+**O que é**: no topo de cada `api/<modulo>.md`, um índice com links âncora para cada símbolo daquele módulo.
+
+**Como implementar**:
+1. Reaproveitar o índice já construído para `_sidebar.md`.
+2. Estrutura:
+   ```markdown
+   ## Índice
+   - 🔧 [parseConfig](#parseconfig)
+   - 🔧 [resolvePath](#resolvepath)
+   - 🏛️ [DocumentBuilder](#documentbuilder)
+   - 📐 [Config](#config)
+   ```
+3. Ordem idêntica à do corpo do arquivo.
+
+**Critérios de aceite**:
+- Todo `api/*.md` começa com TOC.
+- Âncoras batem com os headings gerados.
+
+---
+
+### P1.4 — Agrupamento por `@category`
+
+**O que é**: permitir que o autor agrupe símbolos semanticamente (ex.: "Configuração", "Parsers") via tag customizada `@category`, em vez de sempre agrupar por `kind`.
+
+**Como implementar**:
+1. Ler `@category` de `node.jsDoc.tags`.
+2. Se **ao menos um** símbolo do módulo tiver `@category`, agrupar todos por categoria (símbolos sem `@category` vão para "Outros").
+3. Se **nenhum** tiver, manter agrupamento por `kind` (comportamento atual).
+4. Refletir no TOC e na sidebar.
+
+**Critérios de aceite**:
+- Módulos sem `@category` mantêm o comportamento antigo.
+- Módulos com `@category` agrupam conforme especificado.
+
+---
+
+### P1.5 — Link "Executar no Deno Playground" para Exemplos
+
+**O que é**: para cada bloco `@example`, gerar um link para o Deno Playground com o código pré-preenchido.
+
+**Como implementar**:
+1. Detectar `@example` no JSDoc.
+2. URL base: `https://dash.deno.com/playground/new` (ou `https://deno.com/playground` conforme disponível).
+3. Codificar o exemplo como parâmetro `?code=` (URL-encoded, base64).
+4. Renderizar: `[▶️ Executar no Deno Playground](url)`.
+
+**Critérios de aceite**:
+- Cada `@example` gera o botão quando `DocsifyOptions.denoPlayground !== false`.
+- O link abre o playground com o código correto.
+
+---
+
+## 🥉 Prioridade P2 — Incrementos Futuros
+
+Funcionalidades valiosas, mas que podem aguardar feedback da v1.
+
+### P2.1 — Índice de Busca Pré-gerado (`search-index.json`)
+
+**O que é**: um JSON com `{ title, description, url, kind, tags, params }` para cada símbolo, consumível por plugins de busca.
+
+**Por que P2**: Docsify já tem busca client-side via `docsify-search` que funciona bem para bases pequenas. Só vale a pena o índice pré-gerado em bases grandes (>500 símbolos) ou quando quiser busca por parâmetros/tags.
+
+**Como implementar**:
+1. Novo módulo `markdown/search-index.ts`.
+2. Extrair de cada `DocNode` mantido: `name`, `kind`, primeira linha do `jsDoc.doc`, `@param` names, `@tags`.
+3. Gerar `search-index.json` na raiz de `outDir`.
+4. Documentar no README do projeto como plugar no `docsify-search`.
+
+---
+
+### P2.2 — Detecção de Breaking Changes entre Versões
+
+**O que é**: comparar o `_api-surface.md` atual com o de uma versão anterior e listar mudanças.
+
+**Por que P2**: requer manter histórico de `_api-surface.md` versionado. Vale a pena depois que o fluxo de P0.2 estiver maduro.
+
+**Como implementar**:
+1. Adicionar `DocgenOptions.previousApiSurface?: string` (caminho do arquivo anterior).
+2. Parsear ambos, comparar por nome de símbolo:
+   - Símbolo removido → 🔴 breaking.
+   - Assinatura alterada → 🔴 breaking (ou 🟡 se apenas parâmetros opcionais adicionados).
+   - Símbolo adicionado → 🟢 não-breaking.
+3. Gerar `_changelog.md` com a lista.
+
+---
+
+### P2.3 — Twoslash / Hover Tooltips
+
+**O que é**: ao passar o mouse sobre um tipo em um bloco de código, exibir a definição completa.
+
+**Por que P2**: requer integração com Shiki/Monaco e pré-processamento dos blocos de código. Alto custo de implementação, ganho incremental.
+
+**Como implementar** (esboço):
+1. Pré-processar cada bloco ```ts``` com `@typescript/twoslash`.
+2. Injetar no HTML gerado os atributos `data-*` que o Monaco/Shiki precisa.
+3. Carregar o runtime via CDN no `index.html`.
+
+---
+
+### P2.4 — Temas Customizáveis via `_assets/custom.css`
+
+**O que é**: gerar um CSS pré-configurado com variáveis do Docsify para facilitar troca de cores.
+
+**Por que P2**: Docsify já aceita variáveis CSS inline no `index.html`. Um arquivo separado é mais organizado, mas não muda a experiência.
+
+**Como implementar**:
+1. Se `docsify.assetsDir` estiver definido, gerar `_assets/custom.css` com variáveis comentadas.
+2. Referenciar no `index.html` via `<link>`.
+
+---
+
+### P2.5 — Suporte a MDX
+
+**O que é**: gerar arquivos `.mdx` em vez de `.md`, permitindo componentes interativos em sites como Astro/Next.
+
+**Por que P2**: só faz sentido se o consumidor usar MDX. Docsify não suporta MDX.
+
+**Como implementar**:
+1. Adicionar `format: "mdx"`.
+2. Trocar extensões e adaptar blocos (ex.: `<Tabs>` em vez de headings).
+
+---
+
+## 📊 Resumo Visual das Prioridades
+
+| # | Funcionalidade | Tier | Impacto | Custo |
+|---|----------------|------|---------|-------|
+| P0.1 | Cross-links automáticos | **P0** | 🔥🔥🔥 | Médio |
+| P0.2 | Superfície de API | **P0** | 🔥🔥🔥 | Baixo |
+| P0.3 | Cobertura de documentação | **P0** | 🔥🔥 | Baixo |
+| P1.1 | Links para código-fonte | P1 | 🔥🔥 | Baixo |
+| P1.2 | Badges de status | P1 | 🔥🔥 | Baixo |
+| P1.3 | TOC local | P1 | 🔥 | Baixo |
+| P1.4 | Agrupamento por `@category` | P1 | 🔥 | Médio |
+| P1.5 | Link Deno Playground | P1 | 🔥 | Baixo |
+| P2.1 | Índice de busca | P2 | 🔥 | Médio |
+| P2.2 | Detecção de breaking changes | P2 | 🔥🔥 | Alto |
+| P2.3 | Twoslash tooltips | P2 | 🔥 | Alto |
+| P2.4 | `custom.css` | P2 | 🔥 | Baixo |
+| P2.5 | Suporte a MDX | P2 | 🔥 | Médio |
+
+---
+
+## 🔧 Extensões ao Contrato da Engine
+
+Adicionar a `DocgenOptions`:
+
+```ts
+export interface DocgenOptions {
+  // ... opções do prompt principal ...
+
+  /** Links para código-fonte (P1.1). */
+  sourceLinks?: {
+    provider: "github" | "gitlab" | "bitbucket" | "custom";
+    baseUrl: string;
+    branch?: string;
+    lineTemplate?: string;
+  };
+
+  /** Geração de relatórios extras. */
+  reports?: {
+    apiSurface?: boolean;   // default: true  (P0.2)
+    coverage?: boolean;     // default: true  (P0.3)
+    changelog?: boolean;    // default: false (P2.2)
+  };
+
+  /** Caminho do _api-surface.md anterior para comparação (P2.2). */
+  previousApiSurface?: string;
+
+  /** Threshold mínimo de cobertura em % (P0.3). 0 = sem threshold. */
+  checkThreshold?: number;
+
+  /** Habilita botão "Executar no Deno Playground" nos exemplos (P1.5). */
+  denoPlayground?: boolean;
+}
+```
+
+Adicionar a `DocgenResult.generated[].kind`:
+- `"api-surface"` (P0.2)
+- `"coverage"` (P0.3)
+- `"changelog"` (P2.2)
+- `"search-index"` (P2.1)
+
+Adicionar a `DocgenResult.stats`:
+```ts
+coverage: {
+  symbolsTotal: number;
+  symbolsDocumented: number;
+  percentage: number;
+};
+crossLinks: {
+  linksResolved: number;
+  linksFailed: number;
+};
+```
+
+---
+
+## ✅ Critérios de Aceite Globais do Adendo
+
+1. **Todas as funcionalidades P0** estão implementadas e cobertas por testes unitários com FS em memória.
+2. **Cross-links (P0.1)** funcionam em assinaturas, tabelas de parâmetros, retorno, `@throws` e `{@link}` no texto.
+3. **`_api-surface.md` (P0.2)** é determinístico: hash idêntico entre execuções com a mesma API.
+4. **`_coverage.md` (P0.3)** contém tabela por módulo e lista de símbolos não documentados.
+5. **`--check --check-threshold N`** retorna exit code não-zero quando cobertura < N.
+6. Funcionalidades **P1** podem ser desabilitadas via opções (opt-out).
+7. Funcionalidades **P2** são **opt-in** (default: desabilitadas), exceto `custom.css` que é gerado quando `assetsDir` está definido.
+8. Nenhuma funcionalidade introduz dependência fora do JSR/Deno std, exceto `@typescript/twoslash` (P2.3), que deve ser **lazy-loaded** apenas quando a feature é ativada.
+9. Documentação interna da Engine (README do projeto) explica cada funcionalidade, sua flag correspondente e exemplo de uso.
+
+---
+
+## 🧭 Princípios para Implementação
+
+1. **P0 primeiro, sem exceção**: não avançar para P1 antes de P0 estar estável, testado e documentado.
+2. **Opt-in para P2**: tudo que é P2 deve ser desabilitado por padrão, para não inflar a saída de quem não precisa.
+3. **Determinismo sempre**: qualquer artefato gerado deve ser byte-a-byte idêntico entre execuções com o mesmo input.
+4. **Fail-soft para doc, fail-hard para config**: falta de JSDoc nunca quebra o build; config inválida sempre quebra.
+5. **Zero acoplamento ao Docsify**: cross-links, api-surface, coverage e badges devem funcionar mesmo sem `docsify.enabled: true`. O Docsify é apenas um consumidor da saída Markdown.
+
+---
+
+> **Ao usar este adendo**: entregue-o à IA **imediatamente após** o prompt principal. Esclareça que a IA deve implementar **apenas P0** na v1, e deixar P1/P2 como **stubs documentados** ou comentários `TODO` claros no código, para não sobrecarregar a primeira entrega. Peça que a IA **pergunte antes de implementar P1** se houver tempo, e que **nunca implemente P2 sem confirmação explícita**.
