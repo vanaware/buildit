@@ -45,6 +45,17 @@
         "isDefault": true
         }
     },
+  {
+    "type": "deno",
+    "command": "run",
+    "args": ["--allow-env","--allow-read", "--allow-write", "--allow-run","--allow-net", "scripts/esbuild.ts", "--no-version"],
+    "problemMatcher": ["$deno"],
+    "label": "Deno: Build noversion",
+    "group": {
+        "kind": "build",
+        "isDefault": false
+        }
+    },
     {
     "type": "deno",
     "command": "run",
@@ -82,7 +93,7 @@
       "dependsOrder": "sequence",   // executa em ordem (padrão: paralelo)
       "dependsOn": [
         "Deno: Check All",
-        "Deno: EsBuild",
+        "Deno: Build noversion",
         "Deno: Tag Version"
       ],
       "problemMatcher": []
