@@ -197,7 +197,7 @@ export function getVersionFileTemplate(
 ): string {
   if (isTypeScript) {
     return `// Automatically generated file during build
-
+declare const ${defineVersionString}: string;
 /**
  * Current library/application version.
  * @type {string}
