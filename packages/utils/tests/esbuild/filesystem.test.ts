@@ -30,11 +30,11 @@ describe("cleanTarget", () => {
 
   it("removes folder recursively", async () => {
     await withTempDir(async (dir,) => {
-      const subDir = join(dir, "subpasta",);
+      const subDir = join(dir, "subfolder",);
       await Deno.mkdir(subDir,);
-      await Deno.writeTextFile(join(subDir, "arquivo.js",), "code",);
+      await Deno.writeTextFile(join(subDir, "file.js",), "code",);
 
-      await cleanTarget(dir, ["subpasta",],);
+      await cleanTarget(dir, ["subfolder",],);
 
       assertEquals(await fileExists(subDir,), false,);
     },);

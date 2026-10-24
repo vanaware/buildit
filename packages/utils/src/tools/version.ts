@@ -47,6 +47,29 @@ Necessary configuration example:
 }
 
 /**
+ * Reads the root Deno configuration text, falling back from `deno.jsonc` to
+ * `deno.json` when the `.jsonc` variant does not exist on disk.
+ *
+ * @param denoJsonPath Expected path to the root configuration file
+ * @returns Tuple with the file content and the path actually used
+ */
+async function readRootConfigText(
+  denoJsonPath: string,
+): Promise<[content: string, actualPath: string]> {
+  try {
+    const content = await Deno.readTextFile(denoJsonPath,);
+    return [content, denoJsonPath];
+  } catch {
+    if (denoJsonPath.endsWith(".jsonc",)) {
+      const alt = denoJsonPath.slice(0, -1,);
+      const content = await Deno.readTextFile(alt,);
+      return [content, alt];
+    }
+    throw new Deno.errors.NotFound(`File ${denoJsonPath} not found`);
+  }
+}
+
+/**
  * Synchronizes the version in a workspace directory (deno.jsonc or deno.json).
  */
 export async function syncWorkspaceDir(
@@ -88,17 +111,9 @@ export async function syncWorkspaces(
     await readProjectVersion(denoJsonPath, baseDir,);
 
   try {
-    let rootContent = "";
-    let actualDenoJsonPath = denoJsonPath;
-    try {
-      rootContent = await Deno.readTextFile(denoJsonPath,);
-    } catch {
-      if (denoJsonPath.endsWith(".jsonc",)) {
-        const alt = denoJsonPath.slice(0, -1,);
-        rootContent = await Deno.readTextFile(alt,);
-        actualDenoJsonPath = alt;
-      }
-    }
+    const [rootContent, actualDenoJsonPath] = await readRootConfigText(
+      denoJsonPath,
+    );
     const rootDir = dirname(actualDenoJsonPath,);
     const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
 
@@ -117,13 +132,6 @@ export async function syncWorkspaces(
 }
 
 /**
- * Example paths where the version.ts file can be synchronized.
- */
-export const VERSION_PATHS_EXAMPLE: string[] = [
-  "packages/utils/src/version.ts",
-];
-
-/**
  * Parses a version string in major.minor.patch[#hash] format.
  *
  * @param version Version string
@@ -134,25 +142,19 @@ export function parseVersion(version: string,): ParsedVersion {
   if (trimmed !== version) {
     throw new Error(`❌ Version cannot have spaces: ${version}`,);
   }
-  const versionWithoutHash = version.split("#",)[0] ?? "";
   if (version.includes("#",) && version.endsWith("#",)) {
     throw new Error(`❌ Invalid version format (# without hash): ${version}`,);
   }
+  const versionWithoutHash = version.split("#",)[0] ?? "";
   const parts = versionWithoutHash.split(".",);
   if (parts.length !== 3) {
     throw new Error(`❌ Invalid version format: ${version}`,);
   }
-  const majorStr = parts[0];
-  const minorStr = parts[1];
-  const patchStr = parts[2];
-  if (
-    majorStr === undefined || minorStr === undefined || patchStr === undefined
-  ) {
-    throw new Error(`❌ Invalid version format: ${version}`,);
-  }
-  const major = parseInt(majorStr, 10,);
-  const minor = parseInt(minorStr, 10,);
-  const patch = parseInt(patchStr, 10,);
+  const [major, minor, patch] = parts.map((p,) => parseInt(p, 10,),) as [
+    number,
+    number,
+    number,
+  ];
   if (isNaN(major,) || isNaN(minor,) || isNaN(patch,)) {
     throw new Error(`❌ Version contains non-numeric values: ${version}`,);
   }
@@ -317,17 +319,6 @@ export async function ensureVersionFiles(
 }
 
 /**
- * Writes or ensures the existence of the version.ts file at the specified path or directory.
- * Kept for compatibility.
- */
-export async function writeVersionFile(
-  targetPathOrDir: string,
-  _version?: string,
-): Promise<void> {
-  await ensureVersionFile(targetPathOrDir,);
-}
-
-/**
  * Synchronizes project version in configuration files and code without incrementing.
  * Useful to ensure all packages and version files are aligned.
  *
@@ -411,20 +402,9 @@ export async function incrementProjectVersion(
 
   // Update root deno.jsonc
   try {
-    let actualDenoJsonPath = denoJsonPath;
-    let rootContent = "";
-    try {
-      rootContent = await Deno.readTextFile(denoJsonPath,);
-    } catch {
-      if (denoJsonPath.endsWith(".jsonc",)) {
-        const alt = denoJsonPath.slice(0, -1,);
-        rootContent = await Deno.readTextFile(alt,);
-        actualDenoJsonPath = alt;
-      } else {
-        throw new Deno.errors.NotFound(`File ${denoJsonPath} not found`);
-      }
-    }
-
+    const [rootContent, actualDenoJsonPath] = await readRootConfigText(
+      denoJsonPath,
+    );
     const updatedRootContent = replaceVersionInContent(
       rootContent,
       finalVersion,

@@ -7,7 +7,7 @@
 
 # Exported Context from Project BuildIt - Mode: SERVER
 
-Automatically generated at: 2026-10-04T19:05:09.038Z
+Automatically generated at: 2026-10-24T19:56:44.979Z
 
 ---
 
@@ -19,7 +19,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     tags:
-      - 'v*.*' # Dispara apenas para tags iniciando com 'v' (ex: v0.2, v1.0.0)
+      - 'v*.*' # Only triggers on tags starting with 'v' (e.g., v0.2, v1.0.0)
   workflow_dispatch:
 
 permissions:
@@ -81,7 +81,7 @@ name: Publish to JSR
 on:
   push:
     tags:
-      - 'v*.*' # Dispara apenas para tags iniciando com 'v' (ex: v0.2, v1.0.0)
+      - 'v*.*' # Only triggers on tags starting with 'v' (e.g., v0.2, v1.0.0)
   workflow_dispatch:
 
 permissions:
@@ -129,13 +129,13 @@ jobs:
     ]
   },
   "imports": {
-    "@std/http": "jsr:@std/http@^1.1.3",
+    "@std/http": "jsr:@std/http@^1.1.4",
     "@std/path": "jsr:@std/path@^1.1.6"
   },
   "tasks": {
-    "test": "deno test --allow-env --allow-net --allow-read tests/",
-    "check": "deno check src/**/*.ts",
-    "tests": "deno task check",
+    "test": "deno test --allow-env --allow-net --allow-read tests/**/*test.ts",
+    "check": "deno check src/**/*.{ts,tsx} tests/**/*test.ts",
+    "tests": "deno task check && deno task test",
     "start": "deno run --allow-read --allow-write --allow-env --allow-net  --env-file ./src/main.ts",
     "dev": "deno run --allow-read --allow-write --allow-env --allow-net --env-file  --watch ./src/main.ts",
     "clean": "deno clean && rm -rf ./build && mkdir -p ./build/dist"

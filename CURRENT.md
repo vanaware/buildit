@@ -71,6 +71,12 @@ The library is consolidated in the `packages/utils` package containing **six** c
 - `docs/publish-jsr-rules.md`: JSR compliance guide (complete JSDoc, no local nodule references, MIT license).
 - CI/CD in `.github/workflows/jsr-publish.yml` configured for automated publication with version sanitization.
 
+#### 5. English Localization & Code Simplification Pass
+- Completed English localization: translated remaining Portuguese in `packages/ui/src/index.html`, GitHub workflow comments, test fixtures, and internal identifiers (`opcoes` ➔ `options`, `resultados` ➔ `results`); fixed stale Portuguese function/field names in `docs/*.md` (topology docs and `api.md` export example now match the real English APIs).
+- Deduplicated `packages/utils`: new shared `tools/esbuild-options.ts` helpers (version define key resolution, versioned define, asset define, banner/footer placeholder injection, optional props copy) reused by esbuild, watch, and denobuild engines; single `matchesGlobs` in `tools/paths.ts` (re-exported by `export/formatter.ts`); unified `copyTargetFiles` via private `copyEntryToDist` (basedir tree-preservation semantics unchanged); shared `.jsonc`➔`.json` fallback read in `tools/version.ts` (version injection pipeline untouched).
+- Removed dead code: unused imports, legacy `writeVersionFile()` shim, and example-only JSR exports (`EXTENSIONS_EXAMPLE`, `VERSION_PATHS_EXAMPLE`); re-enabled the `no-unused-vars` lint rule; small readability fixes (`relative()` in `listAssetsForCache`, `Math.round` timings, single-regex `parseVersion`).
+- New BDD coverage: `packages/utils/tests/tools/esbuild-options.test.ts`. Full gate green: `deno task tests` (51 suites, 341 steps, 0 failures) and `deno task esbuild noversion` production build.
+
 ---
 
 ### ⏳ Completed Roadmap & Milestones:

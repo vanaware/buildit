@@ -19,9 +19,39 @@ import {
   resolveOutputPaths,
   resolveWithBase,
 } from "../tools/paths.ts";
+import {
+  applyAssetDefine,
+  buildBannerFooter,
+  buildVersionedDefine,
+  copyOptionalProps,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 import { ensureVersionFiles, readProjectVersion, } from "../tools/version.ts";
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { acquireWatchLock, } from "./lock.ts";
+
+/** Optional watch-specific esbuild properties copied from the target config. */
+const OPTIONAL_WATCH_PROPS = [
+  "platform",
+  "format",
+  "bundle",
+  "minify",
+  "jsx",
+  "jsxImportSource",
+  "conditions",
+  "external",
+  "drop",
+  "write",
+  "legalComments",
+  "keepNames",
+  "loader",
+  "alias",
+  "inject",
+  "target",
+  "charset",
+  "logLevel",
+  "plugins",
+];
 
 /**
  * Builds esbuild options specific for continuous monitoring.
@@ -34,23 +64,10 @@ export async function buildWatchEsbuildOptions(
   defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
-  const finalDefine: Record<string, string> = {
-    ...config.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(config, defineVersionString,);
+  const finalDefine = buildVersionedDefine(config, appVersion, defineVersionKey,);
 
-  if (
-    config.defineAssetsString &&
-    config.defineAssetsString.trim() !== "" &&
-    listAssetsFn &&
-    config.distdir
-  ) {
-    const assets = await listAssetsFn(config.distdir,);
-    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(finalDefine, config, listAssetsFn,);
 
   const resolvedEntryPoints = resolveEntryPoints(
     config.srcdir,
@@ -71,68 +88,20 @@ export async function buildWatchEsbuildOptions(
     options.outdir = outdir;
   }
 
-  const optionalProps = [
-    "platform",
-    "format",
-    "bundle",
-    "minify",
-    "jsx",
-    "jsxImportSource",
-    "conditions",
-    "external",
-    "drop",
-    "write",
-    "legalComments",
-    "keepNames",
-    "loader",
-    "alias",
-    "inject",
-    "target",
-    "charset",
-    "logLevel",
-    "plugins",
-  ];
+  copyOptionalProps(
+    config as unknown as Record<string, unknown>,
+    options as Record<string, unknown>,
+    OPTIONAL_WATCH_PROPS,
+  );
 
-  for (const prop of optionalProps) {
-    // deno-lint-ignore no-explicit-any
-    if ((config as any)[prop] !== undefined) {
-      // deno-lint-ignore no-explicit-any
-      options[prop] = (config as any)[prop];
-    }
+  const banner = buildBannerFooter(config.banner, appVersion, defineVersionKey,);
+  if (banner !== undefined) {
+    options.banner = banner;
   }
 
-  if (config.banner !== undefined) {
-    const banner: { js?: string; css?: string } = {};
-    if (config.banner.js !== undefined) {
-      banner.js = config.banner.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.banner.css !== undefined) {
-      banner.css = config.banner.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (banner.js !== undefined || banner.css !== undefined) {
-      options.banner = banner;
-    }
-  }
-
-  if (config.footer !== undefined) {
-    const footer: { js?: string; css?: string } = {};
-    if (config.footer.js !== undefined) {
-      footer.js = config.footer.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.footer.css !== undefined) {
-      footer.css = config.footer.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (footer.js !== undefined || footer.css !== undefined) {
-      options.footer = footer;
-    }
+  const footer = buildBannerFooter(config.footer, appVersion, defineVersionKey,);
+  if (footer !== undefined) {
+    options.footer = footer;
   }
 
   options.define = finalDefine;

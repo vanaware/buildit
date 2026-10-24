@@ -13,7 +13,7 @@ This document describes the complete execution topology of the **`watch`** utili
 watchCli() (packages/utils/src/watch/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigWatch(configPath, baseDir) (packages/utils/src/watch/config.ts)
+       ├──► loadWatchConfig(configPath, baseDir) (packages/utils/src/watch/config.ts)
        │       │
        │       └──► loadConfig<WatchConfigFile>("watch", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -66,7 +66,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
 * **Actions**:
   1. Configures Cliffy command with `.arguments("[target:string]")`. Cliffy rejects multiple positional arguments with a native error (`Too many arguments: ...`).
   2. `findDenoConfig()`: Locates Deno configuration file.
-  3. `carregarConfigWatch(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
+  3. `loadWatchConfig(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
   4. Passes `target: target || undefined` to `watchEngine(options)`.
   5. Configures `Deno.addSignalListener("SIGINT" | "SIGTERM")` for graceful shutdown via `handle.close()`.
   6. Keeps process active in continuous wait (`await new Promise(() => {})`).
@@ -82,7 +82,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
     baseDir?: string;
     denoJsoncPath?: string;
     lockFile?: string;
-    silencioso?: boolean;
+    silent?: boolean;
   }
   ```
 * **Actions and Sub-functions**:
@@ -122,7 +122,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `watchCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing, signal capture, life loop |
-| `carregarConfigWatch()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
+| `loadWatchConfig()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
 | `watchEngine()` | `watchCli` / API | `options: WatchOptions` | `Promise<WatchHandle[]>` | Lock creation, incremental watcher initialization |
 | `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Lock file creation, listener registration |
 | `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | PID check via signal 0 |

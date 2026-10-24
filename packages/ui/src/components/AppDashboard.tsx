@@ -1,7 +1,6 @@
 import {
   activeTab,
   API_CODE_SNIPPETS,
-  CLI_COMMANDS,
   CONFIG_SNIPPETS,
   copiedId,
   copyToClipboard,
@@ -11,7 +10,6 @@ import {
   selectedTool,
   TOOLS,
 } from "../stores/app.ts";
-import { APP_VERSION, } from "../version.ts";
 
 export const AppDashboard = () => {
   const currentTool = TOOLS.find((t,) => t.id === selectedTool.value) ??

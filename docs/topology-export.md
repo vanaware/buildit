@@ -13,7 +13,7 @@ This document describes the complete execution topology of the **`export`** util
 exportCli() (packages/utils/src/export/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigExport(configPath, baseDir) (packages/utils/src/export/config.ts)
+       ├──► loadExportConfig(configPath, baseDir) (packages/utils/src/export/config.ts)
        │       │
        │       └──► loadConfig<ExportConfigFile>("export", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -22,31 +22,31 @@ exportCli() (packages/utils/src/export/cli.ts)
 exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
-       ├──► resolverOrdemTargets(configs, options.modos)
+       ├──► resolveTargetOrder(configs, options.modes)
        │
        └──► [Loop for each Selected Mode]
                │
                ▼
-       exportarModo(modo, config, options)
+       exportMode(mode, config, options)
                │
-               ├──► coletarArquivosParaExportacao(config, baseDir)
+               ├──► collectFilesForExport(config, baseDir)
                │       │
                │       └──► expandGlob(pattern, { root, exclude })
-               │               ├──► normalizarCaminho(relative_path)
-               │               └──► correspondeGlobs(relative_path, config.excludes)
+               │               ├──► normalizePath(relative_path)
+               │               └──► matchesGlobs(relative_path, config.excludes)
                │
                ├──► ensureDirForFile(outputPath)
                │
                ├──► Deno.open(outputPath, { write, create, truncate }) [Streaming O(1)]
                │       │
-               │       ├──► writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))
+               │       ├──► writer.write(encoder.encode(generateHeader(config, mode, appVersion)))
                │       │
                │       └──► [Loop for each collected file]
                │               │
                │               ├──► Deno.readTextFile(fullPath)
-               │               ├──► formatarArquivoMarkdown(relative_path, fileContent)
-               │               │       ├──► mapearExtensao(relative_path)
-               │               │       └──► calcularCraseWrapper(fileContent)
+               │               ├──► formatMarkdownFile(relative_path, fileContent)
+               │               │       ├──► mapExtension(relative_path)
+               │               │       └──► calculateBacktickWrapper(fileContent)
                │               └──► writer.write(encoder.encode(markdownBlock))
                │
                └──► writer.close()
@@ -59,10 +59,10 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
 ### Step 1: CLI Initialization
 * **Function**: `exportCli()`
 * **File**: `packages/utils/src/export/cli.ts`
-* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modos...:string]`).
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modes...:string]`).
 * **Actions**:
   1. Identifies the configuration file and base directory.
-  2. Executes `carregarConfigExport(configPath, baseDir)` to read `export.jsonc` or load the default fallback (`ui`, `docs`, `server`, `utils`).
+  2. Executes `loadExportConfig(configPath, baseDir)` to read `export.jsonc` or load the default fallback (`ui`, `docs`, `server`, `utils`).
   3. Collects modes passed via positional arguments.
   4. Calls `exportEngine(options)`.
 
@@ -73,40 +73,40 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
   ```typescript
   options: {
     config: Record<string, ExportConfig>;
-    modos?: string[];
+    modes?: string[];
     baseDir?: string;
-    versaoApp?: string;
-    silencioso?: boolean;
+    appVersion?: string;
+    silent?: boolean;
     denoJsoncPath?: string;
   }
   ```
 * **Actions**:
   1. Determines the application version via `readProjectVersion(denoJsoncPath, baseDir)`.
-  2. Executes `resolverOrdemTargets(configs, options.modos)` to strictly filter and order modes. If none were passed explicitly, filters those with `default !== false`.
-  3. Sequentially iterates over each mode executing `exportarModo(...)`.
+  2. Executes `resolveTargetOrder(configs, options.modes)` to strictly filter and order modes. If none were passed explicitly, filters those with `default !== false`.
+  3. Sequentially iterates over each mode executing `exportMode(...)`.
   4. Returns the list of `ExportResult[]` with file count and total bytes written.
 
 ### Step 3: Mode Processing with `expandGlob` and Write Stream
-* **Function**: `exportarModo(modo, config, options)`
+* **Function**: `exportMode(mode, config, options)`
 * **File**: `packages/utils/src/export/engine.ts`
 * **Input Parameters**:
-  - `modo: string`: Mode name (e.g., `"ui"`, `"docs"`)
+  - `mode: string`: Mode name (e.g., `"ui"`, `"docs"`)
   - `config: ExportConfig`: Detailed mode configuration containing `includes: string[]` and optionally `excludes?: string[]`
-  - `options?: { versaoApp?, baseDir?, silencioso?, denoJsoncPath? }`
+  - `options?: { appVersion?, baseDir?, silent?, denoJsoncPath? }`
 * **Actions and Sub-functions**:
-  1. `coletarArquivosParaExportacao(config, baseDir)`:
+  1. `collectFilesForExport(config, baseDir)`:
      - Iterates over each glob pattern in `config.includes` calling `expandGlob(pattern, { root: baseDir, exclude: config.excludes, includeDirs: false })`.
      - Applies anti-loop protection (`exports/`, `snapshots/`) and deduplicates in a `Set<string>`.
      - Returns an alphabetically sorted array for deterministic snapshots.
   2. Opening the Write Stream:
      - `ensureDirForFile(outputPath)`: Creates parent folders on disk.
      - `Deno.open(outputPath, { write: true, create: true, truncate: true })`: Initializes the file for streaming.
-     - `writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))`: Writes the header generated by `gerarCabecalho(...)`.
+     - `writer.write(encoder.encode(generateHeader(config, mode, appVersion)))`: Writes the header generated by `generateHeader(...)`.
   3. Individual File Processing:
      - For each collected file, reads via `Deno.readTextFile(fullPath)`.
-     - `formatarArquivoMarkdown(relative_path, fileContent)`:
-       - `mapearExtensao(ext)`: Maps special extensions (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(content)`: Dynamically calculates the number of backticks (``` or more) to ensure the code block is valid.
+     - `formatMarkdownFile(relative_path, fileContent)`:
+       - `mapExtension(ext)`: Maps special extensions (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
+       - `calculateBacktickWrapper(content)`: Dynamically calculates the number of backticks (``` or more) to ensure the code block is valid.
      - `writer.write(encoder.encode(markdownBlock))`: Sends the Markdown block directly to the disk stream.
   4. Finalization:
      - `writer.close()`: Ensures a clean file closure.
@@ -118,12 +118,12 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `exportCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
-| `carregarConfigExport()` | `exportCli` | `configPath?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | File system reading (`export.jsonc`) |
+| `loadExportConfig()` | `exportCli` | `configPath?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | File system reading (`export.jsonc`) |
 | `exportEngine()` | `exportCli` / API | `options: ExportOptions` | `Promise<ExportResult[]>` | Export orchestration |
-| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `options?` | `Promise<ExportResult>` | Optimized scanning and disk streaming |
-| `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Scanning with `expandGlob` and alphabetical sorting |
-| `correspondeGlobs()` | `formatter` / `engine` | `path: string`, `patterns: string[]` | `boolean` | Regex evaluation generated via `globToRegExp` |
-| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `appVersion: string`, `defineVersionString?: string` | `string` | Markdown string formatting in memory |
-| `formatarArquivoMarkdown()` | `exportarModo` | `path: string`, `content: string` | `string` | Formatting with code fence and syntax highlighting |
-| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `content: string` | `string` (e.g., ```` ``` ````) | Dynamic Markdown backtick escape |
-| `mapearExtensao()` | `formatarArquivoMarkdown` | `extension: string` | `string` (highlight language) | Syntax highlight normalization |
+| `exportMode()` | `exportEngine` | `mode: string`, `config: ExportConfig`, `options?` | `Promise<ExportResult>` | Optimized scanning and disk streaming |
+| `collectFilesForExport()` | `exportMode` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Scanning with `expandGlob` and alphabetical sorting |
+| `matchesGlobs()` | `formatter` / `engine` | `path: string`, `patterns: string[]` | `boolean` | Regex evaluation generated via `globToRegExp` |
+| `generateHeader()` | `exportMode` | `config: ExportConfig`, `mode: string`, `appVersion: string`, `defineVersionString?: string` | `string` | Markdown string formatting in memory |
+| `formatMarkdownFile()` | `exportMode` | `path: string`, `content: string` | `string` | Formatting with code fence and syntax highlighting |
+| `calculateBacktickWrapper()` | `formatMarkdownFile` | `content: string` | `string` (e.g., ```` ``` ````) | Dynamic Markdown backtick escape |
+| `mapExtension()` | `formatMarkdownFile` | `extension: string` | `string` (highlight language) | Syntax highlight normalization |

@@ -13,7 +13,7 @@ This document describes the complete execution topology of the **`denobuild`** u
 denoBuildCli() (packages/utils/src/denobuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigDenoBuild(configPath, baseDir)
+       ├──► loadDenoBuildConfig(configPath, baseDir)
        │       │
        │       └──► loadConfig<DenoBundleConfigFile>("denobuild", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -64,7 +64,7 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 * **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
 * **Actions**:
   1. Locates Deno configuration via `findDenoConfig()`.
-  2. Executes `carregarConfigDenoBuild(configPath, baseDir)` to read `denobuild.jsonc`.
+  2. Executes `loadDenoBuildConfig(configPath, baseDir)` to read `denobuild.jsonc`.
   3. Filters arguments with `parseArgs(args, configs)`.
   4. Calls `denoBuild(options)`.
 
@@ -123,7 +123,7 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `denoBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
-| `carregarConfigDenoBuild()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
+| `loadDenoBuildConfig()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
 | `denoBuild()` | `denoBuildCli` / API | `options: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Version updates and bundle compilation |
 | `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Cleanup, static copy, bundle, disk writing |
 | `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Path resolution and property mapping |
@@ -135,4 +135,4 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 
 1. **Defines Substitution via AST vs Regex**: `applyDefines` operates via textual regular expression. To avoid false positives within literal strings or code comments, contextual or tokenized substitution can be evaluated.
 2. **Unstable API Dependency**: `Deno.bundle` is an unstable Deno feature. The engine's modular structure isolates this dependency in `packages/utils/src/denobuild/bundle.ts`, facilitating future migration or compatibility with Deno 2.x versions.
-3. **Target Ordering Utility Reuse**: Standardize `resolverOrdemTargets` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.
+3. **Target Ordering Utility Reuse**: Standardize `resolveTargetOrder` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.

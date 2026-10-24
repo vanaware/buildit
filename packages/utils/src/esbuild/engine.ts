@@ -1,25 +1,17 @@
-import { copy, emptyDir, ensureDir, } from "@std/fs";
-import { dirname, isAbsolute, join, } from "@std/path";
-import { parse as parseJsonc, } from "@std/jsonc";
+import { join, } from "@std/path";
 
 // ============================================================================
 // 📦 TYPES
 // ============================================================================
 import type {
-  DenoBundleGlobalConfig,
-  DenoBundleTargetConfig,
   EsbuildOptions,
   EsbuildResult,
-  GlobalTargetConfig,
-  ParsedArgs,
-  ParsedVersion,
   TargetConfig,
 } from "../tools/interfaces.ts";
 
 import {
   cleanTarget,
   copyStaticFiles,
-  ensureDirForFile,
   listAssetsForCache,
   resolveEntryPoints,
   resolveOutputPaths,
@@ -27,6 +19,14 @@ import {
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
+
+import {
+  applyAssetDefine,
+  buildBannerFooter,
+  buildVersionedDefine,
+  copyOptionalProps,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 
 // ============================================================================
 // 🔢 VERSION FUNCTIONS (re-exported from config/version.ts)
@@ -57,7 +57,7 @@ export const buildWithDenoPlugin = (
 /**
  * Programmatically executes the esbuild compilation for configured targets.
  *
- * @param opcoes Full execution options (including already parsed configuration)
+ * @param options Full execution options (including already parsed configuration)
  * @returns List of results obtained per target
  *
  * @example
@@ -76,20 +76,20 @@ export const buildWithDenoPlugin = (
  * ```
  */
 export async function esBuild(
-  opcoes: EsbuildOptions,
+  options: EsbuildOptions,
 ): Promise<EsbuildResult[]> {
-  const configs = opcoes.config;
-  const baseDir = opcoes.baseDir ?? ".";
-  const targets = opcoes.targets;
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = options.config;
+  const baseDir = options.baseDir ?? ".";
+  const targets = options.targets;
+  const denoJsoncPath = options.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: opcoes.noversion ?? false,
-    versionPaths: opcoes.versionPaths,
-    forcepackagesversion: opcoes.forcepackagesversion,
-    defineVersionString: opcoes.defineVersionString,
+    noversion: options.noversion ?? false,
+    versionPaths: options.versionPaths,
+    forcepackagesversion: options.forcepackagesversion,
+    defineVersionString: options.defineVersionString,
   },);
 
   // Strictly ensures that the execution order follows the declaration in the configuration
@@ -99,7 +99,7 @@ export async function esBuild(
     return [];
   }
 
-  const resultados: EsbuildResult[] = [];
+  const results: EsbuildResult[] = [];
 
   try {
     for (const targetName of targetsToExecute) {
@@ -120,11 +120,11 @@ export async function esBuild(
         (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
         listFn,
         baseDir,
-        opcoes.defineVersionString,
+        options.defineVersionString,
       );
-      const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+      const durationMs = Math.round(performance.now() - startTime,);
 
-      resultados.push({
+      results.push({
         target: targetName,
         success: true,
         durationMs,
@@ -139,7 +139,7 @@ export async function esBuild(
     }
   }
 
-  return resultados;
+  return results;
 }
 
 /**
@@ -253,6 +253,56 @@ export async function processTarget(
 // ============================================================================
 // 🛠️ ESBUILD FUNCTIONS
 // ============================================================================
+/** Optional esbuild properties copied as-is from the target configuration. */
+const OPTIONAL_ESBUILD_PROPS = [
+  "platform",
+  "format",
+  "bundle",
+  "minify",
+  "sourcemap",
+  "jsx",
+  "jsxImportSource",
+  "conditions",
+  "external",
+  "drop",
+  "metafile",
+  "write",
+  "treeShaking",
+  "legalComments",
+  "keepNames",
+  "splitting",
+  "loader",
+  "alias",
+  "inject",
+  "target",
+  "charset",
+  "logLevel",
+  "logLimit",
+  "logOverride",
+  "entryNames",
+  "chunkNames",
+  "assetNames",
+  "publicPath",
+  "pure",
+  "globalName",
+  "tsconfig",
+  "tsconfigRaw",
+  "outExtension",
+  "supported",
+  "sourcesContent",
+  "ignoreAnnotations",
+  "minifyWhitespace",
+  "minifyIdentifiers",
+  "minifySyntax",
+  "jsxFactory",
+  "jsxFragment",
+  "analyze",
+  "sideEffects",
+  "mangleQuoted",
+  "mangleCache",
+  "plugins",
+];
+
 /**
  * Builds build options for esbuild.
  * @param targetName Target name
@@ -269,20 +319,11 @@ export async function buildEsbuildOptions(
   defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
-  const finalDefine: Record<string, string> = {
-    ...config.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(config, defineVersionString,);
+  const finalDefine = buildVersionedDefine(config, appVersion, defineVersionKey,);
 
   // 🔥 ASSETS DEFINES INJECTION: Unified pattern
-  if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir,);
-
-    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(finalDefine, config, listAssetsFn,);
 
   // 🔥 ENTRYPOINTS RESOLUTION (optional srcdir)
   const resolvedEntryPoints = resolveEntryPoints(
@@ -305,61 +346,11 @@ export async function buildEsbuildOptions(
     options.outdir = outdir;
   }
 
-  const optionalProps = [
-    "platform",
-    "format",
-    "bundle",
-    "minify",
-    "sourcemap",
-    "jsx",
-    "jsxImportSource",
-    "conditions",
-    "external",
-    "drop",
-    "metafile",
-    "write",
-    "treeShaking",
-    "legalComments",
-    "keepNames",
-    "splitting",
-    "loader",
-    "alias",
-    "inject",
-    "target",
-    "charset",
-    "logLevel",
-    "logLimit",
-    "logOverride",
-    "entryNames",
-    "chunkNames",
-    "assetNames",
-    "publicPath",
-    "pure",
-    "globalName",
-    "tsconfig",
-    "tsconfigRaw",
-    "outExtension",
-    "supported",
-    "sourcesContent",
-    "ignoreAnnotations",
-    "minifyWhitespace",
-    "minifyIdentifiers",
-    "minifySyntax",
-    "jsxFactory",
-    "jsxFragment",
-    "analyze",
-    "sideEffects",
-    "mangleQuoted",
-    "mangleCache",
-    "plugins",
-  ];
-  for (const prop of optionalProps) {
-    // deno-lint-ignore no-explicit-any
-    if ((config as any)[prop] !== undefined) {
-      // deno-lint-ignore no-explicit-any
-      (options as any)[prop] = (config as any)[prop];
-    }
-  }
+  copyOptionalProps(
+    config as unknown as Record<string, unknown>,
+    options as Record<string, unknown>,
+    OPTIONAL_ESBUILD_PROPS,
+  );
 
   // 🔥 REQUIREMENT: To use analyze, esbuild needs to generate the metafile
   if (config.analyze) {
@@ -367,9 +358,9 @@ export async function buildEsbuildOptions(
   }
 
   // 🔥 SPECIAL TREATMENT: mangleProps and reserveProps must be RegExp in JS API
-  const regexProps = ["mangleProps", "reserveProps"];
+  const regexProps = ["mangleProps", "reserveProps",];
   for (const propName of regexProps) {
-    const val = (config as any)[propName];
+    const val = (config as unknown as Record<string, unknown>)[propName];
     if (val !== undefined) {
       if (typeof val === "string") {
         let pattern = val;
@@ -387,39 +378,15 @@ export async function buildEsbuildOptions(
   }
 
   // 🔥 CORRECTION: Secure banner construction with defineVersionKey
-  if (config.banner !== undefined) {
-    const banner: { js?: string; css?: string } = {};
-    if (config.banner.js !== undefined) {
-      banner.js = config.banner.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.banner.css !== undefined) {
-      banner.css = config.banner.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (banner.js !== undefined || banner.css !== undefined) {
-      options.banner = banner;
-    }
+  const banner = buildBannerFooter(config.banner, appVersion, defineVersionKey,);
+  if (banner !== undefined) {
+    options.banner = banner;
   }
 
   // 🔥 CORRECTION: Secure footer construction with defineVersionKey
-  if (config.footer !== undefined) {
-    const footer: { js?: string; css?: string } = {};
-    if (config.footer.js !== undefined) {
-      footer.js = config.footer.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.footer.css !== undefined) {
-      footer.css = config.footer.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (footer.js !== undefined || footer.css !== undefined) {
-      options.footer = footer;
-    }
+  const footer = buildBannerFooter(config.footer, appVersion, defineVersionKey,);
+  if (footer !== undefined) {
+    options.footer = footer;
   }
 
   options.define = finalDefine;

@@ -187,7 +187,7 @@ export async function cleanTarget(
     ? { includes: cleanConfig, }
     : cleanConfig;
 
-  if (!config || !config.includes || config.includes.length === 0) return;
+  if (!config.includes || config.includes.length === 0) return;
 
   console.log(`🧹 Cleaning at ${distDir}...`,);
   const includes = config.includes;
@@ -292,12 +292,50 @@ export async function listAssetsForCache(
       !entry.name.endsWith("metafile.json",) &&
       !exclude.has(entry.name,)
     ) {
-      let webPath = entry.path.replace(distDir, "",).replace(/\\/g, "/",);
-      webPath = webPath.startsWith("/",) ? "." + webPath : "./" + webPath;
-      assets.push(webPath,);
+      const relPath = relative(distDir, entry.path,).replace(/\\/g, "/",);
+      assets.push(`./${relPath}`,);
     }
   }
   return assets;
+}
+
+/**
+ * Copies a single matched file into the output directory and applies the
+ * special-case handling for `index.html` (console report) and
+ * `manifest.json` (version injection).
+ *
+ * @param entryPath Source file path found on disk
+ * @param destPath Resolved destination path inside distdir
+ * @param appVersion Application version for manifest.json injection
+ */
+async function copyEntryToDist(
+  entryPath: string,
+  destPath: string,
+  appVersion: string,
+): Promise<void> {
+  await ensureDirForFile(destPath,);
+  await copy(entryPath, destPath, { overwrite: true, },);
+
+  const fileName = basename(entryPath,).toLowerCase();
+  if (fileName === "index.html") {
+    console.log(`📄 index.html copied to ${destPath}`,);
+  }
+  if (fileName === "manifest.json") {
+    try {
+      const manifestText = await Deno.readTextFile(destPath,);
+      const manifestObj = JSON.parse(manifestText,);
+      manifestObj.version = appVersion;
+      await Deno.writeTextFile(
+        destPath,
+        JSON.stringify(manifestObj, null, 2,),
+      );
+      console.log(
+        `📱 Version v${appVersion} injected into manifest.json`,
+      );
+    } catch {
+      // manifest is not valid JSON
+    }
+  }
 }
 
 /**
@@ -343,14 +381,14 @@ export async function copyTargetFiles(
         : item.basedir!)
       : (generalBaseDir ?? ".");
 
+    let patterns: string[];
     if (hasItemBase) {
       // 1. if basedir provided, includes and excludes are relative to basedir and tree is preserved
       // 2. if basedir provided and includes is missing, empty or "*", copies everything from basedir respecting excludes
       const isAll = !item.includes ||
         item.includes.length === 0 ||
         (item.includes.length === 1 && item.includes[0] === "*");
-
-      const patterns = isAll ? ["**/*",] : item.includes!;
+      patterns = isAll ? ["**/*",] : item.includes!;
 
       try {
         const stat = await Deno.stat(effectiveBaseDir,);
@@ -366,125 +404,54 @@ export async function copyTargetFiles(
         );
         continue;
       }
-
-      for (const pattern of patterns) {
-        try {
-          for await (
-            const entry of expandGlob(pattern, {
-              root: effectiveBaseDir,
-              exclude: item.excludes,
-              includeDirs: false,
-            },)
-          ) {
-            if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(
-                /\\/g,
-                "/",
-              );
-
-              if (item.excludes && item.excludes.length > 0) {
-                if (matchesGlobs(relPath, item.excludes,)) {
-                  continue;
-                }
-              }
-
-              const destPath = join(distDir, relPath,);
-              await ensureDirForFile(destPath,);
-              await copy(entry.path, destPath, { overwrite: true, },);
-
-              const fileName = basename(entry.path,).toLowerCase();
-              if (fileName === "index.html") {
-                console.log(
-                  `📄 index.html copied from ${effectiveBaseDir} to ${destPath}`,
-                );
-              }
-              if (fileName === "manifest.json") {
-                try {
-                  const manifestText = await Deno.readTextFile(destPath,);
-                  const manifestObj = JSON.parse(manifestText,);
-                  manifestObj.version = appVersion;
-                  await Deno.writeTextFile(
-                    destPath,
-                    JSON.stringify(manifestObj, null, 2,),
-                  );
-                  console.log(
-                    `📱 Version v${appVersion} injected into manifest.json`,
-                  );
-                } catch {
-                  // manifest is not valid JSON
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn(
-            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
-            err,
-          );
-        }
-      }
-      console.log(
-        `📁 Files from ${effectiveBaseDir} copied to ${distDir}`,
-      );
     } else {
       // 3. if basedir missing, includes and excludes are relative to "general basedir"
       // and directory tree is NOT preserved in copy and files are copied directly to distdir
-      const patterns = item.includes && item.includes.length > 0
-        ? item.includes
-        : [];
-      for (const pattern of patterns) {
-        try {
-          for await (
-            const entry of expandGlob(pattern, {
-              root: effectiveBaseDir,
-              exclude: item.excludes,
-              includeDirs: false,
-            },)
-          ) {
-            if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(
-                /\\/g,
-                "/",
-              );
-              if (item.excludes && item.excludes.length > 0) {
-                if (matchesGlobs(relPath, item.excludes,)) {
-                  continue;
-                }
-              }
+      patterns = item.includes ?? [];
+    }
 
-              const fileName = basename(entry.path,);
-              const destPath = join(distDir, fileName,);
-              await ensureDirForFile(destPath,);
-              await copy(entry.path, destPath, { overwrite: true, },);
+    for (const pattern of patterns) {
+      try {
+        for await (
+          const entry of expandGlob(pattern, {
+            root: effectiveBaseDir,
+            exclude: item.excludes,
+            includeDirs: false,
+          },)
+        ) {
+          if (!entry.isFile) continue;
 
-              if (fileName.toLowerCase() === "index.html") {
-                console.log(`📄 index.html copied to ${destPath}`,);
-              }
-              if (fileName.toLowerCase() === "manifest.json") {
-                try {
-                  const manifestText = await Deno.readTextFile(destPath,);
-                  const manifestObj = JSON.parse(manifestText,);
-                  manifestObj.version = appVersion;
-                  await Deno.writeTextFile(
-                    destPath,
-                    JSON.stringify(manifestObj, null, 2,),
-                  );
-                  console.log(
-                    `📱 Version v${appVersion} injected into manifest.json`,
-                  );
-                } catch {
-                  // manifest is not valid JSON
-                }
-              }
+          const relPath = relative(effectiveBaseDir, entry.path,).replace(
+            /\\/g,
+            "/",
+          );
+
+          if (item.excludes && item.excludes.length > 0) {
+            if (matchesGlobs(relPath, item.excludes,)) {
+              continue;
             }
           }
-        } catch (err) {
-          console.warn(
-            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
-            err,
-          );
+
+          // Destination: with basedir the tree is preserved relative to it;
+          // without basedir files are flattened directly into distdir
+          const destPath = hasItemBase
+            ? join(distDir, relPath,)
+            : join(distDir, basename(entry.path,),);
+
+          await copyEntryToDist(entry.path, destPath, appVersion,);
         }
+      } catch (err) {
+        console.warn(
+          `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
+          err,
+        );
       }
+    }
+
+    if (hasItemBase) {
+      console.log(
+        `📁 Files from ${effectiveBaseDir} copied to ${distDir}`,
+      );
     }
   }
 }

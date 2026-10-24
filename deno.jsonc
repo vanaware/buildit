@@ -1,5 +1,5 @@
 {
-  "version": "0.5.3#mvee92cp",
+  "version": "0.6.1#mvmtlxpb",
   "description": "Build orchestration, bundling and AI context export utilities for Deno & Web projects.",
   "license": "MIT",
   "author": "Vanaware",
@@ -57,8 +57,7 @@
   "lint": {
     "rules": {
       "tags": ["recommended"],
-      "include": ["ban-untagged-todo"],
-      "exclude": ["no-unused-vars"]
+      "include": ["ban-untagged-todo"]
     },
     "include": [
       "scripts/**/*.ts",

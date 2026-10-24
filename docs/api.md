@@ -158,9 +158,9 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
 {
   "$schema": "./packages/utils/schema/export.json",
   "version": "0.3.7",
-  "modos": {
+  "modes": {
     "ui": {
-      "arquivoSaida": "snapshots/ui.md",
+      "outputFile": "snapshots/ui.md",
       "includes": [
         "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
         "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
@@ -169,8 +169,8 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": true,
-      "instrucaoCustomizada": "Frontend context with Preact + BeerCSS.",
+      "includeVersion": true,
+      "customInstruction": "Frontend context with Preact + BeerCSS.",
       "default": true
     }
   }
@@ -179,7 +179,7 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
 
 - **Glob Patterns and Brace Expansion**: The exporter uses `expandGlob` under the hood, allowing concise declaration of paths and extensions (e.g., `{src,docs}/**/*.{ts,tsx,md}`).
 - **O(1) Streaming Write**: Progressive recording directly to disk via `Deno.open` and `WritableStream`, ensuring maximum memory efficiency even in large monorepos.
-- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `instrucaoCustomizada` and `cabecalho`.
+- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `customInstruction` and `header`.
 
 ---
 

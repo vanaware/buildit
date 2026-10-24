@@ -13,7 +13,7 @@ This document describes the complete execution topology of the **`esbuild`** uti
 esBuildCli() (packages/utils/src/esbuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigEsbuild(configPath, baseDir)
+       ├──► loadEsbuildConfig(configPath, baseDir)
        │       │
        │       └──► loadConfig<EsbuildConfigFile>("esbuild", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -33,7 +33,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
        │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [If forcepackagesversion=true]
        │               └──► [Iterate workspaces] -> syncWorkspaceDir(...)
        │
-       ├──► resolverOrdemTargets(configs, targets)
+       ├──► resolveTargetOrder(configs, targets)
        │
        └──► [Loop for each Selected Target]
                │
@@ -77,7 +77,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
 * **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
 * **Actions**:
   1. `findDenoConfig()`: Looks for `deno.jsonc` or `deno.json` in root/parent directories.
-  2. `carregarConfigEsbuild(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
+  2. `loadEsbuildConfig(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
   3. `parseArgs(args, configs)`: Filters targets requested by the user against those declared in the config.
   4. Calls `esBuild(options)`.
 
@@ -103,7 +103,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Invokes `syncWorkspaces(...)` to propagate the version across workspace packages (if `forcepackagesversion === true`).
      - Synchronizes the new version in additional files (`versionPaths`).
      - Returns `finalVersion` (semantic string, e.g., `"0.3.14"`).
-  2. `resolverOrdemTargets(configs, targets)`:
+  2. `resolveTargetOrder(configs, targets)`:
      - Strictly ensures target execution order respects the configuration file declaration, ignoring non-existent targets and selecting those with `default !== false` if none were specified via CLI.
   3. Iterates over each resolved target and invokes `processTarget(...)`.
 
@@ -147,11 +147,11 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `esBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI reading and stdout output |
-| `carregarConfigEsbuild()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
+| `loadEsbuildConfig()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
 | `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (valid targets) | Pure (no I/O) |
 | `esBuild()` | `esBuildCli` / API | `options: EsbuildOptions` | `Promise<EsbuildResult[]>` | Updates versions, compiles targets |
 | `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Writes new versions to `deno.jsonc` and packages |
-| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
+| `resolveTargetOrder()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
 | `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Cleans folders, copies static, compiles bundle |
 | `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (throws if invalid) | Strict validation (fail-fast) |
 | `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Optional reading of distdir for SW |

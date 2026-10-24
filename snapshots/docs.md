@@ -7,14 +7,14 @@
 
 # Exported Context from Project BuildIt - Mode: DOCS
 
-Automatically generated at: 2026-10-04T19:05:09.030Z
+Automatically generated at: 2026-10-24T19:56:44.968Z
 
 ---
 
 ## File: `.tool-versions`
 
 ```tool-versions
-deno 2.9.7
+deno 2.9.8
 
 ```
 
@@ -183,9 +183,9 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
 {
   "$schema": "./packages/utils/schema/export.json",
   "version": "0.3.7",
-  "modos": {
+  "modes": {
     "ui": {
-      "arquivoSaida": "snapshots/ui.md",
+      "outputFile": "snapshots/ui.md",
       "includes": [
         "packages/ui/{src,public,tests,docs}/**/*.{tsx,jsx,js,ts,css,html,manifest,json,jsonc,md}",
         "packages/ui/{build.ts,deno.json,deno.jsonc,readme.md}"
@@ -194,8 +194,8 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
         "**/node_modules/**",
         "**/.git/**"
       ],
-      "incluiVersao": true,
-      "instrucaoCustomizada": "Frontend context with Preact + BeerCSS.",
+      "includeVersion": true,
+      "customInstruction": "Frontend context with Preact + BeerCSS.",
       "default": true
     }
   }
@@ -204,7 +204,7 @@ The `denobuild` engine uses the native `Deno.bundle` API to package applications
 
 - **Glob Patterns and Brace Expansion**: The exporter uses `expandGlob` under the hood, allowing concise declaration of paths and extensions (e.g., `{src,docs}/**/*.{ts,tsx,md}`).
 - **O(1) Streaming Write**: Progressive recording directly to disk via `Deno.open` and `WritableStream`, ensuring maximum memory efficiency even in large monorepos.
-- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `instrucaoCustomizada` and `cabecalho`.
+- **Read-Only Mode**: `exportEngine` reads the current project version to enrich headers without ever incrementing it. It supports automatic substitution of the version constant (`defineVersionString`, default: `__APP_VERSION__`) in `customInstruction` and `header`.
 
 ---
 
@@ -509,7 +509,7 @@ This document describes the complete execution topology of the **`denobuild`** u
 denoBuildCli() (packages/utils/src/denobuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigDenoBuild(configPath, baseDir)
+       ├──► loadDenoBuildConfig(configPath, baseDir)
        │       │
        │       └──► loadConfig<DenoBundleConfigFile>("denobuild", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -560,7 +560,7 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 * **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
 * **Actions**:
   1. Locates Deno configuration via `findDenoConfig()`.
-  2. Executes `carregarConfigDenoBuild(configPath, baseDir)` to read `denobuild.jsonc`.
+  2. Executes `loadDenoBuildConfig(configPath, baseDir)` to read `denobuild.jsonc`.
   3. Filters arguments with `parseArgs(args, configs)`.
   4. Calls `denoBuild(options)`.
 
@@ -619,7 +619,7 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `denoBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
-| `carregarConfigDenoBuild()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
+| `loadDenoBuildConfig()` | `denoBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<DenoBundleConfigResult>` | File system reading (`denobuild.jsonc`) |
 | `denoBuild()` | `denoBuildCli` / API | `options: DenoBuildOptions` | `Promise<DenoBuildResult[]>` | Version updates and bundle compilation |
 | `processBundleTarget()` | `denoBuild` | `targetName`, `config`, `appVersion`, `listAssetsFn?` | `Promise<DenoBuildResult>` | Cleanup, static copy, bundle, disk writing |
 | `buildBundleOptions()` | `processBundleTarget` | `config: DenoBundleTargetConfig` | `Deno.BundleOptions` | Path resolution and property mapping |
@@ -631,7 +631,7 @@ denoBuild(options: DenoBuildOptions) (packages/utils/src/denobuild/engine.ts)
 
 1. **Defines Substitution via AST vs Regex**: `applyDefines` operates via textual regular expression. To avoid false positives within literal strings or code comments, contextual or tokenized substitution can be evaluated.
 2. **Unstable API Dependency**: `Deno.bundle` is an unstable Deno feature. The engine's modular structure isolates this dependency in `packages/utils/src/denobuild/bundle.ts`, facilitating future migration or compatibility with Deno 2.x versions.
-3. **Target Ordering Utility Reuse**: Standardize `resolverOrdemTargets` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.
+3. **Target Ordering Utility Reuse**: Standardize `resolveTargetOrder` (used in `esbuild`) also in `denoBuild` to maintain exactly the same deterministic target behavior.
 
 ````
 
@@ -655,7 +655,7 @@ This document describes the complete execution topology of the **`esbuild`** uti
 esBuildCli() (packages/utils/src/esbuild/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigEsbuild(configPath, baseDir)
+       ├──► loadEsbuildConfig(configPath, baseDir)
        │       │
        │       └──► loadConfig<EsbuildConfigFile>("esbuild", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -675,7 +675,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
        │       └──► syncWorkspaces({ baseDir, denoJsonPath, currentVersion }) [If forcepackagesversion=true]
        │               └──► [Iterate workspaces] -> syncWorkspaceDir(...)
        │
-       ├──► resolverOrdemTargets(configs, targets)
+       ├──► resolveTargetOrder(configs, targets)
        │
        └──► [Loop for each Selected Target]
                │
@@ -719,7 +719,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
 * **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `-n/--no-version`, `-p/--packages-version`, `[targets...:string]`).
 * **Actions**:
   1. `findDenoConfig()`: Looks for `deno.jsonc` or `deno.json` in root/parent directories.
-  2. `carregarConfigEsbuild(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
+  2. `loadEsbuildConfig(configPath, baseDir)`: Loads and validates the configuration file (or returns `DEFAULT_CONFIG`).
   3. `parseArgs(args, configs)`: Filters targets requested by the user against those declared in the config.
   4. Calls `esBuild(options)`.
 
@@ -745,7 +745,7 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
      - Invokes `syncWorkspaces(...)` to propagate the version across workspace packages (if `forcepackagesversion === true`).
      - Synchronizes the new version in additional files (`versionPaths`).
      - Returns `finalVersion` (semantic string, e.g., `"0.3.14"`).
-  2. `resolverOrdemTargets(configs, targets)`:
+  2. `resolveTargetOrder(configs, targets)`:
      - Strictly ensures target execution order respects the configuration file declaration, ignoring non-existent targets and selecting those with `default !== false` if none were specified via CLI.
   3. Iterates over each resolved target and invokes `processTarget(...)`.
 
@@ -789,11 +789,11 @@ esBuild(options: EsbuildOptions) (packages/utils/src/esbuild/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `esBuildCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI reading and stdout output |
-| `carregarConfigEsbuild()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
+| `loadEsbuildConfig()` | `esBuildCli` | `configPath?: string`, `baseDir?: string` | `Promise<EsbuildConfigResult>` | File system reading (`esbuild.jsonc`) |
 | `parseArgs()` | `esBuildCli` | `args: string[]`, `configs: GlobalTargetConfig` | `ParsedArgs` (valid targets) | Pure (no I/O) |
 | `esBuild()` | `esBuildCli` / API | `options: EsbuildOptions` | `Promise<EsbuildResult[]>` | Updates versions, compiles targets |
 | `updateProjectVersion()` | `esBuild` | `VersionUpdateOptions` | `Promise<string>` | Writes new versions to `deno.jsonc` and packages |
-| `resolverOrdemTargets()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
+| `resolveTargetOrder()` | `esBuild` | `configs: Record<string, TargetConfig>`, `requested?: string[]` | `string[]` | Pure (ordering and filtering) |
 | `processTarget()` | `esBuild` | `targetName`, `config`, `version`, `buildFn`, `listAssetsFn` | `Promise<void>` | Cleans folders, copies static, compiles bundle |
 | `validateTargetConfig()`| `processTarget` | `targetName: string`, `config: TargetConfig` | `void` (throws if invalid) | Strict validation (fail-fast) |
 | `buildEsbuildOptions()` | `processTarget` | `targetName`, `config`, `appVersion`, `listAssetsFn` | `Promise<esbuild.BuildOptions>` | Optional reading of distdir for SW |
@@ -829,7 +829,7 @@ This document describes the complete execution topology of the **`export`** util
 exportCli() (packages/utils/src/export/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigExport(configPath, baseDir) (packages/utils/src/export/config.ts)
+       ├──► loadExportConfig(configPath, baseDir) (packages/utils/src/export/config.ts)
        │       │
        │       └──► loadConfig<ExportConfigFile>("export", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -838,31 +838,31 @@ exportCli() (packages/utils/src/export/cli.ts)
 exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
        │
        ├──► readProjectVersion(denoJsoncPath, baseDir)
-       ├──► resolverOrdemTargets(configs, options.modos)
+       ├──► resolveTargetOrder(configs, options.modes)
        │
        └──► [Loop for each Selected Mode]
                │
                ▼
-       exportarModo(modo, config, options)
+       exportMode(mode, config, options)
                │
-               ├──► coletarArquivosParaExportacao(config, baseDir)
+               ├──► collectFilesForExport(config, baseDir)
                │       │
                │       └──► expandGlob(pattern, { root, exclude })
-               │               ├──► normalizarCaminho(relative_path)
-               │               └──► correspondeGlobs(relative_path, config.excludes)
+               │               ├──► normalizePath(relative_path)
+               │               └──► matchesGlobs(relative_path, config.excludes)
                │
                ├──► ensureDirForFile(outputPath)
                │
                ├──► Deno.open(outputPath, { write, create, truncate }) [Streaming O(1)]
                │       │
-               │       ├──► writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))
+               │       ├──► writer.write(encoder.encode(generateHeader(config, mode, appVersion)))
                │       │
                │       └──► [Loop for each collected file]
                │               │
                │               ├──► Deno.readTextFile(fullPath)
-               │               ├──► formatarArquivoMarkdown(relative_path, fileContent)
-               │               │       ├──► mapearExtensao(relative_path)
-               │               │       └──► calcularCraseWrapper(fileContent)
+               │               ├──► formatMarkdownFile(relative_path, fileContent)
+               │               │       ├──► mapExtension(relative_path)
+               │               │       └──► calculateBacktickWrapper(fileContent)
                │               └──► writer.write(encoder.encode(markdownBlock))
                │
                └──► writer.close()
@@ -875,10 +875,10 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
 ### Step 1: CLI Initialization
 * **Function**: `exportCli()`
 * **File**: `packages/utils/src/export/cli.ts`
-* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modos...:string]`).
+* **Input**: CLI arguments via Cliffy (`-c/--app-config`, `-b/--base-dir`, `-d/--deno-config`, `[modes...:string]`).
 * **Actions**:
   1. Identifies the configuration file and base directory.
-  2. Executes `carregarConfigExport(configPath, baseDir)` to read `export.jsonc` or load the default fallback (`ui`, `docs`, `server`, `utils`).
+  2. Executes `loadExportConfig(configPath, baseDir)` to read `export.jsonc` or load the default fallback (`ui`, `docs`, `server`, `utils`).
   3. Collects modes passed via positional arguments.
   4. Calls `exportEngine(options)`.
 
@@ -889,40 +889,40 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
   ```typescript
   options: {
     config: Record<string, ExportConfig>;
-    modos?: string[];
+    modes?: string[];
     baseDir?: string;
-    versaoApp?: string;
-    silencioso?: boolean;
+    appVersion?: string;
+    silent?: boolean;
     denoJsoncPath?: string;
   }
   ```
 * **Actions**:
   1. Determines the application version via `readProjectVersion(denoJsoncPath, baseDir)`.
-  2. Executes `resolverOrdemTargets(configs, options.modos)` to strictly filter and order modes. If none were passed explicitly, filters those with `default !== false`.
-  3. Sequentially iterates over each mode executing `exportarModo(...)`.
+  2. Executes `resolveTargetOrder(configs, options.modes)` to strictly filter and order modes. If none were passed explicitly, filters those with `default !== false`.
+  3. Sequentially iterates over each mode executing `exportMode(...)`.
   4. Returns the list of `ExportResult[]` with file count and total bytes written.
 
 ### Step 3: Mode Processing with `expandGlob` and Write Stream
-* **Function**: `exportarModo(modo, config, options)`
+* **Function**: `exportMode(mode, config, options)`
 * **File**: `packages/utils/src/export/engine.ts`
 * **Input Parameters**:
-  - `modo: string`: Mode name (e.g., `"ui"`, `"docs"`)
+  - `mode: string`: Mode name (e.g., `"ui"`, `"docs"`)
   - `config: ExportConfig`: Detailed mode configuration containing `includes: string[]` and optionally `excludes?: string[]`
-  - `options?: { versaoApp?, baseDir?, silencioso?, denoJsoncPath? }`
+  - `options?: { appVersion?, baseDir?, silent?, denoJsoncPath? }`
 * **Actions and Sub-functions**:
-  1. `coletarArquivosParaExportacao(config, baseDir)`:
+  1. `collectFilesForExport(config, baseDir)`:
      - Iterates over each glob pattern in `config.includes` calling `expandGlob(pattern, { root: baseDir, exclude: config.excludes, includeDirs: false })`.
      - Applies anti-loop protection (`exports/`, `snapshots/`) and deduplicates in a `Set<string>`.
      - Returns an alphabetically sorted array for deterministic snapshots.
   2. Opening the Write Stream:
      - `ensureDirForFile(outputPath)`: Creates parent folders on disk.
      - `Deno.open(outputPath, { write: true, create: true, truncate: true })`: Initializes the file for streaming.
-     - `writer.write(encoder.encode(gerarCabecalho(config, modo, appVersion)))`: Writes the header generated by `gerarCabecalho(...)`.
+     - `writer.write(encoder.encode(generateHeader(config, mode, appVersion)))`: Writes the header generated by `generateHeader(...)`.
   3. Individual File Processing:
      - For each collected file, reads via `Deno.readTextFile(fullPath)`.
-     - `formatarArquivoMarkdown(relative_path, fileContent)`:
-       - `mapearExtensao(ext)`: Maps special extensions (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
-       - `calcularCraseWrapper(content)`: Dynamically calculates the number of backticks (``` or more) to ensure the code block is valid.
+     - `formatMarkdownFile(relative_path, fileContent)`:
+       - `mapExtension(ext)`: Maps special extensions (`.jsonc` -> `json`, `.sh` -> `bash`, `.env*` -> `properties`, `.manifest` -> `json`).
+       - `calculateBacktickWrapper(content)`: Dynamically calculates the number of backticks (``` or more) to ensure the code block is valid.
      - `writer.write(encoder.encode(markdownBlock))`: Sends the Markdown block directly to the disk stream.
   4. Finalization:
      - `writer.close()`: Ensures a clean file closure.
@@ -934,15 +934,15 @@ exportEngine(options: ExportOptions) (packages/utils/src/export/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `exportCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing and console output |
-| `carregarConfigExport()` | `exportCli` | `configPath?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | File system reading (`export.jsonc`) |
+| `loadExportConfig()` | `exportCli` | `configPath?: string`, `baseDir?: string` | `Promise<ExportConfigResult>` | File system reading (`export.jsonc`) |
 | `exportEngine()` | `exportCli` / API | `options: ExportOptions` | `Promise<ExportResult[]>` | Export orchestration |
-| `exportarModo()` | `exportEngine` | `modo: string`, `config: ExportConfig`, `options?` | `Promise<ExportResult>` | Optimized scanning and disk streaming |
-| `coletarArquivosParaExportacao()` | `exportarModo` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Scanning with `expandGlob` and alphabetical sorting |
-| `correspondeGlobs()` | `formatter` / `engine` | `path: string`, `patterns: string[]` | `boolean` | Regex evaluation generated via `globToRegExp` |
-| `gerarCabecalho()` | `exportarModo` | `config: ExportConfig`, `modo: string`, `appVersion: string`, `defineVersionString?: string` | `string` | Markdown string formatting in memory |
-| `formatarArquivoMarkdown()` | `exportarModo` | `path: string`, `content: string` | `string` | Formatting with code fence and syntax highlighting |
-| `calcularCraseWrapper()` | `formatarArquivoMarkdown` | `content: string` | `string` (e.g., ```` ``` ````) | Dynamic Markdown backtick escape |
-| `mapearExtensao()` | `formatarArquivoMarkdown` | `extension: string` | `string` (highlight language) | Syntax highlight normalization |
+| `exportMode()` | `exportEngine` | `mode: string`, `config: ExportConfig`, `options?` | `Promise<ExportResult>` | Optimized scanning and disk streaming |
+| `collectFilesForExport()` | `exportMode` | `config: ExportConfig`, `baseDir: string` | `Promise<string[]>` | Scanning with `expandGlob` and alphabetical sorting |
+| `matchesGlobs()` | `formatter` / `engine` | `path: string`, `patterns: string[]` | `boolean` | Regex evaluation generated via `globToRegExp` |
+| `generateHeader()` | `exportMode` | `config: ExportConfig`, `mode: string`, `appVersion: string`, `defineVersionString?: string` | `string` | Markdown string formatting in memory |
+| `formatMarkdownFile()` | `exportMode` | `path: string`, `content: string` | `string` | Formatting with code fence and syntax highlighting |
+| `calculateBacktickWrapper()` | `formatMarkdownFile` | `content: string` | `string` (e.g., ```` ``` ````) | Dynamic Markdown backtick escape |
+| `mapExtension()` | `formatMarkdownFile` | `extension: string` | `string` (highlight language) | Syntax highlight normalization |
 
 `````
 
@@ -1122,7 +1122,7 @@ This document describes the complete execution topology of the **`watch`** utili
 watchCli() (packages/utils/src/watch/cli.ts)
        │
        ├──► findDenoConfig()
-       ├──► carregarConfigWatch(configPath, baseDir) (packages/utils/src/watch/config.ts)
+       ├──► loadWatchConfig(configPath, baseDir) (packages/utils/src/watch/config.ts)
        │       │
        │       └──► loadConfig<WatchConfigFile>("watch", configPath, baseDir)
        │               └──► readJsoncFile(fullPath) / parseJsonc
@@ -1175,7 +1175,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
 * **Actions**:
   1. Configures Cliffy command with `.arguments("[target:string]")`. Cliffy rejects multiple positional arguments with a native error (`Too many arguments: ...`).
   2. `findDenoConfig()`: Locates Deno configuration file.
-  3. `carregarConfigWatch(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
+  3. `loadWatchConfig(configPath, baseDir)`: Reads `watch.jsonc` or returns `DEFAULT_WATCH_CONFIG`.
   4. Passes `target: target || undefined` to `watchEngine(options)`.
   5. Configures `Deno.addSignalListener("SIGINT" | "SIGTERM")` for graceful shutdown via `handle.close()`.
   6. Keeps process active in continuous wait (`await new Promise(() => {})`).
@@ -1191,7 +1191,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
     baseDir?: string;
     denoJsoncPath?: string;
     lockFile?: string;
-    silencioso?: boolean;
+    silent?: boolean;
   }
   ```
 * **Actions and Sub-functions**:
@@ -1231,7 +1231,7 @@ watchEngine(options: WatchOptions) (packages/utils/src/watch/engine.ts)
 | Function | Caller | Input / Parameters | Return | Side Effect |
 |---|---|---|---|---|
 | `watchCli()` | Deno CLI Runtime | `Deno.args` | `Command` instance | CLI processing, signal capture, life loop |
-| `carregarConfigWatch()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
+| `loadWatchConfig()` | `watchCli` | `configPath?: string`, `baseDir?: string` | `Promise<WatchConfigResult>` | `watch.jsonc` disk reading |
 | `watchEngine()` | `watchCli` / API | `options: WatchOptions` | `Promise<WatchHandle[]>` | Lock creation, incremental watcher initialization |
 | `acquireWatchLock()` | `watchEngine` | `baseDir: string`, `targetName: string`, `customPath?: string` | `Promise<() => Promise<void>>` | Lock file creation, listener registration |
 | `isProcessRunning()` | `acquireWatchLock` | `pid: number` | `boolean` | PID check via signal 0 |

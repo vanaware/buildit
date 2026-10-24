@@ -7,7 +7,7 @@
 
 # Exported Context from Project BuildIt - Mode: UTILS
 
-Automatically generated at: 2026-10-04T19:05:09.053Z
+Automatically generated at: 2026-10-24T19:56:45.005Z
 
 ---
 
@@ -16,7 +16,7 @@ Automatically generated at: 2026-10-04T19:05:09.053Z
 ```json
 {
   "name": "@vanaware/buildit",
-  "version": "0.4.22#muu6xhan",
+  "version": "0.6.0#mvee92cp",
   "license": "MIT",
   "compilerOptions": {
     "lib": [
@@ -413,6 +413,12 @@ import {
 
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { resolveTargetOrder, } from "../tools/targets.ts";
+import {
+  applyAssetDefine,
+  buildVersionedDefine,
+  injectVersionPlaceholders,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 
 import { buildBundleOptions, } from "./bundle.ts";
 import type {
@@ -484,23 +490,17 @@ export async function processBundleTarget(
   );
 
   // 3. Prepare defines
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (resolvedConfig as any).defineVersionString || "__APP_VERSION__";
-  const defines: Record<string, string> = {
-    ...resolvedConfig.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(
+    resolvedConfig,
+    defineVersionString,
+  );
+  const defines = buildVersionedDefine(
+    resolvedConfig,
+    appVersion,
+    defineVersionKey,
+  );
 
-  if (
-    resolvedConfig.defineAssetsString &&
-    resolvedConfig.defineAssetsString.trim() !== "" &&
-    listAssetsFn &&
-    resolvedConfig.distdir
-  ) {
-    const assets = await listAssetsFn(resolvedConfig.distdir,);
-    defines[resolvedConfig.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${resolvedConfig.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(defines, resolvedConfig, listAssetsFn,);
 
   // 4. Run bundle
   console.log(`🔨 Compiling with Deno.bundle...`,);
@@ -540,7 +540,7 @@ export async function processBundleTarget(
     return {
       target: targetName,
       success: true,
-      durationMs: Number((performance.now() - startTime).toFixed(0,),),
+      durationMs: Math.round(performance.now() - startTime,),
       outputFiles: [],
     };
   }
@@ -568,17 +568,21 @@ export async function processBundleTarget(
 
     // 7.3 Apply Banner (JS)
     if (resolvedConfig.banner?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
-      const banner = resolvedConfig.banner.js
-        .replaceAll("__APP_VERSION__", appVersion)
-        .replaceAll(defineVersionKey, appVersion);
+      const banner = injectVersionPlaceholders(
+        resolvedConfig.banner.js,
+        appVersion,
+        defineVersionKey,
+      );
       content = banner + "\n" + content;
     }
 
     // 7.4 Apply Footer (JS)
     if (resolvedConfig.footer?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
-      const footer = resolvedConfig.footer.js
-        .replaceAll("__APP_VERSION__", appVersion)
-        .replaceAll(defineVersionKey, appVersion);
+      const footer = injectVersionPlaceholders(
+        resolvedConfig.footer.js,
+        appVersion,
+        defineVersionKey,
+      );
       content = content + "\n" + footer;
     }
 
@@ -586,19 +590,18 @@ export async function processBundleTarget(
     if (resolvedConfig.write !== false) {
       await ensureDirForFile(outputFile.path,);
       await Deno.writeTextFile(outputFile.path, content,);
-      writtenPaths.push(outputFile.path,);
       console.log(
         `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
       );
     } else {
-      writtenPaths.push(outputFile.path,);
       console.log(
         `   📦 [In-Memory] ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
       );
     }
+    writtenPaths.push(outputFile.path,);
   }
 
-  const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+  const durationMs = Math.round(performance.now() - startTime,);
   console.log(
     `✅ [${targetName}] Build completed in ${durationMs}ms (${outputFiles.length} file(s))`,
   );
@@ -615,7 +618,7 @@ export async function processBundleTarget(
  * Programmatically executes compilation via Deno.bundle for configured targets.
  * Accepts a DenoBundleGlobalConfig object directly in memory or DenoBuildOptions.
  *
- * @param configOuOpcoes Memory DenoBundleGlobalConfig object or full execution options
+ * @param configOrOptions Memory DenoBundleGlobalConfig object or full execution options
  * @returns List of results obtained per target
  *
  * @example
@@ -630,14 +633,14 @@ export async function processBundleTarget(
  * ```
  */
 export async function denoBuild(
-  opcoes: DenoBuildOptions,
+  options: DenoBuildOptions,
 ): Promise<DenoBuildResult[]> {
-  const configs = opcoes.config;
-  const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = options.config;
+  const baseDir = options.baseDir ?? ".";
+  const denoJsoncPath = options.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   // Strictly ensures that the execution order follows the declaration in the configuration
-  const targetsToExecute = resolveTargetOrder(configs, opcoes.targets,);
+  const targetsToExecute = resolveTargetOrder(configs, options.targets,);
 
   console.log(
     `📋 Build targets (safe CONFIG order): ${
@@ -652,13 +655,13 @@ export async function denoBuild(
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: opcoes.noversion ?? false,
-    versionPaths: opcoes.versionPaths,
-    forcepackagesversion: opcoes.forcepackagesversion,
-    defineVersionString: opcoes.defineVersionString,
+    noversion: options.noversion ?? false,
+    versionPaths: options.versionPaths,
+    forcepackagesversion: options.forcepackagesversion,
+    defineVersionString: options.defineVersionString,
   },);
 
-  const resultados: DenoBuildResult[] = [];
+  const results: DenoBuildResult[] = [];
 
   for (const targetName of targetsToExecute) {
     const targetConfig = configs[targetName];
@@ -676,12 +679,12 @@ export async function denoBuild(
       finalVersion,
       listFn,
       baseDir,
-      opcoes.defineVersionString,
+      options.defineVersionString,
     );
-    resultados.push(res,);
+    results.push(res,);
   }
 
-  return resultados;
+  return results;
 }
 
 ````
@@ -936,28 +939,20 @@ Minimum "esbuild.jsonc" file example:
 ## File: `packages/utils/src/esbuild/engine.ts`
 
 ````ts
-import { copy, emptyDir, ensureDir, } from "@std/fs";
-import { dirname, isAbsolute, join, } from "@std/path";
-import { parse as parseJsonc, } from "@std/jsonc";
+import { join, } from "@std/path";
 
 // ============================================================================
 // 📦 TYPES
 // ============================================================================
 import type {
-  DenoBundleGlobalConfig,
-  DenoBundleTargetConfig,
   EsbuildOptions,
   EsbuildResult,
-  GlobalTargetConfig,
-  ParsedArgs,
-  ParsedVersion,
   TargetConfig,
 } from "../tools/interfaces.ts";
 
 import {
   cleanTarget,
   copyStaticFiles,
-  ensureDirForFile,
   listAssetsForCache,
   resolveEntryPoints,
   resolveOutputPaths,
@@ -965,6 +960,14 @@ import {
 } from "../tools/paths.ts";
 
 import { validateTargetConfig, } from "../tools/validate.ts";
+
+import {
+  applyAssetDefine,
+  buildBannerFooter,
+  buildVersionedDefine,
+  copyOptionalProps,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 
 // ============================================================================
 // 🔢 VERSION FUNCTIONS (re-exported from config/version.ts)
@@ -995,7 +998,7 @@ export const buildWithDenoPlugin = (
 /**
  * Programmatically executes the esbuild compilation for configured targets.
  *
- * @param opcoes Full execution options (including already parsed configuration)
+ * @param options Full execution options (including already parsed configuration)
  * @returns List of results obtained per target
  *
  * @example
@@ -1014,20 +1017,20 @@ export const buildWithDenoPlugin = (
  * ```
  */
 export async function esBuild(
-  opcoes: EsbuildOptions,
+  options: EsbuildOptions,
 ): Promise<EsbuildResult[]> {
-  const configs = opcoes.config;
-  const baseDir = opcoes.baseDir ?? ".";
-  const targets = opcoes.targets;
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = options.config;
+  const baseDir = options.baseDir ?? ".";
+  const targets = options.targets;
+  const denoJsoncPath = options.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: opcoes.noversion ?? false,
-    versionPaths: opcoes.versionPaths,
-    forcepackagesversion: opcoes.forcepackagesversion,
-    defineVersionString: opcoes.defineVersionString,
+    noversion: options.noversion ?? false,
+    versionPaths: options.versionPaths,
+    forcepackagesversion: options.forcepackagesversion,
+    defineVersionString: options.defineVersionString,
   },);
 
   // Strictly ensures that the execution order follows the declaration in the configuration
@@ -1037,7 +1040,7 @@ export async function esBuild(
     return [];
   }
 
-  const resultados: EsbuildResult[] = [];
+  const results: EsbuildResult[] = [];
 
   try {
     for (const targetName of targetsToExecute) {
@@ -1058,11 +1061,11 @@ export async function esBuild(
         (opts,) => buildWithDenoPlugin(opts, denoJsoncPath,),
         listFn,
         baseDir,
-        opcoes.defineVersionString,
+        options.defineVersionString,
       );
-      const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+      const durationMs = Math.round(performance.now() - startTime,);
 
-      resultados.push({
+      results.push({
         target: targetName,
         success: true,
         durationMs,
@@ -1077,7 +1080,7 @@ export async function esBuild(
     }
   }
 
-  return resultados;
+  return results;
 }
 
 /**
@@ -1191,6 +1194,56 @@ export async function processTarget(
 // ============================================================================
 // 🛠️ ESBUILD FUNCTIONS
 // ============================================================================
+/** Optional esbuild properties copied as-is from the target configuration. */
+const OPTIONAL_ESBUILD_PROPS = [
+  "platform",
+  "format",
+  "bundle",
+  "minify",
+  "sourcemap",
+  "jsx",
+  "jsxImportSource",
+  "conditions",
+  "external",
+  "drop",
+  "metafile",
+  "write",
+  "treeShaking",
+  "legalComments",
+  "keepNames",
+  "splitting",
+  "loader",
+  "alias",
+  "inject",
+  "target",
+  "charset",
+  "logLevel",
+  "logLimit",
+  "logOverride",
+  "entryNames",
+  "chunkNames",
+  "assetNames",
+  "publicPath",
+  "pure",
+  "globalName",
+  "tsconfig",
+  "tsconfigRaw",
+  "outExtension",
+  "supported",
+  "sourcesContent",
+  "ignoreAnnotations",
+  "minifyWhitespace",
+  "minifyIdentifiers",
+  "minifySyntax",
+  "jsxFactory",
+  "jsxFragment",
+  "analyze",
+  "sideEffects",
+  "mangleQuoted",
+  "mangleCache",
+  "plugins",
+];
+
 /**
  * Builds build options for esbuild.
  * @param targetName Target name
@@ -1207,20 +1260,11 @@ export async function buildEsbuildOptions(
   defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
-  const finalDefine: Record<string, string> = {
-    ...config.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(config, defineVersionString,);
+  const finalDefine = buildVersionedDefine(config, appVersion, defineVersionKey,);
 
   // 🔥 ASSETS DEFINES INJECTION: Unified pattern
-  if (config.defineAssetsString && config.defineAssetsString.trim() !== "" && listAssetsFn && config.distdir) {
-    const assets = await listAssetsFn(config.distdir,);
-
-    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(finalDefine, config, listAssetsFn,);
 
   // 🔥 ENTRYPOINTS RESOLUTION (optional srcdir)
   const resolvedEntryPoints = resolveEntryPoints(
@@ -1243,61 +1287,11 @@ export async function buildEsbuildOptions(
     options.outdir = outdir;
   }
 
-  const optionalProps = [
-    "platform",
-    "format",
-    "bundle",
-    "minify",
-    "sourcemap",
-    "jsx",
-    "jsxImportSource",
-    "conditions",
-    "external",
-    "drop",
-    "metafile",
-    "write",
-    "treeShaking",
-    "legalComments",
-    "keepNames",
-    "splitting",
-    "loader",
-    "alias",
-    "inject",
-    "target",
-    "charset",
-    "logLevel",
-    "logLimit",
-    "logOverride",
-    "entryNames",
-    "chunkNames",
-    "assetNames",
-    "publicPath",
-    "pure",
-    "globalName",
-    "tsconfig",
-    "tsconfigRaw",
-    "outExtension",
-    "supported",
-    "sourcesContent",
-    "ignoreAnnotations",
-    "minifyWhitespace",
-    "minifyIdentifiers",
-    "minifySyntax",
-    "jsxFactory",
-    "jsxFragment",
-    "analyze",
-    "sideEffects",
-    "mangleQuoted",
-    "mangleCache",
-    "plugins",
-  ];
-  for (const prop of optionalProps) {
-    // deno-lint-ignore no-explicit-any
-    if ((config as any)[prop] !== undefined) {
-      // deno-lint-ignore no-explicit-any
-      (options as any)[prop] = (config as any)[prop];
-    }
-  }
+  copyOptionalProps(
+    config as unknown as Record<string, unknown>,
+    options as Record<string, unknown>,
+    OPTIONAL_ESBUILD_PROPS,
+  );
 
   // 🔥 REQUIREMENT: To use analyze, esbuild needs to generate the metafile
   if (config.analyze) {
@@ -1305,9 +1299,9 @@ export async function buildEsbuildOptions(
   }
 
   // 🔥 SPECIAL TREATMENT: mangleProps and reserveProps must be RegExp in JS API
-  const regexProps = ["mangleProps", "reserveProps"];
+  const regexProps = ["mangleProps", "reserveProps",];
   for (const propName of regexProps) {
-    const val = (config as any)[propName];
+    const val = (config as unknown as Record<string, unknown>)[propName];
     if (val !== undefined) {
       if (typeof val === "string") {
         let pattern = val;
@@ -1325,39 +1319,15 @@ export async function buildEsbuildOptions(
   }
 
   // 🔥 CORRECTION: Secure banner construction with defineVersionKey
-  if (config.banner !== undefined) {
-    const banner: { js?: string; css?: string } = {};
-    if (config.banner.js !== undefined) {
-      banner.js = config.banner.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.banner.css !== undefined) {
-      banner.css = config.banner.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (banner.js !== undefined || banner.css !== undefined) {
-      options.banner = banner;
-    }
+  const banner = buildBannerFooter(config.banner, appVersion, defineVersionKey,);
+  if (banner !== undefined) {
+    options.banner = banner;
   }
 
   // 🔥 CORRECTION: Secure footer construction with defineVersionKey
-  if (config.footer !== undefined) {
-    const footer: { js?: string; css?: string } = {};
-    if (config.footer.js !== undefined) {
-      footer.js = config.footer.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.footer.css !== undefined) {
-      footer.css = config.footer.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (footer.js !== undefined || footer.css !== undefined) {
-      options.footer = footer;
-    }
+  const footer = buildBannerFooter(config.footer, appVersion, defineVersionKey,);
+  if (footer !== undefined) {
+    options.footer = footer;
   }
 
   options.define = finalDefine;
@@ -1862,8 +1832,18 @@ export async function exportEngine(
  * glob pattern evaluation, and Markdown formatting with backtick protection.
  */
 
-import { globToRegExp, } from "@std/path";
 import type { ExportConfig, } from "../tools/interfaces.ts";
+import { matchesGlobs, } from "../tools/paths.ts";
+
+/**
+ * Tests if a path matches any of the provided glob patterns.
+ * Re-exported from `tools/paths.ts` as the single canonical implementation.
+ *
+ * @param path Normalized relative path to be tested
+ * @param patterns List of glob patterns (supports brace expansion and globstar)
+ * @returns True if the path matches at least one pattern
+ */
+export { matchesGlobs, } from "../tools/paths.ts";
 
 /**
  * Normalizes a file path for consistent comparison across operating systems.
@@ -1929,31 +1909,6 @@ export function mapExtension(relativePath: string,): string {
   if (relativePath.includes(".env",)) return "properties";
 
   return map[ext] || ext;
-}
-
-/**
- * Tests if a path matches any of the provided glob patterns.
- *
- * @param path Normalized relative path to be tested
- * @param patterns List of glob patterns (supports brace expansion and globstar)
- * @returns True if the path matches at least one pattern
- */
-export function matchesGlobs(path: string, patterns: string[],): boolean {
-  const normalizedPath = path.replace(/\\/g, "/",);
-  for (const pattern of patterns) {
-    try {
-      const reg = globToRegExp(pattern, {
-        globstar: true,
-        caseInsensitive: true,
-      },);
-      if (reg.test(normalizedPath,) || reg.test(path,)) {
-        return true;
-      }
-    } catch {
-      // Ignore invalid pattern
-    }
-  }
-  return false;
 }
 
 /**
@@ -2223,6 +2178,162 @@ export function parseArgs(
 
 ---
 
+## File: `packages/utils/src/tools/esbuild-options.ts`
+
+````ts
+/**
+ * @module @vanaware/buildit/tools/esbuild-options
+ * @description Shared option-building helpers used by the esbuild, watch, and
+ * denobuild engines: version define resolution, asset define injection, and
+ * banner/footer placeholder substitution.
+ */
+
+/** Default identifier used to inject the application version at build time. */
+export const DEFAULT_VERSION_DEFINE = "__APP_VERSION__";
+
+/**
+ * Resolves the identifier used to inject the application version.
+ * Precedence: explicit argument > per-target `defineVersionString` > default.
+ *
+ * @param config Target configuration (may carry `defineVersionString`)
+ * @param defineVersionString Explicit global identifier (optional)
+ * @returns The resolved define identifier
+ *
+ * @example
+ * ```typescript
+ * resolveDefineVersionKey({}, undefined); // "__APP_VERSION__"
+ * resolveDefineVersionKey({ defineVersionString: "__VER__" }); // "__VER__"
+ * ```
+ */
+export function resolveDefineVersionKey(
+  config: { defineVersionString?: string },
+  defineVersionString?: string,
+): string {
+  return defineVersionString || config.defineVersionString ||
+    DEFAULT_VERSION_DEFINE;
+}
+
+/**
+ * Builds the final `define` map with the version constant injected.
+ *
+ * @param config Target configuration with optional custom `define` entries
+ * @param appVersion Current application semantic version
+ * @param defineVersionKey Identifier reserved for the version constant
+ * @returns Merged map of compile-time definitions
+ */
+export function buildVersionedDefine(
+  config: { define?: Record<string, string> },
+  appVersion: string,
+  defineVersionKey: string,
+): Record<string, string> {
+  return {
+    ...config.define,
+    [defineVersionKey]: JSON.stringify(`v${appVersion}`),
+  };
+}
+
+/**
+ * Injects the generated asset list into the define map when `defineAssetsString`
+ * is configured. Mutates `finalDefine` in place.
+ *
+ * @param finalDefine Define map to receive the asset list entry
+ * @param config Target configuration with `defineAssetsString` and `distdir`
+ * @param listAssetsFn Optional function to list assets in the output directory
+ */
+export async function applyAssetDefine(
+  finalDefine: Record<string, string>,
+  config: { defineAssetsString?: string; distdir?: string },
+  listAssetsFn?: (distDir: string) => Promise<string[]>,
+): Promise<void> {
+  if (
+    config.defineAssetsString &&
+    config.defineAssetsString.trim() !== "" &&
+    listAssetsFn &&
+    config.distdir
+  ) {
+    const assets = await listAssetsFn(config.distdir);
+    finalDefine[config.defineAssetsString] = JSON.stringify(assets);
+    console.log(
+      `📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,
+    );
+  }
+}
+
+/**
+ * Replaces version placeholders (`__APP_VERSION__` and the custom define key)
+ * in a text fragment with the actual application version.
+ *
+ * @param text Source text (banner/footer content)
+ * @param appVersion Current application semantic version
+ * @param defineVersionKey Custom identifier also treated as a placeholder
+ * @returns Text with all version placeholders substituted
+ */
+export function injectVersionPlaceholders(
+  text: string,
+  appVersion: string,
+  defineVersionKey: string,
+): string {
+  return text
+    .replaceAll(DEFAULT_VERSION_DEFINE, appVersion)
+    .replaceAll(defineVersionKey, appVersion);
+}
+
+/**
+ * Builds a version-injected banner/footer block for esbuild options.
+ * Returns `undefined` when no js/css fragment is present (mirroring the
+ * historical behavior of only assigning `banner`/`footer` when non-empty).
+ *
+ * @param source Raw banner/footer configuration
+ * @param appVersion Current application semantic version
+ * @param defineVersionKey Custom identifier treated as a placeholder
+ * @returns Processed banner/footer block or `undefined`
+ */
+export function buildBannerFooter(
+  source: { js?: string; css?: string } | undefined,
+  appVersion: string,
+  defineVersionKey: string,
+): { js?: string; css?: string } | undefined {
+  if (source === undefined) return undefined;
+
+  const block: { js?: string; css?: string } = {};
+  if (source.js !== undefined) {
+    block.js = injectVersionPlaceholders(source.js, appVersion, defineVersionKey);
+  }
+  if (source.css !== undefined) {
+    block.css = injectVersionPlaceholders(
+      source.css,
+      appVersion,
+      defineVersionKey,
+    );
+  }
+  if (block.js === undefined && block.css === undefined) return undefined;
+  return block;
+}
+
+/**
+ * Copies the listed optional properties from a source config to a target
+ * options object, skipping `undefined` values.
+ *
+ * @param source Configuration object to read from
+ * @param target Options object to write into
+ * @param props Property names considered for copying
+ */
+export function copyOptionalProps(
+  source: Record<string, unknown>,
+  target: Record<string, unknown>,
+  props: readonly string[],
+): void {
+  for (const prop of props) {
+    if (source[prop] !== undefined) {
+      target[prop] = source[prop];
+    }
+  }
+}
+
+````
+
+---
+
 ## File: `packages/utils/src/tools/git.ts`
 
 ````ts
@@ -2290,29 +2401,6 @@ export async function runGit(
 ## File: `packages/utils/src/tools/interfaces.ts`
 
 ```ts
-/**
- * Example file extensions that can be included in snapshots.
- */
-export const EXTENSIONS_EXAMPLE: string[] = [
-  ".tsx",
-  ".jsx",
-  ".js",
-  ".ts",
-  ".css",
-  ".html",
-  ".manifest",
-  ".map",
-  ".sh",
-  ".py",
-  ".json",
-  ".jsonc",
-  ".yaml",
-  ".yml",
-  ".toml",
-  ".env.example",
-  ".md",
-];
-
 /** Parsed semantic version. */
 export interface ParsedVersion {
   /** Major version component. */
@@ -2433,6 +2521,8 @@ export interface TargetConfig {
   define?: Record<string, string>;
   /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). If omitted or empty, does not inject. */
   defineAssetsString?: string;
+  /** Custom version identifier for this target (used in `define`, `banner` and `footer` version injection, e.g., "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Directives for removing calls to console or debugger. */
   drop?: EsbuildDrop[];
   /** Modules or packages to be treated as external during bundling. */
@@ -2687,6 +2777,8 @@ export interface DenoBundleTargetConfig {
   define?: Record<string, string>;
   /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). */
   defineAssetsString?: string;
+  /** Custom version identifier for this target (used in `define`, `banner` and `footer` version injection, e.g., "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Path of the consolidated output file (relative to distdir). */
   outfile?: string;
   /** If true, Deno.bundle will write directly to disk (default: false in BuildIt to allow post-processing). */
@@ -3093,30 +3185,24 @@ export async function loadConfig<T,>(
 ```ts
 
 export * from "./interfaces.ts";
-export {
-  EXTENSIONS_EXAMPLE as defaultExtensions,
-} from "./interfaces.ts";
-export { VERSION_PATHS_EXAMPLE as versionPathsExample, } from "./version.ts";
-
-export { 
-    readProjectVersion,
-    sanitizeVersion,
-    ensureVersionFiles,
-    incrementProjectVersion,
-    syncVersion,
-    syncWorkspaceDir,
-    syncWorkspaces
-} from "./version.ts"
 
 export {
-    loadConfig
-} from "./jsonc.ts"
+  readProjectVersion,
+  sanitizeVersion,
+  ensureVersionFiles,
+  incrementProjectVersion,
+  syncVersion,
+  syncWorkspaceDir,
+  syncWorkspaces,
+} from "./version.ts";
+
+export { loadConfig, } from "./jsonc.ts";
 
 export {
-    applyDefines,
-    findDenoConfig,
-    processFilesWithDefines
-} from "./paths.ts"
+  applyDefines,
+  findDenoConfig,
+  processFilesWithDefines,
+} from "./paths.ts";
 
 ```
 
@@ -3314,7 +3400,7 @@ export async function cleanTarget(
     ? { includes: cleanConfig, }
     : cleanConfig;
 
-  if (!config || !config.includes || config.includes.length === 0) return;
+  if (!config.includes || config.includes.length === 0) return;
 
   console.log(`🧹 Cleaning at ${distDir}...`,);
   const includes = config.includes;
@@ -3419,12 +3505,50 @@ export async function listAssetsForCache(
       !entry.name.endsWith("metafile.json",) &&
       !exclude.has(entry.name,)
     ) {
-      let webPath = entry.path.replace(distDir, "",).replace(/\\/g, "/",);
-      webPath = webPath.startsWith("/",) ? "." + webPath : "./" + webPath;
-      assets.push(webPath,);
+      const relPath = relative(distDir, entry.path,).replace(/\\/g, "/",);
+      assets.push(`./${relPath}`,);
     }
   }
   return assets;
+}
+
+/**
+ * Copies a single matched file into the output directory and applies the
+ * special-case handling for `index.html` (console report) and
+ * `manifest.json` (version injection).
+ *
+ * @param entryPath Source file path found on disk
+ * @param destPath Resolved destination path inside distdir
+ * @param appVersion Application version for manifest.json injection
+ */
+async function copyEntryToDist(
+  entryPath: string,
+  destPath: string,
+  appVersion: string,
+): Promise<void> {
+  await ensureDirForFile(destPath,);
+  await copy(entryPath, destPath, { overwrite: true, },);
+
+  const fileName = basename(entryPath,).toLowerCase();
+  if (fileName === "index.html") {
+    console.log(`📄 index.html copied to ${destPath}`,);
+  }
+  if (fileName === "manifest.json") {
+    try {
+      const manifestText = await Deno.readTextFile(destPath,);
+      const manifestObj = JSON.parse(manifestText,);
+      manifestObj.version = appVersion;
+      await Deno.writeTextFile(
+        destPath,
+        JSON.stringify(manifestObj, null, 2,),
+      );
+      console.log(
+        `📱 Version v${appVersion} injected into manifest.json`,
+      );
+    } catch {
+      // manifest is not valid JSON
+    }
+  }
 }
 
 /**
@@ -3470,14 +3594,14 @@ export async function copyTargetFiles(
         : item.basedir!)
       : (generalBaseDir ?? ".");
 
+    let patterns: string[];
     if (hasItemBase) {
       // 1. if basedir provided, includes and excludes are relative to basedir and tree is preserved
       // 2. if basedir provided and includes is missing, empty or "*", copies everything from basedir respecting excludes
       const isAll = !item.includes ||
         item.includes.length === 0 ||
         (item.includes.length === 1 && item.includes[0] === "*");
-
-      const patterns = isAll ? ["**/*",] : item.includes!;
+      patterns = isAll ? ["**/*",] : item.includes!;
 
       try {
         const stat = await Deno.stat(effectiveBaseDir,);
@@ -3493,125 +3617,54 @@ export async function copyTargetFiles(
         );
         continue;
       }
-
-      for (const pattern of patterns) {
-        try {
-          for await (
-            const entry of expandGlob(pattern, {
-              root: effectiveBaseDir,
-              exclude: item.excludes,
-              includeDirs: false,
-            },)
-          ) {
-            if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(
-                /\\/g,
-                "/",
-              );
-
-              if (item.excludes && item.excludes.length > 0) {
-                if (matchesGlobs(relPath, item.excludes,)) {
-                  continue;
-                }
-              }
-
-              const destPath = join(distDir, relPath,);
-              await ensureDirForFile(destPath,);
-              await copy(entry.path, destPath, { overwrite: true, },);
-
-              const fileName = basename(entry.path,).toLowerCase();
-              if (fileName === "index.html") {
-                console.log(
-                  `📄 index.html copied from ${effectiveBaseDir} to ${destPath}`,
-                );
-              }
-              if (fileName === "manifest.json") {
-                try {
-                  const manifestText = await Deno.readTextFile(destPath,);
-                  const manifestObj = JSON.parse(manifestText,);
-                  manifestObj.version = appVersion;
-                  await Deno.writeTextFile(
-                    destPath,
-                    JSON.stringify(manifestObj, null, 2,),
-                  );
-                  console.log(
-                    `📱 Version v${appVersion} injected into manifest.json`,
-                  );
-                } catch {
-                  // manifest is not valid JSON
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn(
-            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
-            err,
-          );
-        }
-      }
-      console.log(
-        `📁 Files from ${effectiveBaseDir} copied to ${distDir}`,
-      );
     } else {
       // 3. if basedir missing, includes and excludes are relative to "general basedir"
       // and directory tree is NOT preserved in copy and files are copied directly to distdir
-      const patterns = item.includes && item.includes.length > 0
-        ? item.includes
-        : [];
-      for (const pattern of patterns) {
-        try {
-          for await (
-            const entry of expandGlob(pattern, {
-              root: effectiveBaseDir,
-              exclude: item.excludes,
-              includeDirs: false,
-            },)
-          ) {
-            if (entry.isFile) {
-              const relPath = relative(effectiveBaseDir, entry.path,).replace(
-                /\\/g,
-                "/",
-              );
-              if (item.excludes && item.excludes.length > 0) {
-                if (matchesGlobs(relPath, item.excludes,)) {
-                  continue;
-                }
-              }
+      patterns = item.includes ?? [];
+    }
 
-              const fileName = basename(entry.path,);
-              const destPath = join(distDir, fileName,);
-              await ensureDirForFile(destPath,);
-              await copy(entry.path, destPath, { overwrite: true, },);
+    for (const pattern of patterns) {
+      try {
+        for await (
+          const entry of expandGlob(pattern, {
+            root: effectiveBaseDir,
+            exclude: item.excludes,
+            includeDirs: false,
+          },)
+        ) {
+          if (!entry.isFile) continue;
 
-              if (fileName.toLowerCase() === "index.html") {
-                console.log(`📄 index.html copied to ${destPath}`,);
-              }
-              if (fileName.toLowerCase() === "manifest.json") {
-                try {
-                  const manifestText = await Deno.readTextFile(destPath,);
-                  const manifestObj = JSON.parse(manifestText,);
-                  manifestObj.version = appVersion;
-                  await Deno.writeTextFile(
-                    destPath,
-                    JSON.stringify(manifestObj, null, 2,),
-                  );
-                  console.log(
-                    `📱 Version v${appVersion} injected into manifest.json`,
-                  );
-                } catch {
-                  // manifest is not valid JSON
-                }
-              }
+          const relPath = relative(effectiveBaseDir, entry.path,).replace(
+            /\\/g,
+            "/",
+          );
+
+          if (item.excludes && item.excludes.length > 0) {
+            if (matchesGlobs(relPath, item.excludes,)) {
+              continue;
             }
           }
-        } catch (err) {
-          console.warn(
-            `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
-            err,
-          );
+
+          // Destination: with basedir the tree is preserved relative to it;
+          // without basedir files are flattened directly into distdir
+          const destPath = hasItemBase
+            ? join(distDir, relPath,)
+            : join(distDir, basename(entry.path,),);
+
+          await copyEntryToDist(entry.path, destPath, appVersion,);
         }
+      } catch (err) {
+        console.warn(
+          `⚠️ Error expanding glob '${pattern}' in '${effectiveBaseDir}':`,
+          err,
+        );
       }
+    }
+
+    if (hasItemBase) {
+      console.log(
+        `📁 Files from ${effectiveBaseDir} copied to ${distDir}`,
+      );
     }
   }
 }
@@ -3960,6 +4013,29 @@ Necessary configuration example:
 }
 
 /**
+ * Reads the root Deno configuration text, falling back from `deno.jsonc` to
+ * `deno.json` when the `.jsonc` variant does not exist on disk.
+ *
+ * @param denoJsonPath Expected path to the root configuration file
+ * @returns Tuple with the file content and the path actually used
+ */
+async function readRootConfigText(
+  denoJsonPath: string,
+): Promise<[content: string, actualPath: string]> {
+  try {
+    const content = await Deno.readTextFile(denoJsonPath,);
+    return [content, denoJsonPath];
+  } catch {
+    if (denoJsonPath.endsWith(".jsonc",)) {
+      const alt = denoJsonPath.slice(0, -1,);
+      const content = await Deno.readTextFile(alt,);
+      return [content, alt];
+    }
+    throw new Deno.errors.NotFound(`File ${denoJsonPath} not found`);
+  }
+}
+
+/**
  * Synchronizes the version in a workspace directory (deno.jsonc or deno.json).
  */
 export async function syncWorkspaceDir(
@@ -4001,17 +4077,9 @@ export async function syncWorkspaces(
     await readProjectVersion(denoJsonPath, baseDir,);
 
   try {
-    let rootContent = "";
-    let actualDenoJsonPath = denoJsonPath;
-    try {
-      rootContent = await Deno.readTextFile(denoJsonPath,);
-    } catch {
-      if (denoJsonPath.endsWith(".jsonc",)) {
-        const alt = denoJsonPath.slice(0, -1,);
-        rootContent = await Deno.readTextFile(alt,);
-        actualDenoJsonPath = alt;
-      }
-    }
+    const [rootContent, actualDenoJsonPath] = await readRootConfigText(
+      denoJsonPath,
+    );
     const rootDir = dirname(actualDenoJsonPath,);
     const parsed = parseJsonc(rootContent,) as { workspace?: string[] };
 
@@ -4030,13 +4098,6 @@ export async function syncWorkspaces(
 }
 
 /**
- * Example paths where the version.ts file can be synchronized.
- */
-export const VERSION_PATHS_EXAMPLE: string[] = [
-  "packages/utils/src/version.ts",
-];
-
-/**
  * Parses a version string in major.minor.patch[#hash] format.
  *
  * @param version Version string
@@ -4047,25 +4108,19 @@ export function parseVersion(version: string,): ParsedVersion {
   if (trimmed !== version) {
     throw new Error(`❌ Version cannot have spaces: ${version}`,);
   }
-  const versionWithoutHash = version.split("#",)[0] ?? "";
   if (version.includes("#",) && version.endsWith("#",)) {
     throw new Error(`❌ Invalid version format (# without hash): ${version}`,);
   }
+  const versionWithoutHash = version.split("#",)[0] ?? "";
   const parts = versionWithoutHash.split(".",);
   if (parts.length !== 3) {
     throw new Error(`❌ Invalid version format: ${version}`,);
   }
-  const majorStr = parts[0];
-  const minorStr = parts[1];
-  const patchStr = parts[2];
-  if (
-    majorStr === undefined || minorStr === undefined || patchStr === undefined
-  ) {
-    throw new Error(`❌ Invalid version format: ${version}`,);
-  }
-  const major = parseInt(majorStr, 10,);
-  const minor = parseInt(minorStr, 10,);
-  const patch = parseInt(patchStr, 10,);
+  const [major, minor, patch] = parts.map((p,) => parseInt(p, 10,),) as [
+    number,
+    number,
+    number,
+  ];
   if (isNaN(major,) || isNaN(minor,) || isNaN(patch,)) {
     throw new Error(`❌ Version contains non-numeric values: ${version}`,);
   }
@@ -4110,7 +4165,7 @@ export function getVersionFileTemplate(
 ): string {
   if (isTypeScript) {
     return `// Automatically generated file during build
-
+declare const ${defineVersionString}: string;
 /**
  * Current library/application version.
  * @type {string}
@@ -4230,17 +4285,6 @@ export async function ensureVersionFiles(
 }
 
 /**
- * Writes or ensures the existence of the version.ts file at the specified path or directory.
- * Kept for compatibility.
- */
-export async function writeVersionFile(
-  targetPathOrDir: string,
-  _version?: string,
-): Promise<void> {
-  await ensureVersionFile(targetPathOrDir,);
-}
-
-/**
  * Synchronizes project version in configuration files and code without incrementing.
  * Useful to ensure all packages and version files are aligned.
  *
@@ -4324,20 +4368,9 @@ export async function incrementProjectVersion(
 
   // Update root deno.jsonc
   try {
-    let actualDenoJsonPath = denoJsonPath;
-    let rootContent = "";
-    try {
-      rootContent = await Deno.readTextFile(denoJsonPath,);
-    } catch {
-      if (denoJsonPath.endsWith(".jsonc",)) {
-        const alt = denoJsonPath.slice(0, -1,);
-        rootContent = await Deno.readTextFile(alt,);
-        actualDenoJsonPath = alt;
-      } else {
-        throw new Deno.errors.NotFound(`File ${denoJsonPath} not found`);
-      }
-    }
-
+    const [rootContent, actualDenoJsonPath] = await readRootConfigText(
+      denoJsonPath,
+    );
     const updatedRootContent = replaceVersionInContent(
       rootContent,
       finalVersion,
@@ -5335,9 +5368,39 @@ import {
   resolveOutputPaths,
   resolveWithBase,
 } from "../tools/paths.ts";
+import {
+  applyAssetDefine,
+  buildBannerFooter,
+  buildVersionedDefine,
+  copyOptionalProps,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 import { ensureVersionFiles, readProjectVersion, } from "../tools/version.ts";
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { acquireWatchLock, } from "./lock.ts";
+
+/** Optional watch-specific esbuild properties copied from the target config. */
+const OPTIONAL_WATCH_PROPS = [
+  "platform",
+  "format",
+  "bundle",
+  "minify",
+  "jsx",
+  "jsxImportSource",
+  "conditions",
+  "external",
+  "drop",
+  "write",
+  "legalComments",
+  "keepNames",
+  "loader",
+  "alias",
+  "inject",
+  "target",
+  "charset",
+  "logLevel",
+  "plugins",
+];
 
 /**
  * Builds esbuild options specific for continuous monitoring.
@@ -5350,23 +5413,10 @@ export async function buildWatchEsbuildOptions(
   defineVersionString?: string,
   // deno-lint-ignore no-explicit-any
 ): Promise<any> {
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (config as any).defineVersionString || "__APP_VERSION__";
-  const finalDefine: Record<string, string> = {
-    ...config.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(config, defineVersionString,);
+  const finalDefine = buildVersionedDefine(config, appVersion, defineVersionKey,);
 
-  if (
-    config.defineAssetsString &&
-    config.defineAssetsString.trim() !== "" &&
-    listAssetsFn &&
-    config.distdir
-  ) {
-    const assets = await listAssetsFn(config.distdir,);
-    finalDefine[config.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${config.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(finalDefine, config, listAssetsFn,);
 
   const resolvedEntryPoints = resolveEntryPoints(
     config.srcdir,
@@ -5387,68 +5437,20 @@ export async function buildWatchEsbuildOptions(
     options.outdir = outdir;
   }
 
-  const optionalProps = [
-    "platform",
-    "format",
-    "bundle",
-    "minify",
-    "jsx",
-    "jsxImportSource",
-    "conditions",
-    "external",
-    "drop",
-    "write",
-    "legalComments",
-    "keepNames",
-    "loader",
-    "alias",
-    "inject",
-    "target",
-    "charset",
-    "logLevel",
-    "plugins",
-  ];
+  copyOptionalProps(
+    config as unknown as Record<string, unknown>,
+    options as Record<string, unknown>,
+    OPTIONAL_WATCH_PROPS,
+  );
 
-  for (const prop of optionalProps) {
-    // deno-lint-ignore no-explicit-any
-    if ((config as any)[prop] !== undefined) {
-      // deno-lint-ignore no-explicit-any
-      options[prop] = (config as any)[prop];
-    }
+  const banner = buildBannerFooter(config.banner, appVersion, defineVersionKey,);
+  if (banner !== undefined) {
+    options.banner = banner;
   }
 
-  if (config.banner !== undefined) {
-    const banner: { js?: string; css?: string } = {};
-    if (config.banner.js !== undefined) {
-      banner.js = config.banner.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.banner.css !== undefined) {
-      banner.css = config.banner.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (banner.js !== undefined || banner.css !== undefined) {
-      options.banner = banner;
-    }
-  }
-
-  if (config.footer !== undefined) {
-    const footer: { js?: string; css?: string } = {};
-    if (config.footer.js !== undefined) {
-      footer.js = config.footer.js
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (config.footer.css !== undefined) {
-      footer.css = config.footer.css
-        .replaceAll("__APP_VERSION__", appVersion,)
-        .replaceAll(defineVersionKey, appVersion,);
-    }
-    if (footer.js !== undefined || footer.css !== undefined) {
-      options.footer = footer;
-    }
+  const footer = buildBannerFooter(config.footer, appVersion, defineVersionKey,);
+  if (footer !== undefined) {
+    options.footer = footer;
   }
 
   options.define = finalDefine;
@@ -6914,11 +6916,11 @@ describe("cleanTarget", () => {
 
   it("removes folder recursively", async () => {
     await withTempDir(async (dir,) => {
-      const subDir = join(dir, "subpasta",);
+      const subDir = join(dir, "subfolder",);
       await Deno.mkdir(subDir,);
-      await Deno.writeTextFile(join(subDir, "arquivo.js",), "code",);
+      await Deno.writeTextFile(join(subDir, "file.js",), "code",);
 
-      await cleanTarget(dir, ["subpasta",],);
+      await cleanTarget(dir, ["subfolder",],);
 
       assertEquals(await fileExists(subDir,), false,);
     },);
@@ -7587,9 +7589,9 @@ import { isSafePath, } from "../../src/tools/paths.ts";
 describe("isSafePath", () => {
   describe("safe paths", () => {
     const safePaths = [
-      "arquivo.js",
-      "pasta/arquivo.js",
-      "pasta/subpasta/arquivo.js",
+      "file.js",
+      "folder/file.js",
+      "folder/subfolder/file.js",
       ".",
       "file-with-dash.js",
       "file_with_underscore.js",
@@ -7610,7 +7612,7 @@ describe("isSafePath", () => {
     const traversalPaths = [
       "..",
       "../file.js",
-      "pasta/../file.js",
+      "folder/../file.js",
       "a/b/c/../../file.js",
       "../../../etc/passwd",
       "foo..bar",
@@ -8726,6 +8728,162 @@ describe("resolveTargetOrder", () => {
   it("returns empty array when config is empty", () => {
     const targets = resolveTargetOrder({}, ["ui",],);
     assertEquals(targets, [],);
+  });
+});
+
+```
+
+---
+
+## File: `packages/utils/tests/tools/esbuild-options.test.ts`
+
+```ts
+/// <reference lib="deno.ns" />
+
+import { describe, it, } from "@std/testing/bdd";
+import { assertEquals, } from "@std/assert";
+
+import {
+  applyAssetDefine,
+  buildBannerFooter,
+  buildVersionedDefine,
+  copyOptionalProps,
+  DEFAULT_VERSION_DEFINE,
+  injectVersionPlaceholders,
+  resolveDefineVersionKey,
+} from "../../src/tools/esbuild-options.ts";
+
+describe("esbuild-options helpers", () => {
+  describe("resolveDefineVersionKey", () => {
+    it("falls back to the default identifier", () => {
+      assertEquals(resolveDefineVersionKey({},), DEFAULT_VERSION_DEFINE,);
+    });
+
+    it("prefers the per-target defineVersionString", () => {
+      assertEquals(
+        resolveDefineVersionKey({ defineVersionString: "__VER__", },),
+        "__VER__",
+      );
+    });
+
+    it("prefers the explicit argument over the config value", () => {
+      assertEquals(
+        resolveDefineVersionKey({ defineVersionString: "__VER__", }, "__EX__",),
+        "__EX__",
+      );
+    });
+  });
+
+  describe("buildVersionedDefine", () => {
+    it("merges custom defines and injects the version constant", () => {
+      const defines = buildVersionedDefine(
+        { define: { DEBUG: "true", }, },
+        "1.2.3",
+        "__APP_VERSION__",
+      );
+      assertEquals(defines, {
+        DEBUG: "true",
+        __APP_VERSION__: '"v1.2.3"',
+      },);
+    });
+
+    it("reserves the custom key for the version", () => {
+      const defines = buildVersionedDefine({}, "0.5.3", "__VER__",);
+      assertEquals(defines.__VER__, '"v0.5.3"',);
+    });
+  });
+
+  describe("applyAssetDefine", () => {
+    it("injects the asset list when configured", async () => {
+      const finalDefine: Record<string, string> = {};
+      const listAssetsFn = (_distDir: string,) =>
+        Promise.resolve(["./a.js", "./b.css",],);
+      await applyAssetDefine(
+        finalDefine,
+        { defineAssetsString: "__ASSETS__", distdir: "dist", },
+        listAssetsFn,
+      );
+      assertEquals(
+        finalDefine.__ASSETS__,
+        JSON.stringify(["./a.js", "./b.css",],),
+      );
+    });
+
+    it("does nothing without defineAssetsString", async () => {
+      const finalDefine: Record<string, string> = {};
+      await applyAssetDefine(
+        finalDefine,
+        { distdir: "dist", },
+        () => Promise.resolve([],),
+      );
+      assertEquals(finalDefine, {},);
+    });
+
+    it("does nothing without a listAssetsFn", async () => {
+      const finalDefine: Record<string, string> = {};
+      await applyAssetDefine(
+        finalDefine,
+        { defineAssetsString: "__ASSETS__", distdir: "dist", },
+        undefined,
+      );
+      assertEquals(finalDefine, {},);
+    });
+  });
+
+  describe("injectVersionPlaceholders", () => {
+    it("replaces the default placeholder", () => {
+      assertEquals(
+        injectVersionPlaceholders("build __APP_VERSION__ done", "9.9.9", "K",),
+        "build 9.9.9 done",
+      );
+    });
+
+    it("replaces the custom define key as well", () => {
+      assertEquals(
+        injectVersionPlaceholders(
+          "__VER__ and __APP_VERSION__",
+          "1.0.0",
+          "__VER__",
+        ),
+        "1.0.0 and 1.0.0",
+      );
+    });
+  });
+
+  describe("buildBannerFooter", () => {
+    it("returns undefined for an undefined source", () => {
+      assertEquals(
+        buildBannerFooter(undefined, "1.0.0", "__APP_VERSION__",),
+        undefined,
+      );
+    });
+
+    it("returns undefined when no js/css fragment exists", () => {
+      assertEquals(
+        buildBannerFooter({}, "1.0.0", "__APP_VERSION__",),
+        undefined,
+      );
+    });
+
+    it("injects versions into js and css fragments", () => {
+      assertEquals(
+        buildBannerFooter(
+          { js: "/*! __APP_VERSION__ */", css: "/* __VER__ */", },
+          "2.0.0",
+          "__VER__",
+        ),
+        { js: "/*! 2.0.0 */", css: "/* 2.0.0 */", },
+      );
+    });
+  });
+
+  describe("copyOptionalProps", () => {
+    it("copies only defined whitelisted properties", () => {
+      const source = { a: 1, b: undefined, c: 3, d: 4, };
+      const target: Record<string, unknown> = {};
+      copyOptionalProps(source, target, ["a", "b", "c",],);
+      assertEquals(target, { a: 1, c: 3, },);
+    });
   });
 });
 
@@ -10424,10 +10582,10 @@ if (import.meta.main) {
  * BuildIt Watch CLI Entry Point.
  * Delegates execution to the @vanaware/buildit continuous watch utility.
  */
-import { watchCli } from "../packages/utils/src/watch/cli.ts";
+import { watchCli, } from "../packages/utils/src/watch/cli.ts";
 
 if (import.meta.main) {
-  await watchCli().parse(Deno.args);
+  await watchCli().parse(Deno.args,);
 }
 
 ```

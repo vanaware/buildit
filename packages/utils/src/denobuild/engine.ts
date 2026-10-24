@@ -16,6 +16,12 @@ import {
 
 import { validateTargetConfig, } from "../tools/validate.ts";
 import { resolveTargetOrder, } from "../tools/targets.ts";
+import {
+  applyAssetDefine,
+  buildVersionedDefine,
+  injectVersionPlaceholders,
+  resolveDefineVersionKey,
+} from "../tools/esbuild-options.ts";
 
 import { buildBundleOptions, } from "./bundle.ts";
 import type {
@@ -87,23 +93,17 @@ export async function processBundleTarget(
   );
 
   // 3. Prepare defines
-  // deno-lint-ignore no-explicit-any
-  const defineVersionKey = defineVersionString || (resolvedConfig as any).defineVersionString || "__APP_VERSION__";
-  const defines: Record<string, string> = {
-    ...resolvedConfig.define,
-    [defineVersionKey]: JSON.stringify(`v${appVersion}`,),
-  };
+  const defineVersionKey = resolveDefineVersionKey(
+    resolvedConfig,
+    defineVersionString,
+  );
+  const defines = buildVersionedDefine(
+    resolvedConfig,
+    appVersion,
+    defineVersionKey,
+  );
 
-  if (
-    resolvedConfig.defineAssetsString &&
-    resolvedConfig.defineAssetsString.trim() !== "" &&
-    listAssetsFn &&
-    resolvedConfig.distdir
-  ) {
-    const assets = await listAssetsFn(resolvedConfig.distdir,);
-    defines[resolvedConfig.defineAssetsString] = JSON.stringify(assets,);
-    console.log(`📋 ${assets.length} assets listed for define '${resolvedConfig.defineAssetsString}'`,);
-  }
+  await applyAssetDefine(defines, resolvedConfig, listAssetsFn,);
 
   // 4. Run bundle
   console.log(`🔨 Compiling with Deno.bundle...`,);
@@ -143,7 +143,7 @@ export async function processBundleTarget(
     return {
       target: targetName,
       success: true,
-      durationMs: Number((performance.now() - startTime).toFixed(0,),),
+      durationMs: Math.round(performance.now() - startTime,),
       outputFiles: [],
     };
   }
@@ -171,17 +171,21 @@ export async function processBundleTarget(
 
     // 7.3 Apply Banner (JS)
     if (resolvedConfig.banner?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
-      const banner = resolvedConfig.banner.js
-        .replaceAll("__APP_VERSION__", appVersion)
-        .replaceAll(defineVersionKey, appVersion);
+      const banner = injectVersionPlaceholders(
+        resolvedConfig.banner.js,
+        appVersion,
+        defineVersionKey,
+      );
       content = banner + "\n" + content;
     }
 
     // 7.4 Apply Footer (JS)
     if (resolvedConfig.footer?.js && (outputFile.path.endsWith(".js") || outputFile.path.endsWith(".mjs"))) {
-      const footer = resolvedConfig.footer.js
-        .replaceAll("__APP_VERSION__", appVersion)
-        .replaceAll(defineVersionKey, appVersion);
+      const footer = injectVersionPlaceholders(
+        resolvedConfig.footer.js,
+        appVersion,
+        defineVersionKey,
+      );
       content = content + "\n" + footer;
     }
 
@@ -189,19 +193,18 @@ export async function processBundleTarget(
     if (resolvedConfig.write !== false) {
       await ensureDirForFile(outputFile.path,);
       await Deno.writeTextFile(outputFile.path, content,);
-      writtenPaths.push(outputFile.path,);
       console.log(
         `   📄 ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
       );
     } else {
-      writtenPaths.push(outputFile.path,);
       console.log(
         `   📦 [In-Memory] ${outputFile.path} (${(content.length / 1024).toFixed(1,)}KB)`,
       );
     }
+    writtenPaths.push(outputFile.path,);
   }
 
-  const durationMs = Number((performance.now() - startTime).toFixed(0,),);
+  const durationMs = Math.round(performance.now() - startTime,);
   console.log(
     `✅ [${targetName}] Build completed in ${durationMs}ms (${outputFiles.length} file(s))`,
   );
@@ -218,7 +221,7 @@ export async function processBundleTarget(
  * Programmatically executes compilation via Deno.bundle for configured targets.
  * Accepts a DenoBundleGlobalConfig object directly in memory or DenoBuildOptions.
  *
- * @param configOuOpcoes Memory DenoBundleGlobalConfig object or full execution options
+ * @param configOrOptions Memory DenoBundleGlobalConfig object or full execution options
  * @returns List of results obtained per target
  *
  * @example
@@ -233,14 +236,14 @@ export async function processBundleTarget(
  * ```
  */
 export async function denoBuild(
-  opcoes: DenoBuildOptions,
+  options: DenoBuildOptions,
 ): Promise<DenoBuildResult[]> {
-  const configs = opcoes.config;
-  const baseDir = opcoes.baseDir ?? ".";
-  const denoJsoncPath = opcoes.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
+  const configs = options.config;
+  const baseDir = options.baseDir ?? ".";
+  const denoJsoncPath = options.denoJsoncPath ?? join(baseDir, "deno.jsonc",);
 
   // Strictly ensures that the execution order follows the declaration in the configuration
-  const targetsToExecute = resolveTargetOrder(configs, opcoes.targets,);
+  const targetsToExecute = resolveTargetOrder(configs, options.targets,);
 
   console.log(
     `📋 Build targets (safe CONFIG order): ${
@@ -255,13 +258,13 @@ export async function denoBuild(
   const finalVersion = await updateProjectVersion({
     denoJsonPath: denoJsoncPath,
     baseDir,
-    noversion: opcoes.noversion ?? false,
-    versionPaths: opcoes.versionPaths,
-    forcepackagesversion: opcoes.forcepackagesversion,
-    defineVersionString: opcoes.defineVersionString,
+    noversion: options.noversion ?? false,
+    versionPaths: options.versionPaths,
+    forcepackagesversion: options.forcepackagesversion,
+    defineVersionString: options.defineVersionString,
   },);
 
-  const resultados: DenoBuildResult[] = [];
+  const results: DenoBuildResult[] = [];
 
   for (const targetName of targetsToExecute) {
     const targetConfig = configs[targetName];
@@ -279,10 +282,10 @@ export async function denoBuild(
       finalVersion,
       listFn,
       baseDir,
-      opcoes.defineVersionString,
+      options.defineVersionString,
     );
-    resultados.push(res,);
+    results.push(res,);
   }
 
-  return resultados;
+  return results;
 }

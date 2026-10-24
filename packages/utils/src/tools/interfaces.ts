@@ -1,26 +1,3 @@
-/**
- * Example file extensions that can be included in snapshots.
- */
-export const EXTENSIONS_EXAMPLE: string[] = [
-  ".tsx",
-  ".jsx",
-  ".js",
-  ".ts",
-  ".css",
-  ".html",
-  ".manifest",
-  ".map",
-  ".sh",
-  ".py",
-  ".json",
-  ".jsonc",
-  ".yaml",
-  ".yml",
-  ".toml",
-  ".env.example",
-  ".md",
-];
-
 /** Parsed semantic version. */
 export interface ParsedVersion {
   /** Major version component. */
@@ -141,6 +118,8 @@ export interface TargetConfig {
   define?: Record<string, string>;
   /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). If omitted or empty, does not inject. */
   defineAssetsString?: string;
+  /** Custom version identifier for this target (used in `define`, `banner` and `footer` version injection, e.g., "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Directives for removing calls to console or debugger. */
   drop?: EsbuildDrop[];
   /** Modules or packages to be treated as external during bundling. */
@@ -395,6 +374,8 @@ export interface DenoBundleTargetConfig {
   define?: Record<string, string>;
   /** Identifier of the constant for injecting the list of generated assets (e.g., "__GENERATED_ASSETS__"). */
   defineAssetsString?: string;
+  /** Custom version identifier for this target (used in `define`, `banner` and `footer` version injection, e.g., "__APP_VERSION__"). */
+  defineVersionString?: string;
   /** Path of the consolidated output file (relative to distdir). */
   outfile?: string;
   /** If true, Deno.bundle will write directly to disk (default: false in BuildIt to allow post-processing). */

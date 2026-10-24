@@ -7,9 +7,9 @@ import { isSafePath, } from "../../src/tools/paths.ts";
 describe("isSafePath", () => {
   describe("safe paths", () => {
     const safePaths = [
-      "arquivo.js",
-      "pasta/arquivo.js",
-      "pasta/subpasta/arquivo.js",
+      "file.js",
+      "folder/file.js",
+      "folder/subfolder/file.js",
       ".",
       "file-with-dash.js",
       "file_with_underscore.js",
@@ -30,7 +30,7 @@ describe("isSafePath", () => {
     const traversalPaths = [
       "..",
       "../file.js",
-      "pasta/../file.js",
+      "folder/../file.js",
       "a/b/c/../../file.js",
       "../../../etc/passwd",
       "foo..bar",

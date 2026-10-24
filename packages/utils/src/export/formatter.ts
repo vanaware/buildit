@@ -4,8 +4,18 @@
  * glob pattern evaluation, and Markdown formatting with backtick protection.
  */
 
-import { globToRegExp, } from "@std/path";
 import type { ExportConfig, } from "../tools/interfaces.ts";
+import { matchesGlobs, } from "../tools/paths.ts";
+
+/**
+ * Tests if a path matches any of the provided glob patterns.
+ * Re-exported from `tools/paths.ts` as the single canonical implementation.
+ *
+ * @param path Normalized relative path to be tested
+ * @param patterns List of glob patterns (supports brace expansion and globstar)
+ * @returns True if the path matches at least one pattern
+ */
+export { matchesGlobs, } from "../tools/paths.ts";
 
 /**
  * Normalizes a file path for consistent comparison across operating systems.
@@ -71,31 +81,6 @@ export function mapExtension(relativePath: string,): string {
   if (relativePath.includes(".env",)) return "properties";
 
   return map[ext] || ext;
-}
-
-/**
- * Tests if a path matches any of the provided glob patterns.
- *
- * @param path Normalized relative path to be tested
- * @param patterns List of glob patterns (supports brace expansion and globstar)
- * @returns True if the path matches at least one pattern
- */
-export function matchesGlobs(path: string, patterns: string[],): boolean {
-  const normalizedPath = path.replace(/\\/g, "/",);
-  for (const pattern of patterns) {
-    try {
-      const reg = globToRegExp(pattern, {
-        globstar: true,
-        caseInsensitive: true,
-      },);
-      if (reg.test(normalizedPath,) || reg.test(path,)) {
-        return true;
-      }
-    } catch {
-      // Ignore invalid pattern
-    }
-  }
-  return false;
 }
 
 /**
